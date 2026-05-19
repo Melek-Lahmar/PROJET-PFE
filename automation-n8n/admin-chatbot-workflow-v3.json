@@ -1,0 +1,139 @@
+{
+  "name": "Admin Chatbot V3 (bilingue + actions + insights)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin-chat-v3",
+        "options": {
+          "rawBody": false
+        },
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-1",
+      "name": "Webhook /admin-chat-v3",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Section 5.3 — Détection langue (FR / AR / Tounsi)\nconst body = $input.item.json.body || $input.item.json;\nconst question = body.question || '';\nconst tounsiMarkers = ['3andek','3andi','3andna','9adech','ch7al','lyoum','barcha','marra','wache','kifech','fama','mra3','9bal','5ater'];\nconst hasArabic = /[\\u0600-\\u06FF]/.test(question);\nconst lower = question.toLowerCase();\nconst tounsiHit = tounsiMarkers.some(m => lower.includes(m)) || /\\b[a-z]*[3679][a-z]*\\b/i.test(question);\nlet language = 'fr';\nif (hasArabic) language = 'ar';\nelse if (tounsiHit) language = 'tounsi';\nreturn [{ json: { ...body, _language: language } }];"
+      },
+      "id": "lang-1",
+      "name": "Détecter langue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/admin/chat/ask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{ $env.BACKEND_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "question", "value": "={{ $json.question }}" },
+            { "name": "sessionId", "value": "={{ $json.sessionId }}" }
+          ]
+        }
+      },
+      "id": "ask-1",
+      "name": "Backend /chat/ask",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Branche actions sécurisées si action='action'\nconst data = $json;\nif (data.action === 'action' && data.pendingAction) {\n  return [{ json: { ...data, requiresConfirm: true } }];\n}\nreturn [{ json: data }];"
+      },
+      "id": "action-1",
+      "name": "Branche actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BACKEND_URL }}/api/admin/chat/insights/pending",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{ $env.BACKEND_TOKEN }}" }
+          ]
+        }
+      },
+      "id": "insights-1",
+      "name": "Insights proactifs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [840, 500]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Merge réponse + insights pour le client final\nconst askResp = $items('Branche actions')[0].json;\nconst insights = $items('Insights proactifs')[0].json || [];\nreturn [{ json: { ...askResp, proactiveInsights: insights } }];"
+      },
+      "id": "merge-1",
+      "name": "Merge réponse + insights",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1240, 400]
+    }
+  ],
+  "connections": {
+    "Webhook /admin-chat-v3": {
+      "main": [[{ "node": "Détecter langue", "type": "main", "index": 0 }]]
+    },
+    "Détecter langue": {
+      "main": [[{ "node": "Backend /chat/ask", "type": "main", "index": 0 }]]
+    },
+    "Backend /chat/ask": {
+      "main": [[{ "node": "Branche actions", "type": "main", "index": 0 }]]
+    },
+    "Branche actions": {
+      "main": [
+        [
+          { "node": "Insights proactifs", "type": "main", "index": 0 },
+          { "node": "Merge réponse + insights", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Insights proactifs": {
+      "main": [[{ "node": "Merge réponse + insights", "type": "main", "index": 0 }]]
+    },
+    "Merge réponse + insights": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [
+    { "id": "pfe", "name": "PFE 2026" },
+    { "id": "v3", "name": "V3 — bilingue + actions + insights" }
+  ],
+  "triggerCount": 1,
+  "versionId": "v3-2026-05-10"
+}

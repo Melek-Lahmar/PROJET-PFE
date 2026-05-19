@@ -1,0 +1,114 @@
+{
+  "dashboard": {
+    "admin": {
+      "connected": "Administrator · Connected"
+    },
+    "nav": {
+      "overview": "Overview",
+      "sales": "Sales",
+      "orders": "Orders",
+      "products": "Products",
+      "stock": "Stock",
+      "depots": "Warehouses",
+      "logistics": "Delivery",
+      "drivers": "Drivers",
+      "clients": "Clients",
+      "reclamations": "Claims",
+      "sync": "Sage sync",
+      "insights": "Insights",
+      "backAdmin": "Back to admin"
+    },
+    "meta": {
+      "cockpit": "Decision cockpit",
+      "updatedAt": "Updated",
+      "notAvailable": "Not available",
+      "executiveSummary": "Executive summary"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "refreshing": "Refreshing..."
+    },
+    "filters": {
+      "period": "Period",
+      "from": "From",
+      "to": "To",
+      "depot": "Warehouse",
+      "governorate": "Governorate",
+      "clientType": "Client type"
+    },
+    "period": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "12m": "12 months",
+      "custom": "Custom"
+    },
+    "pages": {
+      "overview": {
+        "title": "Overview",
+        "description": "General summary of sales, orders, stock, delivery and data quality."
+      },
+      "sales": {
+        "title": "Sales performance",
+        "description": "Revenue, average basket, best products and top clients."
+      },
+      "orders": {
+        "title": "Orders",
+        "description": "Order lifecycle, statuses, payment modes and risk orders."
+      },
+      "products": {
+        "title": "Products and catalog",
+        "description": "Catalog quality, publication, images, stock-outs and product performance."
+      },
+      "stock": {
+        "title": "Stock",
+        "description": "Availability, reservations, critical thresholds and warehouse anomalies."
+      },
+      "depots": {
+        "title": "Warehouses",
+        "description": "Activity, available stock, orders and anomalies by warehouse."
+      },
+      "logistics": {
+        "title": "Delivery",
+        "description": "Delivery statuses, success rate, returns and average delays."
+      },
+      "drivers": {
+        "title": "Drivers",
+        "description": "Current workload, performance, success rate and alerts by driver."
+      },
+      "clients": {
+        "title": "Clients",
+        "description": "B2B/B2C split, activity, regions, address quality and top clients."
+      },
+      "reclamations": {
+        "title": "Claims",
+        "description": "Claims by status, reason, criticality and processing delay."
+      },
+      "sync": {
+        "title": "Sage synchronization",
+        "description": "Reference data state, anomalies and synchronization quality."
+      },
+      "insights": {
+        "title": "Strategic insights",
+        "description": "Rule-based recommendations using business aggregations."
+      }
+    },
+    "charts": {
+      "primaryTrend": "Primary trend",
+      "secondaryTrend": "Secondary trend",
+      "statusDistribution": "Status distribution",
+      "topEntities": "Top entities"
+    },
+    "sections": {
+      "alerts": "Priority alerts"
+    },
+    "errors": {
+      "title": "Loading failed",
+      "description": "An error occurred while fetching dashboard data."
+    },
+    "empty": {
+      "title": "No data",
+      "description": "No usable data for the current filters."
+    }
+  }
+}

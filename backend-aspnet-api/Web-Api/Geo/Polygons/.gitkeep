@@ -1,0 +1,12 @@
+# Drop the file `tunisia_delegations.geojson` here.
+#
+# Source : https://data.humdata.org/dataset/cod-ab-tun (OCHA — Tunisia Subnational
+# Administrative Boundaries, niveau ADM2 = délégations).
+#
+# Format attendu : FeatureCollection GeoJSON. Chaque Feature doit porter
+# `properties.adm1_fr` (gouvernorat) et `properties.adm2_fr` (délégation),
+# geometry de type Polygon ou MultiPolygon (EPSG:4326).
+#
+# Sans ce fichier, l'API démarre normalement, log un WARNING
+# `[GeoPolygonService] GeoJSON file not found, polygon validation disabled`,
+# et POST /api/geo/validate-point répond avec Status=Unknown.

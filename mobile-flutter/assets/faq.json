@@ -1,0 +1,84 @@
+{
+  "categories": [
+    {
+      "title": "Paiement et frais",
+      "items": [
+        {
+          "q": "Comment je paie ?",
+          "a": "Le paiement se fait en cash directement au livreur au moment de la livraison (Cash on Delivery)."
+        },
+        {
+          "q": "Pourquoi 8 DT de frais de livraison ?",
+          "a": "Les 8 DT couvrent la livraison à domicile partout en Tunisie. Une réduction est appliquée selon votre niveau de fidélité (Argent -10%, Or -25%, Platine offerts)."
+        },
+        {
+          "q": "C'est quoi le timbre fiscal de 1 DT ?",
+          "a": "Le timbre fiscal est une taxe légale tunisienne appliquée à toutes les livraisons COD."
+        },
+        {
+          "q": "Y a-t-il une réduction fidélité ?",
+          "a": "Oui : Bronze (0 livraison) → aucun avantage, Argent (10+) → -10%, Or (30+) → -25% + livraison prioritaire, Platine (100+) → frais offerts + assistance prioritaire."
+        }
+      ]
+    },
+    {
+      "title": "Livraison",
+      "items": [
+        {
+          "q": "Combien de temps pour livrer ?",
+          "a": "En général sous 24-48h après confirmation. Le suivi est visible dans l'onglet Mes Commandes."
+        },
+        {
+          "q": "Que faire si je ne suis pas chez moi ?",
+          "a": "Le livreur tentera 3 fois avant de créer une demande de reprogrammation. Vous pouvez aussi reprogrammer à l'avance depuis l'écran de tracking."
+        },
+        {
+          "q": "Le livreur peut-il appeler avant d'arriver ?",
+          "a": "Oui, vous pouvez configurer cela dans Communication (Profil → Préférences contact)."
+        },
+        {
+          "q": "Comment reprogrammer ma livraison ?",
+          "a": "Depuis le suivi, cliquez sur Reprogrammer puis choisissez une date (J+1 à J+14) et un créneau (Matin / Après-midi / Soir)."
+        }
+      ]
+    },
+    {
+      "title": "Problèmes",
+      "items": [
+        {
+          "q": "J'ai reçu un colis endommagé, que faire ?",
+          "a": "Créez une réclamation depuis le détail de la commande. Joignez une photo du colis endommagé."
+        },
+        {
+          "q": "Le colis ne correspond pas à ma commande, que faire ?",
+          "a": "Créez une réclamation avec le motif COLIS_NON_CORRESPONDANT. La confirmatrice traitera votre cas rapidement."
+        },
+        {
+          "q": "Comment faire un échange ?",
+          "a": "Depuis votre réclamation clôturée, cliquez Demander un échange et précisez les articles à remplacer."
+        },
+        {
+          "q": "Comment annuler ma commande ?",
+          "a": "Tant que la commande n'est pas confirmée, vous pouvez l'annuler depuis Mes Commandes. Après confirmation, créez une réclamation motif ANNULATION."
+        }
+      ]
+    },
+    {
+      "title": "Suivi",
+      "items": [
+        {
+          "q": "Comment suivre mon colis sans compte ?",
+          "a": "Sur l'écran de connexion, cliquez Suivre un colis sans compte et saisissez le numéro de commande + les 4 derniers chiffres du téléphone du destinataire."
+        },
+        {
+          "q": "C'est quoi les statuts (Confirmée, En livraison, etc.) ?",
+          "a": "EN_ATTENTE: en attente de confirmation. CONFIRMEE: validée par la confirmatrice. EN_LIVRAISON: chez le livreur. LIVREE: arrivée à destination. RETOUR: renvoyée."
+        },
+        {
+          "q": "Pourquoi je vois mon livreur sur la carte ?",
+          "a": "Quand votre livreur démarre la livraison vers chez vous (statut Active Delivery), sa position s'affiche en temps réel sur la carte."
+        }
+      ]
+    }
+  ]
+}

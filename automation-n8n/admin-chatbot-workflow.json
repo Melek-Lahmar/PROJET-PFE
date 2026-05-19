@@ -1,0 +1,315 @@
+{
+  "name": "Admin Chatbot — PFE Livraison",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook (POST /chatbot)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validation du payload Flutter\nconst body = $json.body || $json;\nconst question = (body.question || '').toString().trim();\nif (!question) {\n  throw new Error('question is required');\n}\nreturn [{ json: { question, sessionId: body.sessionId || null } }];"
+      },
+      "id": "validate-1",
+      "name": "Validate payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un parseur d'intentions pour un chatbot métier de livraison COD en Tunisie. Tu analyses la question et tu retournes EXCLUSIVEMENT un objet JSON avec ces champs : intent (string parmi: get_orders_count, list_orders, get_claims_count, list_claims, top_products, governorate_stats, order_detail, fallback), entity (orders|claims|products|governorates), filters (object avec status (pending|confirmed|tentative|refused|inDelivery|delivered|returned|postponed|all|unhandled), period (today|7d|30d|3m|12m), governorate (string ou null), order_number (string ou null), client_query (string ou null), product_query (string ou null)), needs_table (bool), needs_chart (bool). Tunisie : gouvernorats reconnus = Ariana, Beja, BenArous, Bizerte, Gabes, Gafsa, Jendouba, Kairouan, Kasserine, Kebili, Kef, Mahdia, Manouba, Medenine, Monastir, Nabeul, Sfax, SidiBouzid, Siliana, Sousse, Tataouine, Tozeur, Tunis, Zaghouan. Réponds UNIQUEMENT avec le JSON, sans aucun texte additionnel.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.question\n    }\n  ],\n  \"response_format\": {\"type\": \"json_object\"},\n  \"temperature\": 0\n}",
+        "options": {}
+      },
+      "id": "groq-parse-1",
+      "name": "Groq — Parse intent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "groq-credentials",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract intent JSON from Groq response\nconst raw = $json.choices?.[0]?.message?.content || '{}';\nlet intent;\ntry { intent = JSON.parse(raw); } catch { intent = { intent: 'fallback' }; }\nreturn [{ json: { ...intent, originalQuestion: $('Validate payload').item.json.question } }];"
+      },
+      "id": "parse-intent-1",
+      "name": "Parse intent JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "get_orders_count", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "orders_count" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "list_orders", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "list_orders" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "get_claims_count", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "claims_count" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "top_products", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "top_products" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "governorate_stats", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "gov_stats" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "order_detail", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "order_detail" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-1",
+      "name": "Route by intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/orders/count",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "period", "value": "={{ $json.filters?.period || '30d' }}" },
+            { "name": "governorate", "value": "={{ $json.filters?.governorate || '' }}" },
+            { "name": "status", "value": "={{ $json.filters?.status || 'all' }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-orders-count",
+      "name": "GET orders/count",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 100]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/orders/list",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "period", "value": "={{ $json.filters?.period || '30d' }}" },
+            { "name": "governorate", "value": "={{ $json.filters?.governorate || '' }}" },
+            { "name": "status", "value": "={{ $json.filters?.status || 'all' }}" },
+            { "name": "orderNumber", "value": "={{ $json.filters?.order_number || '' }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-orders-list",
+      "name": "GET orders/list",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 220]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/claims/count",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "period", "value": "={{ $json.filters?.period || '30d' }}" },
+            { "name": "governorate", "value": "={{ $json.filters?.governorate || '' }}" },
+            { "name": "status", "value": "={{ $json.filters?.status || 'all' }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-claims-count",
+      "name": "GET claims/count",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 340]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/products/top",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "period", "value": "={{ $json.filters?.period || '30d' }}" },
+            { "name": "governorate", "value": "={{ $json.filters?.governorate || '' }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-products-top",
+      "name": "GET products/top",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 460]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/governorates/stats",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "period", "value": "={{ $json.filters?.period || '30d' }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-gov-stats",
+      "name": "GET governorates/stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 580]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBAPI_BASE_URL}}/api/admin/chat/orders/{{ $json.filters?.order_number }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Chat-Api-Key", "value": "={{$env.CHATBOT_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-order-detail",
+      "name": "GET order/{piece}",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un assistant métier d'un système de livraison COD en Tunisie. À partir de la question d'origine et des données réelles fournies, tu rédiges UNE phrase courte et claire en français qui répond à la question. N'invente pas de chiffres, n'ajoute pas de spéculations. Si les données sont vides, dis-le. Pas d'emojis, pas de salutations.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.prompt\n    }\n  ],\n  \"temperature\": 0.2\n}",
+        "options": {}
+      },
+      "id": "groq-format-1",
+      "name": "Groq — Format response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1700, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "groq-credentials",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construit le prompt de reformulation à partir de l'intent + data\nconst all = $('Parse intent JSON').first().json;\nconst data = $json;\nconst prompt = `Question : ${all.originalQuestion}\\n\\nIntention détectée : ${all.intent}\\n\\nDonnées brutes :\\n${JSON.stringify(data, null, 2)}`;\nreturn [{ json: { prompt, intent: all.intent, data } }];"
+      },
+      "id": "build-prompt",
+      "name": "Build reformulation prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construit la réponse finale Flutter\nconst groqText = $json.choices?.[0]?.message?.content || 'Données reçues.';\nconst built = $('Build reformulation prompt').first().json;\nreturn [{ json: {\n  success: true,\n  message: groqText,\n  intent: built.intent,\n  data: built.data,\n  ui: { type: 'text', show_table: false, show_chart: false }\n}}];"
+      },
+      "id": "final-response",
+      "name": "Build final JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (POST /chatbot)": { "main": [[{ "node": "Validate payload", "type": "main", "index": 0 }]] },
+    "Validate payload": { "main": [[{ "node": "Groq — Parse intent", "type": "main", "index": 0 }]] },
+    "Groq — Parse intent": { "main": [[{ "node": "Parse intent JSON", "type": "main", "index": 0 }]] },
+    "Parse intent JSON": { "main": [[{ "node": "Route by intent", "type": "main", "index": 0 }]] },
+    "Route by intent": {
+      "main": [
+        [{ "node": "GET orders/count", "type": "main", "index": 0 }],
+        [{ "node": "GET orders/list", "type": "main", "index": 0 }],
+        [{ "node": "GET claims/count", "type": "main", "index": 0 }],
+        [{ "node": "GET products/top", "type": "main", "index": 0 }],
+        [{ "node": "GET governorates/stats", "type": "main", "index": 0 }],
+        [{ "node": "GET order/{piece}", "type": "main", "index": 0 }]
+      ]
+    },
+    "GET orders/count": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "GET orders/list": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "GET claims/count": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "GET products/top": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "GET governorates/stats": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "GET order/{piece}": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "Build reformulation prompt": { "main": [[{ "node": "Groq — Format response", "type": "main", "index": 0 }]] },
+    "Groq — Format response": { "main": [[{ "node": "Build final JSON", "type": "main", "index": 0 }]] },
+    "Build final JSON": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": []
+}

@@ -1,0 +1,1468 @@
+# 🎯 MASTER PROMPT — Évolution Plateforme E-commerce Multi-Plateforme
+**Cible** : Claude Code | **Stack** : React + ASP.NET Core 8 + SQL Server
+**Version** : 2.0 — Chatbot en mode intégration
+
+---
+
+## 📌 PRÉAMBULE — INSTRUCTIONS DE TRAVAIL POUR CLAUDE CODE
+
+### Règles d'or — à respecter SYSTÉMATIQUEMENT
+
+1. **Explore avant d'agir** : lis `README.md`, `*.csproj`, `package.json`, parcours la structure (`src/`, `Controllers/`, `Services/`, `Entities/`), identifie les conventions existantes (naming, patterns, architecture en couches).
+2. **Plan first** : utilise `TodoWrite` pour décomposer chaque module en sous-tâches avant la 1ʳᵉ ligne de code.
+3. **Un module à la fois** : ne passe JAMAIS au module suivant sans validation explicite de ma part (« OK module suivant »).
+4. **Demande, ne devine pas** : si un choix produit/technique est ambigu, pose la question avant d'implémenter.
+5. **Respecte l'existant** : si un pattern est déjà en place (ex. Repository, MediatR, ServiceLayer), suis-le. Si tu introduis un nouveau pattern, justifie-le explicitement.
+6. **Commits Git** : Conventional Commits (`feat(b2b): ajout taux remise`, `fix(orders): verrouillage concurrent`), 1 commit logique par sous-tâche.
+7. **Migrations EF Core** : nommées clairement (`AddDiscountToB2BClient`), revues avant `dotnet ef database update`. JAMAIS de migration destructive sans confirmation.
+8. **Sécurité** : valider TOUTES les permissions côté backend (`[Authorize(Roles="Admin")]`, etc.). Jamais de confiance dans le front.
+9. **Pas de breaking change** sur les endpoints existants sans alerte explicite.
+
+### Workflow par module
+
+```
+1. Lecture code existant lié (3-5 fichiers max)
+2. TodoWrite avec étapes ordonnées
+3. Couche DATA  → Entité + Migration EF Core
+4. Couche LOGIC → Service + DTO + Validator
+5. Couche API   → Controller + Swagger
+6. Couche FRONT → API client → Hook → Composant → Page
+7. Tests manuels (curl/Postman + UI)
+8. Récap des fichiers touchés + DoD checklist cochée
+9. Stop → attente validation
+```
+
+---
+
+## 🏗️ CONTEXTE DU PROJET
+
+Plateforme e-commerce composée de :
+- **Web React** : back-office admin + interface client B2C/B2B
+- **App mobile (Flutter)** : interface client + interface confirmateur + chatbot déjà intégré
+- **API ASP.NET Core 8** : partagée web/mobile (chatbot déjà exposé via cette API)
+- **SQL Server** : base relationnelle
+
+### Acteurs
+
+| Rôle | Plateforme | Description |
+|---|---|---|
+| Admin | Web | Gestion globale, paramétrage, statistiques, chatbot |
+| Confirmateur | Mobile + Web | Valide/refuse les commandes (call-center) |
+| Livreur | Mobile | Effectue les livraisons |
+| Client B2C | Web + Mobile | Particulier — pas de remise |
+| Client B2B | Web + Mobile | Professionnel avec remise personnalisée |
+
+---
+
+## ⚙️ STACK TECHNIQUE VERROUILLÉE
+
+### Backend
+- **ASP.NET Core 8** Web API
+- **Entity Framework Core 8** (Code-First, migrations)
+- **SQL Server**
+- **AutoMapper** (Entities ↔ DTOs)
+- **FluentValidation** (validation DTOs)
+- **JWT Bearer** + Refresh Token
+- **SignalR** (temps réel : états commandes, verrou confirmateur, chatbot live si déjà en place)
+- **Serilog** (logs structurés)
+- **Swagger / OpenAPI**
+
+### Frontend Web
+- **React 18** (Hooks, composants fonctionnels uniquement)
+- **React Router v6**
+- **TanStack Query (React Query)** — data fetching/caching
+- **Zustand** OU **Redux Toolkit** (selon existant)
+- **axios** + intercepteurs (auth, refresh token, erreurs globales)
+- **react-i18next** — i18n FR/EN/AR + RTL
+- **react-hook-form + zod** — formulaires + validation
+- **TailwindCSS** ou **MUI** (à aligner sur existant)
+- **@microsoft/signalr** — client SignalR
+
+### Mobile : Flutter (déjà en production, chatbot déjà intégré)
+
+---
+
+# 📦 MODULES À IMPLÉMENTER
+
+> Chaque module suit la structure : **Objectif → Modèle de données → API → Frontend → Tests → Definition of Done**.
+
+---
+
+## 🟦 MODULE 1 — Bouton « Ajouter au panier » sur les cartes produits
+
+### Objectif métier
+Permettre l'ajout direct au panier depuis chaque carte produit (listing, recherche, catégorie, homepage) sans entrer dans la fiche détail.
+
+### Frontend (uniquement)
+
+**Composant cible** : `src/components/products/ProductCard.jsx`
+
+```jsx
+import { useAddToCart } from '@/hooks/useCart';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
+
+export function ProductCard({ product }) {
+  const { t } = useTranslation();
+  const { mutate: addToCart, isPending } = useAddToCart();
+
+  const isOutOfStock = product.stock <= 0;
+
+  return (
+    <div className="product-card">
+      {/* ... visuel existant ... */}
+      <button
+        onClick={() => addToCart({ productId: product.id, quantity: 1 })}
+        disabled={isOutOfStock || isPending}
+        className="btn-add-to-cart"
+        aria-label={t('product.addToCart', { name: product.name })}
+      >
+        {isPending ? <Spinner /> : <CartIcon />}
+        {isOutOfStock ? t('product.outOfStock') : t('product.addToCart')}
+      </button>
+    </div>
+  );
+}
+```
+
+**Hook** : `src/hooks/useCart.js`
+- Mutation TanStack Query → POST `/api/cart/items`
+- `onSuccess` : invalider `['cart']` + toast + animation badge panier (+1)
+- `onError` : toast erreur traduit
+
+### Definition of Done
+- [ ] Bouton présent sur toutes les cartes (listing, recherche, catégorie, homepage)
+- [ ] État `disabled` si rupture de stock + tooltip
+- [ ] Compteur panier header mis à jour en temps réel (optimistic update OK)
+- [ ] Toast de confirmation
+- [ ] Animation au clic (légère)
+- [ ] Clés i18n pour tous les textes
+- [ ] Responsive (mobile/tablet/desktop)
+- [ ] Accessible (ARIA, focus visible, navigation clavier)
+
+---
+
+## 🟦 MODULE 2 — Module « Comparer » professionnel
+
+### Objectif métier
+Comparer 2 à 4 produits côte à côte avec mise en évidence des différences.
+
+### Modèle de données
+- **Persistance** : `localStorage` (non-authentifié) + endpoint optionnel pour comparateur synchronisé compte (à confirmer).
+
+### Frontend
+
+**Pages/composants** :
+- `src/pages/Compare.jsx`
+- `src/components/compare/CompareTable.jsx`
+- `src/components/compare/CompareToggle.jsx` (bouton « Comparer » sur chaque ProductCard)
+- `src/store/compareStore.js` (Zustand)
+
+**Store Zustand** :
+```js
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export const useCompareStore = create(
+  persist(
+    (set, get) => ({
+      items: [],
+      MAX: 4,
+      add: (product) => {
+        const items = get().items;
+        if (items.length >= get().MAX) return { ok: false, reason: 'MAX' };
+        if (items.find(i => i.id === product.id)) return { ok: false, reason: 'DUP' };
+        set({ items: [...items, product] });
+        return { ok: true };
+      },
+      remove: (id) => set({ items: get().items.filter(i => i.id !== id) }),
+      clear: () => set({ items: [] }),
+    }),
+    { name: 'compare-store' }
+  )
+);
+```
+
+**Tableau comparatif** :
+- Lignes = caractéristiques (nom, prix, marque, specs techniques)
+- Colonnes = produits
+- **Highlight automatique** des valeurs divergentes (background différent)
+- Bouton « Retirer » par colonne
+- Bouton « Ajouter au panier » par colonne
+- Lien « Voir fiche produit » par colonne
+
+### Definition of Done
+- [ ] Bouton toggle « Comparer » sur chaque carte produit (icône balance)
+- [ ] Page `/compare` avec table responsive
+- [ ] Min 2, max 4 produits
+- [ ] Highlight visuel des différences
+- [ ] Persistance localStorage
+- [ ] Bouton « Vider la comparaison »
+- [ ] i18n complet
+- [ ] Adaptation mobile (scroll horizontal ou colonnes empilées)
+
+---
+
+## 🟦 MODULE 3 — Multi-adresses client + Adresse par défaut
+
+### Objectif métier
+- Chaque client peut gérer plusieurs adresses de livraison.
+- Une seule adresse par défaut à la fois.
+- Sélection/ajout d'adresse possible dans le profil ET dans le tunnel de commande.
+- **L'admin ne voit JAMAIS les coordonnées GPS** (latitude/longitude) — seulement les données textuelles.
+
+### Modèle de données (EF Core)
+
+```csharp
+public class ClientAddress
+{
+    public Guid Id { get; set; }
+    public Guid ClientId { get; set; }
+    public Client Client { get; set; } = null!;
+
+    public string Label { get; set; } = "";
+    public string FullName { get; set; } = "";
+    public string Phone { get; set; } = "";
+    public string Street { get; set; } = "";
+    public string City { get; set; } = "";
+    public string PostalCode { get; set; } = "";
+    public string Country { get; set; } = "";
+    public string? Landmark { get; set; }
+
+    // ⚠️ NE JAMAIS exposer ces 2 champs aux admins
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
+    public bool IsDefault { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+}
+```
+
+**Contrainte unicité** : 1 seule `IsDefault = true` par `ClientId` → géré côté service (transaction).
+
+**Migration** :
+```bash
+dotnet ef migrations add AddClientAddresses
+```
+
+### API
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/me/addresses` | Client | Liste mes adresses |
+| POST | `/api/me/addresses` | Client | Créer |
+| PUT | `/api/me/addresses/{id}` | Client | Modifier |
+| DELETE | `/api/me/addresses/{id}` | Client | Supprimer |
+| PATCH | `/api/me/addresses/{id}/default` | Client | Définir par défaut |
+| GET | `/api/admin/clients/{id}/addresses` | Admin | **DTO SANS lat/lng** |
+
+**DTO Admin (sans GPS)** :
+```csharp
+public class ClientAddressAdminDto
+{
+    public Guid Id { get; set; }
+    public string Label { get; set; }
+    public string FullName { get; set; }
+    public string Phone { get; set; }
+    public string Street { get; set; }
+    public string City { get; set; }
+    public string PostalCode { get; set; }
+    public string Country { get; set; }
+    public string? Landmark { get; set; }
+    public bool IsDefault { get; set; }
+    // ❌ PAS de Latitude / Longitude
+}
+```
+
+**Service — set default (transaction)** :
+```csharp
+public async Task SetDefaultAsync(Guid clientId, Guid addressId)
+{
+    using var tx = await _db.Database.BeginTransactionAsync();
+    await _db.ClientAddresses
+        .Where(a => a.ClientId == clientId && a.IsDefault)
+        .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsDefault, false));
+
+    var target = await _db.ClientAddresses
+        .FirstOrDefaultAsync(a => a.Id == addressId && a.ClientId == clientId)
+        ?? throw new NotFoundException("Address");
+    target.IsDefault = true;
+    await _db.SaveChangesAsync();
+    await tx.CommitAsync();
+}
+```
+
+### Frontend
+- `src/pages/profile/Addresses.jsx` (liste + CRUD + badge « Par défaut »)
+- `src/components/checkout/AddressPicker.jsx` (sélecteur dans tunnel commande + bouton « + Nouvelle adresse »)
+- `src/hooks/useAddresses.js` (TanStack Query)
+
+### Definition of Done
+- [ ] CRUD complet adresses dans le profil
+- [ ] Sélection/ajout d'adresse dans le checkout
+- [ ] Badge visuel « Par défaut »
+- [ ] Une seule adresse par défaut (vérifié BDD + UI)
+- [ ] DTO admin **sans lat/lng** vérifié dans Swagger
+- [ ] Tests : forcer un GET admin → s'assurer que lat/lng sont absents du JSON
+
+---
+
+## 🟦 MODULE 4 — Remise B2B personnalisée
+
+### Objectif métier
+- Chaque client **B2B** a un taux de remise propre (%).
+- L'admin modifie ce taux dans la gestion clients (B2B uniquement).
+- À la finalisation de commande, la remise est appliquée **automatiquement sur le total**.
+- ❓ **Question à clarifier** : remise sur HT ou TTC ?
+
+### Modèle de données
+
+```csharp
+public class Client
+{
+    public Guid Id { get; set; }
+    public ClientType Type { get; set; }
+    public decimal? DiscountPercent { get; set; }
+    public ICollection<B2BDiscountHistory> DiscountHistory { get; set; } = new List<B2BDiscountHistory>();
+}
+
+public enum ClientType { B2C = 1, B2B = 2 }
+
+public class B2BDiscountHistory
+{
+    public Guid Id { get; set; }
+    public Guid ClientId { get; set; }
+    public decimal? OldValue { get; set; }
+    public decimal? NewValue { get; set; }
+    public Guid ChangedByAdminId { get; set; }
+    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+    public string? Reason { get; set; }
+}
+```
+
+```csharp
+modelBuilder.Entity<Client>()
+    .Property(c => c.DiscountPercent)
+    .HasPrecision(5, 2);
+```
+
+### API
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/admin/clients?type=B2B` | Admin | Liste B2B |
+| PATCH | `/api/admin/clients/{id}/discount` | Admin | Modifier remise + history |
+| GET | `/api/admin/clients/{id}/discount-history` | Admin | Historique |
+
+**Validation** : `0 <= value <= 100`, null accepté.
+
+### Service de calcul
+
+```csharp
+public class OrderCalculatorService
+{
+    public OrderTotalsDto Compute(Order order, Client client)
+    {
+        var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+
+        decimal discountAmount = 0m;
+        decimal? discountRate = null;
+
+        if (client.Type == ClientType.B2B && client.DiscountPercent.HasValue)
+        {
+            discountRate = client.DiscountPercent.Value;
+            discountAmount = Math.Round(subtotal * (discountRate.Value / 100m), 2);
+        }
+
+        var total = subtotal - discountAmount;
+
+        return new OrderTotalsDto
+        {
+            Subtotal = subtotal,
+            DiscountRate = discountRate,
+            DiscountAmount = discountAmount,
+            Total = total
+        };
+    }
+}
+```
+
+### Frontend
+- `src/pages/admin/clients/B2BClients.jsx` (filtre B2B + colonne éditable « Remise % »)
+- Modal édition remise avec champ « Motif »
+- Onglet « Historique » sur fiche client
+- Récapitulatif checkout client :
+  ```
+  Sous-total           : 1 250,00
+  Remise B2B (-12.5%)  :  -156,25
+  ─────────────────────────────────
+  Total                : 1 093,75
+  ```
+
+### Definition of Done
+- [ ] Champ `DiscountPercent` migré
+- [ ] Endpoint admin protégé `[Authorize(Roles="Admin")]`
+- [ ] Historique tracé
+- [ ] Application auto **uniquement pour B2B**
+- [ ] Affichage transparent dans le récap
+- [ ] Snapshot du taux à la commande (pas du taux courant)
+
+---
+
+## 🟦 MODULE 5 — États de commande unifiés + Verrou anti-collision
+
+### Objectif métier
+1. **Unifier** le modèle d'états entre web et mobile (tentatives numérotées partout).
+2. **Verrou** : commande masquée aux autres confirmateurs pendant consultation, libérée à la fermeture / timeout.
+
+### Modèle de données
+
+```csharp
+public enum OrderStatus
+{
+    Pending = 1,
+    Attempt = 2,
+    Confirmed = 3,
+    Refused = 4
+}
+
+public class Order
+{
+    public Guid Id { get; set; }
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public int AttemptNumber { get; set; } = 0;
+    public ICollection<OrderStatusHistory> StatusHistory { get; set; } = new List<OrderStatusHistory>();
+
+    // 🔒 VERROU
+    public Guid? LockedByConfirmatorId { get; set; }
+    public DateTime? LockedAt { get; set; }
+
+    [Timestamp] public byte[] RowVersion { get; set; } = null!;
+}
+
+public class OrderStatusHistory
+{
+    public Guid Id { get; set; }
+    public Guid OrderId { get; set; }
+    public OrderStatus Status { get; set; }
+    public int? AttemptNumber { get; set; }
+    public Guid? ConfirmatorId { get; set; }
+    public string? Note { get; set; }
+    public DateTime At { get; set; } = DateTime.UtcNow;
+}
+```
+
+### API
+
+| Méthode | Route | Description |
+|---|---|---|
+| GET | `/api/orders/queue` | File disponible (Pending/Attempt) ET (non verrouillée OU timeout OU verrouillée par moi) |
+| POST | `/api/orders/{id}/lock` | Acquérir verrou (409 si déjà pris) |
+| POST | `/api/orders/{id}/release` | Libérer |
+| POST | `/api/orders/{id}/status` | Changer statut + incrémenter tentative + auto-release si terminal |
+
+```csharp
+public async Task<bool> TryLockAsync(Guid orderId, Guid confirmatorId)
+{
+    var timeout = DateTime.UtcNow.AddMinutes(-5);
+    var rows = await _db.Orders
+        .Where(o => o.Id == orderId
+                 && (o.LockedByConfirmatorId == null
+                  || o.LockedAt < timeout
+                  || o.LockedByConfirmatorId == confirmatorId))
+        .ExecuteUpdateAsync(s => s
+            .SetProperty(o => o.LockedByConfirmatorId, confirmatorId)
+            .SetProperty(o => o.LockedAt, DateTime.UtcNow));
+
+    if (rows == 0) return false;
+    await _hub.Clients.All.SendAsync("OrderLocked", orderId, confirmatorId);
+    return true;
+}
+```
+
+**SignalR Hub** :
+```csharp
+public class OrdersHub : Hub
+{
+    public override async Task OnDisconnectedAsync(Exception? ex)
+    {
+        var userId = Guid.Parse(Context.UserIdentifier!);
+        await _orderService.ReleaseAllLocksAsync(userId);
+        await base.OnDisconnectedAsync(ex);
+    }
+}
+```
+
+**Job de cleanup** (BackgroundService) : libère toutes les commandes dont `LockedAt < now - 5min` toutes les 60s + push SignalR `OrderUnlocked`.
+
+### Frontend
+
+- `src/hooks/useOrdersQueue.js` — TanStack Query + souscription SignalR
+- `src/pages/confirmator/OrderDetail.jsx` :
+  - `onMount` → POST `/lock` (si 409 → redirect + toast)
+  - `onUnmount` → POST `/release`
+  - Boutons : Confirmer / Refuser / Tentative (n°X)
+  - Bandeau « Vous traitez actuellement cette commande »
+
+### Definition of Done
+- [ ] Modèle d'état unifié web + mobile + BDD
+- [ ] Verrou testé à 2 navigateurs en parallèle
+- [ ] Timeout 5min testé
+- [ ] Libération auto sur déconnexion SignalR
+- [ ] Historique complet
+- [ ] Notifications temps réel opérationnelles
+- [ ] Mobile et web : même modèle de tentatives numérotées
+
+---
+
+## 🟦 MODULE 6 — Mobile : Masquer GPS au confirmateur
+
+### Implémentation
+- DTO mobile confirmateur : `OrderForConfirmatorDto` SANS `Latitude`/`Longitude`.
+- Aucune carte/WebView Maps dans les écrans confirmateur.
+- Adresse affichée : `FullName`, `Phone`, `Street`, `City`, `PostalCode`, `Country`, `Landmark`.
+
+### Definition of Done
+- [ ] DTO confirmateur audité → 0 champ GPS
+- [ ] Aucune carte rendue dans les écrans confirmateur
+- [ ] Test interception réseau → absence lat/lng confirmée
+
+---
+
+## 🟦 MODULE 7 — Admin : Homepage Builder + 5 templates
+
+### Modèle de données
+
+```csharp
+public class HomepageTemplate
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; }
+    public string BlocksJson { get; set; } = "[]";
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public Guid CreatedByAdminId { get; set; }
+}
+```
+
+**Règle** : max 5 templates, 1 seul `IsActive`.
+
+**Format JSON des blocs** :
+```json
+[
+  { "type": "banner", "id": "b1", "props": { "image": "...", "title": "...", "cta": "..." } },
+  { "type": "carousel", "id": "c1", "props": { "productIds": [12, 34, 56] } },
+  { "type": "categories", "id": "cat1", "props": { "categoryIds": [1, 2, 3] } },
+  { "type": "richText", "id": "rt1", "props": { "html": "..." } },
+  { "type": "video", "id": "v1", "props": { "url": "..." } }
+]
+```
+
+### API
+
+| Méthode | Route | Description |
+|---|---|---|
+| GET | `/api/admin/homepage/templates` | Liste (max 5) |
+| POST | `/api/admin/homepage/templates` | Créer (refuse si 5) |
+| PUT | `/api/admin/homepage/templates/{id}` | Modifier |
+| DELETE | `/api/admin/homepage/templates/{id}` | Supprimer (sauf actif) |
+| POST | `/api/admin/homepage/templates/{id}/activate` | Activer |
+| GET | `/api/homepage` | Public — template actif |
+
+### Frontend Admin
+- `src/pages/admin/homepage/HomepageBuilder.jsx`
+- Drag & drop : **`@dnd-kit/core`**
+- Layout : sidebar gauche (palette) | canvas centre | sidebar droite (props bloc sélectionné)
+- Header : sélecteur template + bouton « Aperçu » + bouton « Activer »
+
+```jsx
+import { DndContext } from '@dnd-kit/core';
+import { SortableContext, arrayMove } from '@dnd-kit/sortable';
+
+export function HomepageBuilder() {
+  const [blocks, setBlocks] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+
+  const handleDragEnd = (e) => {
+    const { active, over } = e;
+    if (active.id !== over?.id) {
+      setBlocks(b => arrayMove(b, indexOf(b, active.id), indexOf(b, over.id)));
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-[240px_1fr_320px]">
+      <BlockPalette onAdd={(t) => setBlocks([...blocks, makeBlock(t)])} />
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={blocks.map(b => b.id)}>
+          <Canvas blocks={blocks} onSelect={setSelectedId} />
+        </SortableContext>
+      </DndContext>
+      <PropsPanel block={blocks.find(b => b.id === selectedId)} onChange={...} />
+    </div>
+  );
+}
+```
+
+### Definition of Done
+- [ ] Drag & drop fonctionnel
+- [ ] 5 templates max — backend bloque le 6ᵉ
+- [ ] Activation atomique (1 seul actif)
+- [ ] Aperçu live
+- [ ] Page publique consomme le template actif
+- [ ] Ne peut supprimer template actif
+
+---
+
+## 🟦 MODULE 8 — Dashboard & Statistiques
+
+### Endpoints API
+
+```
+GET /api/admin/stats/overview?from=&to=
+GET /api/admin/stats/delivery-agents?from=&to=
+GET /api/admin/stats/complaints?from=&to=
+GET /api/admin/stats/revenue-by-client?from=&to=&type=B2B|B2C
+GET /api/admin/stats/revenue-by-client/{clientId}/details
+```
+
+**KPI Overview** :
+```csharp
+public class OverviewStatsDto
+{
+    public decimal TotalRevenue { get; set; }
+    public int OrdersCount { get; set; }
+    public decimal AverageBasket { get; set; }
+    public int NewClients { get; set; }
+    public int ActiveDeliveryAgents { get; set; }
+    public int OpenComplaints { get; set; }
+    public List<TimeseriesPoint> RevenueOverTime { get; set; } = new();
+}
+```
+
+**Livreurs** :
+```csharp
+public class DeliveryAgentStatsDto
+{
+    public Guid AgentId { get; set; }
+    public string Name { get; set; }
+    public int DeliveriesCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public decimal SuccessRate { get; set; }
+    public TimeSpan AverageDeliveryTime { get; set; }
+    public List<string> ZonesCovered { get; set; } = new();
+}
+```
+
+**Réclamations** :
+```csharp
+public class ComplaintStatsDto
+{
+    public int Total { get; set; }
+    public Dictionary<string, int> ByCategory { get; set; } = new();
+    public TimeSpan AverageResolutionTime { get; set; }
+    public decimal ResolutionRate { get; set; }
+    public List<ComplaintByProductDto> TopProducts { get; set; } = new();
+}
+```
+
+**CA par client (basé BL)** :
+```csharp
+public class ClientRevenueDto
+{
+    public Guid ClientId { get; set; }
+    public string ClientName { get; set; }
+    public ClientType Type { get; set; }
+    public int BlCount { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public decimal AverageBasket { get; set; }
+    public DateTime LastBlDate { get; set; }
+}
+```
+
+> CA calculé à partir des **Bons de Livraison (BL)**, PAS des commandes.
+
+### Frontend
+- `src/pages/admin/Dashboard.jsx` — refonte complète
+- Graphiques : **Recharts**
+- Layout : grille responsive
+- Filtres globaux persistés URL (`?from=...&to=...`)
+- Composants : `<KpiCard />`, `<RevenueChart />`, `<DeliveryAgentsTable />`, `<ComplaintsBreakdown />`, `<ClientRevenueTable />` avec export CSV
+
+### Definition of Done
+- [ ] 3 nouveaux endpoints stats
+- [ ] Dashboard remodernisé (KPI cards + charts)
+- [ ] Filtres globaux persistés URL
+- [ ] Tableau CA par client basé BL + export CSV
+- [ ] Drill-down au clic
+- [ ] Agrégations SQL (pas en mémoire)
+
+---
+
+## 🟦 MODULE 9 — Internationalisation FR / EN / AR + RTL
+
+### Implémentation
+
+```bash
+npm i react-i18next i18next i18next-browser-languagedetector i18next-http-backend
+```
+
+**Configuration** : `src/i18n/index.js`
+```js
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import HttpBackend from 'i18next-http-backend';
+
+i18n
+  .use(HttpBackend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    fallbackLng: 'fr',
+    supportedLngs: ['fr', 'en', 'ar'],
+    ns: ['common', 'products', 'cart', 'checkout', 'admin', 'errors', 'chatbot'],
+    defaultNS: 'common',
+    interpolation: { escapeValue: false }
+  });
+
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng;
+  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+});
+
+export default i18n;
+```
+
+**Arborescence** :
+```
+public/locales/
+├── fr/
+│   ├── common.json
+│   ├── products.json
+│   ├── chatbot.json
+│   └── ...
+├── en/
+└── ar/
+```
+
+**Sélecteur** : `<LanguageSwitcher />` dans le header.
+
+**Persistance** : `localStorage` + champ `PreferredLanguage` sur user.
+
+### Definition of Done
+- [ ] 3 langues opérationnelles
+- [ ] RTL appliqué automatiquement en arabe
+- [ ] Sélecteur dans le header, persisté
+- [ ] **ZÉRO chaîne hardcodée**
+- [ ] Icônes directionnelles inversées en RTL
+- [ ] Test visuel complet en arabe
+
+---
+
+## 🟦 MODULE 10 — Paramétrage Application (Admin uniquement)
+
+### Modèle de données
+
+```csharp
+public class AppSetting
+{
+    public string Key { get; set; } = "";
+    public string ValueJson { get; set; } = "";
+    public string? Description { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public Guid UpdatedByAdminId { get; set; }
+}
+```
+
+**Clés attendues** :
+- `footer.copyright`, `footer.links`, `footer.socials`
+- `company.address`, `company.phone`, `company.email`, `company.ice`, `company.rc`
+- `theme.primary`, `theme.secondary`, `theme.accent`
+- `branding.logoHeaderUrl`, `branding.logoFooterUrl`, `branding.faviconUrl`
+- `seo.title`, `seo.description`, `seo.ogImage`
+- `languages.enabled` (`["fr","en","ar"]`)
+- `translations.overrides`
+
+### API
+
+```
+GET  /api/admin/settings            → liste complète (admin)
+GET  /api/admin/settings/{key}      → une clé
+PUT  /api/admin/settings/{key}      → maj
+GET  /api/settings/public           → sous-ensemble PUBLIC (whitelist)
+```
+
+**Cache** : IMemoryCache 5min, invalidé sur PUT.
+
+### Frontend
+- `src/pages/admin/settings/Settings.jsx` avec onglets :
+  - Identité (logos, favicon)
+  - Coordonnées (adresse, téléphone, email, légal)
+  - Thème (color pickers)
+  - Footer (éditeur de liens + textes)
+  - Langues (toggle + éditeur de traductions overrides)
+  - SEO
+
+- Hook `useAppSettings()` charge `/api/settings/public` au mount + alimente `<ThemeProvider>` + `<Footer>` dynamique.
+
+### Definition of Done
+- [ ] Endpoint admin `[Authorize(Roles="Admin")]`
+- [ ] Endpoint public whitelist stricte
+- [ ] Modifications appliquées **sans redéploiement**
+- [ ] Cache invalidé sur PUT
+- [ ] Audit (qui/quoi/quand)
+
+---
+
+## 🟦 MODULE 11 — Harmonisation visuelle Web ↔ Mobile (Flutter)
+
+### Implémentation
+1. **Récupérer** depuis le mobile Flutter : palette (`ThemeData`, `ColorScheme`), typo (`TextTheme`), radius, ombres, spacing, set d'icônes.
+2. **Centraliser** dans `src/theme/tokens.js` :
+   ```js
+   export const tokens = {
+     colors: {
+       primary: '#...',
+       secondary: '#...',
+       accent: '#...',
+       background: '#...',
+       surface: '#...',
+       text: '#...',
+       muted: '#...',
+       success: '#...',
+       warning: '#...',
+       danger: '#...',
+     },
+     radii: { sm: '4px', md: '8px', lg: '12px', xl: '20px' },
+     shadows: { card: '0 2px 8px rgba(0,0,0,0.06)' },
+     fonts: { sans: 'Inter, system-ui, sans-serif' }
+   };
+   ```
+3. **Connecter** : Tailwind config OU MUI theme depuis ces tokens.
+4. **Re-styler** : Button, Card, Input, Modal, Toast, Badge, Table.
+5. **Dark mode** si présent sur Flutter.
+
+### Definition of Done
+- [ ] `tokens.js` source unique
+- [ ] Tailwind / MUI configuré depuis tokens
+- [ ] Composants UI principaux restylés
+- [ ] Cohérence visuelle validée par captures côte à côte (Flutter ↔ React)
+
+---
+
+## 🟦 MODULE 12 — Intégration du Chatbot existant (Admin Only)
+
+### 🔴 CONTEXTE CRITIQUE
+
+> Le chatbot est **DÉJÀ DÉVELOPPÉ ET EN PRODUCTION** :
+> - **Backend** : API ASP.NET Core 8 déjà en place (entités, contrôleurs, services, moteur de matching)
+> - **Frontend mobile** : intégré dans l'app **Flutter** (en production)
+>
+> Cette tâche consiste **UNIQUEMENT** à construire l'**interface d'administration React** qui consomme cette API existante.
+
+### ❌ CE QUI EST INTERDIT
+
+- ❌ Créer de nouvelles entités EF Core
+- ❌ Créer de nouvelles migrations
+- ❌ Modifier le moteur de matching d'intents
+- ❌ Modifier la logique métier backend
+- ❌ Dupliquer des DTOs déjà présents
+- ❌ Modifier les endpoints existants (sauf ajustement mineur de DTO avec validation explicite)
+
+### ✅ CE QUI EST AUTORISÉ
+
+- ✅ Consommer les endpoints existants
+- ✅ Créer les composants React (back-office)
+- ✅ Ajouter de **nouveaux** endpoints UNIQUEMENT s'il manque quelque chose côté admin (avec validation explicite avant)
+- ✅ Ajouter des DTOs admin-spécifiques si les DTOs mobile ne conviennent pas
+
+### 🔍 PHASE 1 — AUDIT OBLIGATOIRE AVANT TOUT CODE
+
+Avant d'écrire **la moindre ligne**, Claude Code DOIT :
+
+1. **Backend** :
+   - Localiser les fichiers du chatbot (`Entities/Chatbot/`, `Controllers/ChatbotController*.cs`, `Services/Chatbot*`)
+   - Lister **TOUS les endpoints existants** avec : route, méthode, payload, réponse, auth requise
+   - Identifier les entités et leurs propriétés
+   - Identifier les DTOs déjà disponibles
+   - Vérifier la présence de SignalR pour le chatbot (Hub déjà existant ?)
+   - Vérifier la présence d'endpoints `admin/*` pour le chatbot ou s'il faut les ajouter
+   - **Produire un document `CHATBOT_API_AUDIT.md`** dans `docs/` avec :
+     ```markdown
+     # Audit Chatbot Backend
+
+     ## Endpoints existants
+     | Méthode | Route | Auth | Description | Utilisé par Flutter |
+     |---------|-------|------|-------------|---------------------|
+     | GET | /api/chatbot/... | ... | ... | ✅ |
+
+     ## Entités
+     - `Intent` : { Id, Name, ... }
+     - `Conversation` : { Id, ... }
+
+     ## DTOs disponibles
+     - `IntentDto` : utilisé pour ...
+     - `ConversationDto` : ...
+
+     ## Endpoints MANQUANTS pour l'admin
+     - PATCH /api/admin/chatbot/conversations/{id}/takeover ← à créer ?
+     - GET /api/admin/chatbot/analytics/* ← à créer ?
+
+     ## SignalR
+     - Hub existant : ChatbotHub à `/hubs/chatbot` ? Oui/Non
+     ```
+
+2. **Mobile Flutter** :
+   - Si possible, accéder au code Flutter pour voir comment il consomme l'API
+   - Sinon, demander à l'utilisateur des captures d'écran ou la documentation du chatbot mobile
+
+3. **Stop & Confirm** :
+   - Présenter l'audit
+   - Lister les **endpoints à créer** s'il en manque côté admin
+   - Attendre validation avant d'implémenter
+
+### 🎯 OBJECTIFS FONCTIONNELS DE L'INTERFACE ADMIN
+
+L'admin doit pouvoir, via le React :
+
+1. **Configuration** : modifier les paramètres globaux du chatbot (nom du bot, message d'accueil, message de fallback, avatar, horaires, couleur, activation/désactivation, fallback LLM si présent).
+2. **Intents** : CRUD complet (créer, lister, voir, modifier, supprimer, dupliquer, importer/exporter).
+3. **Phrases d'entraînement** : ajouter/supprimer des phrases par intent et par langue (FR/EN/AR).
+4. **Réponses** : éditer les réponses par intent et par langue, avec quick replies optionnels.
+5. **Base de connaissances** (si l'entité existe côté backend) : CRUD articles FAQ.
+6. **Conversations** : lister, filtrer, ouvrir, voir tout l'historique, prendre la main (takeover), répondre en humain, clôturer.
+7. **Supervision live** : voir en temps réel les nouvelles conversations + escalades (via SignalR si Hub existant).
+8. **Analytics** : voir KPI globaux, top intents, requêtes non reconnues, satisfaction.
+9. **Sandbox** : tester le chatbot avec une UI de simulation **sans persister** les messages.
+
+### 🏗️ ARCHITECTURE FRONTEND
+
+```
+src/features/admin/chatbot/
+├── api/
+│   └── chatbotApi.js              ← appels axios vers TOUS les endpoints chatbot existants
+├── hooks/
+│   ├── useChatbotConfig.js        ← TanStack Query
+│   ├── useIntents.js
+│   ├── useIntent.js
+│   ├── useSaveIntent.js
+│   ├── useArticles.js
+│   ├── useConversations.js
+│   ├── useConversation.js
+│   ├── useSendAdminMessage.js
+│   ├── useTakeover.js
+│   ├── useAnalytics.js
+│   └── useSandbox.js
+├── components/
+│   ├── ChatbotLayout.jsx          ← layout commun + sidebar de tabs
+│   ├── intents/
+│   │   ├── IntentsTable.jsx
+│   │   ├── IntentEditor.jsx       ← formulaire complet (phrases + réponses)
+│   │   ├── ResponseEditor.jsx     ← sous-composant éditeur de réponse
+│   │   ├── PhraseList.jsx
+│   │   └── QuickRepliesEditor.jsx
+│   ├── conversations/
+│   │   ├── ConversationsTable.jsx
+│   │   ├── ConversationThread.jsx ← affichage messages (user/bot/admin)
+│   │   ├── MessageBubble.jsx
+│   │   ├── AdminInput.jsx         ← input admin quand takeover actif
+│   │   └── TakeoverBanner.jsx
+│   ├── analytics/
+│   │   ├── KpiCards.jsx
+│   │   ├── TopIntentsChart.jsx
+│   │   ├── UnrecognizedQueriesTable.jsx
+│   │   └── SatisfactionChart.jsx
+│   ├── sandbox/
+│   │   ├── SandboxPanel.jsx       ← bac à sable (input + bulles)
+│   │   └── DebugPanel.jsx         ← détail intent matché, confidence, etc.
+│   └── config/
+│       ├── GeneralSettings.jsx    ← nom, messages, avatar, couleur
+│       ├── OperatingHours.jsx     ← horaires d'ouverture
+│       └── LlmSettings.jsx        ← fallback LLM (si feature présente)
+├── pages/
+│   ├── ChatbotOverviewPage.jsx
+│   ├── ChatbotConfigPage.jsx
+│   ├── IntentsListPage.jsx
+│   ├── IntentEditPage.jsx
+│   ├── ArticlesListPage.jsx
+│   ├── ArticleEditPage.jsx
+│   ├── ConversationsListPage.jsx
+│   ├── ConversationDetailPage.jsx
+│   ├── LiveQueuePage.jsx
+│   ├── AnalyticsOverviewPage.jsx
+│   ├── SatisfactionPage.jsx
+│   ├── UnrecognizedQueriesPage.jsx
+│   └── SandboxPage.jsx
+└── routes.jsx                     ← export des routes du module
+```
+
+### 🔌 EXEMPLE — Client API (à adapter selon audit)
+
+```js
+// src/features/admin/chatbot/api/chatbotApi.js
+import { api } from '@/lib/axios';
+
+export const chatbotApi = {
+  // CONFIG
+  getConfig: () => api.get('/admin/chatbot/config').then(r => r.data),
+  updateConfig: (payload) => api.put('/admin/chatbot/config', payload).then(r => r.data),
+
+  // INTENTS
+  listIntents: (params) => api.get('/admin/chatbot/intents', { params }).then(r => r.data),
+  getIntent: (id) => api.get(`/admin/chatbot/intents/${id}`).then(r => r.data),
+  createIntent: (payload) => api.post('/admin/chatbot/intents', payload).then(r => r.data),
+  updateIntent: (id, payload) => api.put(`/admin/chatbot/intents/${id}`, payload).then(r => r.data),
+  deleteIntent: (id) => api.delete(`/admin/chatbot/intents/${id}`).then(r => r.data),
+  duplicateIntent: (id) => api.post(`/admin/chatbot/intents/${id}/duplicate`).then(r => r.data),
+  importIntents: (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post('/admin/chatbot/intents/import', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data);
+  },
+  exportIntents: () => api.get('/admin/chatbot/intents/export', { responseType: 'blob' })
+    .then(r => r.data),
+
+  // ARTICLES (FAQ)
+  listArticles: (params) => api.get('/admin/chatbot/articles', { params }).then(r => r.data),
+  createArticle: (payload) => api.post('/admin/chatbot/articles', payload).then(r => r.data),
+  updateArticle: (id, payload) => api.put(`/admin/chatbot/articles/${id}`, payload).then(r => r.data),
+  deleteArticle: (id) => api.delete(`/admin/chatbot/articles/${id}`).then(r => r.data),
+
+  // CONVERSATIONS
+  listConversations: (params) => api.get('/admin/chatbot/conversations', { params }).then(r => r.data),
+  getConversation: (id) => api.get(`/admin/chatbot/conversations/${id}`).then(r => r.data),
+  takeover: (id) => api.post(`/admin/chatbot/conversations/${id}/takeover`).then(r => r.data),
+  release: (id) => api.post(`/admin/chatbot/conversations/${id}/release`).then(r => r.data),
+  sendAdminMessage: (id, content) =>
+    api.post(`/admin/chatbot/conversations/${id}/messages`, { content }).then(r => r.data),
+  closeConversation: (id) => api.post(`/admin/chatbot/conversations/${id}/close`).then(r => r.data),
+
+  // ANALYTICS
+  analyticsOverview: (params) => api.get('/admin/chatbot/analytics/overview', { params }).then(r => r.data),
+  topIntents: (params) => api.get('/admin/chatbot/analytics/top-intents', { params }).then(r => r.data),
+  unrecognized: (params) => api.get('/admin/chatbot/analytics/unrecognized', { params }).then(r => r.data),
+  satisfaction: (params) => api.get('/admin/chatbot/analytics/satisfaction', { params }).then(r => r.data),
+
+  // SANDBOX
+  sandboxMessage: (message, language) =>
+    api.post('/admin/chatbot/sandbox/message', { message, language }).then(r => r.data),
+};
+```
+
+> ⚠️ Ces routes sont **HYPOTHÉTIQUES**. Elles doivent être **vérifiées et corrigées** dans la Phase 1 d'audit. Si un endpoint manque, le créer côté backend après validation.
+
+### 📍 INTÉGRATION DES ROUTES
+
+`src/router.jsx` :
+```jsx
+import chatbotRoutes from '@/features/admin/chatbot/routes';
+
+const router = createBrowserRouter([
+  {
+    path: '/admin',
+    element: <RequireRole role="Admin"><AdminLayout /></RequireRole>,
+    children: [
+      // ... autres routes admin
+      ...chatbotRoutes,
+    ]
+  }
+]);
+```
+
+`src/features/admin/chatbot/routes.jsx` :
+```jsx
+export default [
+  {
+    path: 'chatbot',
+    element: <ChatbotLayout />,
+    children: [
+      { index: true, element: <ChatbotOverviewPage /> },
+      { path: 'config', element: <ChatbotConfigPage /> },
+      { path: 'intents', element: <IntentsListPage /> },
+      { path: 'intents/new', element: <IntentEditPage /> },
+      { path: 'intents/:id', element: <IntentEditPage /> },
+      { path: 'articles', element: <ArticlesListPage /> },
+      { path: 'articles/:id', element: <ArticleEditPage /> },
+      { path: 'conversations', element: <ConversationsListPage /> },
+      { path: 'conversations/live', element: <LiveQueuePage /> },
+      { path: 'conversations/:id', element: <ConversationDetailPage /> },
+      { path: 'analytics', element: <AnalyticsOverviewPage /> },
+      { path: 'analytics/top-intents', element: <TopIntentsPage /> },
+      { path: 'analytics/unrecognized', element: <UnrecognizedQueriesPage /> },
+      { path: 'analytics/satisfaction', element: <SatisfactionPage /> },
+      { path: 'sandbox', element: <SandboxPage /> },
+    ]
+  }
+];
+```
+
+### 🧭 NAVIGATION
+
+Ajouter dans la sidebar admin un menu **« Chatbot »** avec icône (`Bot`, `MessageCircle`) et sous-menu déroulant :
+- Vue d'ensemble
+- Configuration
+- Intents
+- Base de connaissances
+- Conversations
+  - Liste
+  - Live
+- Analytics
+  - Vue d'ensemble
+  - Top intents
+  - Non reconnues
+  - Satisfaction
+- Sandbox
+
+### 🎨 EXEMPLE — IntentEditor.jsx
+
+```jsx
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import { useIntent, useSaveIntent } from '../hooks';
+import { useNavigate, useParams } from 'react-router-dom';
+
+const schema = z.object({
+  name: z.string().min(2).regex(/^[a-z_]+$/, 'snake_case uniquement'),
+  displayName: z.string().min(2),
+  category: z.string(),
+  isActive: z.boolean(),
+  priority: z.number().int().min(0),
+  trainingPhrases: z.array(z.object({
+    phrase: z.string().min(2),
+    language: z.enum(['fr', 'en', 'ar'])
+  })).min(3, 'Au moins 3 phrases recommandées'),
+  responses: z.array(z.object({
+    language: z.enum(['fr', 'en', 'ar']),
+    text: z.string().min(2),
+    quickReplies: z.array(z.object({ label: z.string(), payload: z.string() })).optional(),
+    actionType: z.string().nullable().optional(),
+    actionPayload: z.any().optional()
+  })).min(1)
+});
+
+export function IntentEditor() {
+  const { id } = useParams();
+  const { t } = useTranslation('chatbot');
+  const navigate = useNavigate();
+  const { data: intent, isLoading } = useIntent(id);
+  const { mutate: save, isPending } = useSaveIntent();
+
+  const form = useForm({
+    resolver: zodResolver(schema),
+    values: intent
+  });
+
+  const phrases = useFieldArray({ control: form.control, name: 'trainingPhrases' });
+  const responses = useFieldArray({ control: form.control, name: 'responses' });
+
+  const onSubmit = (data) => save({ id, payload: data }, {
+    onSuccess: () => navigate('/admin/chatbot/intents')
+  });
+
+  if (id && isLoading) return <Loader />;
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 max-w-4xl">
+      <Section title={t('intent.identity')}>
+        <Input label={t('intent.name')} {...form.register('name')}
+               error={form.formState.errors.name?.message} />
+        <Input label={t('intent.displayName')} {...form.register('displayName')} />
+        <Select label={t('intent.category')} {...form.register('category')}>
+          <option value="general">{t('cat.general')}</option>
+          <option value="orders">{t('cat.orders')}</option>
+          <option value="products">{t('cat.products')}</option>
+          <option value="account">{t('cat.account')}</option>
+          <option value="billing">{t('cat.billing')}</option>
+        </Select>
+        <Switch label={t('intent.active')} {...form.register('isActive')} />
+      </Section>
+
+      <Section title={t('intent.trainingPhrases')} hint={t('intent.trainingHint')}>
+        {phrases.fields.map((field, i) => (
+          <div key={field.id} className="flex gap-2 mb-2">
+            <Input {...form.register(`trainingPhrases.${i}.phrase`)}
+                   placeholder={t('intent.phrasePlaceholder')} />
+            <Select {...form.register(`trainingPhrases.${i}.language`)}>
+              <option value="fr">FR</option>
+              <option value="en">EN</option>
+              <option value="ar">AR</option>
+            </Select>
+            <IconButton onClick={() => phrases.remove(i)} icon={<TrashIcon />} />
+          </div>
+        ))}
+        <Button type="button" onClick={() => phrases.append({ phrase: '', language: 'fr' })}>
+          + {t('intent.addPhrase')}
+        </Button>
+      </Section>
+
+      <Section title={t('intent.responses')}>
+        {responses.fields.map((field, i) => (
+          <ResponseEditor key={field.id} index={i} form={form}
+                          onRemove={() => responses.remove(i)} />
+        ))}
+        <Button type="button" onClick={() => responses.append({ language: 'fr', text: '' })}>
+          + {t('intent.addResponse')}
+        </Button>
+      </Section>
+
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" onClick={() => navigate('/admin/chatbot/intents')}>
+          {t('common.cancel')}
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? <Spinner /> : t('common.save')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+```
+
+### 🎨 EXEMPLE — ConversationThread.jsx (avec takeover)
+
+```jsx
+export function ConversationThread() {
+  const { id } = useParams();
+  const { data: conversation } = useConversation(id);
+  const { mutate: takeover } = useTakeover();
+  const { mutate: sendMsg } = useSendAdminMessage();
+  const connection = useSignalR('/hubs/chatbot');
+
+  useEffect(() => {
+    if (!connection || !id) return;
+    connection.invoke('JoinConversation', id);
+    const handler = () => queryClient.invalidateQueries(['conversation', id]);
+    connection.on('MessageReceived', handler);
+    return () => connection.off('MessageReceived', handler);
+  }, [connection, id]);
+
+  const adminId = useAuthStore(s => s.user.id);
+  const isMine = conversation?.assignedAdminId === adminId;
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-160px)]">
+      <Header>
+        <h2>Conversation #{id.slice(0, 8)}</h2>
+        {!isMine && (
+          <Button onClick={() => takeover(id)}>
+            {t('conv.takeover')}
+          </Button>
+        )}
+      </Header>
+
+      {isMine && (
+        <TakeoverBanner>
+          {t('conv.youAreHandlingNow')}
+        </TakeoverBanner>
+      )}
+
+      <MessageList messages={conversation?.messages || []} />
+
+      {isMine && (
+        <AdminInput onSend={(content) => sendMsg({ id, content })} />
+      )}
+    </div>
+  );
+}
+```
+
+### 🎨 EXEMPLE — SandboxPanel.jsx (bac à sable)
+
+```jsx
+export function SandboxPanel() {
+  const { t } = useTranslation('chatbot');
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [language, setLanguage] = useState('fr');
+
+  const { mutate: send, isPending } = useMutation({
+    mutationFn: ({ message, language }) => chatbotApi.sandboxMessage(message, language),
+    onSuccess: (data, vars) => {
+      setMessages(m => [
+        ...m,
+        { sender: 'user', content: vars.message },
+        { sender: 'bot', ...data }
+      ]);
+    }
+  });
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    send({ message: input, language });
+    setInput('');
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-6 h-[calc(100vh-160px)]">
+      <div className="border rounded-lg flex flex-col">
+        <Header>
+          {t('sandbox.preview')}
+          <Select value={language} onChange={e => setLanguage(e.target.value)}>
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+            <option value="ar">AR</option>
+          </Select>
+        </Header>
+        <div className="flex-1 overflow-auto p-4 space-y-2">
+          {messages.map((m, i) => <Bubble key={i} {...m} />)}
+        </div>
+        <div className="p-3 border-t flex gap-2">
+          <Input value={input} onChange={e => setInput(e.target.value)}
+                 onKeyDown={e => e.key === 'Enter' && handleSend()}
+                 placeholder={t('sandbox.typeMessage')} />
+          <Button onClick={handleSend} disabled={isPending}>
+            {t('common.send')}
+          </Button>
+        </div>
+      </div>
+
+      <div className="border rounded-lg p-4 overflow-auto">
+        <h3>{t('sandbox.debug')}</h3>
+        {messages.filter(m => m.sender === 'bot').map((m, i) => (
+          <DebugCard key={i}>
+            <div><strong>Intent:</strong> {m.intentMatched || 'none'}</div>
+            <div><strong>Confidence:</strong> {m.confidence?.toFixed(2) || '-'}</div>
+            <div><strong>Response:</strong> {m.content}</div>
+          </DebugCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### 🌍 I18N
+- Réutiliser le namespace `chatbot` déjà chargé (Module 9).
+- Si possible, **récupérer les traductions du chatbot Flutter** pour cohérence des termes.
+- Toutes les chaînes de l'UI admin du chatbot doivent passer par `t()`.
+
+### 🎨 STYLE
+- Reprendre les tokens du Module 11.
+- Les bulles de conversation doivent imiter le style mobile (Flutter) pour cohérence visuelle entre les apps.
+
+### 🔐 SÉCURITÉ
+- Toutes les routes `/admin/chatbot/*` protégées côté front par `<RequireRole role="Admin" />` ET côté back par `[Authorize(Roles="Admin")]` (à vérifier dans l'audit).
+- Sanitize le contenu des messages (DOMPurify) si rendu HTML.
+- Logs admin sur actions sensibles (takeover, modification config, suppression intent).
+
+### 🚦 ORDRE D'IMPLÉMENTATION INTERNE AU MODULE
+
+```
+1. Phase 1 — Audit complet (CHATBOT_API_AUDIT.md)
+2. Validation utilisateur de l'audit
+3. Création éventuelle d'endpoints admin manquants (avec validation)
+4. Layout + navigation + routes
+5. Page Config (la plus simple, valide la connexion API)
+6. CRUD Intents (cœur fonctionnel)
+7. Sandbox (permet de tester l'ensemble)
+8. Liste + détail Conversations
+9. Takeover + SignalR
+10. Articles (FAQ)
+11. Analytics
+12. Live Queue
+```
+
+### ✅ DEFINITION OF DONE — MODULE 12
+
+- [ ] Audit `docs/CHATBOT_API_AUDIT.md` produit et validé par l'utilisateur
+- [ ] Aucune nouvelle entité EF Core créée
+- [ ] Aucune nouvelle migration créée
+- [ ] Endpoints admin manquants (s'il y en a) créés après validation explicite
+- [ ] Navigation admin contient le menu Chatbot
+- [ ] Page Config opérationnelle (CRUD config)
+- [ ] CRUD Intents complet (lister, créer, éditer, supprimer, dupliquer, import/export)
+- [ ] Phrases d'entraînement multi-langues (FR/EN/AR)
+- [ ] Éditeur de réponses avec quick replies
+- [ ] Liste des conversations filtrable (statut, date, client)
+- [ ] Détail conversation avec thread complet
+- [ ] Takeover humain fonctionnel (SignalR si Hub présent)
+- [ ] Réponse admin envoyée et visible côté mobile Flutter
+- [ ] Sandbox fonctionnel avec debug panel (intent matché, confidence)
+- [ ] Analytics affichées (KPI, top intents, unrecognized, satisfaction)
+- [ ] Live Queue avec mise à jour temps réel
+- [ ] i18n FR/EN/AR + RTL pour toute l'UI admin du chatbot
+- [ ] Style cohérent avec Flutter (couleurs, bulles, animations)
+- [ ] Tous les endpoints utilisés sont protégés `[Authorize(Roles="Admin")]`
+- [ ] Aucune console error / warning React
+- [ ] Test E2E manuel : créer intent → tester en sandbox → voir le résultat
+
+---
+
+# 🔐 CONVENTIONS TRANSVERSALES
+
+### Sécurité
+- TOUS les endpoints protégés par `[Authorize]` avec rôles explicites.
+- Validation FluentValidation sur chaque DTO entrant.
+- Aucun champ GPS dans les DTOs admins ou confirmateurs.
+- Anti-CSRF activé sur endpoints sensibles.
+- Rate-limiting sur endpoints publics critiques (`/api/auth/*`, `/api/chatbot/*`).
+- Secrets (LLM keys, JWT secret) jamais commités, jamais retournés en clair.
+
+### Performance
+- Pagination obligatoire sur toute liste > 50 items (`?page=&pageSize=`).
+- Indexes BDD sur colonnes filtrées (`ClientId`, `Status`, `CreatedAt`, `IntentId`, `ConversationId`, etc.).
+- Agrégations stats faites en SQL, pas en mémoire.
+- `AsNoTracking()` sur les reads.
+- Cache mémoire pour : settings publics, config chatbot, intents actifs (invalidation sur write).
+
+### Logs & Audit
+- Serilog : enrichissement avec `UserId`, `CorrelationId`.
+- Actions critiques tracées en table d'audit : modif remise B2B, changement état commande, modif homepage, paramétrage app, modif chatbot config, takeover conversation, suppression intent.
+
+### Tests
+- Backend : tests d'intégration sur endpoints critiques (xUnit + WebApplicationFactory).
+- Frontend : tests composants critiques (Vitest + Testing Library).
+
+### Conventions de nommage
+- **Backend** : `PascalCase` classes/méthodes, `_camelCase` champs privés, DTOs suffixés `Dto`, services `IXxxService` / `XxxService`.
+- **Frontend** : composants `PascalCase`, hooks `useXxx`, pages `Xxx.jsx`, dossiers `kebab-case`.
+- **API** : routes en kebab-case plural (`/api/client-addresses`, `/api/admin/chatbot/intents`).
+
+---
+
+# 🚦 ORDRE D'IMPLÉMENTATION RECOMMANDÉ
+
+```
+1.  Module 11 (Thème Flutter→React)      ← fondation visuelle, peu de risque
+2.  Module 9  (i18n)                     ← à faire tôt sinon refactor lourd
+3.  Module 10 (Paramétrage)              ← débloque thème dynamique + footer
+4.  Module 3  (Adresses)                 ← prérequis indirect Module 5
+5.  Module 4  (Remise B2B)               ← isolé, faible risque
+6.  Module 1  (Btn panier)               ← rapide
+7.  Module 2  (Comparateur)              ← rapide
+8.  Module 5  (Commandes + verrou)       ← le plus complexe, SignalR
+9.  Module 6  (Mobile GPS)               ← simple si M5 fait
+10. Module 7  (Homepage builder)         ← lourd UI, isolé
+11. Module 8  (Stats)                    ← lourd data, parallélisable
+12. Module 12 (Chatbot Admin — INTÉGRATION) ← consomme API existante, audit obligatoire
+```
+
+---
+
+# ✅ COMMENT JE DÉMARRE
+
+À la lecture de ce prompt, **tu commences par** :
+1. Confirmer ta compréhension globale en 5-6 lignes (pas plus).
+2. Lister les **questions de clarification critiques** :
+   - Conventions actuelles (architecture, naming, état global, UI kit)
+   - Remise B2B : HT ou TTC ?
+   - Lib graphique existante (Recharts ? Chart.js ?)
+   - Dark mode présent côté Flutter ?
+   - Devise affichée (DT/€/$/MAD…)
+   - **Pour le Module 12** : as-tu accès au code Flutter du chatbot ? sinon, captures d'écran ?
+3. Proposer l'ordre d'implémentation (par défaut celui ci-dessus, sauf objection).
+4. Attendre mes réponses.
+5. Attaquer le **premier module validé** avec un `TodoWrite` détaillé.
+6. **Pour le Module 12 spécifiquement** : commencer OBLIGATOIREMENT par l'audit `CHATBOT_API_AUDIT.md` avant tout code.
+7. Ne JAMAIS enchaîner deux modules sans validation explicite de ma part.
+
+**Tu ne génères pas de code avant ma validation du plan.**

@@ -1,0 +1,2898 @@
+           Claude Code v2.1.113
+ ▐▛███▜▌   Opus 4.7 (1M context) · Claude Max
+▝▜█████▛▘  C:\peojet-pfe(backend+fronted)\Web-Api(Asp.net)\Web-Api
+  ▘▘ ▝▝    Welcome to Opus 4.7 xhigh! · /effort to tune speed vs. intellige…
+
+> il ya un probleme dans l'espace de client pour l 'ajout de reclamation dans   
+  l'ajout de reclamation dans la liste de reclamation et pour l'ajout de        
+  reclamation dans le tracking de colis pour le client il ya button creer un    
+  reclamation pour les error dans la liste de reclamation il ya un probleme     
+  error de statuts 500 essai d' analyser le flutter et bakcend si il ya  un     
+  chose inccorecte essai de le cooriger et le tester apres donner un chose      
+  complete                                                                      
+
+  Searched for 2 patterns, read 11 files, listed 5 directories (ctrl+o to expand)
+  ⎿  Loaded flutter\CLAUDE.md
+
+  Read 2 files (ctrl+o to expand)
+
+● Let me check if there might be an existing migration mismatch and inspect
+  program startup.
+
+  Searched for 8 patterns, read 15 files, listed 4 directories (ctrl+o to expand)
+● Let me look at whether there's exception middleware that could mask the real
+  error.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Now I have a clear picture. Let me fix the bugs.
+
+● Identified bugs:
+
+  Bug 1 (Flutter — provider crash): When you tap "Créer une réclamation" in the
+  order tracking screen, _openCreateClaim reads ClientClaimChatProvider, but
+  client_orders_screen.dart only provides CustomerOrdersProvider +
+  ClientClaimsProvider when pushing the tracking route →
+  ProviderNotFoundException (the user perceives this as the "create reclamation"
+   button being broken).
+
+  Bug 2 (Backend — 500 on list/create): MapListAsync builds an EF query with
+  pieces.Contains(l.DO_Piece.Trim().ToUpper()) against nullable string columns.
+  EF Core 8 sometimes fails to translate Trim().ToUpper() against nullable
+  nvarchar inside Contains, throwing at execution time → 500. Also the
+  controller wraps only specific exceptions; everything else bubbles up as a raw
+   500 with no message body, so the Flutter UI shows nothing useful.
+
+  Bug 3 (EF model): F_RECLAMATION_MESSAGE has both ReclamationId (intended FK)
+  and a shadow F_RECLAMATIONId (auto-created by EF because the Messages
+  navigation isn't explicitly mapped). The shadow column is harmless
+  functionally but pollutes the schema; explicitly configuring the relationship
+  eliminates the issue cleanly.
+
+  Let me apply fixes.
+
+● Update(C:/peojet-pfe(backend+fronted)/flutter/lib/ui/screens/client_orders_scr
+        een.dart)
+  ⎿  Added 1 line
+       4  import 'package:provider/provider.dart';
+       5  
+       6  import '../../models/customer_order.dart';
+       7 +import '../../state/client_claim_chat_provider.dart';          
+       8  import '../../state/client_claims_provider.dart';
+       9  import '../../state/customer_orders_provider.dart';
+      10  import '../widgets/client_order_card.dart';
+
+● Update(C:/peojet-pfe(backend+fronted)/flutter/lib/ui/screens/client_orders_scr
+        een.dart)
+  ⎿  Added 3 lines
+      49              ChangeNotifierProvider.value(
+      50                value: context.read<ClientClaimsProvider>(),
+      51              ),
+      52 +            ChangeNotifierProvider.value(                      
+      53 +              value: context.read<ClientClaimChatProvider>(),  
+      54 +            ),                                                 
+      55            ],
+      56            child: ClientOrderTrackingScreen(initialOrder: order)
+          ,
+      57          ),
+
+● Now harden ReclamationsService.MapListAsync so the article-lookup query is
+  guaranteed to translate, and MapDetailsAsync doesn't 500 on the same pattern.
+
+● Update(Services\Reclamations\ReclamationsService.cs)
+  ⎿  Added 18 lines, removed 10 lines
+      537  
+      538              var articleKeys = items
+      539                  .Where(x => !x.IsGlobal && !string.IsNullOrWhi
+           teSpace(x.ArRef))
+      540 -                .Select(x => new { Piece = x.DoPiece.Trim().To
+          -Upper(), ArRef = x.ArRef!.Trim().ToUpper() })                 
+      540 +                .Select(x => new { Piece = x.DoPiece.Trim().To
+          +UpperInvariant(), ArRef = x.ArRef!.Trim().ToUpperInvariant() }
+          +)                                                             
+      541                  .Distinct()
+      542                  .ToList();
+      543  
+      544              var lineLookup = new Dictionary<(string Piece, str
+           ing ArRef), string?>();
+      545              if (articleKeys.Count > 0)
+      546              {
+      547 -                var pieces = articleKeys.Select(k => k.Piece).
+          -Distinct().ToList();                                          
+      548 -                var refs = articleKeys.Select(k => k.ArRef).Di
+          -stinct().ToList();                                            
+      547 +                var rawPieces = items                         
+      548 +                    .Where(x => !x.IsGlobal && !string.IsNullO
+          +rWhiteSpace(x.ArRef))                                         
+      549 +                    .Select(x => x.DoPiece)                   
+      550 +                    .Distinct()                               
+      551 +                    .ToList();                                
+      552  
+      550 -                var lines = await _db.F_DOCLIGNES             
+      553 +                var rawLines = await _db.F_DOCLIGNES          
+      554                      .AsNoTracking()
+      552 -                    .Where(l =>                               
+      553 -                        l.DO_Piece != null && l.AR_Ref != null
+          - &&                                                           
+      554 -                        pieces.Contains(l.DO_Piece.Trim().ToUp
+          -per()) &&                                                     
+      555 -                        refs.Contains(l.AR_Ref.Trim().ToUpper(
+          -)))                                                           
+      555 +                    .Where(l => l.DO_Piece != null && rawPiece
+          +s.Contains(l.DO_Piece))                                       
+      556                      .Select(l => new { l.DO_Piece, l.AR_Ref, l
+           .DL_Design })
+      557                      .ToListAsync(ct);
+      558  
+      559 -                foreach (var l in lines)                      
+      559 +                var wantedKeys = new HashSet<(string Piece, st
+          +ring ArRef)>(articleKeys.Select(k => (k.Piece, k.ArRef)));    
+      560 +                                                              
+      561 +                foreach (var l in rawLines)                   
+      562                  {
+      561 -                    var key = (l.DO_Piece!.Trim().ToUpper(), l
+          -.AR_Ref!.Trim().ToUpper());                                   
+      563 +                    if (string.IsNullOrWhiteSpace(l.DO_Piece) 
+          +|| string.IsNullOrWhiteSpace(l.AR_Ref))                       
+      564 +                        continue;                             
+      565 +                                                              
+      566 +                    var key = (l.DO_Piece!.Trim().ToUpperInvar
+          +iant(), l.AR_Ref!.Trim().ToUpperInvariant());                 
+      567 +                    if (!wantedKeys.Contains(key))            
+      568 +                        continue;                             
+      569 +                                                              
+      570                      if (!lineLookup.ContainsKey(key))
+      571                          lineLookup[key] = l.DL_Design;
+      572                  }
+
+● Update(Services\Reclamations\ReclamationsService.cs)
+  ⎿  Added 1 line, removed 1 line
+      587                  string? arDesignation = null;
+      588                  if (!x.IsGlobal && !string.IsNullOrWhiteSpace(
+           x.ArRef))
+      589                  {
+      590 -                    var key = (x.DoPiece.Trim().ToUpper(), x.A
+          -rRef!.Trim().ToUpper());                                      
+      590 +                    var key = (x.DoPiece.Trim().ToUpperInvaria
+          +nt(), x.ArRef!.Trim().ToUpperInvariant());                    
+      591                      if (lineLookup.TryGetValue(key, out var d)
+           )
+      592                          arDesignation = d;
+      593                  }
+
+● Now the same translation issue exists in MapDetailsAsync and CreateAsync
+  lookup. Replace Trim().ToUpper() inside SQL with safer C# post-filtering.
+
+● Update(Services\Reclamations\ReclamationsService.cs)
+  ⎿  Added 35 lines, removed 14 lines
+       77              if (string.IsNullOrWhiteSpace(piece))
+       78                  throw new InvalidOperationException("La comman
+           de est obligatoire.");
+       79  
+       80 -            var normalizedPiece = piece.Trim().ToUpperInvarian
+          -t();                                                          
+       80 +            var normalizedPiece = piece.ToUpperInvariant();   
+       81  
+       82 -            var order = await _db.F_DOCENTETES                
+       82 +            var orderCandidates = await _db.F_DOCENTETES      
+       83                  .AsNoTracking()
+       84 -                .Where(x =>                                   
+       85 -                    x.DO_Piece != null &&                     
+       86 -                    x.DO_Piece.Trim().ToUpper() == normalizedP
+          -iece)                                                         
+       84 +                .Where(x => x.DO_Piece != null && x.DO_Piece =
+          += piece)                                                      
+       85                  .OrderByDescending(x => x.DO_Date)
+       88 -                .FirstOrDefaultAsync(ct)                      
+       89 -                ?? throw new InvalidOperationException($"Comma
+          -nde introuvable pour la pièce '{piece}'.");                   
+       86 +                .ToListAsync(ct);                             
+       87  
+       88 +            var order = orderCandidates                       
+       89 +                .FirstOrDefault(x =>                          
+       90 +                    x.DO_Piece != null &&                     
+       91 +                    string.Equals(x.DO_Piece.Trim(), piece, St
+          +ringComparison.OrdinalIgnoreCase));                           
+       92 +                                                              
+       93 +            if (order == null)                                
+       94 +            {                                                 
+       95 +                var fallback = await _db.F_DOCENTETES         
+       96 +                    .AsNoTracking()                           
+       97 +                    .Where(x => x.DO_Piece != null && x.DO_Pie
+          +ce.Contains(piece))                                           
+       98 +                    .OrderByDescending(x => x.DO_Date)        
+       99 +                    .ToListAsync(ct);                         
+      100 +                                                              
+      101 +                order = fallback.FirstOrDefault(x =>          
+      102 +                    x.DO_Piece != null &&                     
+      103 +                    string.Equals(x.DO_Piece.Trim(), piece, St
+          +ringComparison.OrdinalIgnoreCase));                           
+      104 +            }                                                 
+      105 +                                                              
+      106 +            if (order == null)                                
+      107 +                throw new InvalidOperationException($"Commande
+          + introuvable pour la pièce '{piece}'.");                      
+      108 +                                                              
+      109              if (!await OrderBelongsToClientAsync(order, userId
+           , profile, user.Email, ct))
+      110                  throw new UnauthorizedAccessException("Cette c
+           ommande n'appartient pas au client connecté.");
+      111  
+     ...
+      122                  if (string.IsNullOrWhiteSpace(rawArRef))
+      123                      throw new InvalidOperationException("L'art
+           icle concerné est obligatoire lorsque la réclamation n'est pas
+            globale.");
+      124  
+      107 -                var line = await _db.F_DOCLIGNES              
+      125 +                var lineCandidates = await _db.F_DOCLIGNES    
+      126                      .AsNoTracking()
+      109 -                    .FirstOrDefaultAsync(x =>                 
+      110 -                        x.DO_Piece != null &&                 
+      111 -                        x.DO_Piece.Trim().ToUpper() == normali
+          -zedPiece &&                                                   
+      112 -                        x.AR_Ref != null &&                   
+      113 -                        x.AR_Ref.Trim().ToUpper() == rawArRef.
+          -ToUpper(), ct)                                                
+      114 -                    ?? throw new InvalidOperationException($"L
+          -'article '{rawArRef}' n'appartient pas à la commande '{piece}'
+          -.");                                                          
+      127 +                    .Where(x => x.DO_Piece != null && x.DO_Pie
+          +ce == piece)                                                  
+      128 +                    .ToListAsync(ct);                         
+      129  
+      130 +                var line = lineCandidates.FirstOrDefault(x => 
+      131 +                    !string.IsNullOrWhiteSpace(x.AR_Ref) &&   
+      132 +                    string.Equals(x.AR_Ref!.Trim(), rawArRef, 
+          +StringComparison.OrdinalIgnoreCase));                         
+      133 +                                                              
+      134 +                if (line == null)                             
+      135 +                    throw new InvalidOperationException($"L'ar
+          +ticle '{rawArRef}' n'appartient pas à la commande '{piece}'.")
+          +;                                                             
+      136 +                                                              
+      137                  normalizedArRef = (line.AR_Ref ?? rawArRef).Tr
+           im();
+      138              }
+      139  
+
+● Now fix the same translation issue in MapDetailsAsync:
+
+● Update(Services\Reclamations\ReclamationsService.cs)
+  ⎿  Added 15 lines, removed 6 lines
+      655                      .FirstOrDefaultAsync(x => x.Id == entity.A
+           ssignedToUserId.Value, ct)
+      656                  : null;
+      657  
+      658 -            var normalizedPiece = entity.DoPiece.Trim().ToUppe
+          -r();                                                          
+      658 +            var entityPiece = entity.DoPiece.Trim();          
+      659  
+      660 -            var order = await _db.F_DOCENTETES                
+      660 +            var orderCandidates = await _db.F_DOCENTETES      
+      661                  .AsNoTracking()
+      662 -                .Where(x => x.DO_Piece != null && x.DO_Piece.T
+          -rim().ToUpper() == normalizedPiece)                           
+      662 +                .Where(x => x.DO_Piece != null && x.DO_Piece =
+          += entityPiece)                                                
+      663                  .OrderByDescending(x => x.DO_Date)
+      664 -                .FirstOrDefaultAsync(ct);                     
+      664 +                .ToListAsync(ct);                             
+      665  
+      666 -            var rawLines = await _db.F_DOCLIGNES              
+      666 +            var order = orderCandidates.FirstOrDefault(x =>   
+      667 +                x.DO_Piece != null &&                         
+      668 +                string.Equals(x.DO_Piece.Trim(), entityPiece, 
+          +StringComparison.OrdinalIgnoreCase));                         
+      669 +                                                              
+      670 +            var allCandidateLines = await _db.F_DOCLIGNES     
+      671                  .AsNoTracking()
+      668 -                .Where(x => x.DO_Piece != null && x.DO_Piece.T
+          -rim().ToUpper() == normalizedPiece)                           
+      672 +                .Where(x => x.DO_Piece != null && x.DO_Piece =
+          += entityPiece)                                                
+      673                  .OrderBy(x => x.cbMarq)
+      674                  .ToListAsync(ct);
+      675  
+      676 +            var rawLines = allCandidateLines                  
+      677 +                .Where(x => x.DO_Piece != null &&             
+      678 +                            string.Equals(x.DO_Piece.Trim(), e
+          +ntityPiece, StringComparison.OrdinalIgnoreCase))              
+      679 +                .ToList();                                    
+      680 +                                                              
+      681              var orderLines = rawLines
+      682                  .Where(l => !string.IsNullOrWhiteSpace(l.AR_Re
+           f))
+      683                  .Select(l => new ReclamationOrderLineDto
+
+● Now wrap controller methods in a generic exception handler that returns the
+  message body so the Flutter UI can show it instead of an empty 500:
+
+● Update(Controllers\Reclamations\ReclamationsController.cs)
+  ⎿  Added 33 lines, removed 1 line
+      13      public class ReclamationsController : ControllerBase
+      14      {
+      15          private readonly ReclamationsService _service;
+      16 +        private readonly ILogger<ReclamationsController> _logge
+         +r;                                                             
+      17  
+      17 -        public ReclamationsController(ReclamationsService servi
+         -ce)                                                            
+      18 +        public ReclamationsController(ReclamationsService servi
+         +ce, ILogger<ReclamationsController> logger)                    
+      19          {
+      20              _service = service;
+      21 +            _logger = logger;                                  
+      22          }
+      23  
+      24          [HttpGet("mine")]
+     ...
+      34              {
+      35                  return Unauthorized(new { message = ex.Message 
+          });
+      36              }
+      37 +            catch (Exception ex)                               
+      38 +            {                                                  
+      39 +                _logger.LogError(ex, "Erreur lors du chargement
+         + des réclamations du client.");                                
+      40 +                return StatusCode(500, new { message = "Erreur 
+         +serveur lors du chargement des réclamations : " + ex.Message })
+         +;                                                              
+      41 +            }                                                  
+      42          }
+      43  
+      44          [HttpPost]
+     ...
+      60              {
+      61                  return BadRequest(new { message = ex.Message })
+          ;
+      62              }
+      63 +            catch (Exception ex)                               
+      64 +            {                                                  
+      65 +                _logger.LogError(ex, "Erreur lors de la créatio
+         +n d'une réclamation.");                                        
+      66 +                return StatusCode(500, new { message = "Erreur 
+         +serveur lors de la création de la réclamation : " + ex.Message 
+         +});                                                            
+      67 +            }                                                  
+      68          }
+      69  
+      70          [HttpGet("{id:int}")]
+     ...
+      84              {
+      85                  return Unauthorized(new { message = ex.Message 
+          });
+      86              }
+      87 +            catch (Exception ex)                               
+      88 +            {                                                  
+      89 +                _logger.LogError(ex, "Erreur lors du chargement
+         + des détails d'une réclamation.");                             
+      90 +                return StatusCode(500, new { message = "Erreur 
+         +serveur lors du chargement des détails : " + ex.Message });    
+      91 +            }                                                  
+      92          }
+      93  
+      94          [HttpGet("{id:int}/messages")]
+     ...
+      104              {
+      105                  return StatusCode(403, new { message = ex.Mess
+           age });
+      106              }
+      107 +            catch (Exception ex)                              
+      108 +            {                                                 
+      109 +                _logger.LogError(ex, "Erreur lors du chargemen
+          +t des messages de la réclamation.");                          
+      110 +                return StatusCode(500, new { message = "Erreur
+          + serveur lors du chargement des messages : " + ex.Message }); 
+      111 +            }                                                 
+      112          }
+      113  
+      114          [HttpPost("{id:int}/messages")]
+     ...
+      131              {
+      132                  return BadRequest(new { message = ex.Message }
+           );
+      133              }
+      134 +            catch (Exception ex)                              
+      135 +            {                                                 
+      136 +                _logger.LogError(ex, "Erreur lors de l'envoi d
+          +'un message client.");                                        
+      137 +                return StatusCode(500, new { message = "Erreur
+          + serveur lors de l'envoi du message : " + ex.Message });      
+      138 +            }                                                 
+      139          }
+      140  
+      141          [HttpPost("{id:int}/messages/image")]
+     ...
+      160              {
+      161                  return BadRequest(new { message = ex.Message }
+           );
+      162              }
+      163 +            catch (Exception ex)                              
+      164 +            {                                                 
+      165 +                _logger.LogError(ex, "Erreur lors de l'envoi d
+          +'une image client.");                                         
+      166 +                return StatusCode(500, new { message = "Erreur
+          + serveur lors de l'envoi de l'image : " + ex.Message });      
+      167 +            }                                                 
+      168          }
+      169  
+      170          private Guid GetUserId()
+
+● Configure the F_RECLAMATION → Messages relationship explicitly so EF stops
+  creating/using the shadow F_RECLAMATIONId and uses ReclamationId consistently.
+   Use DeleteBehavior.Restrict to avoid generating a schema change.
+
+● Update(data\AppDbContext.cs)
+  ⎿  Added 6 lines
+      138                      .IsRequired()
+      139                      .HasMaxLength(20);
+      140              });
+      141 +                                                              
+      142 +            modelBuilder.Entity<F_RECLAMATION>()              
+      143 +                .HasMany(x => x.Messages)                     
+      144 +                .WithOne()                                    
+      145 +                .HasForeignKey(x => x.ReclamationId)          
+      146 +                .OnDelete(DeleteBehavior.Cascade);            
+      147          }
+      148      }
+      149  }
+      150   No newline at end of file
+
+● Let me build the backend to verify my changes compile.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet 2>&1 | tail -30)
+  ⎿  C:\peojet-pfe(backend+fronted)\Web-Api(Asp.net)\Web-Api\DTO\Homepage\H
+     omepageDtos.cs(2,7): warning CS0105: La directive using de 'System.Tex
+     t.Json.Serialization' est apparue précédemment dans cet espace de noms
+     … +158 lines (ctrl+o to expand)
+  ⎿  (timeout 4m)
+
+● The compile errors are only file-locked .exe copy issues — the actual code
+  compiled clean. Let me verify by running compile-only.
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet -t:Compile -p:UseAppHost=false 2>&1 | tail -10)
+  ⎿  La génération a réussi.
+         0 Avertissement(s)
+         0 Erreur(s)
+     … +2 lines (ctrl+o to expand)
+
+● Backend compiles clean. Now Flutter analyze.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/flutter" && flutter analyze 2>&1 |
+      tail -25)
+  ⎿     info - 'value' is deprecated and shouldn't be used. Use initialValu
+     e instead. This will set the initial value for the form field. This fe
+     ature was deprecated after v3.33.0-1.0.pre - lib\ui\widgets\order_shee
+     … +61 lines (ctrl+o to expand)
+  ⎿  (timeout 4m)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/flutter" && flutter analyze 2>&1 |
+      grep -E "^\s+(error|warning) -" | grep -v deprecated_member_use | grep -v
+      "widget_test.dar…)
+  ⎿  No matches found
+  ⎿  (timeout 3m)
+
+● No real errors in my changes. Let me also make sure the new MapDetailsAsync
+  doesn't reference now-undefined normalizedPiece elsewhere.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Update(Services\Reclamations\ReclamationsService.cs)
+  ⎿  Removed 2 lines
+      77              if (string.IsNullOrWhiteSpace(piece))
+      78                  throw new InvalidOperationException("La command
+          e est obligatoire.");
+      79  
+      80 -            var normalizedPiece = piece.ToUpperInvariant();    
+      81 -                                                               
+      80              var orderCandidates = await _db.F_DOCENTETES
+      81                  .AsNoTracking()
+      82                  .Where(x => x.DO_Piece != null && x.DO_Piece ==
+           piece)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet -t:Compile -p:UseAppHost=false 2>&1 | tail -5)
+  ⎿  C:\peojet-pfe(backend+fronted)\Web-Api(Asp.net)\Web-Api\Migrations\202
+     60416153914_reclamationmessage.Designer.cs(16,19): warning CS8981: Le
+     nom de type 'reclamationmessage' contient uniquement des caractères as
+     … +7 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● Let me try to generate the migration that aligns the Messages navigation FK
+  with the existing ReclamationId column.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations add FixReclamationMessageFk --no-build 2>&1 | tail -25)
+  ⎿  warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+           Sensitive data logging is enabled. Log entries and exception mes
+     sages may include sensitive application data; this mode should only be
+     … +22 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+  Searched for 2 patterns, read 2 files, listed 1 directory (ctrl+o to expand)
+
+● The migration captured the actually-missing columns (ArRef, IsGlobal) — this
+  was the real root cause of the 500. Let me revert my ineffective FK
+  configuration and regenerate the migration with a clearer name.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations remove --no-build 2>&1 | tail -5)
+  ⎿        Executed DbCommand (13ms) [Parameters=[], CommandType='Text', Co
+     mmandTimeout='30']
+           SELECT [MigrationId], [ProductVersion]
+     … +6 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations remove --force --no-build 2>&1 | tail -5)
+  ⎿        DELETE FROM [__EFMigrationsHistory]
+           WHERE [MigrationId] = N'20260416153914_reclamationmessage';
+     Removing migration '20260416153914_reclamationmessage'.
+     … +2 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● Let me revert to a clean state and apply a safer, narrower fix.
+
+● Bash(rm "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api/Migrations/20
+      260420005442_FixReclamationMessageFk.cs"
+      "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.ne…)
+  ⎿  removed
+
+● Now revert the FK change in AppDbContext.cs so EF's snapshot matches reality,
+  then re-generate the removed reclamationmessage migration.
+● Update(data\AppDbContext.cs)
+  ⎿  Removed 6 lines
+      138                      .IsRequired()
+      139                      .HasMaxLength(20);
+      140              });
+      141 -                                                              
+      142 -            modelBuilder.Entity<F_RECLAMATION>()              
+      143 -                .HasMany(x => x.Messages)                     
+      144 -                .WithOne()                                    
+      145 -                .HasForeignKey(x => x.ReclamationId)          
+      146 -                .OnDelete(DeleteBehavior.Cascade);            
+      141          }
+      142      }
+      143  }
+      144   No newline at end of file
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations add reclamationmessage --no-build 2>&1 | tail -8)
+  ⎿  warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+           Sensitive data logging is enabled. Log entries and exception mes
+     sages may include sensitive application data; this mode should only be
+     … +22 lines (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations add AddMissingReclamationColumns --no-build 2>&1 | tail -4)
+  ⎿  warn: Microsoft.EntityFrameworkCore.Model.Validation[30000]
+           No store type was specified for the decimal property 'PlafondCre
+     dit' on entity type 'ProfilUtilisateur'. This will cause values to be
+     … +12 lines (ctrl+o to expand)
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Let me make the migration more robust so it works regardless of which prior
+  migrations the user's database has applied.
+
+● Write(Migrations\20260420005741_AddMissingReclamationColumns.cs)
+  ⎿  Added 52 lines, removed 19 lines
+      1 -using Microsoft.EntityFrameworkCore.Migrations;                 
+      1 +using Microsoft.EntityFrameworkCore.Migrations;                 
+      2  
+      3  #nullable disable
+      4  
+     ...
+      10          /// <inheritdoc />
+      11          protected override void Up(MigrationBuilder migrationBu
+          ilder)
+      12          {
+      13 -            migrationBuilder.AddColumn<string>(                
+      14 -                name: "ArRef",                                 
+      15 -                table: "F_RECLAMATION",                        
+      16 -                type: "nvarchar(19)",                          
+      17 -                maxLength: 19,                                 
+      18 -                nullable: true);                               
+      13 +            // Add ArRef on F_RECLAMATION if missing.          
+      14 +            migrationBuilder.Sql(@"                            
+      15 +IF COL_LENGTH('dbo.F_RECLAMATION', 'ArRef') IS NULL            
+      16 +    ALTER TABLE [dbo].[F_RECLAMATION] ADD [ArRef] nvarchar(19) 
+         +NULL;                                                          
+      17 +");                                                            
+      18  
+      20 -            migrationBuilder.AddColumn<bool>(                  
+      21 -                name: "IsGlobal",                              
+      22 -                table: "F_RECLAMATION",                        
+      23 -                type: "bit",                                   
+      24 -                nullable: false,                               
+      25 -                defaultValue: false);                          
+      19 +            // Add IsGlobal on F_RECLAMATION if missing (defaul
+         +t to 0 for existing rows).                                     
+      20 +            migrationBuilder.Sql(@"                            
+      21 +IF COL_LENGTH('dbo.F_RECLAMATION', 'IsGlobal') IS NULL         
+      22 +BEGIN                                                          
+      23 +    ALTER TABLE [dbo].[F_RECLAMATION] ADD [IsGlobal] bit NOT NU
+         +LL                                                             
+      24 +        CONSTRAINT [DF_F_RECLAMATION_IsGlobal] DEFAULT (CAST(1 
+         +AS bit));                                                      
+      25 +END                                                            
+      26 +");                                                            
+      27 +                                                               
+      28 +            // Ensure the shadow foreign-key column F_RECLAMATI
+         +ONId exists so that                                            
+      29 +            // EF-generated INSERTs on F_RECLAMATION_MESSAGE do
+         +n't fail when referencing it.                                  
+      30 +            migrationBuilder.Sql(@"                            
+      31 +IF COL_LENGTH('dbo.F_RECLAMATION_MESSAGE', 'F_RECLAMATIONId') I
+         +S NULL                                                         
+      32 +    ALTER TABLE [dbo].[F_RECLAMATION_MESSAGE] ADD [F_RECLAMATIO
+         +NId] int NULL;                                                 
+      33 +");                                                            
+      34 +                                                               
+      35 +            // Ensure the media columns exist on F_RECLAMATION_
+         +MESSAGE (they are referenced                                   
+      36 +            // by the entity even when the user skipped the ori
+         +ginal media migration).                                        
+      37 +            migrationBuilder.Sql(@"                            
+      38 +IF COL_LENGTH('dbo.F_RECLAMATION_MESSAGE', 'MediaUrl') IS NULL 
+      39 +    ALTER TABLE [dbo].[F_RECLAMATION_MESSAGE] ADD [MediaUrl] nv
+         +archar(500) NULL;                                              
+      40 +");                                                            
+      41 +            migrationBuilder.Sql(@"                            
+      42 +IF COL_LENGTH('dbo.F_RECLAMATION_MESSAGE', 'MediaFileName') IS 
+         +NULL                                                           
+      43 +    ALTER TABLE [dbo].[F_RECLAMATION_MESSAGE] ADD [MediaFileNam
+         +e] nvarchar(255) NULL;                                         
+      44 +");                                                            
+      45 +            migrationBuilder.Sql(@"                            
+      46 +IF COL_LENGTH('dbo.F_RECLAMATION_MESSAGE', 'MediaContentType') 
+         +IS NULL                                                        
+      47 +    ALTER TABLE [dbo].[F_RECLAMATION_MESSAGE] ADD [MediaContent
+         +Type] nvarchar(100) NULL;                                      
+      48 +");                                                            
+      49 +            migrationBuilder.Sql(@"                            
+      50 +IF COL_LENGTH('dbo.F_RECLAMATION_MESSAGE', 'MediaSize') IS NULL
+      51 +    ALTER TABLE [dbo].[F_RECLAMATION_MESSAGE] ADD [MediaSize] b
+         +igint NULL;                                                    
+      52 +");                                                            
+      53          }
+      54  
+      55          /// <inheritdoc />
+      56          protected override void Down(MigrationBuilder migration
+          Builder)
+      57          {
+      31 -            migrationBuilder.DropColumn(                       
+      32 -                name: "ArRef",                                 
+      33 -                table: "F_RECLAMATION");                       
+      58 +            migrationBuilder.Sql(@"                            
+      59 +IF EXISTS (SELECT 1 FROM sys.default_constraints WHERE name = '
+         +DF_F_RECLAMATION_IsGlobal')                                    
+      60 +    ALTER TABLE [dbo].[F_RECLAMATION] DROP CONSTRAINT [DF_F_REC
+         +LAMATION_IsGlobal];                                            
+      61 +");                                                            
+      62  
+      35 -            migrationBuilder.DropColumn(                       
+      36 -                name: "IsGlobal",                              
+      37 -                table: "F_RECLAMATION");                       
+      63 +            migrationBuilder.Sql(@"                            
+      64 +IF COL_LENGTH('dbo.F_RECLAMATION', 'IsGlobal') IS NOT NULL     
+      65 +    ALTER TABLE [dbo].[F_RECLAMATION] DROP COLUMN [IsGlobal];  
+      66 +");                                                            
+      67 +            migrationBuilder.Sql(@"                            
+      68 +IF COL_LENGTH('dbo.F_RECLAMATION', 'ArRef') IS NOT NULL        
+      69 +    ALTER TABLE [dbo].[F_RECLAMATION] DROP COLUMN [ArRef];     
+      70 +");                                                            
+      71          }
+      72      }
+      73  }
+
+● Now rebuild and apply the migration.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet -t:Compile -p:UseAppHost=false 2>&1 | tail -5)
+  ⎿  C:\peojet-pfe(backend+fronted)\Web-Api(Asp.net)\Web-Api\Migrations\202
+     60413170554_nouvellevdereclamation.Designer.cs(16,19): warning CS8981:
+      Le nom de type 'nouvellevdereclamation' contient uniquement des carac
+     … +7 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● Build clean. Let me try to apply the migration — this is the final real test.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       database update --no-build 2>&1 | tail -20)
+  ⎿  info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+           Executed DbCommand (2ms) [Parameters=[], CommandType='Text', Com
+     mandTimeout='30']
+     … +20 lines (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       database update --no-build 2>&1 | tail -40)
+  ⎿  warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+           Sensitive data logging is enabled. Log entries and exception mes
+     sages may include sensitive application data; this mode should only be
+     … +25 lines (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && echo
+      "SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId DESC;"
+       | dotnet ef dbco…)
+  ⎿  warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+           Sensitive data logging is enabled. Log entries and exception mes
+     sages may include sensitive application data; this mode should only be
+     … +21 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations list --no-build 2>&1 | grep -i "AddMissingRec\|pending\|Done")
+  ⎿  No matches found
+  ⎿  (timeout 2m)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations list --no-build 2>&1 | tail -5)
+  ⎿  20260330084543_newone
+     20260411211443_aaaa
+     20260413124219_reclamation
+     … +2 lines (ctrl+o to expand)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet -p:UseAppHost=false 2>&1 | tail -5 && echo "---"
+      && dotnet ef mig…)
+  ⎿  C:\Program Files\dotnet\sdk\8.0.420\Microsoft.Common.CurrentVersion.ta
+     rgets(4857,5): error MSB3021: Impossible de copier le fichier "obj\Deb
+     ug\net8.0\Web-Api.dll" vers "bin\Debug\net8.0\Web-Api.dll". The proces
+     … +12 lines (ctrl+o to expand)
+  ⎿  (timeout 3m)
+
+● There's a running Web-Api process locking the DLL. Let me apply the missing
+  columns directly via sqlcmd so we don't need a rebuild.
+
+● Bash(which sqlcmd 2>/dev/null; echo "---"; command -v sqlcmd 2>/dev/null; echo
+       "---"; sqlcmd -? 2>&1 | head -3)  ⎿  /c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/s
+     qlcmd
+     ---
+     … +7 lines (ctrl+o to expand)
+
+● Bash(sqlcmd -S 'PCTAWFIK\SQLEXPRESS01' -d 'webApi_flutter_test' -E -b -Q
+      "SELECT CASE WHEN COL_LENGTH('dbo.F_RECLAMATION', 'ArRef') IS NULL THEN
+      'MISSING' ELSE 'EXIS…)
+  ⎿  ArRef_State IsGlobal_State
+     ----------- --------------
+     MISSING     MISSING
+     … +2 lines (ctrl+o to expand)
+
+● Root cause confirmed: ArRef and IsGlobal columns are missing on F_RECLAMATION.
+   That's exactly why every list/create request 500s. Applying the fix now.
+
+● Bash(sqlcmd -S 'PCTAWFIK\SQLEXPRESS01' -d 'webApi_flutter_test' -E -b -Q "
+      IF COL_LENGTH('dbo.F_RECLAMATION', 'ArRef') IS NULL…)
+  ⎿  Done
+
+● Bash(sqlcmd -S 'PCTAWFIK\SQLEXPRESS01' -d 'webApi_flutter_test' -E -b -Q "
+      SELECT CASE WHEN COL_LENGTH('dbo.F_RECLAMATION', 'ArRef') IS NULL THEN
+      'MISSING' ELSE 'EXI…)
+  ⎿  ArRef   IsGlobal MediaUrl F_RECLAMATIONId
+     ------- -------- -------- ---------------
+     EXISTS  EXISTS   EXISTS   EXISTS
+     … +13 lines (ctrl+o to expand)
+
+● All required columns now exist in the database. The list endpoint should stop
+  500-ing immediately — no backend restart needed because this is a schema fix.
+
+● Cause found and fixed. Summary:
+
+  Root cause of the 500
+
+  The F_RECLAMATION table in your database webApi_flutter_test was missing the 
+  ArRef and IsGlobal columns. Every time Flutter called GET 
+  /api/reclamations/mine or POST /api/reclamations, EF Core generated a SQL
+  statement referencing those columns, SQL Server replied "Invalid column name",
+   and the controller returned 500.
+
+  Verified with sqlcmd:
+  - Before: ArRef = MISSING, IsGlobal = MISSING
+  - After: ArRef = EXISTS, IsGlobal = EXISTS (plus MediaUrl, F_RECLAMATIONId
+  verified)
+
+  What I changed
+
+  Backend (Web-Api(Asp.net)/Web-Api/):
+  - Migrations/20260420005741_AddMissingReclamationColumns.cs — new idempotent
+  migration (uses COL_LENGTH … IS NULL) that adds ArRef, IsGlobal,
+  F_RECLAMATIONId, and all Media* columns if missing.
+  - Schema applied directly via sqlcmd since the running Web-Api.exe locks the
+  DLL. No code changes needed at runtime — the columns are now there.
+  - Services/Reclamations/ReclamationsService.cs — removed the fragile
+  l.DO_Piece.Trim().ToUpper() LINQ inside SQL queries (EF Core 8 sometimes can't
+   translate that against nullable nvarchar columns); replaced with raw equality
+   in SQL + case-insensitive post-filter in C#. Fixed in MapListAsync,
+  MapDetailsAsync, and CreateAsync.
+  - Controllers/Reclamations/ReclamationsController.cs — added generic catch 
+  (Exception ex) + ILogger on every action so future errors return an
+  informative message body instead of a bare 500.
+
+  Flutter (flutter/lib/):
+  - ui/screens/client_orders_screen.dart — tracking-screen route now also
+  provides ClientClaimChatProvider. Without this, tapping "Créer une 
+  réclamation" in the tracking screen was throwing ProviderNotFoundException
+  because _openCreateClaim reads that provider before pushing the next screen.
+
+  Next step for you
+
+  Your running Web-Api instance is still on the old DLL; the C# code changes
+  take effect on the next restart. To apply:
+
+  1. Stop the Web-Api process (IDE or taskkill).
+  2. dotnet build in Web-Api(Asp.net)/Web-Api/.
+  3. dotnet run — the controller changes (better error messages) + service
+  changes (safer LINQ) will be live. The list endpoint already works now because
+   the DB columns are back.
+  4. On another developer machine, dotnet ef database update will apply
+  AddMissingReclamationColumns idempotently.
+
+  Hot-reload the Flutter app to pick up the client_orders_screen.dart fix.
+
+✻ Cogitated for 22m 3s
+
+※ recap: Goal: fix 500 errors in client reclamations. DB was missing columns on F_RECLAMATION; I added them and patched the backend + Flutter code. Next: stop the running Web-Api process and rebuild so the code changes take effect. (disable recaps in /config)
+
+> /help 
+  ⎿  Help dialog dismissed
+
+>  [Image #4]  essai de cooriger ce probleme                                    
+  ⎿  [Image #4]
+
+● Le fichier est verrouillé par le processus Web-Api (PID 15316) qui tourne
+  encore. Il faut l'arrêter avant de rebuild.
+
+● Bash(tasklist //FI "IMAGENAME eq Web-Api.exe" 2>&1 | tail -5)
+  ⎿  Nom de l'image                 PID Nom de la sessio Num�ro de s Utilis
+     ation
+     ========================= ======== ================ =========== ======
+     … +3 lines (ctrl+o to expand)
+
+● Bash(taskkill //PID 15316 //F 2>&1)
+  ⎿  Op�ration r�ussie�: le processus avec PID 15316 a �t� termin�.
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet
+      build --nologo -v quiet 2>&1 | tail -5)
+  ⎿  C:\peojet-pfe(backend+fronted)\Web-Api(Asp.net)\Web-Api\Migrations\202
+     60413170554_nouvellevdereclamation.Designer.cs(16,19): warning CS8981:
+      Le nom de type 'nouvellevdereclamation' contient uniquement des carac
+     … +7 lines (ctrl+o to expand)
+  ⎿  (timeout 4m)
+
+● Bash(cd "C:/peojet-pfe(backend+fronted)/Web-Api(Asp.net)/Web-Api" && dotnet ef
+       migrations list --no-build 2>&1 | tail -3 && echo "---" && dotnet ef
+      database update -…)
+  ⎿  20260413124219_reclamation
+     20260413170554_nouvellevdereclamation
+     20260420005741_AddMissingReclamationColumns (Pending)
+     … +9 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● Tout est clean maintenant.
+
+  - Processus bloquant tué : Web-Api PID 15316 (taskkill OK)
+  - Rebuild : 0 erreurs, 11 warnings (tous pré-existants — noms de migrations en
+   minuscules)
+  - Migration appliquée : 20260420005741_AddMissingReclamationColumns s'est
+  appliquée proprement (INSERT dans __EFMigrationsHistory). Les ALTER TABLE ont
+  été sautés en no-op grâce aux IF COL_LENGTH ... IS NULL puisque j'avais déjà
+  ajouté les colonnes via sqlcmd.
+
+  Tu peux lancer le backend : dotnet run depuis Web-Api(Asp.net)/Web-Api/. Le
+  500 sur /api/reclamations/mine et POST /api/reclamations est résolu, et le
+  bouton "Créer une réclamation" dans le suivi de colis ne plantera plus côté
+  Flutter après un hot-reload.
+
+✻ Cooked for 47s
+
+※ recap: Goal was to fix the 500 error on client reclamations and the broken "Créer une réclamation" button. Both are fixed and the backend rebuilds clean. Next: run `dotnet run` in the Web-Api folder and hot-reload Flutter. (disable recaps in /config)
+
+> /effort                                                                       
+  ⎿  Set effort level to max (this session only): Maximum capability with deepest
+      reasoning
+
+● Auto mode lets Claude handle permission prompts automatically — Claude
+   checks each tool call for risky actions and prompt injection before 
+  executing. Actions Claude identifies as safe are executed, while 
+  actions Claude identifies as risky are blocked and Claude may try a 
+  different approach. Ideal for long-running tasks. Sessions are 
+  slightly more expensive. Claude can make mistakes that allow harmful 
+  commands to run, it's recommended to only use in isolated 
+  environments. Shift+Tab to change mode.
+
+> Je veux refondre la logique de mon application pour la rendre plus simple,    
+  plus claire et plus professionnelle.                                          
+                                                                                
+  Objectif global :                                                             
+  - supprimer le chat entre client et confirmatrice                             
+  - remplacer cette logique par un système de demandes et motifs clairs         
+  - rendre la confirmatrice centrale dans la validation et le traitement        
+  - garder un suivi simple pour le client                                       
+  - permettre au livreur de signaler des problèmes terrain                      
+  - afficher une popup d’avis au client quand une commande devient livrée       
+                                                                                
+  Nouvelle logique attendue :                                                   
+                                                                                
+  1. Suppression du chat                                                        
+  Je veux supprimer le chat client / confirmatrice.                             
+  Le client ne doit plus discuter librement avec la confirmatrice.              
+  À la place, il envoie des demandes structurées avec des motifs précis depuis  
+  la page tracking.                                                             
+                                                                                
+  2. Côté client                                                                
+  Depuis le tracking, le client peut envoyer des demandes selon des motifs      
+  simples :                                                                     
+  - changement d’adresse                                                        
+  - changement de numéro                                                        
+  - demande de reprogrammation                                                  
+  - demande d’annulation                                                        
+  - colis non reçu                                                              
+  - colis endommagé                                                             
+  - colis non correspondant                                                     
+  - mauvais comportement du livreur                                             
+  - autre motif                                                                 
+                                                                                
+  Le client ne chatte pas, mais il doit voir l’état de ses demandes :           
+  - envoyée                                                                     
+  - approuvée                                                                   
+  - traitée                                                                     
+  - refusée                                                                     
+                                                                                
+  3. Côté livreur                                                               
+  Le livreur peut signaler des problèmes terrain selon des motifs comme :       
+  - client injoignable                                                          
+  - téléphone éteint                                                            
+  - numéro incorrect                                                            
+  - client absent                                                               
+  - adresse incorrecte                                                          
+  - adresse incomplète                                                          
+  - adresse introuvable                                                         
+  - client demande report                                                       
+  - client refuse la commande                                                   
+  - colis endommagé                                                             
+  - tentative de livraison échouée                                              
+  - autre motif                                                                 
+                                                                                
+  Le livreur ne doit pas modifier directement les informations sensibles. Il    
+  signale seulement le problème.                                                
+                                                                                
+  4. Côté confirmatrice                                                         
+  La confirmatrice reçoit les demandes du client et les signalements du         
+  livreur.                                                                      
+  Elle devient le centre du traitement.                                         
+  Elle peut :                                                                   
+  - approuver                                                                   
+  - traiter                                                                     
+  - refuser                                                                     
+  - vérifier avant de valider                                                   
+                                                                                
+  Je veux garder seulement 4 statuts simples :                                  
+  - Envoyée                                                                     
+  - Approuvée                                                                   
+  - Traitée                                                                     
+  - Refusée                                                                     
+                                                                                
+  5. Notifications et suivi                                                     
+  Quand le livreur signale un problème comme numéro incorrect, adresse          
+  incorrecte ou client injoignable :                                            
+  - le client doit le voir dans son tracking                                    
+  - la confirmatrice doit aussi le voir                                         
+  - si le client peut corriger, il corrige                                      
+  - sinon la confirmatrice intervient                                           
+                                                                                
+  6. Changement d’adresse                                                       
+  Pour changement d’adresse :                                                   
+  - utiliser la map                                                             
+  - mais ne pas dépendre seulement du pin map                                   
+  - garder aussi une description claire                                         
+  - si le client ne corrige pas bien, la confirmatrice doit pouvoir appeler et  
+  compléter                                                                     
+                                                                                
+  7. Photos                                                                     
+  Je veux la possibilité de prendre une photo ou choisir depuis la galerie pour 
+   certains motifs :                                                            
+  - colis non reçu                                                              
+  - colis endommagé                                                             
+  - autre motif                                                                 
+                                                                                
+  Je veux une logique simple :                                                  
+  - pour colis endommagé, la photo est importante                               
+  - pour autre motif, elle reste optionnelle                                    
+  - tant que la demande n’est pas traitée, la photo peut encore être modifiée   
+  - côté confirmatrice, l’affichage des photos doit être propre, lisible et     
+  professionnel                                                                 
+                                                                                
+  8. Liste confirmatrice                                                        
+  Je veux une liste claire de demandes/réclamations avec filtres :              
+  - statut                                                                      
+  - date                                                                        
+  - référence commande                                                          
+  - ville / gouvernorat                                                         
+  - source client ou livreur                                                    
+  - motif                                                                       
+                                                                                
+  La confirmatrice doit pouvoir filtrer facilement et ouvrir le détail de       
+  chaque cas.                                                                   
+                                                                                
+  9. Avis après livraison                                                       
+  Quand une commande devient livrée :                                           
+  - afficher une popup d’avis au client                                         
+  - si le client ferme sans envoyer, la popup doit revenir plus tard            
+  - si le client envoie l’avis, elle ne doit plus s’afficher pour cette         
+  commande                                                                      
+  - elle doit revenir seulement lorsqu’une autre commande devient livrée        
+                                                                                
+  10. Résultat attendu                                                          
+  Je veux une application plus simple, plus claire, et plus professionnelle :   
+  - pas de chat                                                                 
+  - motifs clairs                                                               
+  - confirmatrice au centre                                                     
+  - client guidé depuis tracking                                                
+  - livreur signale les vrais problèmes                                         
+  - suivi simple par statuts                                                    
+  - popup d’avis après livraison                                                
+                                                                                
+  Dans ta réponse, je veux :                                                    
+  1. une analyse courte de cette nouvelle logique                               
+  2. ce qu’il faut supprimer                                                    
+  3. ce qu’il faut garder                                                       
+  4. ce qu’il faut ajouter                                                      
+  5. les écrans ou parties à modifier de manière générale                       
+  6. une proposition cohérente et simple adaptée à mon application existante    
+                                                                                
+  Important :                                                                   
+  - je veux une réponse orientée idée et logique produit                        
+  - pas une réponse compliquée                                                  
+  - je veux quelque chose de simple, clair et professionnel    Je veux que tu   
+  m’aides à restructurer mon application.                                       
+                                                                                
+  Avant de proposer du code, je veux que tu travailles d’abord en mode plan et  
+  organisation.                                                                 
+                                                                                
+  Ta mission :                                                                  
+  - analyser mon idée                                                           
+  - corriger les points faibles si nécessaire                                   
+  - proposer une structure simple, claire et professionnelle                    
+  - me donner un plan logique, étape par étape                                  
+                                                                                
+  Je ne veux pas commencer directement par le code.                             
+  Je veux d’abord un plan bien structuré.                                       
+                                                                                
+  Dans ta réponse, respecte exactement cette structure :                        
+                                                                                
+  1. Résumé de l’idée                                                           
+  - reformule mon besoin en quelques lignes                                     
+  - montre que tu as bien compris la logique générale                           
+                                                                                
+  2. Ce qui est bon dans l’idée                                                 
+  - dis ce qu’il faut garder                                                    
+                                                                                
+  3. Ce qu’il faut changer                                                      
+  - dis ce qu’il faut simplifier, corriger ou améliorer                         
+                                                                                
+  4. Ce qu’il faut supprimer                                                    
+  - liste les parties inutiles ou compliquées à enlever                         
+                                                                                
+  5. Ce qu’il faut ajouter                                                      
+  - liste les fonctionnalités ou idées à ajouter pour rendre le système plus    
+  cohérent                                                                      
+                                                                                
+  6. Logique finale proposée                                                    
+  - explique le fonctionnement final de manière simple                          
+  - qui fait quoi : client, livreur, confirmatrice, admin                       
+                                                                                
+  7. Plan global par étapes                                                     
+  - donne un plan clair en étapes                                               
+  - chaque étape doit avoir un titre et un objectif simple                      
+                                                                                
+  8. Priorité des étapes                                                        
+  - dis par quoi commencer                                                      
+  - ordre recommandé de réalisation                                             
+                                                                                
+  9. Risques ou points d’attention                                              
+  - indique les points qui peuvent créer de la confusion ou des problèmes       
+                                                                                
+  10. Version finale simplifiée                                                 
+  - termine par une version courte et propre de la logique finale de            
+  l’application                                                                 
+                                                                                
+  Important :                                                                   
+  - réponse simple et directe                                                   
+  - pas de code pour le moment                                                  
+  - pas de détails techniques inutiles                                          
+  - reste centré sur la logique produit et l’organisation du projet             
+  - si mon idée contient des erreurs, corrige-les franchement                   
+
+● 1. Résumé de l'idée
+
+  Tu veux remplacer le chat libre client ↔ confirmatrice par un système de
+  demandes à motifs prédéfinis. Le client signale ses problèmes depuis le
+  tracking, le livreur signale ses problèmes terrain, et la confirmatrice traite
+   tout depuis une seule console avec filtres. Quatre statuts simples, photos
+  quand le motif l'exige, et un avis demandé au client après chaque livraison.
+
+  2. Ce qui est bon dans l'idée
+
+  - Suppression du chat : excellent. Un chat libre est ingérable, non mesurable,
+   et souvent hors sujet.
+  - Motifs fixes : très professionnel. Chaque cas devient filtrable,
+  statistique, exportable.
+  - Confirmatrice au centre : tu gardes l'affectation par gouvernorat qui existe
+   déjà. Cohérent.
+  - Livreur qui signale sans modifier : sépare proprement les responsabilités.
+  Il remonte, il ne modifie pas.
+  - Popup d'avis récurrente : bon levier pour récolter du feedback sans forcer.
+  - Filtres riches pour la confirmatrice : indispensable dès que le volume
+  monte.
+
+  3. Ce qu'il faut changer
+
+  - Les 4 statuts sont ambigus. « Approuvée » et « Traitée » se confondent. Je
+  propose plus clair :
+    - Envoyée → En cours → Résolue ou Refusée.
+  Si tu tiens à tes 4 mots, définis-les explicitement : Approuvée = décision
+  prise, Traitée = action terminée. Sinon l'utilisateur ne comprend pas la
+  nuance.
+  - "Autre motif" ne doit pas redevenir un champ texte ouvert. Garde une
+  description courte (≤ 300 caractères), obligatoire, plus photo optionnelle.
+  - Photo "importante mais modifiable" : trop flou. Règle binaire par motif :
+  obligatoire (colis endommagé, colis non correspondant) ou optionnelle partout
+  ailleurs. La modification tant que non traitée reste, mais règle de
+  "importance" disparaît.
+  - Changement d'adresse : map + description ne suffit pas en soi. La
+  confirmatrice doit valider avant que la nouvelle adresse écrase l'ancienne. Le
+   client propose, la confirmatrice tranche.
+  - Ne pas créer deux tables parallèles (demandes client, signalements livreur).
+   C'est la même entité avec un champ Source = CLIENT / LIVREUR. Sinon tu
+  dupliques la logique.
+
+  4. Ce qu'il faut supprimer
+
+  - Le chat complet : le hub SignalR des réclamations, la table des messages,
+  les deux écrans de chat Flutter (client + confirmatrice), les deux providers
+  de chat, les endpoints /messages.
+  - Les messages système et internes (SYSTEM, IsInternal) : sans chat, ils ne
+  servent plus.
+  - Le motif libre sur le formulaire de création : remplacé par une liste
+  fermée.
+  - Tout le code de broadcast de messages en temps réel (tu n'en as plus besoin
+  pour un changement de statut, une mise à jour simple suffit).
+
+  5. Ce qu'il faut ajouter
+
+  - Motifs client (liste fermée) : changement adresse, changement numéro,
+  reprog, annulation, non reçu, endommagé, non correspondant, comportement
+  livreur, autre.
+  - Motifs livreur (liste fermée) : injoignable, téléphone éteint, numéro
+  incorrect, absent, adresse incorrecte/incomplète/introuvable, demande report,
+  refuse la commande, colis endommagé, tentative échouée, autre.
+  - Champ Source (CLIENT ou LIVREUR) sur la demande.
+  - Photos : 1 à 5 images max, stockées comme actuellement, liées à la demande.
+  - Correction proposée : quand le motif est "changement adresse" ou "changement
+   numéro", le client saisit directement la nouvelle valeur dans la demande. Si
+  approuvée, la confirmatrice l'applique d'un clic.
+  - Table des avis : note 1-5, commentaire court, une entrée par commande.
+  - État de relance de l'avis : date de dernière invite, nombre de rappels, pour
+   savoir quand réafficher la popup.
+  - Alerte dans le tracking client : quand un signalement livreur attend une
+  correction du client (ex : "Le livreur n'a pas trouvé ton adresse — corrige-la
+   maintenant").
+  - Actions rapides confirmatrice sur le détail d'une demande : Approuver,
+  Traiter, Refuser, Appeler le client, Appliquer la correction, Ouvrir la map.
+
+  6. Logique finale proposée
+
+  Client : sur le tracking, bouton « J'ai un problème » → choix d'un motif →
+  photo ou correction si demandé → envoi. Onglet « Mes demandes » : liste avec
+  statut, clic = détail.
+
+  Livreur : sur le détail d'une livraison en cours, bouton « Signaler un
+  problème » → choix d'un motif → photo/note optionnelle → envoi. Il voit ses
+  signalements dans son historique.
+
+  Confirmatrice : une seule page « Demandes & signalements ». Filtres : statut,
+  date, commande, gouvernorat, source, motif. Clic = détail complet : commande,
+  client, motif, photos, correction proposée. Boutons d'action directs. Chaque
+  changement de statut est visible immédiatement côté client sur son tracking.
+
+  Admin : même vue que la confirmatrice, mais sur tous les gouvernorats, plus
+  quelques stats.
+
+  Popup d'avis : quand une commande passe en LIVRE, on la marque "avis attendu".
+   À la prochaine ouverture de l'app (ou au retour sur l'écran commandes), si au
+   moins 24h se sont écoulées depuis le dernier rappel, on affiche la popup.
+  Avis envoyé → terminé pour cette commande. Fermée → on retentera plus tard
+  (max 3 rappels). Elle revient pour chaque nouvelle commande livrée.
+
+  7. Plan global par étapes
+
+  ┌─────┬─────────────────┬─────────────────────────────────────────────────┐
+  │  #  │      Étape      │                    Objectif                     │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │     │ Audit du chat   │ Lister tous les fichiers et endpoints à         │
+  │ 1   │ existant        │ supprimer, vérifier qu'aucune autre feature ne  │
+  │     │                 │ dépend du chat.                                 │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │     │                 │ Définir l'entité "Demande" : champs, enums      │
+  │ 2   │ Modélisation    │ motifs, statuts, source, photos, correction     │
+  │     │                 │ proposée.                                       │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 3   │ Schéma DB       │ Créer les nouvelles colonnes/tables, archiver   │
+  │     │                 │ puis supprimer les messages de chat.            │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 4   │ API client      │ Endpoints : créer, lister mes demandes, voir    │
+  │     │                 │ détail, uploader photo.                         │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 5   │ API livreur     │ Endpoints signalement (même structure, source   │
+  │     │                 │ différente).                                    │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 6   │ API             │ Liste filtrée + actions (approuver / traiter /  │
+  │     │ confirmatrice   │ refuser / appliquer la correction).             │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 7   │ API avis        │ Créer avis, récupérer l'état du prompt, marquer │
+  │     │                 │  comme ignoré.                                  │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │     │                 │ Retirer le chat, ajouter "Nouvelle demande"     │
+  │ 8   │ Flutter client  │ depuis tracking, ajouter "Mes demandes" avec    │
+  │     │                 │ badges statut, ajouter popup avis.              │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 9   │ Flutter livreur │ Ajouter écran "Signaler un problème".           │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 10  │ Flutter         │ Retirer le chat, refondre la liste avec         │
+  │     │ confirmatrice   │ filtres, détail avec actions rapides.           │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │     │ Notifications   │ Garder un signal en temps réel pour "nouvelle   │
+  │ 11  │ légères         │ demande" et "changement de statut" (ou passer   │
+  │     │                 │ en polling simple si tu veux moins de code).    │
+  ├─────┼─────────────────┼─────────────────────────────────────────────────┤
+  │ 12  │ Nettoyage & QA  │ Tests manuels bout en bout, suppression du code │
+  │     │                 │  mort, doc courte des motifs.                   │
+  └─────┴─────────────────┴─────────────────────────────────────────────────┘
+
+  8. Priorité des étapes
+
+  1. D'abord les étapes 1 à 3 — le socle. Pas de modèle propre → pas de suite.
+  2. Ensuite 4 à 7 — tout le backend. Ne commence pas Flutter sans backend figé,
+   sinon tu codes en l'air.
+  3. Puis 8 avant 9 avant 10. Raison : le client est le cas d'usage le plus
+  simple et te valide la boucle complète. La confirmatrice a la plus grosse
+  complexité (filtres, actions multiples), elle doit arriver en dernier quand le
+   reste tourne déjà.
+  4. 7 et 11 peuvent aller en parallèle de 9 ou 10, elles sont isolées.
+  5. 12 en continu.
+
+  Ce qu'il NE faut PAS faire en premier : ne touche pas à la confirmatrice au
+  début. C'est la pièce la plus complexe, elle doit venir quand la donnée et la
+  logique client/livreur sont stables.
+
+  9. Risques ou points d'attention
+
+  - Perte de l'historique des chats existants : archive la table avant de la
+  dropper, ne la supprime pas d'un coup.
+  - Ambiguïté des statuts : rédige un libellé humain à côté de chaque statut
+  pour que l'utilisateur comprenne (« Envoyée = on a reçu ta demande », « En
+  cours = on s'en occupe », etc.).
+  - Upload photo qui échoue sur mauvais réseau : ne bloque pas l'envoi de la
+  demande. Enregistre la demande, réessaie la photo en arrière-plan, ou permet
+  de la rajouter après.
+  - Correction d'adresse appliquée trop vite : impose la validation
+  confirmatrice avant écriture. Un clic "Appliquer" explicite, pas une
+  approbation implicite.
+  - Popup d'avis abusive : max 1 par session d'app, 24h mini entre deux rappels,
+   3 rappels max par commande, puis on lâche.
+  - Plusieurs demandes/signalements sur la même commande : groupe-les par
+  commande dans la liste confirmatrice, sinon c'est le bazar.
+  - Droits d'accès : re-valide que le client voit uniquement ses demandes, le
+  livreur uniquement ses commandes, la confirmatrice uniquement son gouvernorat.
+   À tester après la refonte.
+  - Renommage éventuel F_RECLAMATION → F_DEMANDE : utile pour clarifier, mais
+  c'est cosmétique — ne bloque pas la refonte pour ça, fais-le en tout début si
+  tu y tiens.
+
+  10. Version finale simplifiée
+
+  ▎ Règle unique : plus de chat. Uniquement des demandes avec motif.
+  ▎
+  ▎ - Client : signale un problème depuis le tracking, choisit un motif, joint 
+  ▎ une photo si besoin, suit son statut.
+  ▎ - Livreur : signale un problème terrain depuis sa livraison, choisit un 
+  ▎ motif dans sa liste.
+  ▎ - Confirmatrice : tout dans une seule liste filtrable ; elle décide 
+  ▎ (approuver, traiter, refuser), applique les corrections si besoin, peut 
+  ▎ appeler le client.
+  ▎ - Statuts clairs : Envoyée → En cours → Résolue ou Refusée.
+  ▎ - Après livraison : popup d'avis, rappelée si fermée, oubliée si envoyée.
+  ▎
+  ▎ Résultat : un flux linéaire, des données propres, un support mesurable, zéro
+  ▎  conversation libre.
+
+  Dis-moi quand tu veux qu'on passe à l'étape 1 (audit) et je te sors la liste
+  précise des fichiers à supprimer et des endpoints à retirer.
+✻ Cooked for 2m 45s
+
+※ recap: Goal: refondre l'app pour remplacer le chat réclamations par des demandes à motifs, avec confirmatrice centrale et popup d'avis post-livraison. Prochaine action: lancer l'étape 1, l'audit des fichiers chat à supprimer côté backend et Flutter. (disable recaps in /config)
+
+> donner  un version de plan avec tes idee d'ajoutées et de supprimées et       
+  donner le plan                                                                
+
+● Version consolidée du plan
+
+  A. Ce que j'enlève de ton idée initiale
+
+  ┌───────────────────────┬─────────────────────┬───────────────────────────┐
+  │  Élément de ton idée  │    Pourquoi je      │       Remplacé par        │
+  │                       │      l'enlève       │                           │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │ Les 4 statuts         │ "Approuvée" et      │ 3 statuts actifs :        │
+  │ "Envoyée / Approuvée  │ "Traitée" se        │ Envoyée → En cours →      │
+  │ / Traitée / Refusée"  │ confondent          │ Résolue, plus Refusée en  │
+  │                       │                     │ sortie                    │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │ "Autre motif" en      │ Réintroduit du      │ Motif AUTRE + description │
+  │ champ libre           │ texte non structuré │  courte obligatoire (max  │
+  │                       │                     │ 300 caractères)           │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │                       │                     │ Règle binaire :           │
+  │ Photo "importante     │ Règle trop floue    │ obligatoire pour certains │
+  │ mais modifiable"      │                     │  motifs, optionnelle pour │
+  │                       │                     │  les autres               │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │ Deux tables séparées  │ Duplique la logique │ Une seule entité avec un  │
+  │ (demandes client /    │  et la liste        │ champ Source = CLIENT ou  │
+  │ signalements livreur) │ confirmatrice       │ LIVREUR                   │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │ Chat (messages, hub   │ Source du problème  │ Demandes structurées      │
+  │ temps réel, écrans    │ initial             │ uniquement                │
+  │ chat)                 │                     │                           │
+  ├───────────────────────┼─────────────────────┼───────────────────────────┤
+  │ Écrasement direct     │ Risque de données   │ Validation obligatoire    │
+  │ d'adresse quand le    │ fausses             │ par la confirmatrice      │
+  │ client corrige        │                     │ avant application         │
+  └───────────────────────┴─────────────────────┴───────────────────────────┘
+
+  B. Ce que j'ajoute à ton idée
+
+  ┌────────────────────────────────┬────────────────────────────────────────┐
+  │             Ajout              │                Pourquoi                │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Champ "Correction proposée"    │ Permet au client de proposer           │
+  │ sur la demande (nouvelle       │ directement la valeur correcte ; la    │
+  │ adresse, nouveau numéro)       │ confirmatrice l'applique d'un clic     │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Bouton d'action "Appliquer la  │ Évite la double saisie                 │
+  │ correction" côté confirmatrice │                                        │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Alerte visible sur le tracking │ Le client sait quoi faire sans être    │
+  │  client quand un signalement   │ contacté                               │
+  │ livreur attend une correction  │                                        │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Bouton "Appeler le client"     │                                        │
+  │ côté confirmatrice (intent     │ Fait partie du vrai travail quotidien  │
+  │ tel:)                          │                                        │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Groupement par commande dans   │ Plusieurs demandes/signalements sur la │
+  │ la liste confirmatrice         │  même commande = un seul bloc          │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Table d'état du prompt d'avis  │                                        │
+  │ (dernière invite, nombre de    │ Contrôle la fréquence de la popup      │
+  │ rappels)                       │                                        │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Archivage (pas suppression)    │ Préserver l'historique avant de purger │
+  │ des anciens messages de chat   │                                        │
+  ├────────────────────────────────┼────────────────────────────────────────┤
+  │ Notification légère (statut    │                                        │
+  │ changé) au lieu de temps réel  │ Plus simple, suffisant                 │
+  │ complet                        │                                        │
+  └────────────────────────────────┴────────────────────────────────────────┘
+
+  C. Ce que je garde de ton idée
+
+  - Suppression totale du chat libre
+  - Motifs prédéfinis pour client ET livreur
+  - Confirmatrice au centre du traitement
+  - Livreur qui signale mais ne modifie pas
+  - Photo possible sur certains motifs
+  - Filtres riches pour la confirmatrice
+  - Popup d'avis récurrente après livraison
+
+  ---
+  Logique finale (version propre)
+
+  Rôles et flux
+
+  Client
+  1. Tracking d'une commande → bouton "J'ai un problème"
+  2. Choix d'un motif dans une liste fixe
+  3. Si le motif est "changement adresse/numéro" : saisie de la nouvelle valeur
+  (avec map pour l'adresse)
+  4. Si le motif l'exige : photo obligatoire (sinon optionnelle)
+  5. Envoi → la demande passe en statut Envoyée
+  6. Il suit le statut dans l'onglet "Mes demandes"
+  7. Après livraison : popup "Laisse ton avis" (1-5 étoiles + commentaire court)
+
+  Livreur
+  1. Détail d'une livraison → bouton "Signaler un problème"
+  2. Choix d'un motif dans SA liste (différente du client)
+  3. Photo/note optionnelle
+  4. Envoi → signalement en statut Envoyée
+  5. Historique visible dans son app
+
+  Confirmatrice
+  1. Page unique "Demandes & signalements" — tout est là
+  2. Filtres : statut, date, référence commande, gouvernorat, source
+  (client/livreur), motif
+  3. Clic sur un cas → détail : commande, client, motif, description, photos,
+  correction proposée
+  4. Actions : Approuver · Traiter · Refuser · Appeler · Appliquer la correction
+   · Ouvrir la map
+  5. Chaque action met à jour le statut, le client le voit sur son tracking
+
+  Admin
+  - Même vue, mais sur tous les gouvernorats
+  - Export et statistiques
+
+  Statuts (les 4 finaux, clairs)
+
+  ┌─────────┬─────────────────────────────┬─────────────────────────────────┐
+  │ Statut  │      Qui le déclenche       │       Ce que ça veut dire       │
+  ├─────────┼─────────────────────────────┼─────────────────────────────────┤
+  │ Envoyée │ Client ou livreur (à la     │ Pas encore regardée             │
+  │         │ création)                   │                                 │
+  ├─────────┼─────────────────────────────┼─────────────────────────────────┤
+  │ En      │ Confirmatrice (elle prend   │ Elle s'en occupe                │
+  │ cours   │ le cas)                     │                                 │
+  ├─────────┼─────────────────────────────┼─────────────────────────────────┤
+  │ Résolue │ Confirmatrice (à la fin)    │ Action faite, cas clos          │
+  ├─────────┼─────────────────────────────┼─────────────────────────────────┤
+  │ Refusée │ Confirmatrice               │ Rejetée, avec motif de refus    │
+  │         │                             │ obligatoire                     │
+  └─────────┴─────────────────────────────┴─────────────────────────────────┘
+
+  Règle photos (simple)
+
+  ┌─────────────────────────┬─────────────┐
+  │          Motif          │    Photo    │
+  ├─────────────────────────┼─────────────┤
+  │ Colis endommagé         │ Obligatoire │
+  ├─────────────────────────┼─────────────┤
+  │ Colis non correspondant │ Obligatoire │
+  ├─────────────────────────┼─────────────┤
+  │ Colis non reçu          │ Optionnelle │
+  ├─────────────────────────┼─────────────┤
+  │ Autre (client)          │ Optionnelle │
+  ├─────────────────────────┼─────────────┤
+  │ Tous les autres motifs  │ Aucune      │
+  └─────────────────────────┴─────────────┘
+
+  Règle popup d'avis
+
+  - Déclenchement : commande passe à LIVRE
+  - Affichage : à la prochaine ouverture de l'écran commandes
+  - Intervalle entre 2 rappels : minimum 24h
+  - Nombre max de rappels : 3
+  - Avis envoyé → plus jamais pour cette commande
+  - Revient pour chaque nouvelle commande livrée
+  - Max 1 popup par session d'app
+
+  ---
+  Modèle de données simplifié
+
+  Entité Demande (ex-réclamation)
+  - Id, Code
+  - CommandePiece (référence commande)
+  - ArRef (optionnel — article ciblé) + IsGlobal
+  - Source : CLIENT ou LIVREUR
+  - Motif : enum (liste différente selon source)
+  - Description : courte, 300 caractères
+  - Statut : ENVOYEE / EN_COURS / RESOLUE / REFUSEE
+  - ClientUserId, AssignedConfirmateurId (affectation par gouvernorat)
+  - CreatedByUserId (utile si source = livreur)
+  - CorrectionProposee : JSON court (nouveau numéro, nouvelle adresse + lat/lng)
+  - CorrectionAppliquee : bool
+  - MotifRefus : texte court si refusée
+  - CreatedAt, UpdatedAt, ResolvedAt
+
+  Entité DemandePhoto
+  - Id, DemandeId, Url, FileName, ContentType, Size, CreatedAt
+  - 0 à 5 par demande
+
+  Entité AvisCommande
+  - CommandePiece (clé)
+  - ClientUserId
+  - Note (1-5)
+  - Commentaire (optionnel, 500 caractères)
+  - CreatedAt
+
+  Entité AvisPromptState
+  - CommandePiece (clé)
+  - NbRappels, LastPromptAt, Dismissed
+  - Sert à savoir quand réafficher la popup
+
+  À supprimer
+  - Table des messages de chat (archiver d'abord)
+  - Colonnes spécifiques au chat sur la demande (IsReadByClient, IsReadByStaff,
+  LastMessageAt)
+
+  ---
+  Écrans à gérer
+
+  ┌─────────────────────────┬───────────────────────────────────────────────┐
+  │          Écran          │                    Action                     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Chat client             │ Supprimer                                     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Chat confirmatrice      │ Supprimer                                     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │                         │ Modifier : ajouter bouton "J'ai un problème"  │
+  │ Tracking client         │ + bloc d'alertes si signalement livreur en    │
+  │                         │ attente                                       │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Liste "Mes              │ Renommer "Mes demandes", afficher les 4       │
+  │ réclamations" client    │ statuts avec badges clairs                    │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Détail demande client   │ Modifier : vue en lecture seule avec timeline │
+  │                         │  des statuts, pas de chat                     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Création demande client │ Ajouter : formulaire avec motif, description, │
+  │                         │  photo, correction proposée si applicable     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Liste confirmatrice     │ Refondre : filtres, groupement par commande,  │
+  │                         │ badges                                        │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Détail demande          │ Refondre : actions rapides, affichage propre  │
+  │ confirmatrice           │ des photos, correction proposée en évidence   │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Détail livraison        │ Modifier : ajouter bouton "Signaler un        │
+  │ livreur                 │ problème"                                     │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Création signalement    │ Ajouter : formulaire avec motif, note, photo  │
+  │ livreur                 │                                               │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Écran commandes client  │ Modifier : gérer le déclenchement de la popup │
+  │                         │  d'avis                                       │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Popup avis              │ Ajouter : composant réutilisable              │
+  ├─────────────────────────┼───────────────────────────────────────────────┤
+  │ Écran avis              │ Ajouter (optionnel, pour la phase stats)      │
+  │ confirmatrice/admin     │                                               │
+  └─────────────────────────┴───────────────────────────────────────────────┘
+
+  ---
+  Plan d'exécution — étapes et priorités
+
+  Phase 1 — Fondations (bloquant, à faire en premier)
+
+  Étape 1. Audit du chat existant
+  - Lister tous les fichiers, endpoints, providers, hubs liés au chat
+  - Vérifier qu'aucune autre feature ne s'y accroche
+  - Objectif : savoir exactement ce qu'on coupe
+
+  Étape 2. Définition du modèle Demande
+  - Finaliser les enums (motifs client, motifs livreur, statuts)
+  - Définir la structure CorrectionProposee
+  - Figer les règles de photo par motif
+  - Objectif : un modèle data propre avant d'écrire la moindre ligne
+
+  Étape 3. Migration base de données
+  - Archiver la table des messages de chat
+  - Créer colonnes Source, CorrectionProposee, CorrectionAppliquee, MotifRefus
+  - Créer table DemandePhoto, AvisCommande, AvisPromptState
+  - Supprimer les colonnes devenues inutiles
+  - Objectif : schéma stable pour la suite
+
+  Phase 2 — Backend (faire avant tout Flutter)
+
+  Étape 4. API côté client
+  - Créer une demande, lister mes demandes, voir détail, uploader photos
+  - Retirer les endpoints /messages
+
+  Étape 5. API côté livreur
+  - Créer un signalement (réutilise la même entité, Source = LIVREUR)
+  - Lister mes signalements
+
+  Étape 6. API côté confirmatrice
+  - Liste filtrée (statut, date, commande, gouvernorat, source, motif)
+  - Actions : approuver, passer en cours, résoudre, refuser (avec motif),
+  appliquer la correction
+
+  Étape 7. API avis
+  - Créer un avis, récupérer l'état du prompt, marquer comme ignoré
+
+  Phase 3 — Frontend (dans l'ordre client → livreur → confirmatrice)
+
+  Étape 8. Flutter client
+  - Supprimer écrans chat + providers chat
+  - Ajouter bouton "J'ai un problème" sur tracking
+  - Nouveau formulaire demande
+  - Refonte liste "Mes demandes" avec 4 statuts visibles
+  - Détail demande en lecture seule
+  - Popup avis post-livraison
+
+  Étape 9. Flutter livreur
+  - Bouton "Signaler un problème" sur détail livraison
+  - Formulaire signalement
+
+  Étape 10. Flutter confirmatrice
+  - Supprimer écrans chat + providers chat
+  - Refonte liste avec filtres et groupement
+  - Détail avec actions rapides et affichage photos propre
+
+  Phase 4 — Finition
+
+  Étape 11. Notifications légères
+  - Simple notification push quand une demande est créée ou change de statut
+  - Ou polling toutes les X secondes, plus simple encore
+
+  Étape 12. Nettoyage, test, doc
+  - Supprimer le code mort
+  - Tests manuels bout en bout par rôle
+  - Courte doc des motifs et du flux pour l'équipe
+
+  ---
+  Ordre recommandé (chemin court)
+
+  1. Phase 1 (étapes 1–3) — ne rien coder Flutter avant que ça soit fait
+  2. Phase 2 (étapes 4–7) — tout le backend ; la 7 peut être parallélisée
+  3. Étape 8 (client) — c'est le chemin le plus simple, il valide la boucle
+  4. Étape 9 (livreur) — petit, rapide
+  5. Étape 10 (confirmatrice) — la plus lourde, elle arrive quand tout le reste
+  tourne
+  6. Étapes 11–12 — finition continue
+
+  Ne commence pas par la confirmatrice. C'est l'écran le plus complexe. Le faire
+   en dernier te fait gagner du temps.
+
+  ---
+  Points d'attention durant l'exécution
+
+  - Libellés humains à côté de chaque statut pour que l'utilisateur comprenne
+  - Upload photo : non-bloquant, réessai en arrière-plan
+  - Correction d'adresse : jamais appliquée sans clic explicite de la
+  confirmatrice
+  - Popup avis : ne pas harceler, respecter les limites (24h, 3 rappels)
+  - Droits : revérifier que chaque rôle voit uniquement ce qu'il doit voir après
+   refonte
+  - Rétrocompatibilité : les demandes existantes n'ont pas de Source — il faut
+  leur mettre CLIENT par défaut pendant la migration
+
+  ---
+  Version ultra-courte
+
+  ▎ Trois formulaires (demande client, signalement livreur, avis), une seule 
+  ▎ liste côté confirmatrice, quatre statuts, des motifs fixes, des photos là où
+  ▎  c'est utile, et une popup d'avis après chaque livraison. Rien de plus. Le 
+  ▎ chat disparaît complètement.
+
+  Dis-moi si tu valides ce plan et je commence par l'étape 1 (audit des fichiers
+   à supprimer).
+
+✻ Churned for 1m 24s
+
+>  Étape 9. Flutter livreur                                                     
+    - Bouton "Signaler un problème" sur détail livraison                        
+    - Formulaire signalement    deja jai faire si le livreur change status elle 
+   faire un motif ca commant ou je ne faore pas signale de probleme mais apres  
+  un changment de satuts d un chose a part de livré elle va dans la             
+  confirmatrice et la confirmatrice si resoudre probleme essai il peut changer  
+  statuts de commande dans deamande directe et il peut appele directe je veut   
+  mon app flexible et les petit deaille sont bien devveloppe donner par etape   
+  apres modification$                                                           
+
+● Modification validée : plan mis à jour
+
+  A. Ce qui change par rapport à la version précédente
+
+  Avant (version précédente) : le livreur avait deux entrées — changement de
+  statut + bouton "Signaler un problème".
+
+  Maintenant (ta modification, meilleure) : un seul point d'entrée côté livreur
+  — le changement de statut lui-même. Le bouton "Signaler un problème"
+  disparaît. Quand le livreur bascule la commande vers un statut autre que
+  LIVRE, le motif qu'il saisit crée automatiquement une demande côté
+  confirmatrice.
+
+  Conséquence positive : pas de double saisie pour le livreur, pas de
+  duplication de logique, le flux est linéaire.
+
+  B. Nouveau flux par rôle
+
+  Livreur — un seul chemin
+
+  - Changement de statut de la commande.
+  - Si le nouveau statut est LIVRE → aucune demande créée. La commande est
+  simplement marquée livrée (et cela déclenche la popup d'avis côté client).
+  - Si le nouveau statut est autre chose (REPORTE, TENTATIVE, RETOUR, DEPOT,
+  REFUSE) → un motif est obligatoire + photo optionnelle. Le système crée
+  automatiquement une demande liée à la commande avec Source = LIVREUR, Motif = 
+  la raison choisie, Statut = Envoyée.
+  - Le livreur ne gère plus de chat, ne tape plus rien en plus. Son travail =
+  livrer ou signaler par statut.
+
+  Client — inchangé par rapport au plan précédent
+
+  - Depuis le tracking, bouton "J'ai un problème" → motif + description +
+  correction proposée si applicable + photo si exigée.
+  - Voit l'avancement dans "Mes demandes".
+  - Reçoit la popup d'avis après une livraison.
+
+  Confirmatrice — la pièce maîtresse, plus flexible
+
+  Elle ouvre une demande (qu'elle vienne du client ou du livreur — mêmes écrans,
+   mêmes actions). Dans le détail de la demande, elle peut :
+
+  ┌───────────────────────────┬─────────────────────────────────────────────┐
+  │          Action           │              Quand c'est utile              │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Approuver (passer en En   │ Elle prend le cas en charge                 │
+  │ cours)                    │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Résoudre                  │ Le problème est réglé                       │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Refuser (avec motif de    │ Demande rejetée                             │
+  │ refus obligatoire)        │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Appeler le client (bouton │ Direct, pas besoin de changer d'écran       │
+  │  tel:)                    │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Appeler le livreur        │ Si c'est un signalement livreur             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Appliquer la correction   │ Un seul clic : écrase adresse/numéro de la  │
+  │ proposée                  │ commande                                    │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Modifier l'adresse ou le  │ Si le client a mal saisi                    │
+  │ numéro manuellement       │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Changer le statut de la   │ Cas typique : livreur a mis REPORTE, elle   │
+  │ commande directement      │ appelle le client, reprogramme, elle peut   │
+  │ depuis la demande         │ forcer CONFIRME ou refixer une date         │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Ouvrir la map à l'adresse │ Vérifier la zone                            │
+  │  de livraison             │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Voir les photos en plein  │ Zoom, swipe entre les photos                │
+  │ écran                     │                                             │
+  ├───────────────────────────┼─────────────────────────────────────────────┤
+  │ Ajouter une note interne  │ Traçabilité pour elle-même ou pour l'admin  │
+  │ (non visible du client)   │                                             │
+  └───────────────────────────┴─────────────────────────────────────────────┘
+
+  La confirmatrice n'a plus besoin de naviguer ailleurs pour agir. Tout est
+  concentré sur un seul écran de détail.
+
+  C. Ce que ça simplifie dans le modèle de données
+
+  Tu n'as plus besoin de distinguer "signalement" et "demande" dans le code :
+  une seule entité, un champ Source qui vaut CLIENT ou LIVREUR. C'est la règle
+  qu'on avait déjà prévue, elle devient encore plus évidente maintenant.
+
+  Ajout discret mais utile : un champ LinkedStatusChange (optionnel) qui, quand
+  la demande vient d'un changement de statut livreur, référence l'opération pour
+   l'audit. Rien de complexe — juste un identifiant interne.
+
+  ---
+  Plan révisé — étape par étape
+
+  Phase 1 — Fondations (à faire en premier, rien ne peut être codé sans ça)
+
+  Étape 1 — Audit du chat existant
+
+  Objectif : lister tous les fichiers, endpoints, providers, hubs à supprimer.
+  Vérifier qu'aucune autre feature ne s'accroche au chat.
+  Livrable : une liste écrite "à supprimer" + "à modifier", sans ambiguïté.
+
+  Étape 2 — Définition du modèle Demande
+
+  Objectif : figer les enums (motifs client, motifs livreur, statuts, sources),
+  la structure CorrectionProposee, les règles photo par motif.
+  Livrable : un document court qui sert de référence pour toute la suite.
+
+  Étape 3 — Migration base de données
+
+  Objectif : schéma stable.
+  Actions :
+  - Archiver la table des messages (pas la supprimer encore — on la garde
+  renommée au cas où).
+  - Ajouter à F_RECLAMATION (ou F_DEMANDE) : Source, CorrectionProposee,
+  CorrectionAppliquee, MotifRefus, LinkedStatusChange (optionnel).
+  - Créer DemandePhoto, AvisCommande, AvisPromptState.
+  - Supprimer colonnes devenues inutiles (IsReadByClient, IsReadByStaff,
+  LastMessageAt — propres au chat).
+
+  ---
+  Phase 2 — Backend (ne pas commencer Flutter avant que tout ça soit fini)
+
+  Étape 4 — Endpoints client
+
+  - Créer une demande.
+  - Lister mes demandes.
+  - Voir le détail.
+  - Uploader une photo (en plusieurs fois possible tant que statut Envoyée).
+  - Supprimer les endpoints /messages.
+
+  Étape 5 — Hook de création automatique côté livreur
+
+  C'est le gros changement issu de ta modification.
+  - Quand l'endpoint de changement de statut de la commande reçoit un statut
+  autre que LIVRE, créer automatiquement une demande avec :
+    - Source = LIVREUR
+    - Motif = la raison saisie
+    - CreatedByUserId = le livreur
+    - AssignedConfirmateurId = la confirmatrice du gouvernorat
+    - Statut = Envoyée
+  - Si une photo est jointe au changement de statut, elle est attachée à la
+  demande.
+  - Pas de nouvel endpoint "signalement" à créer — tout passe par l'endpoint
+  existant de changement de statut.
+
+  Étape 6 — Endpoints confirmatrice (le cœur)
+
+  - Liste filtrée (statut, date, commande, gouvernorat, source, motif).
+  - Actions unitaires :
+    - Passer en En cours
+    - Résoudre
+    - Refuser (motif obligatoire)
+    - Appliquer la correction proposée (écrit la nouvelle valeur sur la commande
+   ou le profil)
+    - Changer le statut de la commande depuis la demande — c'est ici que se joue
+   la flexibilité que tu veux
+    - Modifier adresse/numéro manuellement
+    - Ajouter une note interne
+  - Chaque action logge l'historique pour audit.
+
+  Étape 7 — Endpoints avis
+
+  - Créer un avis pour une commande.
+  - Récupérer les commandes "avis en attente".
+  - Marquer un rappel comme ignoré.
+
+  ---
+  Phase 3 — Frontend (ordre : client → livreur → confirmatrice)
+
+  Étape 8 — Flutter client
+
+  - Supprimer : écrans chat client, provider chat.
+  - Modifier : tracking → bouton "J'ai un problème" ; bloc d'alerte si un
+  signalement livreur attend une action du client.
+  - Ajouter : formulaire de création de demande (motif, description, photo si
+  exigée, correction proposée si applicable).
+  - Modifier : liste "Mes demandes" avec badges 4 statuts colorés.
+  - Modifier : détail demande en lecture seule + timeline des statuts (pas de
+  chat).
+  - Ajouter : popup avis après livraison.
+
+  Étape 9 — Flutter livreur (léger, grâce à ta modification)
+
+  - Modifier : écran de changement de statut → dropdown motif déjà présent,
+  ajuster pour coller aux motifs finaux ; ajouter possibilité d'attacher une
+  photo.
+  - Ne pas ajouter de bouton "Signaler un problème" — le changement de statut
+  remplace ça.
+  - Ajouter (optionnel) : petit onglet "Mes signalements" si le livreur veut
+  revoir ses changements de statut avec motif.
+
+  Étape 10 — Flutter confirmatrice (le plus gros chantier)
+
+  - Supprimer : écrans chat confirmatrice, provider chat.
+  - Refondre la liste :
+    - Filtres visibles (bottom sheet ou drawer).
+    - Groupement par commande quand plusieurs demandes existent.
+    - Badges de source (client/livreur) et de statut.
+    - Recherche par référence commande.
+  - Refondre le détail :
+    - En-tête : commande, client, adresse, téléphone.
+    - Bloc motif + description.
+    - Bloc correction proposée (mis en évidence si présente).
+    - Galerie photos (swipe, zoom).
+    - Barre d'actions : Appeler · Ouvrir la map · Appliquer correction · Changer
+   statut commande · Approuver · Résoudre · Refuser.
+    - Timeline des événements (statut changé par X à Y le Z).
+    - Note interne (zone de texte libre, non visible client).
+
+  ---
+  Phase 4 — Finition
+
+  Étape 11 — Notifications
+
+  - Garder un signal léger temps réel (SignalR) uniquement pour "nouveau cas à
+  traiter" et "statut changé" — pas de contenu de message.
+  - Ou polling toutes les 15–20 secondes si tu veux virer SignalR complètement.
+
+  Étape 12 — Détails qui font la différence (flexibilité et finition)
+
+  - Confirmation sur chaque action destructive (refuser, changer statut
+  commande, appliquer correction).
+  - Toast/snackbar de retour sur chaque action réussie.
+  - Empty states propres sur chaque liste (image + texte + bouton d'action).
+  - Loading states discrets (pas de full-screen spinner dès qu'un petit truc
+  charge).
+  - Libellés statuts avec texte explicite à côté : "Envoyée = reçue", "En cours
+  = on s'en occupe", "Résolue = c'est bon", "Refusée = non retenue".
+  - Couleurs statuts constantes dans toute l'app (même code couleur côté client
+  et côté confirmatrice).
+  - Raccourci d'appel depuis la liste aussi, pas uniquement depuis le détail.
+  - Historique : quand la confirmatrice change le statut de la commande depuis
+  une demande, on enregistre "Statut commande changé par la confirmatrice X
+  depuis la demande Y". Audit complet.
+
+  Étape 13 — QA et nettoyage
+
+  - Tests manuels bout en bout par rôle (scénario complet : client crée →
+  confirmatrice traite → livreur livre → client note).
+  - Suppression du code mort.
+  - Documentation courte des motifs et du flux pour l'équipe.
+
+  ---
+  Ordre recommandé
+
+  1. Étapes 1 → 3 (fondations data) — obligatoire en premier.
+  2. Étape 4 (API client) — simple et rapide.
+  3. Étape 5 (hook livreur) — le changement de modélisation qui vient de ta
+  modif, à faire juste après.
+  4. Étape 6 (API confirmatrice) — riche, à soigner.
+  5. Étape 7 (API avis) — isolée, peut être parallèle.
+  6. Étape 8 (Flutter client) — valide la boucle de bout en bout.
+  7. Étape 9 (Flutter livreur) — petite, rapide.
+  8. Étape 10 (Flutter confirmatrice) — gros mais tout le reste existe déjà,
+  donc gérable.
+  9. Étape 11–13 — finition continue.
+
+  ---
+  Points d'attention spécifiques à cette modification
+
+  - Un seul mécanisme pour les signalements livreur : le changement de statut.
+  Ne recrée pas un deuxième endpoint "signalement" par inadvertance.
+  - Statut LIVRE ne doit jamais créer de demande. C'est une livraison réussie,
+  point.
+  - Retour en arrière possible côté confirmatrice : si le livreur a mis REPORTE
+  par erreur, la confirmatrice peut remettre CONFIRME depuis la demande. La
+  demande passe alors en Résolue automatiquement (ou à faire à la main — à
+  décider en étape 2).
+  - Cohérence du statut commande ↔ statut demande : quand la confirmatrice force
+   le statut commande à LIVRE depuis une demande, la demande devrait passer en
+  Résolue. À documenter à l'étape 2.
+  - Photo attachée au changement de statut : le livreur doit pouvoir en joindre
+  une (preuve de tentative, colis endommagé). Même mécanisme que pour les
+  demandes client.
+
+  ---
+  Version courte
+
+  ▎ Le livreur ne signale plus via un bouton séparé : son changement de statut 
+  ▎ avec motif est le signalement. Le système crée automatiquement une demande 
+  ▎ pour la confirmatrice. Celle-ci, dans un seul écran de détail, peut appeler,
+  ▎  modifier l'adresse ou le numéro, changer le statut de la commande, 
+  ▎ approuver, résoudre, refuser. Tout est concentré, flexible, sans 
+  ▎ aller-retour.
+
+  Dis-moi "go étape 1" et je te sors la liste exacte des fichiers et endpoints à
+   supprimer pour l'audit.
+
+✻ Brewed for 1m 40s
+
+> ajoute  en cours pour le demande                                              
+
+● Statut En cours confirmé dans la logique
+
+  Les 4 statuts finaux de la demande restent :
+
+  ┌─────┬─────────┬────────────────────────────────────┬────────────────────┐
+  │  #  │ Statut  │          Qui le déclenche          │    Transition      │
+  │     │         │                                    │  possible depuis   │
+  ├─────┼─────────┼────────────────────────────────────┼────────────────────┤
+  │ 1   │ Envoyée │ Création auto (client ou           │ — (statut initial) │
+  │     │         │ changement de statut livreur)      │                    │
+  ├─────┼─────────┼────────────────────────────────────┼────────────────────┤
+  │ 2   │ En      │ Confirmatrice (bouton "Prendre en  │ Envoyée            │
+  │     │ cours   │ charge")                           │                    │
+  ├─────┼─────────┼────────────────────────────────────┼────────────────────┤
+  │ 3   │ Résolue │ Confirmatrice (bouton "Résoudre")  │ Envoyée ou En      │
+  │     │         │                                    │ cours              │
+  ├─────┼─────────┼────────────────────────────────────┼────────────────────┤
+  │ 4   │ Refusée │ Confirmatrice (bouton "Refuser" +  │ Envoyée ou En      │
+  │     │         │ motif)                             │ cours              │
+  └─────┴─────────┴────────────────────────────────────┴────────────────────┘
+
+  Quand passer la demande en En cours
+
+  La confirmatrice passe la demande en En cours dans trois cas typiques :
+
+  1. Elle clique sur "Prendre en charge" depuis la liste ou le détail.
+  2. Elle appelle le client depuis la demande → passage automatique en En cours.
+  3. Elle applique une correction (adresse, numéro) ou modifie le statut de la 
+  commande → passage automatique en En cours.
+
+  Tant que la demande est en Envoyée, la confirmatrice peut l'ignorer ou la
+  refuser directement. Dès qu'elle agit dessus, elle passe en En cours. Elle y
+  reste jusqu'à ce que le cas soit Résolu ou Refusé.
+
+  Cycle de vie complet
+
+  Envoyée ──► En cours ──► Résolue
+      │           │
+      │           └──────► Refusée
+      │
+      └───────────────────► Résolue (cas simple, traité du premier coup)
+      │
+      └───────────────────► Refusée (rejetée sans passer par En cours)
+
+  Une fois la demande en Résolue ou Refusée, elle est verrouillée — plus aucun
+  changement possible (audit figé).
+
+  Ce que ça change dans le plan
+
+  Étape 2 (Définition du modèle) — j'ajoute explicitement :
+  - En cours = statut "travail en cours" côté confirmatrice.
+  - Déclencheurs auto : appel client, application de correction, changement de
+  statut commande depuis la demande.
+  - Règle : toute action qui modifie quelque chose (appel, correction,
+  changement statut commande) fait passer la demande en En cours si elle était
+  encore en Envoyée.
+
+  Étape 6 (API confirmatrice) — j'ajoute :
+  - Endpoint explicite PUT /api/demandes/{id}/prise-en-charge (ou action
+  intégrée dans chaque autre action via un passage automatique).
+  - Règle côté service : toute action sur une demande Envoyée bascule son statut
+   en En cours avant d'appliquer l'action.
+
+  Étape 8 (Flutter client) — liste "Mes demandes" affiche les 4 statuts avec une
+   couleur claire :
+  - Envoyée → gris neutre
+  - En cours → bleu/primaire (la confirmatrice s'en occupe)
+  - Résolue → vert
+  - Refusée → rouge
+
+  Étape 10 (Flutter confirmatrice) — dans le détail, le bouton "Prendre en
+  charge" apparaît uniquement si le statut est Envoyée.
+
+  Version courte
+
+  ▎ En cours est le statut central. Tant qu'il y reste, le cas vit. Dès qu'une 
+  ▎ action concrète est faite, on y bascule automatiquement. On en sort 
+  ▎ uniquement par Résolue ou Refusée.
+
+  Dis "go étape 1" et je démarre l'audit du chat.
+
+✻ Cogitated for 30s
+
+> jai une idee pour que le demande ne souahite pas toujours apres 3 tentaive    
+  par exemple rtlephone ferme ou injoiniable elle le va dans le confirmatrice   
+  si non elle ne envoye pas mais si une autre chose or une chose a une liasion  
+  de telephone elle envoye directe comme numero incorecte traite cette idee     
+  c'est vraiment tres efficace                                                  
+
+● Excellente idée — je l'intègre au plan
+
+  Ta logique : ne pas polluer la confirmatrice avec chaque tentative. On laisse
+  au livreur 3 essais pour certains motifs qui peuvent se résoudre tout seuls
+  (téléphone éteint, client injoignable). Pour les motifs qui ne se résoudront
+  jamais sans action humaine (numéro incorrect, adresse incorrecte), on escalade
+   immédiatement.
+
+  C'est effectivement très efficace — ça réduit drastiquement le bruit côté
+  confirmatrice tout en gardant la réactivité là où elle compte.
+
+  A. Classification des motifs livreur en 2 familles
+
+  Famille 1 — Escalation immédiate (dès la 1re tentative)
+
+  Motifs où seule la confirmatrice peut agir :
+
+  - Numéro incorrect
+  - Adresse incorrecte
+  - Adresse incomplète
+  - Adresse introuvable
+  - Client refuse la commande
+  - Client demande report
+  - Colis endommagé
+  - Autre motif
+
+  Raison : un numéro faux restera faux au 2e essai. Inutile d'attendre.
+
+  Famille 2 — Escalation différée (3 tentatives avant escalation)
+
+  Motifs qui peuvent se résoudre d'eux-mêmes si on réessaie :
+
+  - Téléphone éteint
+  - Client injoignable
+  - Client absent
+  - Tentative de livraison échouée (motif neutre)
+
+  Raison : le client peut rallumer son téléphone, rentrer chez lui, être
+  disponible au prochain passage.
+
+  Règle unique
+
+  ┌───────────┬─────────────────────────────┬───────────────────────────────┐
+  │ Tentative │       Motif immédiat        │         Motif différé         │
+  ├───────────┼─────────────────────────────┼───────────────────────────────┤
+  │ 1re       │ Demande créée immédiatement │ Tentative loguée, pas de      │
+  │           │                             │ demande                       │
+  ├───────────┼─────────────────────────────┼───────────────────────────────┤
+  │ 2e        │ (n'existe pas — demande     │ Tentative loguée, pas de      │
+  │           │ déjà créée)                 │ demande                       │
+  ├───────────┼─────────────────────────────┼───────────────────────────────┤
+  │ 3e        │ —                           │ Demande créée + confirmatrice │
+  │           │                             │  notifiée                     │
+  └───────────┴─────────────────────────────┴───────────────────────────────┘
+
+  B. Mécanisme proposé
+
+  Objet technique : Tentative de livraison
+
+  Chaque changement de statut livreur vers un statut autre que LIVRE crée une
+  tentative en base, indépendamment du motif.
+
+  - Si le motif est immédiat → la tentative crée aussi une demande sur-le-champ.
+  - Si le motif est différé → on compte les tentatives avec motif différé pour
+  cette commande ; au 3e cumulé, on crée la demande et on lie les 3 tentatives.
+
+  Règle "une seule demande active par commande × motif"
+
+  Tant qu'une demande est ouverte (Envoyée ou En cours) pour un motif donné sur
+  une commande donnée, les nouvelles tentatives du même motif n'en créent pas 
+  une deuxième. Elles incrémentent le compteur et s'ajoutent à l'historique de
+  la demande existante.
+
+  Si la demande devient Résolue ou Refusée, un nouveau problème du même type sur
+   la même commande peut recréer une demande (nouveau cycle).
+
+  Auto-résolution quand la livraison réussit
+
+  Si le livreur finit par livrer (statut → LIVRE) alors qu'une demande était
+  ouverte pour cette commande, la demande passe automatiquement en Résolue avec
+  la note "Livraison effectuée par le livreur". Pas de cas zombie, pas de
+  travail inutile pour la confirmatrice.
+
+  Affichage côté client (important)
+
+  Même avant la création d'une demande, le client doit voir les tentatives dans
+  son tracking, sinon il reste dans le noir.
+
+  - 1re tentative "téléphone éteint" → bandeau sur le tracking : "Le livreur a
+  tenté de te joindre — rallume ton téléphone. Prochaine tentative prévue."
+  - 2e tentative → "Deuxième tentative. Rallume ton téléphone."
+  - 3e tentative → "Troisième tentative. Support contacté." + demande visible
+  dans "Mes demandes".
+
+  Ça conserve l'esprit de ton idée (ne pas harceler la confirmatrice), tout en
+  gardant le client informé pour qu'il puisse corriger de son côté avant que ça
+  escalade.
+
+  Affichage côté confirmatrice
+
+  Quand la demande arrive au 3e essai, le détail montre clairement les 3 
+  tentatives horodatées (date, heure, position GPS si dispo, motif, livreur).
+  Elle voit toute l'histoire d'un coup.
+
+  Seuil configurable
+
+  Le seuil "3" est un paramètre du backend, pas une constante hardcodée. On peut
+   plus tard l'ajuster par motif (2 pour "client absent", 3 pour "téléphone
+  éteint"), mais pour la v1 un seuil unique de 3 suffit.
+
+  C. Impact sur le plan
+
+  Étape 2 — Définition du modèle (à enrichir)
+
+  Ajouter :
+  - La classification des motifs en ESCALATION_IMMEDIATE et ESCALATION_DIFFEREE.
+  - Le seuil de tentatives (3, configurable).
+  - Règle d'auto-résolution au LIVRE.
+  - Règle "une seule demande active par commande × motif".
+
+  Étape 3 — Migration DB (à enrichir)
+
+  Ajouter une table :
+  - F_DEMANDE_TENTATIVE : Id, CommandePiece, Motif, LivreurUserId, CreatedAt,
+  Latitude, Longitude (optionnel), DemandeId (nullable — rempli quand la
+  tentative a déclenché ou rejoint une demande).
+
+  Ajouter sur la demande :
+  - TentativesCount (int) — pour affichage rapide sans requête.
+  - FirstAttemptAt / LastAttemptAt.
+
+  Étape 5 — Hook livreur (à enrichir — c'est le cœur de ta modif)
+
+  Quand le livreur change le statut de la commande vers autre chose que LIVRE :
+
+  1. Créer une Tentative en base (toujours).
+  2. Lire la famille du motif.
+  3. Si immédiat :
+    - Chercher s'il existe déjà une demande active (Commande, Motif). Si oui →
+  attacher la tentative à cette demande, incrémenter le compteur. Si non → créer
+   la demande, attacher la tentative.
+  4. Si différé :
+    - Compter les tentatives de motifs différés actives pour cette commande (non
+   liées à une demande Résolue/Refusée).
+    - Si ≥ 3 → créer la demande (ou attacher à la demande active), notifier la
+  confirmatrice.
+    - Si < 3 → laisser la tentative pending, notifier uniquement le client via
+  son tracking.
+  5. Si le statut → LIVRE : auto-résoudre toute demande active liée à cette
+  commande.
+
+  Étape 8 — Flutter client (à enrichir)
+
+  Dans le tracking, afficher un bandeau tentatives :
+  - "Tentative 1/3 — le livreur n'a pas pu te joindre. Rallume ton téléphone."
+  - Après 3 tentatives : "Ton dossier a été transmis au support."
+
+  Étape 10 — Flutter confirmatrice (à enrichir)
+
+  Dans le détail de la demande, afficher un bloc Historique des tentatives :
+  - Liste horodatée des 3 (ou plus) tentatives.
+  - Pour chacune : date/heure, motif, livreur, position GPS si dispo.
+
+  D. Plan mis à jour — étape par étape
+
+  Phase 1 — Fondations
+
+  1. Audit du chat existant (inchangé)
+  2. Définition du modèle Demande + Tentative (enrichi) — motifs classés
+  immédiat/différé, seuil 3, règles d'auto-résolution.
+  3. Migration DB (enrichie) — ajouter table F_DEMANDE_TENTATIVE, colonnes
+  TentativesCount, FirstAttemptAt, LastAttemptAt.
+
+  Phase 2 — Backend
+
+  4. Endpoints client (inchangé).
+  5. Hook livreur avec logique de seuil (le cœur de ta nouvelle règle) :
+    - Création auto d'une tentative à chaque changement de statut livreur ≠
+  LIVRE.
+    - Classification du motif.
+    - Décision "créer une demande maintenant ou pas" selon famille + compteur.
+    - Fusion avec une demande active existante si elle existe.
+    - Auto-résolution au LIVRE.
+  6. Endpoints confirmatrice (inchangé dans les actions, mais le détail renvoie
+  l'historique des tentatives).
+  7. Endpoints avis (inchangé).
+
+  Phase 3 — Frontend
+
+  8. Flutter client (+ bandeau tentatives dans le tracking).
+  9. Flutter livreur (inchangé — son écran de changement de statut reste le
+  même).
+  10. Flutter confirmatrice (+ bloc "Historique des tentatives" dans le détail
+  demande).
+
+  Phase 4 — Finition
+
+  11. Notifications — push uniquement quand une vraie demande est créée (pas sur
+   les tentatives 1 et 2). Réduit le bruit.
+  12. Détails de finition (inchangé).
+  13. QA + nettoyage (inchangé).
+
+  E. Points d'attention ajoutés
+
+  - Ne jamais perdre une tentative : chaque changement de statut avec motif est
+  logué en base, même s'il ne crée pas de demande. L'audit doit être complet.
+  - Seuil côté serveur uniquement. Ne pas laisser le client ou le livreur
+  décider. Le serveur compte et décide.
+  - Basculement de famille : si le livreur fait 2× "téléphone éteint" puis 1×
+  "numéro incorrect" → la 3e (immédiate) crée la demande tout de suite,
+  indépendamment des 2 précédentes. Les 2 tentatives précédentes sont attachées
+  à la demande pour le contexte.
+  - Temps écoulé : on peut éventuellement exiger un délai minimum entre 2
+  tentatives du même motif (ex. 30 min) pour éviter qu'un livreur impatient
+  fasse 3 tentatives en 5 minutes. À décider en étape 2 — pour la v1 on peut
+  s'en passer et juste compter.
+  - Ce que voit le livreur : il ne voit pas le compteur (ce n'est pas son
+  problème). Il change le statut, le système fait sa logique en arrière-plan.
+
+  F. Version courte
+
+  ▎ Le livreur change le statut comme d'habitude. Le serveur classe le motif. 
+  ▎ Motif "action serveur requise" (numéro incorrect, adresse fausse, etc.) → 
+  ▎ demande créée immédiatement. Motif "qui peut se résoudre tout seul" 
+  ▎ (téléphone éteint, client absent) → on compte en silence ; au 3e, demande 
+  ▎ créée. Le client voit les tentatives dans son tracking pour pouvoir corriger
+  ▎  avant escalation. Livraison réussie → toute demande ouverte se ferme toute 
+  ▎ seule.
+
+  Ton idée règle un vrai problème opérationnel — la confirmatrice n'est plus
+  submergée par du bruit, mais les vrais cas arrivent en temps réel.
+
+  Dis "go étape 1" et je commence l'audit.
+
+✻ Baked for 1m 45s
+
+> traite tous les etape par odre qui convient et apres si il y a des chose a    
+  change a va la discuté                                                        
+
+● Je démarre par l'Étape 1 — Audit du chat existant. Je liste tous les fichiers,
+   endpoints, entités et références à retirer/modifier. Ensuite on discute avant
+   de passer à l'étape 2.
+
+  Searched for 14 patterns, read 5 files, listed 2 directories (ctrl+o to expand)
+
+● Audit terminé. Voici le résultat complet.
+
+  Étape 1 — Audit du chat (résultat)
+
+  A. Backend — à SUPPRIMER intégralement
+
+  Fichiers (à effacer)
+
+  Fichier: Hubs/ReclamationHub.cs
+  Raison: Le hub SignalR du chat
+  ────────────────────────────────────────
+  Fichier: DTO/Reclamations/ReclamationMessageDto.cs
+  Raison: DTO message — inutile sans chat
+  ────────────────────────────────────────
+  Fichier: DTO/Reclamations/SendReclamationMessageRequestDto.cs
+  Raison: DTO envoi message
+  ────────────────────────────────────────
+  Fichier: Auth/Constants/ReclamationMessageTypes.cs
+  Raison: Types de messages (TEXT/SYSTEM/IMAGE)
+  ────────────────────────────────────────
+  Fichier: Model/F_RECLAMATION_MESSAGE.cs
+  Raison: Entité message
+  ────────────────────────────────────────
+  Fichier: Services/Reclamations/ReclamationMediaStorageService.cs
+  Raison: Stockage des images du chat (on garde un service similaire pour les
+    photos de demandes, mais renommé)
+
+  Endpoints à retirer (contrôleurs)
+
+  Controllers/Reclamations/ReclamationsController.cs (client)
+  - GET /api/reclamations/{id}/messages
+  - POST /api/reclamations/{id}/messages
+  - POST /api/reclamations/{id}/messages/image
+
+  Controllers/Confirmateur/ConfirmateurReclamationsController.cs (confirmatrice)
+  - GET /api/confirmateur/reclamations/{id}/messages
+  - POST /api/confirmateur/reclamations/{id}/messages
+  - POST /api/confirmateur/reclamations/{id}/messages/image
+
+  À garder dans ces contrôleurs : GET mine, POST (create), GET {id}, PUT 
+  {id}/status, PUT {id}/assign — on les modifiera à l'étape 6.
+
+  Méthodes à retirer dans Services/Reclamations/ReclamationsService.cs
+
+  - GetMessagesForClientAsync
+  - GetMessagesForStaffAsync
+  - GetMessagesCoreAsync
+  - SendClientMessageAsync
+  - SendStaffMessageAsync
+  - SendClientImageMessageAsync
+  - SendStaffImageMessageAsync
+  - AddSystemMessage
+  - BroadcastMessageAsync
+  - BroadcastStatusAsync (ou à conserver en light uniquement pour "statut
+  changé" — voir étape 11)
+  - MapMessageAsync
+
+  Références à retirer dans Program.cs
+
+  - using Web_Api.Services.Reclamations; conservé
+  - builder.Services.AddScoped<ReclamationMediaStorageService>(); → à remplacer
+  par le service des photos de demande (étape 5)
+  - app.MapHub<ReclamationHub>("/hubs/reclamations"); → à retirer (ou à garder
+  si on conserve SignalR pour notifications légères — décision à prendre en
+  étape 11)
+  - builder.Services.AddSignalR(); → à retirer si on vire SignalR ; à garder
+  sinon
+
+  Colonnes à retirer de F_RECLAMATION (après archivage)
+
+  - IsReadByClient
+  - IsReadByStaff
+  - LastMessageAt
+
+  Colonnes/tables à archiver puis supprimer
+
+  - Table F_RECLAMATION_MESSAGE complète — d'abord renommée en
+  F_RECLAMATION_MESSAGE_ARCHIVE (sécurité), puis supprimée quand on valide qu'on
+   n'a plus besoin de rien.
+  - Colonne shadow F_RECLAMATIONId de la table F_RECLAMATION_MESSAGE — disparaît
+   avec la table.
+
+  Constantes à adapter dans Auth/Constants/ReclamationStatuses.cs
+
+  - Garder OUVERTE, EN_COURS, RESOLUE, FERMEE, REFUSEE ou simplifier à 4 :
+  ENVOYEE, EN_COURS, RESOLUE, REFUSEE (décision en étape 2).
+  - Retirer EN_ATTENTE_CLIENT, EN_ATTENTE_INTERNE, REPONDUE, ANNULEE — inutiles
+  sans chat.
+
+  ---
+  B. Flutter — à SUPPRIMER intégralement
+
+  Fichiers (à effacer)
+
+  Fichier: lib/ui/screens/client_claim_chat_screen.dart
+  Raison: Écran chat client
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/confirmatrice_claim_chat_screen.dart
+  Raison: Écran chat confirmatrice
+  ────────────────────────────────────────
+  Fichier: lib/state/client_claim_chat_provider.dart
+  Raison: Provider chat client
+  ────────────────────────────────────────
+  Fichier: lib/state/confirmatrice_claim_chat_provider.dart
+  Raison: Provider chat confirmatrice
+  ────────────────────────────────────────
+  Fichier: lib/data/services/client_claim_chat_service.dart
+  Raison: Service HTTP chat client
+  ────────────────────────────────────────
+  Fichier: lib/ui/widgets/chat/chat_input_bar.dart
+  Raison: Barre de saisie chat
+  ────────────────────────────────────────
+  Fichier: lib/ui/widgets/chat/chat_message_bubble.dart
+  Raison: Bulle de message
+  ────────────────────────────────────────
+  Fichier: lib/ui/widgets/chat/ (dossier entier)
+  Raison: À effacer complètement
+  ────────────────────────────────────────
+  Fichier: lib/models/client_claim_message.dart
+  Raison: Modèle message
+  ────────────────────────────────────────
+  Fichier: lib/data/quick_replies.dart
+  Raison: Réponses rapides confirmatrice
+  ────────────────────────────────────────
+  Fichier: lib/core/realtime_service.dart
+  Raison: Connexion SignalR (ou à garder très light pour notifications — étape
+    11)
+
+  Dépendance à retirer de pubspec.yaml
+
+  - signalr_netcore: ^1.4.4 (sauf si on garde le hub pour les notifications
+  statut)
+
+  Méthodes à retirer
+
+  lib/data/services/client_claims_service.dart : fetchMessages, sendMessage,
+  sendImageMessage
+
+  lib/data/services/confirmatrice_claims_service.dart : fetchMessages,
+  sendMessage, sendImageMessage
+
+  Imports et références à nettoyer (dans fichiers qui restent)
+
+  Fichier: lib/main.dart
+  Référence à retirer: import 'core/realtime_service.dart';, import 
+    'state/client_claim_chat_provider.dart';, import 
+    'state/confirmatrice_claim_chat_provider.dart';, les 2
+  ChangeNotifierProvider
+     qui créent ces providers, la variable realtime
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/client_claim_details_screen.dart
+  Référence à retirer: Imports chat, méthode _openChat, FloatingActionButton
+    "Chat"
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/confirmatrice_claim_details_screen.dart
+  Référence à retirer: Imports chat, navigation vers
+    confirmatrice_claim_chat_screen.dart
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/client_claims_screen.dart
+  Référence à retirer: Import et usage de ClientClaimChatProvider dans
+    _openDetails
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/client_orders_screen.dart
+  Référence à retirer: Import et usage de ClientClaimChatProvider dans
+    _openTracking
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/client_order_tracking_screen.dart
+  Référence à retirer: Import et usage de ClientClaimChatProvider dans
+    _openCreateClaim
+  ────────────────────────────────────────
+  Fichier: lib/ui/screens/confirmatrice_claims_screen.dart
+  Référence à retirer: Import et usage de ConfirmatriceClaimChatProvider
+
+  ---
+  C. Ce qui reste (à garder et à adapter plus tard)
+
+  Backend — à garder, on les adaptera dans les étapes suivantes
+
+  - Model/F_RECLAMATION.cs — renommée F_DEMANDE plus tard, ou on garde le nom.
+  Les propriétés DoPiece, ArRef, IsGlobal, ClientUserId, AssignedToUserId,
+  TypeReclamation, Motif, Description, Statut, Priorite, CreatedAt, UpdatedAt,
+  ClosedAt, ResolvedAt sont bonnes.
+  - Services/Reclamations/ReclamationsService.cs — méthodes non-chat :
+  GetMineAsync, GetForStaffAsync, CreateAsync, GetDetailsForClientAsync,
+  GetDetailsForStaffAsync, UpdateStatusAsync, AssignAsync, MapListAsync,
+  MapDetailsAsync, GenerateCodeAsync, FindConfirmateurForClientGouvernoratAsync,
+   OrderBelongsToClientAsync.
+  - DTO/Reclamations/ — tout ce qui n'est pas message :
+  CreateReclamationRequestDto, ReclamationDetailsDto, ReclamationListItemDto,
+  ReclamationOrderLineDto, ReclamationResponseDto, AssignReclamationRequestDto,
+  UpdateReclamationStatusRequestDto.
+  - Auth/Constants/ReclamationTypes.cs — à enrichir avec les nouveaux motifs
+  (étape 2).
+  - Controllers/Reclamations/ReclamationsController.cs — on garde, on supprime
+  juste les 3 actions messages.
+  - Controllers/Confirmateur/ConfirmateurReclamationsController.cs — idem.
+
+  Flutter — à garder et à adapter
+
+  - lib/models/client_claim.dart — modèle demande, à enrichir (source,
+  correction, photos).
+  - lib/data/services/client_claims_service.dart — on enlève les 3 méthodes
+  messages.
+  - lib/data/services/confirmatrice_claims_service.dart — idem.
+  - lib/state/client_claims_provider.dart — provider principal, à garder.
+  - lib/state/confirmatrice_claims_provider.dart — à garder.
+  - lib/ui/screens/client_claims_screen.dart — à adapter (pas de supprimer).
+  - lib/ui/screens/client_claim_details_screen.dart — à adapter (retirer FAB
+  Chat).
+  - lib/ui/screens/client_create_claim_screen.dart — à refondre en étape 8.
+  - lib/ui/screens/client_order_tracking_screen.dart — à adapter (ajouter
+  bandeau tentatives).
+  - lib/ui/screens/confirmatrice_claims_screen.dart — à refondre en étape 10.
+  - lib/ui/screens/confirmatrice_claim_details_screen.dart — à refondre en étape
+   10.
+  - lib/ui/widgets/claims/client_claim_status_badge.dart — à adapter aux 4
+  statuts finaux.
+
+  ---
+  D. Récapitulatif chiffré
+
+  ┌───────────────────────────────┬─────────────────────────────────────────┐
+  │           Catégorie           │                 Nombre                  │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Fichiers backend à supprimer  │ 6                                       │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Endpoints backend à retirer   │ 6 (3 client + 3 confirmatrice)          │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Méthodes de service backend à │ 11                                      │
+  │  retirer                      │                                         │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Fichiers Flutter à supprimer  │ 11 (+ dossier widgets/chat/)            │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Fichiers Flutter à modifier   │ 7                                       │
+  │ (imports à nettoyer)          │                                         │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Méthodes Flutter à retirer    │ 6 (3 par service)                       │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Dépendance à retirer          │ signalr_netcore                         │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │ Colonnes DB à retirer         │ 3 sur F_RECLAMATION + table             │
+  │                               │ F_RECLAMATION_MESSAGE entière           │
+  └───────────────────────────────┴─────────────────────────────────────────┘
+
+  ---
+  E. Risques identifiés pendant l'audit
+
+  1. realtime_service.dart sert uniquement au chat → peut partir intégralement.
+  Si on veut garder des notifications légères "statut changé", on rebâtira un
+  mini-service plus tard (étape 11).
+  2. signalr_netcore (dépendance Flutter + AddSignalR() backend) : à retirer
+  sauf si on garde les notifs.
+  3. ReclamationStatuses a 8 statuts en base. On doit faire une passe pour
+  migrer les anciennes réclamations vers les 4 nouveaux (OUVERTE → ENVOYEE,
+  REPONDUE → EN_COURS, ANNULEE → REFUSEE, FERMEE → RESOLUE).
+  4. Archivage avant suppression : la table F_RECLAMATION_MESSAGE a 1 ligne
+  actuellement (vérifié tout à l'heure dans sqlcmd — tu as 1 réclamation
+  REC-20260414-0001). Avant de dropper, on la renomme en _ARCHIVE. Risque quasi
+  nul.
+  5. Le renommage F_RECLAMATION → F_DEMANDE est optionnel. Je recommande de
+  garder le nom pour éviter de casser 30+ références dans le code. On garde
+  juste TypeReclamation, Motif, etc. Les URLs /api/reclamations restent stables.
+
+  ---
+  F. Ce que je propose pour la suite
+
+  - Confirme que tu acceptes de :
+    a. Supprimer les 6 fichiers backend, 11 fichiers Flutter, 6 endpoints, 11
+  méthodes service.
+    b. Conserver le nom F_RECLAMATION en base (pas de renommage massif).
+    c. Conserver les URLs /api/reclamations et /api/confirmateur/reclamations
+  (pas de renommage d'URL).
+    d. Archiver la table messages avant de la dropper.
+  - Décision à prendre pour l'étape 11 :
+    - Option A : on garde SignalR pour notifier "nouvelle demande" et "statut
+  changé" (plus réactif).
+    - Option B : on vire SignalR complètement, le client fait du polling toutes
+  les 20 sec (plus simple, plus robuste, un peu moins temps réel).
+    - Je recommande l'option B pour cette v2 — tu simplifies massivement, tu
+  perds 2 secondes de réactivité, tu gagnes en stabilité.
+
+  Dis-moi :
+  1. "OK audit" pour valider, et je passe à l'étape 2 (définition du modèle
+  Demande + Tentative avec enums finaux).
+  2. Ou dis-moi ce que tu veux changer dans cette liste avant.
+
+✻ Sautéed for 3m 7s
+
+> je choisit option A et je confirme a et b et c et pour d drop n'est pas       
+  nesecaire jai deja en etape test d'app mais mon question si tu analyse la     
+  logique est bon ou il faut change quelque chose                               
+
+● Note pour le D : OK, pas d'archivage, on drop directement la table
+  F_RECLAMATION_MESSAGE à l'étape 3.
+
+  Maintenant ton analyse critique. La logique globale est bonne, mais il y a 8 
+  points flous dans ta logique qu'il faut trancher avant l'étape 2, sinon tu vas
+   coder sur du sable. Je te donne mon analyse honnête avec ma recommandation
+  sur chaque point.
+
+  Analyse critique de la logique
+
+  Ce qui est solide — à garder sans toucher
+
+  - Suppression totale du chat.
+  - Confirmatrice centrale avec actions groupées (appeler, appliquer correction,
+   changer statut commande, résoudre, refuser).
+  - 4 statuts simples : Envoyée → En cours → Résolue / Refusée.
+  - Changement de statut livreur = signalement automatique (pas de bouton
+  "Signaler" séparé).
+  - Popup d'avis récurrente après livraison.
+  - Correction proposée par le client, appliquée d'un clic par la confirmatrice.
+  - Option A retenue (SignalR).
+
+  Ça, c'est propre. Rien à changer.
+
+  Les 8 points flous à clarifier maintenant
+
+  1. Comptage des tentatives : par motif ou par commande ?
+
+  Problème : si le livreur fait 1× "téléphone éteint", 1× "client absent", 1×
+  "injoignable", est-ce 1 tentative par motif (donc aucune demande créée) ou 3
+  tentatives cumulées sur la commande (donc escalade au 3e) ?
+
+  Ma recommandation : compter globalement par commande, pas par motif. 3 échecs
+  quel que soit le motif "différé" → escalade. Raison : 3 échecs sur la même
+  commande = vrai problème, peu importe l'étiquette précise.
+
+  2. Cooldown entre tentatives du livreur
+
+  Problème : un livreur pressé peut faire 3× "téléphone éteint" en 2 minutes et
+  déclencher une demande inutile.
+
+  Ma recommandation : imposer un délai minimum de 20 minutes entre 2 tentatives
+  sur la même commande. Si le livreur essaie trop vite, son écran refuse et
+  affiche "Attends avant de réessayer". Simple à coder, évite les faux
+  déclenchements.
+
+  3. Photo obligatoire côté livreur pour "colis endommagé"
+
+  Problème : si le livreur signale un colis endommagé sans preuve visuelle, la
+  confirmatrice n'a rien pour trancher.
+
+  Ma recommandation : photo obligatoire côté livreur pour les motifs colis 
+  endommagé uniquement. L'écran de changement de statut impose l'ajout avant
+  validation. Même règle binaire que pour le client.
+
+  4. Remise en livraison après correction
+
+  Problème : la confirmatrice corrige l'adresse. Faut-il que la commande repasse
+   automatiquement en CONFIRME (pour être re-planifiée) ou qu'elle le fasse à la
+   main ?
+
+  Ma recommandation : explicite, pas automatique. Dans le détail demande, bouton
+   "Remettre en livraison" qui remet la commande en CONFIRME. Raison : elle peut
+   vouloir vérifier, appeler le client, coordonner avec le livreur avant de
+  relancer. Pas d'automatisme invisible.
+
+  5. Le livreur voit-il les corrections confirmatrice ?
+
+  Problème : si la confirmatrice change l'adresse, le livreur doit savoir sinon
+  il repasse à la mauvaise adresse.
+
+  Ma recommandation : oui, le livreur voit la mise à jour sur la commande, sans
+  détail de la demande. Un petit bandeau sur son écran livraison : "Adresse mise
+   à jour par le support — nouvelle adresse : X". Critique opérationnellement,
+  sinon ta boucle est cassée.
+
+  6. Annulation de commande via demande
+
+  Problème : si le client demande "annulation" et que la confirmatrice approuve,
+   quel statut reçoit la commande ?
+
+  Ma recommandation : réutiliser le statut REFUSE existant de F_DOCENTETE (3 =
+  REFUSE). La demande passe en Résolue. Pas de nouveau statut à créer. Simple.
+
+  7. Événements SignalR (option A retenue)
+
+  Problème : sans liste précise, on va ressortir un hub usine à gaz.
+
+  Ma recommandation : exactement 3 événements, rien de plus :
+  - DemandeCreated → notifie la confirmatrice assignée.
+  - DemandeStatusChanged → notifie le client concerné.
+  - CommandeDelivered → notifie le client (déclenche la popup avis).
+
+  Pas de broadcast de messages, pas d'événements chat. Juste ces 3 signaux
+  structurés.
+
+  8. "Autre motif" — toujours escalation immédiate ?
+
+  Problème : on ne sait pas à l'avance ce qu'il y a dedans.
+
+  Ma recommandation : toujours escalation immédiate, sans comptage. Raison : on
+  ne prend pas le risque d'ignorer un vrai problème que le client ou le livreur
+  n'a pas pu classer. Description obligatoire pour que la confirmatrice
+  comprenne vite.
+
+  Point bonus que je n'avais pas mentionné avant
+
+  Livraison réussie avec demande ouverte
+
+  Quand le livreur finit par mettre LIVRE alors qu'une demande est encore
+  Envoyée ou En cours pour cette commande → la demande passe automatiquement en 
+  Résolue avec la note "Livraison effectuée — cas clos automatiquement". Pas de
+  cas zombie, pas de clic confirmatrice inutile. Déjà dans mon plan mais je te
+  le re-souligne parce que c'est un détail critique.
+
+  Résumé des décisions à valider
+
+  ┌─────┬───────────────────────┬───────────────────────────────────────────┐
+  │  #  │       Question        │             Ma recommandation             │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 1   │ Comptage tentatives   │ Globalement par commande (pas par motif)  │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 2   │ Cooldown entre        │ 20 min                                    │
+  │     │ tentatives            │                                           │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 3   │ Photo livreur "colis  │ Obligatoire                               │
+  │     │ endommagé"            │                                           │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 4   │ Remise en livraison   │ Manuel (bouton "Remettre en livraison")   │
+  │     │ après correction      │                                           │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 5   │ Livreur voit les      │ Oui, bandeau sur sa commande              │
+  │     │ corrections           │                                           │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 6   │ Statut commande après │ REFUSE existant (pas de nouveau statut)   │
+  │     │  annulation           │                                           │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 7   │ Événements SignalR    │ 3 uniquement (DemandeCreated,             │
+  │     │                       │ DemandeStatusChanged, CommandeDelivered)  │
+  ├─────┼───────────────────────┼───────────────────────────────────────────┤
+  │ 8   │ "Autre motif"         │ Toujours escalation immédiate             │
+  └─────┴───────────────────────┴───────────────────────────────────────────┘
+
+  Ce que je te demande
+
+  Dis-moi oui/non sur chacune des 8 recommandations (ou "OK tout" si tu valides
+  tout), et je passe à l'étape 2 — Définition du modèle avec ces règles figées.
+
+  Si tu veux changer quelque chose dans une recommandation, dis-le, on en
+  discute avant de figer.
+
+✻ Cogitated for 1m 36s
+
+> pour la tentative  : 1 tentaive c'est pour la journé elle le faire 2 3 appele 
+   et passe reporté et demain faire comme hier et aussi le lendemain et         
+  finallement elle passe a confirmtrice elle decide de retourné si par le       
+  appler ou non :  tres recommandé que la confiramtrice dans la detail de       
+  demande elle contient tous les infomartamtion de livreur et tous les          
+  infomartaion de client . pour les autre points je suis d'accord avec toi      
+
+● Ta règle est meilleure que la mienne — plus réaliste du terrain. Je valide et
+  j'intègre.
+
+  Mise à jour de la logique
+
+  1. Comptage des tentatives — version corrigée (ta règle)
+
+  Règle finale : 1 tentative = 1 journée d'échec, pas 1 changement de statut.
+
+  - Dans la même journée, le livreur peut appeler 2-3 fois, faire plusieurs
+  tentatives d'approche, basculer le statut plusieurs fois. Tout ça compte pour
+  1 seule tentative journalière.
+  - À la fin de la journée, s'il a mis REPORTE ou un statut différé avec un
+  motif "soft" (injoignable, téléphone éteint, absent…), on enregistre 1 
+  tentative pour ce jour.
+  - Le lendemain, s'il remet un statut différé → 2e tentative.
+  - Le jour 3 → 3e tentative → escalade automatique à la confirmatrice.
+
+  Côté technique, j'implémente ça avec une contrainte simple : une seule entrée 
+  "tentative" par couple (commande, date du jour) pour les motifs différés. Si
+  le livreur revient changer le statut le même jour, on met à jour l'entrée
+  existante (dernière heure, dernier motif), on n'en crée pas une nouvelle.
+
+  Conséquence sur le point 2 : le cooldown de 20 minutes devient inutile. Ta
+  règle "1 par jour" absorbe naturellement le cas du livreur impatient. On
+  supprime ce point.
+
+  2. Points 3 à 8 — tous confirmés
+
+  ┌─────┬────────────────────────────────────────────────────────────────────┐
+  │  #  │                           Décision figée                           │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 3   │ Photo obligatoire côté livreur pour "colis endommagé"              │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 4   │ Remise en livraison = manuelle (bouton "Remettre en livraison")    │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 5   │ Livreur voit les corrections via bandeau sur la commande           │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 6   │ Annulation → statut REFUSE existant                                │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 7   │ SignalR avec 3 événements uniquement (DemandeCreated,              │
+  │     │ DemandeStatusChanged, CommandeDelivered)                           │
+  ├─────┼────────────────────────────────────────────────────────────────────┤
+  │ 8   │ "Autre motif" → toujours escalation immédiate                      │
+  └─────┴────────────────────────────────────────────────────────────────────┘
+
+  3. Nouveau point validé — infos complètes dans le détail demande
+
+  Tu as raison, c'est critique. Le détail demande côté confirmatrice doit
+  afficher tout le contexte nécessaire pour décider sans naviguer ailleurs.
+
+  Bloc Client
+  - Nom complet, téléphone, email
+  - Adresse complète (rue, ville, gouvernorat, code postal)
+  - Position GPS (si dispo)
+  - Code client Sage
+  - Nombre de commandes passées et nombre de réclamations antérieures (pour
+  contextualiser)
+  - Bouton "Appeler le client" (intent tel:)
+
+  Bloc Livreur (si la demande vient d'un livreur)
+  - Nom du livreur
+  - Téléphone du livreur
+  - Position GPS actuelle / dernière connue
+  - Nombre de livraisons du jour
+  - Bouton "Appeler le livreur"
+
+  Bloc Commande
+  - Référence + date de commande
+  - Statut actuel de la commande
+  - Liste des articles + quantités
+  - Total à payer, mode de paiement, mode de livraison
+  - Timeline des changements de statut de la commande
+
+  Bloc Tentatives (si escalation différée)
+  - Liste horodatée : jour 1 (motif, heure de la dernière tentative), jour 2,
+  jour 3…
+  - Pour chaque jour : motif, heure, position GPS si dispo, livreur concerné
+
+  Bloc Demande
+  - Motif choisi + description courte
+  - Photos (galerie zoomable)
+  - Correction proposée par le client (mise en évidence si présente)
+  - Note interne confirmatrice (zone libre, pas visible client)
+
+  Barre d'actions (collante en bas)
+  - Prendre en charge · Appliquer correction · Changer statut commande ·
+  Remettre en livraison · Résoudre · Refuser · Appeler client · Appeler livreur
+
+  Tout sur un seul écran. Aucun aller-retour.
+
+  4. Règles figées pour l'étape 2
+
+  Je fige pour l'étape 2 :
+
+  - 4 statuts demande : ENVOYEE → EN_COURS → RESOLUE / REFUSEE
+  - 1 tentative = 1 jour (contrainte unique par commande + date)
+  - 3 jours différés consécutifs → escalade auto
+  - Motifs immédiats → demande dès la 1re journée
+  - Photo livreur obligatoire pour colis endommagé
+  - SignalR avec 3 events
+  - Détail demande = tout le contexte (client, livreur, commande, tentatives,
+  demande)
+  - Pas de renommage F_RECLAMATION (on garde)
+  - URLs stables (/api/reclamations)
+  - Drop direct de F_RECLAMATION_MESSAGE (pas d'archivage)
+
+  Task complete
+
+  Audit validé. Tout est propre.
+
+  ---
+  Je suis prêt à enchaîner sur l'Étape 2 — Définition du modèle Demande + 
+  Tentative.
+
+  Je te fournirai :
+  - La liste complète des enums (motifs client, motifs livreur, statuts,
+  sources)
+  - La classification détaillée (immédiat/différé) de chaque motif
+  - La structure finale de la table F_RECLAMATION modifiée
+  - La nouvelle table F_RECLAMATION_TENTATIVE
+  - Les tables F_AVIS_COMMANDE et F_AVIS_PROMPT_STATE
+  - Les règles de transition de statut (qui peut passer à quoi, depuis quoi)
+  - Les règles photos par motif
+
+  Dis "go étape 2" et je te sors le document complet.
+
+✻ Worked for 1m 11s

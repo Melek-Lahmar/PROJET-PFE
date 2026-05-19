@@ -1,0 +1,98 @@
+﻿# =========================
+# Windows
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDE / Editors
+# =========================
+.vs/
+**/.vs/
+.idea/
+**/.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# React / Node
+# =========================
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.vite/
+**/.vite/
+coverage/
+**/coverage/
+
+# =========================
+# ASP.NET / .NET
+# =========================
+bin/
+**/bin/
+obj/
+**/obj/
+TestResults/
+**/TestResults/
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# =========================
+# Flutter / Dart
+# =========================
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# =========================
+# Android / Gradle
+# =========================
+.gradle/
+**/.gradle/
+**/local.properties
+**/.kotlin/
+
+# =========================
+# Secrets / Environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Archives / Backups
+# =========================
+*.zip
+*.rar
+*.7z
+*.bak
+*.backup
+
+# =========================
+# Database local files
+# =========================
+*.mdf
+*.ldf
+*.sqlite
+*.sqlite3
+*.db
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+.cache/

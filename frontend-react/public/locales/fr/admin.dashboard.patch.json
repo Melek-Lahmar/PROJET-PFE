@@ -1,0 +1,114 @@
+{
+  "dashboard": {
+    "admin": {
+      "connected": "Administrateur · Connecté"
+    },
+    "nav": {
+      "overview": "Vue globale",
+      "sales": "Ventes",
+      "orders": "Commandes",
+      "products": "Produits",
+      "stock": "Stock",
+      "depots": "Dépôts",
+      "logistics": "Livraison",
+      "drivers": "Livreurs",
+      "clients": "Clients",
+      "reclamations": "Réclamations",
+      "sync": "Synchronisation Sage",
+      "insights": "Insights",
+      "backAdmin": "Retour admin"
+    },
+    "meta": {
+      "cockpit": "Cockpit décisionnel",
+      "updatedAt": "Mis à jour",
+      "notAvailable": "Non disponible",
+      "executiveSummary": "Résumé exécutif"
+    },
+    "actions": {
+      "refresh": "Actualiser",
+      "refreshing": "Actualisation..."
+    },
+    "filters": {
+      "period": "Période",
+      "from": "Date début",
+      "to": "Date fin",
+      "depot": "Dépôt",
+      "governorate": "Gouvernorat",
+      "clientType": "Type client"
+    },
+    "period": {
+      "7d": "7 jours",
+      "30d": "30 jours",
+      "90d": "90 jours",
+      "12m": "12 mois",
+      "custom": "Personnalisée"
+    },
+    "pages": {
+      "overview": {
+        "title": "Vue globale",
+        "description": "Synthèse générale des ventes, commandes, stock, livraison et qualité des données."
+      },
+      "sales": {
+        "title": "Performance commerciale",
+        "description": "Analyse du chiffre d’affaires, du panier moyen, des produits et clients les plus performants."
+      },
+      "orders": {
+        "title": "Commandes",
+        "description": "Pilotage du cycle commande, statuts, modes de paiement et commandes à risque."
+      },
+      "products": {
+        "title": "Produits et catalogue",
+        "description": "Qualité catalogue, publication, images, ruptures et performance produit."
+      },
+      "stock": {
+        "title": "Stock",
+        "description": "Disponibilité, réservations, seuils critiques et anomalies par dépôt."
+      },
+      "depots": {
+        "title": "Dépôts",
+        "description": "Activité, stock disponible, commandes et anomalies par dépôt."
+      },
+      "logistics": {
+        "title": "Livraison",
+        "description": "Suivi logistique, statuts de livraison, taux de réussite, retours et délais."
+      },
+      "drivers": {
+        "title": "Livreurs",
+        "description": "Charge actuelle, performance, réussite et alertes par livreur."
+      },
+      "clients": {
+        "title": "Clients",
+        "description": "Segmentation B2B/B2C, activité, région, qualité d’adresse et meilleurs clients."
+      },
+      "reclamations": {
+        "title": "Réclamations",
+        "description": "Suivi des réclamations, motifs, statuts, criticité et délai de traitement."
+      },
+      "sync": {
+        "title": "Synchronisation Sage",
+        "description": "État des référentiels, anomalies de données et qualité de synchronisation."
+      },
+      "insights": {
+        "title": "Insights stratégiques",
+        "description": "Recommandations déterministes basées sur les règles métier et les agrégations."
+      }
+    },
+    "charts": {
+      "primaryTrend": "Tendance principale",
+      "secondaryTrend": "Tendance secondaire",
+      "statusDistribution": "Répartition par statut",
+      "topEntities": "Top éléments"
+    },
+    "sections": {
+      "alerts": "Alertes prioritaires"
+    },
+    "errors": {
+      "title": "Chargement impossible",
+      "description": "Une erreur est survenue pendant la récupération des données."
+    },
+    "empty": {
+      "title": "Aucune donnée",
+      "description": "Aucune donnée exploitable avec les filtres actuels."
+    }
+  }
+}

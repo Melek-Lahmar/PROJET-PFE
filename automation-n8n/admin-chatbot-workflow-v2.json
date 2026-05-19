@@ -1,0 +1,257 @@
+{
+  "name": "Admin Chatbot V2 — PFE Livraison COD",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook (POST /chatbot)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validation du payload Flutter\nconst body = $json.body || $json;\nconst question = (body.question || '').toString().trim();\nif (!question) throw new Error('question is required');\nreturn [{ json: { question, sessionId: body.sessionId || null } }];"
+      },
+      "id": "validate-1",
+      "name": "Validate payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es le routeur d'intentions du chatbot admin d'une plateforme de livraison COD (Cash on Delivery) en Tunisie.\\n\\nLe projet : 4 rôles métier (CLIENT, CONFIRMATEUR, LIVREUR, ADMIN). Cycle commande : BC (créé par client) → CONFIRME (par confirmatrice) → BL → tentatives livreur → LIVRE / RETOUR / REPORTE. Statuts commande DO_Valide : EN_ATTENTE, CONFIRME, TENTATIVE, REFUSE. Statuts livraison LI_Statut : CONFIRME, EN_LIVRAISON, LIVRE, RETOUR, DEPOT, REPORTE. Réclamations (du client) — 4 statuts : ENVOYEE, EN_COURS_DE_TRAITEMENT, CLOTUREE, REFUSEE — 7 motifs : CHANGEMENT_ADRESSE, CHANGEMENT_NUMERO, REPROGRAMMATION, ANNULATION, COLIS_NON_RECU (avant livraison) + COLIS_ENDOMMAGE, COLIS_NON_CORRESPONDANT (après livraison). Demandes (du livreur) — 7 motifs en 3 groupes : A immédiat visible client (NUMERO_INCORRECT, ADRESSE_INCORRECTE), B immédiat interne (CLIENT_REFUSE, AUTRE), C différé après 3 tentatives (CLIENT_INJOIGNABLE, TELEPHONE_ETEINT, CLIENT_ABSENT). Confirmatrice : pause/active, attribution auto par charge + ancienneté + éligibilité, redistribution si déconnectée >30min, lock 15min sur BC. Livreur : pool géographique par gouvernorat, reprogrammation J+1 à J+14 sur créneau MATIN/APRES_MIDI/SOIR. SignalR : 9 events temps réel. Sage X3 = ERP source de vérité. Frais HOME = 8 DT, timbre fiscal = 1 DT. Gouvernorats Tunisie : Tunis, Ariana, Ben Arous, Manouba, Nabeul, Bizerte, Sfax, Sousse, Monastir, Mahdia, Kairouan, Gafsa, Gabes, Medenine, Tataouine, Kasserine, Sidi Bouzid, Beja, Jendouba, Kef, Siliana, Zaghouan, Tozeur, Kebili.\\n\\nTu reçois la question utilisateur et tu retournes EXCLUSIVEMENT un JSON avec ces champs :\\n- action : 'kb' | 'query' | 'analyze' | 'predict' | 'chitchat'\\n- payload : objet adapté à action (vide pour kb/chitchat)\\n- expected_format : 'text' | 'list' | 'chart' | 'metric' | 'kb'\\n\\nRègles de routing :\\n- 'kb' : question conceptuelle / explicative ('c'est quoi une réclamation ?', 'comment marche l'attribution ?', 'rôle confirmatrice ?', 'différence entre BC et BL ?'). payload : {} . expected_format : 'kb'.\\n- 'query' : question chiffrée / liste / agrégat ('combien de commandes', 'top produits', 'liste réclamations', 'chiffre d'affaires Sfax'). payload : { entity: 'orders'|'claims'|'demandes'|'products'|'governorates'|'drivers'|'confirmatrices', metric: 'count'|'sum'|'avg'|'list'|'top', filters: { period: 'today'|'7d'|'30d'|'3m'|'12m', governorate: string|null, status: string|null, motif: string|null, typeCas: string|null }, groupBy: 'status'|'governorate'|'driver'|'day'|'week'|'month'|null, limit: number, orderBy: string|null }. expected_format : 'metric' pour count/sum/avg seuls, 'list' pour list/top, 'chart' si groupBy.\\n- 'analyze' : tendance / comparaison / anomalie / corrélation / distribution ('tendance des retours', 'compare gouvernorats', 'anomalies cette semaine', 'distribution des montants'). payload : { operation: 'trend'|'compare'|'anomaly'|'correlation'|'distribution', subject: { entity, metric: 'count'|'sum_amount'|'return_rate'|'delivery_rate', filters }, options: { granularity: 'day'|'week'|'month', groupBy, baselineWindow, secondMetric, topN } }. expected_format : 'chart' (sauf distribution = 'metric').\\n- 'predict' : prédiction / probabilité / prévision ('risque de retour BC0042', 'volume prévu semaine prochaine', 'probabilité livraison'). payload : { task: 'return_risk'|'delivery_first_attempt'|'volume_forecast', input: { doPiece, governorate, amount, paymentMode, deliveryMode, clientType, dayOfWeek, priorReturns, horizonDays } }. expected_format : 'metric' (return_risk/delivery), 'chart' (volume_forecast).\\n- 'chitchat' : 'bonjour', 'merci', 'qui es-tu', salutation. payload : {}. expected_format : 'text'.\\n\\nExemples :\\nQ: 'Combien de commandes livrées à Sfax la semaine dernière ?'\\nR: {\\\"action\\\":\\\"query\\\",\\\"payload\\\":{\\\"entity\\\":\\\"orders\\\",\\\"metric\\\":\\\"count\\\",\\\"filters\\\":{\\\"period\\\":\\\"7d\\\",\\\"governorate\\\":\\\"Sfax\\\",\\\"status\\\":\\\"delivered\\\"},\\\"groupBy\\\":null,\\\"limit\\\":10},\\\"expected_format\\\":\\\"metric\\\"}\\n\\nQ: 'C'est quoi une réclamation ?'\\nR: {\\\"action\\\":\\\"kb\\\",\\\"payload\\\":{},\\\"expected_format\\\":\\\"kb\\\"}\\n\\nQ: 'Tendance des réclamations sur 3 mois ?'\\nR: {\\\"action\\\":\\\"analyze\\\",\\\"payload\\\":{\\\"operation\\\":\\\"trend\\\",\\\"subject\\\":{\\\"entity\\\":\\\"claims\\\",\\\"metric\\\":\\\"count\\\",\\\"filters\\\":{\\\"period\\\":\\\"3m\\\"}},\\\"options\\\":{\\\"granularity\\\":\\\"week\\\"}},\\\"expected_format\\\":\\\"chart\\\"}\\n\\nQ: 'Volume prévu sur 7 jours ?'\\nR: {\\\"action\\\":\\\"predict\\\",\\\"payload\\\":{\\\"task\\\":\\\"volume_forecast\\\",\\\"input\\\":{\\\"horizonDays\\\":7}},\\\"expected_format\\\":\\\"chart\\\"}\\n\\nQ: 'Bonjour'\\nR: {\\\"action\\\":\\\"chitchat\\\",\\\"payload\\\":{},\\\"expected_format\\\":\\\"text\\\"}\\n\\nRéponds UNIQUEMENT avec le JSON, sans texte additionnel.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.question) }}\n    }\n  ],\n  \"response_format\": {\"type\": \"json_object\"},\n  \"temperature\": 0\n}",
+        "options": {}
+      },
+      "id": "groq-router",
+      "name": "Groq — Route action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "groq-credentials",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract router JSON from Groq response\nconst raw = $json.choices?.[0]?.message?.content || '{}';\nlet routed;\ntry { routed = JSON.parse(raw); } catch { routed = { action: 'chitchat', payload: {}, expected_format: 'text' }; }\nconst question = $('Validate payload').item.json.question;\nreturn [{ json: { ...routed, originalQuestion: question } }];"
+      },
+      "id": "parse-route-1",
+      "name": "Parse routing JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "query", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "query" },
+            { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "analyze", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "analyze" },
+            { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "predict", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "predict" },
+            { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "kb", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "kb" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-action",
+      "name": "Route by action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBAPI_BASE_URL }}/api/admin/chat/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Chat-Api-Key", "value": "={{ $env.CHATBOT_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload || {}) }}",
+        "options": {}
+      },
+      "id": "http-query",
+      "name": "POST /chat/query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBAPI_BASE_URL }}/api/admin/chat/analyze",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Chat-Api-Key", "value": "={{ $env.CHATBOT_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload || {}) }}",
+        "options": {}
+      },
+      "id": "http-analyze",
+      "name": "POST /chat/analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBAPI_BASE_URL }}/api/admin/chat/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Chat-Api-Key", "value": "={{ $env.CHATBOT_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload || {}) }}",
+        "options": {}
+      },
+      "id": "http-predict",
+      "name": "POST /chat/predict",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Branche KB : pas d'appel API, on retourne juste l'action et la question.\nconst routed = $json;\nreturn [{ json: { __isKb: true, originalQuestion: routed.originalQuestion, action: 'kb' } }];"
+      },
+      "id": "kb-passthrough",
+      "name": "KB pass-through",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 550]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construit le prompt de reformulation à partir de la question + data API.\nconst routed = $('Parse routing JSON').first().json;\nconst data = $json;\nconst question = routed.originalQuestion;\nconst action = routed.action;\n\nlet contextHint = '';\nif (data.__isKb) {\n  contextHint = `Question conceptuelle. Réponds en t'appuyant sur ta connaissance du projet (système COD Tunisie, 4 rôles, BC/BL, réclamations, demandes, attribution conf, lock 15min, escalation 3 tentatives, etc.). Une à trois phrases, ton clair et professionnel.`;\n} else if (action === 'query') {\n  contextHint = `Tu as appelé l'API /chat/query et tu as reçu un JSON. Le champ 'value' = chiffre principal, 'rows' = lignes liste, 'series' = points pour graphe. Si 'rows' est rempli, tu peux résumer 1-2 lignes ou indiquer le nombre. Si 'series' est rempli, tu décris la tendance globale. N'INVENTE PAS de chiffres absents du JSON.`;\n} else if (action === 'analyze') {\n  contextHint = `Tu as appelé /chat/analyze. Le JSON contient une analyse statistique (trend, compare, anomaly, correlation, distribution). Décris le résultat en français clair, mentionne les chiffres clés (slope, R², z-score, percentiles selon le cas).`;\n} else if (action === 'predict') {\n  contextHint = `Tu as appelé /chat/predict. Le JSON contient une prédiction ML (probabilité 0-1 ou valeur prévue). Donne le résultat avec le pourcentage si applicable, l'explication si fournie, et la métadonnée du modèle (type, source données).`;\n}\n\nconst prompt = `Question utilisateur : ${question}\\n\\n${contextHint}\\n\\nRéponse de l'API :\\n${JSON.stringify(data, null, 2)}\\n\\nRédige une réponse naturelle en français (1-3 phrases), claire, sans inventer de chiffres.`;\n\nreturn [{ json: { prompt, action, data, originalQuestion: question } }];"
+      },
+      "id": "build-prompt",
+      "name": "Build reformulation prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es l'assistant métier d'une plateforme de livraison COD en Tunisie. Tu réponds en français clair, naturel, professionnel, en 1 à 3 phrases. Tu ne inventes JAMAIS de chiffres absents des données fournies. Tu ne fais pas de salutation, pas d'emoji, pas de formules de politesse en début ou fin. Tu réponds directement à la question.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.prompt) }}\n    }\n  ],\n  \"temperature\": 0.3\n}",
+        "options": {}
+      },
+      "id": "groq-format",
+      "name": "Groq — Format response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "groq-credentials",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construit la réponse finale Flutter (text + optional chart series)\nconst groqText = $json.choices?.[0]?.message?.content || 'Réponse indisponible.';\nconst built = $('Build reformulation prompt').first().json;\nconst data = built.data || {};\n\n// Détecte si la réponse contient des séries à afficher en graphe\nlet chart = null;\nif (Array.isArray(data.series) && data.series.length > 0) {\n  chart = { type: 'bar', points: data.series };\n} else if (Array.isArray(data.forecast) && data.forecast.length > 0) {\n  chart = { type: 'line', points: data.forecast.map(p => ({ bucket: p.date, value: p.value, lower: p.lowerBound, upper: p.upperBound })) };\n} else if (Array.isArray(data.compare) && data.compare.length > 0) {\n  chart = { type: 'bar', points: data.compare.map(g => ({ bucket: g.label, value: g.value })) };\n} else if (Array.isArray(data.anomalies) && data.anomalies.length > 0 && Array.isArray(data.series)) {\n  chart = { type: 'line', points: data.series, anomalies: data.anomalies };\n}\n\nconst rows = Array.isArray(data.rows) ? data.rows : null;\n\nreturn [{ json: {\n  success: true,\n  message: groqText.trim(),\n  action: built.action,\n  data,\n  rows,\n  chart\n}}];"
+      },
+      "id": "final-response",
+      "name": "Build final JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Branche chitchat — pas d'appel API, juste réponse polie immédiate.\nconst routed = $json;\nconst q = (routed.originalQuestion || '').toLowerCase();\nlet message;\nif (/bonjour|salut|hello|coucou/.test(q)) message = \"Bonjour ! Je suis l'assistant métier de votre plateforme de livraison. Je peux répondre aux questions sur les commandes, réclamations, livreurs, produits, prédictions et statistiques.\";\nelse if (/merci/.test(q)) message = \"Avec plaisir.\";\nelse if (/qui es.tu|tu es qui|c.est quoi/.test(q)) message = \"Je suis l'assistant LLM de votre plateforme COD. Je peux répondre aux questions chiffrées, conceptuelles, analytiques et prédictives sur les commandes, livraisons et réclamations.\";\nelse message = \"Je peux vous aider sur les commandes, réclamations, livreurs, produits, statistiques et prédictions. Que voulez-vous savoir ?\";\nreturn [{ json: { success: true, message, action: 'chitchat', data: null, rows: null, chart: null } }];"
+      },
+      "id": "chitchat-response",
+      "name": "Chitchat response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 700]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2220, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (POST /chatbot)": { "main": [[{ "node": "Validate payload", "type": "main", "index": 0 }]] },
+    "Validate payload": { "main": [[{ "node": "Groq — Route action", "type": "main", "index": 0 }]] },
+    "Groq — Route action": { "main": [[{ "node": "Parse routing JSON", "type": "main", "index": 0 }]] },
+    "Parse routing JSON": { "main": [[{ "node": "Route by action", "type": "main", "index": 0 }]] },
+    "Route by action": {
+      "main": [
+        [{ "node": "POST /chat/query", "type": "main", "index": 0 }],
+        [{ "node": "POST /chat/analyze", "type": "main", "index": 0 }],
+        [{ "node": "POST /chat/predict", "type": "main", "index": 0 }],
+        [{ "node": "KB pass-through", "type": "main", "index": 0 }],
+        [{ "node": "Chitchat response", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST /chat/query": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "POST /chat/analyze": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "POST /chat/predict": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "KB pass-through": { "main": [[{ "node": "Build reformulation prompt", "type": "main", "index": 0 }]] },
+    "Build reformulation prompt": { "main": [[{ "node": "Groq — Format response", "type": "main", "index": 0 }]] },
+    "Groq — Format response": { "main": [[{ "node": "Build final JSON", "type": "main", "index": 0 }]] },
+    "Build final JSON": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] },
+    "Chitchat response": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": []
+}

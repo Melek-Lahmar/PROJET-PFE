@@ -1,0 +1,1341 @@
+@import "tailwindcss";
+
+/* =====================================================
+   THEME TOKENS
+===================================================== */
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-shell: hsl(var(--shell));
+  --color-shell-foreground: hsl(var(--shell-foreground));
+  --color-shell-border: hsl(var(--shell-border));
+  --color-shell-elevated: hsl(var(--shell-elevated));
+}
+
+/* =====================================================
+   BASE
+===================================================== */
+
+@layer base {
+  :root {
+    --background: 220 33% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --primary: 221 83% 58%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 216 33% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 215 28% 94%;
+    --muted-foreground: 215 16% 43%;
+
+    --accent: 216 33% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --border: 214 28% 88%;
+    --input: 216 33% 97%;
+    --ring: 221 83% 58%;
+
+    --shell: 0 0% 100%;
+    --shell-foreground: 222 47% 16%;
+    --shell-border: 214 28% 88%;
+    --shell-elevated: 220 33% 97%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+    --info: 213 94% 55%;
+    --info-foreground: 0 0% 100%;
+    /* Aligned with Flutter AppColors.error #DC2626 */
+    --danger: 0 72% 51%;
+    --danger-foreground: 0 0% 100%;
+
+    /* Flutter parity: secondary teal, accent sky */
+    --teal: 173 80% 40%;
+    --teal-foreground: 0 0% 100%;
+    --sky: 199 89% 60%;
+    --sky-foreground: 0 0% 100%;
+
+    /* Status palette aligned 1:1 with flutter app_status_palette.dart */
+    --status-pending-fg: 36 100% 24%;
+    --status-pending-bg: 47 100% 92%;
+    --status-pending-border: 39 78% 66%;
+
+    --status-in-delivery-fg: 213 89% 41%;
+    --status-in-delivery-bg: 213 100% 94%;
+    --status-in-delivery-border: 213 79% 73%;
+
+    --status-delivered-fg: 138 60% 30%;
+    --status-delivered-bg: 138 67% 94%;
+    --status-delivered-border: 130 47% 69%;
+
+    --status-rescheduled-fg: 30 100% 36%;
+    --status-rescheduled-bg: 30 100% 92%;
+    --status-rescheduled-border: 26 84% 73%;
+
+    --status-returned-fg: 6 79% 40%;
+    --status-returned-bg: 0 79% 96%;
+    --status-returned-border: 0 78% 79%;
+
+    --status-depot-fg: 215 18% 35%;
+    --status-depot-bg: 220 24% 96%;
+    --status-depot-border: 215 25% 80%;
+
+    --dashboard-shadow-lg: 0 28px 80px -42px rgba(15, 23, 42, 0.42);
+    --dashboard-shadow-md: 0 20px 50px -36px rgba(15, 23, 42, 0.3);
+    --dashboard-shadow-sm: 0 16px 34px -24px rgba(15, 23, 42, 0.16);
+
+    --surface-shadow-xl: 0 34px 88px -46px rgba(15, 23, 42, 0.34);
+    --surface-shadow-lg: 0 24px 60px -34px rgba(15, 23, 42, 0.22);
+    --surface-shadow-md: 0 16px 34px -24px rgba(15, 23, 42, 0.16);
+    --surface-glow: 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+    --homepage-hero-shadow: 0 44px 120px -58px rgba(15, 23, 42, 0.46);
+    --homepage-card-shadow: 0 28px 72px -42px rgba(15, 23, 42, 0.24);
+    --homepage-soft-shadow: 0 18px 40px -32px rgba(15, 23, 42, 0.18);
+  }
+
+  .dark {
+    --background: 223 66% 9%;
+    --foreground: 214 32% 92%;
+
+    --card: 223 40% 13%;
+    --card-foreground: 214 32% 92%;
+
+    --primary: 221 90% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 223 32% 16%;
+    --secondary-foreground: 214 32% 92%;
+
+    --muted: 223 28% 16%;
+    --muted-foreground: 215 20% 72%;
+
+    --accent: 223 28% 18%;
+    --accent-foreground: 214 32% 92%;
+
+    --border: 223 24% 22%;
+    --input: 223 24% 16%;
+    --ring: 221 90% 62%;
+
+    --shell: 223 68% 11%;
+    --shell-foreground: 214 28% 88%;
+    --shell-border: 223 33% 22%;
+    --shell-elevated: 223 54% 14%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+    --info: 213 94% 55%;
+    --info-foreground: 0 0% 100%;
+    --danger: 0 72% 56%;
+    --danger-foreground: 0 0% 100%;
+
+    --teal: 173 80% 50%;
+    --teal-foreground: 173 84% 12%;
+    --sky: 199 89% 70%;
+    --sky-foreground: 199 89% 14%;
+
+    /* Status palette — dark variants (slightly lifted bg, brighter fg) */
+    --status-pending-fg: 47 100% 78%;
+    --status-pending-bg: 36 70% 18%;
+    --status-pending-border: 39 60% 38%;
+
+    --status-in-delivery-fg: 213 100% 78%;
+    --status-in-delivery-bg: 213 90% 18%;
+    --status-in-delivery-border: 213 70% 40%;
+
+    --status-delivered-fg: 138 70% 78%;
+    --status-delivered-bg: 138 60% 16%;
+    --status-delivered-border: 130 47% 36%;
+
+    --status-rescheduled-fg: 30 100% 78%;
+    --status-rescheduled-bg: 30 80% 20%;
+    --status-rescheduled-border: 26 84% 42%;
+
+    --status-returned-fg: 0 100% 84%;
+    --status-returned-bg: 0 60% 22%;
+    --status-returned-border: 0 78% 50%;
+
+    --status-depot-fg: 215 28% 84%;
+    --status-depot-bg: 215 20% 18%;
+    --status-depot-border: 215 18% 36%;
+
+    --dashboard-shadow-lg: 0 30px 90px -50px rgba(2, 6, 23, 0.84);
+    --dashboard-shadow-md: 0 22px 56px -34px rgba(2, 6, 23, 0.42);
+    --dashboard-shadow-sm: 0 18px 36px -26px rgba(2, 6, 23, 0.3);
+
+    --surface-shadow-xl: 0 36px 96px -52px rgba(2, 6, 23, 0.76);
+    --surface-shadow-lg: 0 24px 62px -36px rgba(2, 6, 23, 0.48);
+    --surface-shadow-md: 0 16px 36px -24px rgba(2, 6, 23, 0.34);
+    --surface-glow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    --homepage-hero-shadow: 0 48px 130px -62px rgba(2, 6, 23, 0.88);
+    --homepage-card-shadow: 0 30px 78px -44px rgba(2, 6, 23, 0.52);
+    --homepage-soft-shadow: 0 20px 44px -30px rgba(2, 6, 23, 0.38);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.065), transparent 18%),
+      radial-gradient(circle at bottom left, hsl(var(--info) / 0.05), transparent 22%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.12), transparent 18%),
+      radial-gradient(circle at bottom left, hsl(var(--info) / 0.09), transparent 22%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+    color: hsl(var(--card-foreground));
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--card-foreground));
+    box-shadow: 0 0 0 1000px hsl(var(--input)) inset;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  img {
+    image-rendering: auto;
+  }
+}
+
+/* =====================================================
+   UTILITIES
+===================================================== */
+
+@layer utilities {
+  /* Shell pleine largeur : remplit le viewport, juste avec des gouttières
+     latérales fluides. Plus de `max-w-7xl` qui bridait le rendu sur grand
+     écran. Pages qui ont besoin d'une largeur de lecture confortable
+     (longue prose, formulaires denses) peuvent wrapper leur contenu dans
+     `.content-wrapper`. */
+  .container-app {
+    @apply w-full px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24;
+  }
+
+  /* Wrapper interne max-w-7xl centré, à utiliser pour les zones de lecture
+     confortable au sein d'une section pleine largeur. */
+  .content-wrapper {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  /* Section qui s'étend pleine largeur viewport — utile pour heroes,
+     bandeaux de fond, dégradés ambiants. */
+  .fullscreen-section {
+    @apply relative w-full;
+  }
+
+  /* Dégradé ambiant pour heroes pleine largeur. Subtile, ne pollue pas le
+     contenu en dessous. */
+  .hero-gradient-bg {
+    background:
+      radial-gradient(ellipse at top left,  hsl(var(--primary) / 0.18), transparent 55%),
+      radial-gradient(ellipse at top right, hsl(var(--primary) / 0.10), transparent 55%),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background) / 0.95));
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .app-surface {
+    @apply rounded-[30px] border border-border/70 text-card-foreground backdrop-blur-xl;
+    background:
+      linear-gradient(180deg, hsl(var(--card) / 0.985), hsl(var(--card) / 0.94)),
+      linear-gradient(135deg, hsl(var(--primary) / 0.02), transparent 34%);
+    box-shadow: var(--surface-shadow-xl), var(--surface-glow);
+  }
+
+  .app-surface-soft {
+    @apply rounded-[26px] border border-border/60 text-card-foreground backdrop-blur-xl;
+    background:
+      linear-gradient(180deg, hsl(var(--card) / 0.92), hsl(var(--card) / 0.86)),
+      linear-gradient(135deg, hsl(var(--primary) / 0.025), transparent 34%);
+    box-shadow: var(--surface-shadow-lg), var(--surface-glow);
+  }
+
+  .app-shell-surface {
+    @apply rounded-[24px] border border-shell-border/80 text-shell-foreground backdrop-blur-xl;
+    background:
+      linear-gradient(180deg, hsl(var(--shell) / 0.92), hsl(var(--shell) / 0.84)),
+      linear-gradient(135deg, hsl(var(--primary) / 0.03), transparent 36%);
+    box-shadow: var(--dashboard-shadow-lg);
+  }
+
+  .app-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .app-title {
+    @apply text-3xl font-black tracking-tight text-card-foreground md:text-[2.35rem];
+    letter-spacing: -0.035em;
+  }
+
+  .app-description {
+    @apply text-sm leading-7 text-muted-foreground md:text-[15px];
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-[26px] border border-border/70 bg-card;
+  }
+
+  .table-head {
+    @apply bg-muted/55 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  .table-row {
+    @apply border-t border-border/60 transition-colors hover:bg-accent/45;
+  }
+
+  .badge-neutral {
+    background-color: hsl(var(--muted) / 0.6);
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border) / 0.7);
+    box-shadow: 0 8px 22px -18px rgba(15, 23, 42, 0.18);
+  }
+
+  .badge-success {
+    background-color: hsl(var(--success) / 0.14);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.22);
+    box-shadow: 0 8px 22px -18px rgba(16, 185, 129, 0.24);
+  }
+
+  .badge-warning {
+    background-color: hsl(var(--warning) / 0.14);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.22);
+    box-shadow: 0 8px 22px -18px rgba(245, 158, 11, 0.24);
+  }
+
+  .badge-danger {
+    background-color: hsl(var(--danger) / 0.14);
+    color: hsl(var(--danger));
+    border: 1px solid hsl(var(--danger) / 0.22);
+    box-shadow: 0 8px 22px -18px rgba(244, 63, 94, 0.24);
+  }
+
+  .badge-info {
+    background-color: hsl(var(--info) / 0.14);
+    color: hsl(var(--info));
+    border: 1px solid hsl(var(--info) / 0.22);
+    box-shadow: 0 8px 22px -18px rgba(59, 130, 246, 0.24);
+  }
+
+  .homepage-shell {
+    @apply space-y-10 md:space-y-14;
+  }
+
+  .homepage-section-shell {
+    @apply space-y-8;
+  }
+
+  .homepage-section-shell-tight {
+    @apply space-y-6;
+  }
+
+  .homepage-premium-card {
+    @apply relative overflow-hidden rounded-[28px] border border-border/70 bg-card/95;
+    box-shadow: var(--homepage-card-shadow), var(--surface-glow);
+  }
+
+  .homepage-premium-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.06), transparent 28%);
+    pointer-events: none;
+  }
+
+  .homepage-premium-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .homepage-card-hover {
+    transition:
+      transform 0.24s ease,
+      box-shadow 0.24s ease,
+      border-color 0.24s ease,
+      background-color 0.24s ease,
+      opacity 0.24s ease;
+  }
+
+  .homepage-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--homepage-hero-shadow);
+  }
+
+  .homepage-soft-panel {
+    @apply rounded-[26px] border border-border/70 bg-card/82 backdrop-blur-xl;
+    box-shadow: var(--homepage-soft-shadow), var(--surface-glow);
+  }
+
+  .homepage-glass-chip {
+    @apply inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-sm;
+    border-color: hsl(var(--border) / 0.7);
+    background: hsl(var(--card) / 0.72);
+    color: hsl(var(--card-foreground));
+    box-shadow: var(--surface-shadow-md);
+  }
+
+  .homepage-dark-chip {
+    @apply inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 34px -24px rgba(2, 6, 23, 0.62);
+  }
+
+  .homepage-hero-surface {
+    @apply relative overflow-hidden rounded-[32px] border border-border/70;
+    box-shadow: var(--homepage-hero-shadow), var(--surface-glow);
+  }
+
+  .homepage-grid-4 {
+    @apply grid gap-5 md:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .homepage-grid-3 {
+    @apply grid gap-5 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .homepage-grid-2 {
+    @apply grid gap-5 md:grid-cols-2;
+  }
+
+  .homepage-muted-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+  }
+
+  .homepage-spotlight-shell {
+    background:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 36%),
+      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92));
+  }
+
+  .dashboard-shell {
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.06), transparent 22%),
+      radial-gradient(circle at bottom left, hsl(var(--info) / 0.05), transparent 24%);
+  }
+
+  .dashboard-page-shell {
+    @apply relative;
+  }
+
+  .dashboard-page-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 320px;
+    border-radius: 32px;
+    background:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.14), transparent 34%),
+      radial-gradient(circle at top right, hsl(var(--info) / 0.1), transparent 30%);
+    opacity: 0.65;
+    pointer-events: none;
+  }
+
+  .dashboard-hero-panel {
+    @apply relative overflow-hidden rounded-[30px] border border-border/70 bg-card/88 backdrop-blur-xl;
+    box-shadow: var(--dashboard-shadow-lg);
+  }
+
+  .dashboard-hero-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.16), transparent 28%),
+      linear-gradient(180deg, hsl(var(--card) / 0.76), hsl(var(--card) / 0.94));
+  }
+
+  .dashboard-hero-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dashboard-header {
+    position: relative;
+  }
+
+  .dashboard-header::after {
+    content: "";
+    position: absolute;
+    inset: auto 24px 0 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.18), transparent);
+  }
+
+  .dashboard-nav-card {
+    backdrop-filter: blur(18px);
+  }
+
+  .dashboard-nav-link {
+    @apply relative rounded-[22px] border border-transparent px-4 py-4 transition-all duration-200;
+  }
+
+  .dashboard-nav-link:hover {
+    @apply border-border/70 bg-accent/40;
+    transform: translateY(-1px);
+    box-shadow: var(--dashboard-shadow-sm);
+  }
+
+  .dashboard-nav-link-active {
+    @apply border-primary/20 bg-primary/[0.08];
+    box-shadow: 0 14px 32px -22px rgba(37, 99, 235, 0.26);
+  }
+
+  .dashboard-mobile-nav {
+    @apply sticky top-20 z-20 overflow-x-auto rounded-[24px] border border-border/70 bg-card/88 p-2 backdrop-blur-xl xl:hidden;
+    box-shadow: var(--dashboard-shadow-sm);
+  }
+
+  .dashboard-mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-mobile-nav {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .dashboard-toolbar-chip {
+    @apply inline-flex items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2 text-xs font-semibold text-muted-foreground shadow-sm;
+  }
+
+  .dashboard-toolbar-chip:hover {
+    @apply border-primary/20 bg-primary/[0.04] text-card-foreground;
+  }
+
+  .dashboard-toolbar-select {
+    @apply bg-transparent text-card-foreground outline-none;
+  }
+
+  .dashboard-kpi-card {
+    @apply relative isolate overflow-hidden;
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.08), transparent 42%),
+      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92));
+  }
+
+  .dashboard-kpi-card::after {
+    content: "";
+    position: absolute;
+    inset: auto 18px 18px 18px;
+    height: 42px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.05), transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .dashboard-kpi-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dashboard-metric-card {
+    @apply rounded-[24px] border border-border/70 bg-card/92 backdrop-blur-xl;
+    box-shadow: var(--dashboard-shadow-md);
+  }
+
+  .dashboard-soft-panel {
+    @apply rounded-[22px] border border-border/70 bg-accent/35;
+  }
+
+  .dashboard-panel-muted {
+    @apply rounded-[22px] border border-border/70 bg-accent/18;
+  }
+
+  .dashboard-panel-strong {
+    @apply rounded-[22px] border border-primary/20 bg-primary/[0.05];
+  }
+
+  .dashboard-sticky-rail {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .dashboard-chart-card {
+    position: relative;
+  }
+
+  .dashboard-chart-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, hsl(var(--card) / 0.02), transparent 26%);
+    pointer-events: none;
+  }
+
+  .dashboard-chart-shell {
+    min-height: 320px;
+  }
+
+  .dashboard-section-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .dashboard-section-grid > * {
+    min-width: 0;
+  }
+
+  .dashboard-rail-shadow {
+    box-shadow: 0 22px 60px -38px rgba(15, 23, 42, 0.28);
+  }
+
+  .dashboard-critical-card {
+    @apply rounded-[24px] border border-rose-200/70 bg-rose-50/80;
+  }
+
+  .dark .dashboard-critical-card {
+    @apply border-rose-500/20 bg-rose-500/10;
+  }
+
+  .dashboard-success-card {
+    @apply rounded-[24px] border border-emerald-200/70 bg-emerald-50/80;
+  }
+
+  .dark .dashboard-success-card {
+    @apply border-emerald-500/20 bg-emerald-500/10;
+  }
+
+  .dashboard-warning-card {
+    @apply rounded-[24px] border border-amber-200/70 bg-amber-50/80;
+  }
+
+  .dark .dashboard-warning-card {
+    @apply border-amber-500/20 bg-amber-500/10;
+  }
+
+  .dashboard-insight-list > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .dashboard-scroll-shell {
+    @apply overflow-x-auto rounded-[22px] border border-border/70;
+  }
+
+  .dashboard-card-hover {
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .dashboard-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--dashboard-shadow-sm);
+  }
+
+  /* =========================================================
+     Premium status pills — 1:1 with Flutter app_status_palette
+     ========================================================= */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold leading-none whitespace-nowrap;
+    box-shadow: 0 6px 18px -14px rgba(15, 23, 42, 0.18);
+  }
+
+  .status-pill svg {
+    @apply h-3.5 w-3.5 shrink-0;
+  }
+
+  .status-pill-pending {
+    color: hsl(var(--status-pending-fg));
+    background-color: hsl(var(--status-pending-bg));
+    border-color: hsl(var(--status-pending-border));
+  }
+  .status-pill-in-delivery {
+    color: hsl(var(--status-in-delivery-fg));
+    background-color: hsl(var(--status-in-delivery-bg));
+    border-color: hsl(var(--status-in-delivery-border));
+  }
+  .status-pill-delivered {
+    color: hsl(var(--status-delivered-fg));
+    background-color: hsl(var(--status-delivered-bg));
+    border-color: hsl(var(--status-delivered-border));
+  }
+  .status-pill-rescheduled {
+    color: hsl(var(--status-rescheduled-fg));
+    background-color: hsl(var(--status-rescheduled-bg));
+    border-color: hsl(var(--status-rescheduled-border));
+  }
+  .status-pill-returned {
+    color: hsl(var(--status-returned-fg));
+    background-color: hsl(var(--status-returned-bg));
+    border-color: hsl(var(--status-returned-border));
+  }
+  .status-pill-depot {
+    color: hsl(var(--status-depot-fg));
+    background-color: hsl(var(--status-depot-bg));
+    border-color: hsl(var(--status-depot-border));
+  }
+
+  /* =========================================================
+     Premium hero — wide gradient with animated glow.
+     Matches flutter premium_hero.dart proportions.
+     ========================================================= */
+  .premium-hero {
+    @apply relative overflow-hidden rounded-[32px] border border-border/70 px-6 py-9 sm:px-10 sm:py-12;
+    background:
+      linear-gradient(135deg, hsl(var(--primary) / 0.18), transparent 38%),
+      radial-gradient(circle at top right, hsl(var(--info) / 0.20), transparent 36%),
+      linear-gradient(180deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.88));
+    box-shadow: var(--homepage-hero-shadow), var(--surface-glow);
+  }
+
+  .premium-hero::after {
+    content: "";
+    position: absolute;
+    inset: -40% -10% auto auto;
+    width: 360px;
+    height: 360px;
+    border-radius: 999px;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 65%);
+    pointer-events: none;
+    animation: premium-glow 14s ease-in-out infinite;
+  }
+
+  /* =========================================================
+     Animated entry — used by <AnimatedEntry/> wrapper.
+     Mirrors flutter EntryAnimation/StaggeredColumn.
+     ========================================================= */
+  .anim-fade-up {
+    animation: fade-up 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  .anim-fade-in {
+    animation: fade-in 380ms ease-out both;
+  }
+
+  .anim-scale-in {
+    animation: scale-in 360ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  /* Nouvelles animations Flutter-like ajoutées 2026-05-13 */
+  .anim-slide-right {
+    animation: slide-right 560ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .anim-slide-left {
+    animation: slide-left 560ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .anim-bounce-in {
+    animation: bounce-in 720ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .anim-pulse-glow {
+    animation: pulse-glow 2.4s ease-in-out infinite;
+  }
+  .anim-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .anim-shimmer-text {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--card-foreground)) 0%,
+      hsl(var(--primary)) 30%,
+      hsl(var(--card-foreground)) 60%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer-text 3s linear infinite;
+  }
+
+  /* =========================================================
+     Gradient text — pour titres premium "wow" sans alourdir
+     ========================================================= */
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(217 91% 60%) 35%,
+      hsl(263 70% 65%) 70%,
+      hsl(330 81% 60%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+  .gradient-text-cool {
+    background: linear-gradient(
+      135deg,
+      hsl(199 89% 60%) 0%,
+      hsl(173 80% 40%) 50%,
+      hsl(263 70% 65%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* =========================================================
+     Floating orbs — halos ambient lumineux comme Flutter
+     (background décoratif derrière les hero, cards premium).
+     ========================================================= */
+  .floating-orb {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(40px);
+    opacity: 0.55;
+    animation: orb-drift 18s ease-in-out infinite;
+    will-change: transform;
+  }
+  .floating-orb-primary {
+    background: radial-gradient(circle, hsl(var(--primary) / 0.7), transparent 70%);
+  }
+  .floating-orb-accent {
+    background: radial-gradient(circle, hsl(263 70% 65% / 0.6), transparent 70%);
+  }
+  .floating-orb-warm {
+    background: radial-gradient(circle, hsl(330 81% 60% / 0.55), transparent 70%);
+  }
+
+  /* =========================================================
+     Hover lift premium — card s'élève + halo coloré
+     ========================================================= */
+  .hover-lift {
+    transition:
+      transform .35s cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow .35s ease,
+      border-color .35s ease;
+    will-change: transform;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      var(--surface-shadow-xl),
+      0 0 0 1px hsl(var(--primary) / 0.18),
+      0 28px 60px -28px hsl(var(--primary) / 0.32);
+  }
+
+  /* =========================================================
+     Glow button — bouton avec halo lumineux pulsé
+     ========================================================= */
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)),
+      hsl(263 70% 60%)
+    );
+    color: hsl(var(--primary-foreground));
+    box-shadow:
+      0 12px 28px -12px hsl(var(--primary) / 0.55),
+      0 0 0 1px hsl(var(--primary) / 0.22) inset;
+  }
+  .btn-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.25) 50%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform .6s ease;
+  }
+  .btn-glow:hover::after {
+    transform: translateX(100%);
+  }
+  .btn-glow:hover {
+    box-shadow:
+      0 18px 44px -14px hsl(var(--primary) / 0.7),
+      0 0 0 1px hsl(var(--primary) / 0.32) inset;
+    transform: translateY(-1px);
+  }
+
+  /* =========================================================
+     Number counter — utilisé pour les KPI animés
+     ========================================================= */
+  .counter-up {
+    display: inline-block;
+    animation: counter-bounce 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* =========================================================
+     Skeleton loader (matches flutter skeleton.dart shimmer).
+     ========================================================= */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--accent)) 38%,
+      hsl(var(--muted)) 76%);
+    background-size: 240% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    border-radius: 12px;
+  }
+}
+
+/* =====================================================
+   Keyframes — Flutter-like animation curves
+===================================================== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55); }
+  50%      { box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@keyframes shimmer-text {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(28px, -32px) scale(1.08); }
+  66%      { transform: translate(-22px, 14px) scale(0.94); }
+}
+@keyframes counter-bounce {
+  0%   { opacity: 0; transform: translateY(-12px) scale(0.85); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@keyframes premium-glow {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.85; }
+  50%      { transform: translate(-30px, 20px) scale(1.08); opacity: 1; }
+}
+
+/* =====================================================
+   SCROLLBAR
+===================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* =====================================================
+   GLOBAL SMOOTH UI
+===================================================== */
+
+* {
+  transition:
+    background-color .22s ease,
+    border-color .22s ease,
+    color .22s ease,
+    box-shadow .22s ease,
+    transform .22s ease,
+    opacity .22s ease;
+}
+
+/* =====================================================
+   ADMIN DASHBOARD HUB
+===================================================== */
+
+.admin-dashboard-hero {
+  position: relative;
+}
+
+.admin-dashboard-description {
+  max-width: 980px;
+}
+
+.admin-dashboard-chips {
+  row-gap: 0.65rem;
+}
+
+@media (max-width: 1024px) {
+  .app-title {
+    letter-spacing: -0.03em;
+  }
+
+  .app-surface,
+  .app-surface-soft {
+    border-radius: 26px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-title {
+    font-size: 1.9rem;
+  }
+
+  .app-description {
+    line-height: 1.7;
+  }
+
+  .app-surface,
+  .app-surface-soft {
+    border-radius: 24px;
+  }
+
+  .homepage-hero-surface {
+    border-radius: 26px;
+  }
+}
+
+/* =====================================================
+   PREMIUM REFONTE LARGE — 2026-05-13
+   Animations + cursor + transitions de page + glassmorphism
+===================================================== */
+
+/* --- 1. Bouton premium : glow halo gradient animé --- */
+@keyframes premium-btn-glow-anim {
+  0%, 100% {
+    box-shadow: 0 0 18px hsl(var(--primary) / 0.55),
+                0 0 36px hsl(var(--primary) / 0.30);
+  }
+  50% {
+    box-shadow: 0 0 26px hsl(var(--primary) / 0.75),
+                0 0 52px hsl(var(--primary) / 0.45);
+  }
+}
+.premium-btn-glow {
+  animation: premium-btn-glow-anim 2.6s ease-in-out infinite;
+}
+
+/* --- 2. Bouton premium : ripple onde au clic --- */
+@keyframes premium-ripple-anim {
+  0% {
+    transform: scale(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.animate-premium-ripple {
+  animation: premium-ripple-anim 0.65s ease-out forwards;
+}
+
+/* --- 3. Toast slide-in depuis la droite --- */
+@keyframes premium-toast-in-anim {
+  0% {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-4px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+.animate-premium-toast-in {
+  animation: premium-toast-in-anim 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- 4. Modal premium : backdrop fade-in + scale-in panel --- */
+@keyframes premium-backdrop-in-anim {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes premium-modal-in-anim {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-premium-backdrop-in {
+  animation: premium-backdrop-in-anim 0.25s ease-out both;
+}
+.animate-premium-modal-in {
+  animation: premium-modal-in-anim 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- 5. Confetti success particles --- */
+@keyframes premium-confetti-anim {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--sway, 30) * 1px), 110vh, 0) rotate(720deg);
+  }
+}
+.animate-premium-confetti {
+  animation: premium-confetti-anim cubic-bezier(0.42, 0, 0.58, 1) both;
+  --sway: 0;
+}
+.animate-premium-confetti:nth-child(3n)   { --sway: -60; }
+.animate-premium-confetti:nth-child(3n+1) { --sway: 40; }
+.animate-premium-confetti:nth-child(3n+2) { --sway: -20; }
+
+/* --- 6. Page transitions (entrée fade + slide subtle) --- */
+.premium-page-transition {
+  transition: opacity var(--transition-duration, 360ms) cubic-bezier(0.22, 1, 0.36, 1),
+              transform var(--transition-duration, 360ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+.premium-page-transition[data-stage="enter"] {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.premium-page-transition[data-stage="idle"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- 7. Cursor dot + ring (premium pointer) --- */
+.premium-cursor-dot,
+.premium-cursor-ring {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  border-radius: 9999px;
+  mix-blend-mode: difference;
+  will-change: transform;
+}
+.premium-cursor-dot {
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top: -4px;
+  background: white;
+  transition: transform 0.05s linear, background 0.2s ease;
+}
+.premium-cursor-ring {
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  margin-top: -18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  transition: width 0.2s ease, height 0.2s ease, margin 0.2s ease, border-color 0.2s ease;
+}
+.premium-cursor-ring.is-active {
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  border-color: rgba(99, 102, 241, 0.85);
+}
+@media (pointer: coarse) {
+  .premium-cursor-dot,
+  .premium-cursor-ring {
+    display: none;
+  }
+}
+
+/* --- 8. Hero parallax : gradient animé en arrière-plan --- */
+@keyframes premium-hero-gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.premium-hero-gradient-anim {
+  background: linear-gradient(
+    -45deg,
+    hsl(var(--primary) / 0.22),
+    hsl(262 83% 58% / 0.18),
+    hsl(199 89% 48% / 0.20),
+    hsl(280 90% 60% / 0.16)
+  );
+  background-size: 400% 400%;
+  animation: premium-hero-gradient-shift 14s ease infinite;
+}
+
+/* --- 9. Glassmorphism nav + glow CTAs --- */
+.premium-glass-nav {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(1.2) blur(14px);
+  -webkit-backdrop-filter: saturate(1.2) blur(14px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+.dark .premium-glass-nav,
+[data-theme="dark"] .premium-glass-nav {
+  background: rgba(15, 23, 42, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.premium-glow-cta {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+.premium-glow-cta::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(120deg, #6366F1, #A855F7, #EC4899, #6366F1);
+  background-size: 200% 200%;
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  animation: premium-glow-cta-shift 4s linear infinite;
+}
+.premium-glow-cta:hover::before {
+  opacity: 0.85;
+}
+@keyframes premium-glow-cta-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* --- 10. Skeleton shimmer enhanced --- */
+@keyframes premium-shimmer-anim {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.premium-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.6) 0%,
+    hsl(var(--muted) / 0.9) 50%,
+    hsl(var(--muted) / 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: premium-shimmer-anim 1.8s ease-in-out infinite;
+}
+
+/* --- 11. Theme switcher morph sun↔moon --- */
+.premium-theme-switcher[data-theme="light"] .premium-icon-sun,
+.premium-theme-switcher[data-theme="auto"]:not(.dark) .premium-icon-sun {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+.premium-theme-switcher[data-theme="dark"] .premium-icon-sun,
+.premium-theme-switcher[data-theme="auto"].dark .premium-icon-sun {
+  opacity: 0;
+  transform: scale(0.4) rotate(-90deg);
+}
+.premium-theme-switcher[data-theme="dark"] .premium-icon-moon,
+.premium-theme-switcher[data-theme="auto"].dark .premium-icon-moon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+.premium-theme-switcher[data-theme="light"] .premium-icon-moon,
+.premium-theme-switcher[data-theme="auto"]:not(.dark) .premium-icon-moon {
+  opacity: 0;
+  transform: scale(0.4) rotate(90deg);
+}

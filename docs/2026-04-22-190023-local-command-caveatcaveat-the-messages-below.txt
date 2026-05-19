@@ -1,0 +1,2648 @@
+ ▐▛███▜▌   Claude Code v2.1.117
+▝▜█████▛▘  Opus 4.7 (1M context) · Claude Max
+  ▘▘ ▝▝    C:\peojet-pfe(backend+fronted)
+
+> /effort                                                                       
+  ⎿  Set effort level to max (this session only): Maximum capability with deepest
+      reasoning
+
+> analyser bien projet flutter et web api  Je veux que tu mettes à jour le plan 
+   et la logique que tu m’as déjà proposés, en intégrant les modifications      
+  suivantes.                                                                    
+                                                                                
+  Important :                                                                   
+  - corrige les incohérences si nécessaire                                      
+  - corrige aussi les intitulés pour qu’ils soient professionnels               
+  - donne-moi une logique claire, simple et moderne                             
+  - je veux d’abord un plan produit / workflow, pas du code                     
+                                                                                
+  Modifications à intégrer :                                                    
+                                                                                
+  1. Statuts                                                                    
+  Je veux renommer les statuts :                                                
+  - “Résolue” devient “Clôturée”                                                
+  - “En cours” devient “En cours de traitement”                                 
+                                                                                
+  2. Changement d’adresse                                                       
+  Quand le client fait une réclamation de changement d’adresse, ou quand il     
+  reçoit une demande venant du livreur pour modifier l’adresse :                
+  - afficher un bouton du type “Prendre mon adresse actuelle”                   
+  - si le client clique dessus, le système récupère latitude et longitude côté  
+  backend                                                                       
+  - sinon, le client peut choisir sa position dans un widget map avec un pin    
+  - ensuite il clique sur “Appliquer”                                           
+  - cette logique doit apparaître seulement si le cas concerne une modification 
+   d’adresse, que ce soit dans une réclamation ou dans une demande              
+                                                                                
+  3. Répartition des commandes entre confirmatrices                             
+  Je veux changer la logique précédente :                                       
+  - une confirmatrice peut confirmer des commandes de n’importe quel            
+  gouvernorat                                                                   
+  - ce n’est plus limité à son propre gouvernorat                               
+  - il faut considérer cela comme une logique d’agence globale                  
+  - une fois connectée, la confirmatrice peut traiter des commandes venant de   
+  n’importe quel gouvernorat                                                    
+                                                                                
+  Mais je ne veux pas un simple “load balancing” basique.                       
+  Je veux que tu me proposes une logique plus moderne, par exemple une          
+  attribution intelligente des commandes selon :                                
+  - la charge actuelle                                                          
+  - l’ancienneté de la commande                                                 
+  - l’urgence                                                                   
+  - la disponibilité                                                            
+  - un système de file globale avec prise en charge optimisée                   
+                                                                                
+  4. Motifs                                                                     
+  Je veux supprimer complètement le motif :                                     
+  - “mauvais comportement du livreur”                                           
+                                                                                
+  5. Reprogrammation                                                            
+  La reprogrammation doit être déclenchée uniquement côté client, dans l’espace 
+   client.                                                                      
+                                                                                
+  6. Motifs côté livreur                                                        
+  Je veux que tu revoies les motifs côté livreur :                              
+  - ils ne doivent pas forcément être les mêmes que les motifs côté client      
+  - adapte les motifs au vrai contexte livreur                                  
+  - si un intitulé actuel n’est pas cohérent, corrige-le                        
+                                                                                
+  7. Tentatives                                                                 
+  Si le nombre de tentatives est supérieur ou égal à 3 :                        
+  - le cas doit remonter automatiquement à la confirmatrice                     
+  - elle doit le voir clairement pour intervenir                                
+                                                                                
+  Je veux que tu me répondes avec cette structure :                             
+                                                                                
+  1. Résumé de la nouvelle logique corrigée                                     
+  2. Ce qui change par rapport à la version précédente                          
+  3. Nouvelle logique recommandée pour les statuts                              
+  4. Nouvelle logique recommandée pour le changement d’adresse                  
+  5. Nouvelle logique recommandée pour la répartition / attribution des         
+  commandes entre confirmatrices                                                
+  6. Motifs à garder côté client                                                
+  7. Motifs à garder côté livreur                                               
+  8. Logique des tentatives et remontée vers la confirmatrice                   
+  9. Plan global mis à jour étape par étape                                     
+  10. Questions ou points à clarifier avant développement                       
+                                                                                
+  Important :                                                                   
+  - je veux une réponse orientée plan et workflow                               
+  - pas de code pour le moment                                                  
+  - je veux une logique simple, cohérente et professionnelle                    
+  - si certaines de mes idées ne sont pas bonnes, corrige-les franchement       
+
+  Searched for 10 patterns, read 5 files, recalled 6 memories (ctrl+o to expand)
+  ⎿  Loaded flutter\CLAUDE.md
+
+● J'ai relu le plan en cours (refonte phases 1 à 3) et le code actuel (motifs,
+  statuts, logique d'affectation gouvernorat, écran de réponse client aux
+  demandes). Voici le plan produit mis à jour, sans code.
+
+  ---
+  1. Résumé de la nouvelle logique corrigée
+
+  Une plate-forme unique de gestion des demandes (ancien "réclamations") traitée
+   par une équipe de confirmatrices formant une agence globale. Trois acteurs :
+
+  - Client : signale un problème ou répond à une demande livreur. Il est le seul
+   à pouvoir déclencher une reprogrammation.
+  - Livreur : signale un incident terrain avec des motifs propres à son métier.
+  Trois tentatives échouées sur une commande déclenchent une remontée
+  automatique, quel que soit le motif.
+  - Confirmatrice : traite une file globale unique, priorisée par un score
+  intelligent (ancienneté, tentatives, urgence). Plus de frontière par
+  gouvernorat.
+
+  Les demandes suivent un cycle simple à quatre statuts professionnels (Envoyée
+  → En cours de traitement → Clôturée / Refusée). Les cas de modification
+  d'adresse sont traités via une capture GPS + carte interactive, applicable par
+   un seul bouton.
+
+  ---
+  2. Ce qui change par rapport à la version précédente
+
+  ┌───────────────────────────┬──────────────────────┬──────────────────────┐
+  │           Sujet           │        Avant         │      Maintenant      │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │ ENVOYEE / EN_COURS / │ ENVOYEE / EN_COURS_D │
+  │ Statuts                   │  RESOLUE / REFUSEE   │ E_TRAITEMENT /       │
+  │                           │                      │ CLOTUREE / REFUSEE   │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │                      │ bouton "Prendre mon  │
+  │ Adresse                   │ texte libre + GPS    │ adresse actuelle" +  │
+  │                           │ optionnel            │ widget carte avec    │
+  │                           │                      │ pin + "Appliquer"    │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │ par gouvernorat      │ file globale unique  │
+  │ Attribution confirmatrice │ (FIFO)               │ + score de priorité  │
+  │                           │                      │ intelligent          │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │ Motif MAUVAIS_COMPORTEMEN │ présent              │ supprimé             │
+  │ T_LIVREUR                 │                      │                      │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │ déclenchable par     │                      │
+  │ Reprogrammation           │ client + livreur     │ client uniquement    │
+  │                           │ (via CLIENT_DEMANDE_ │                      │
+  │                           │ REPORT)              │                      │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │ calqués sur ceux     │ revus, adaptés au    │
+  │ Motifs livreur            │ client (doublons,    │ terrain              │
+  │                           │ intitulés flous)     │                      │
+  ├───────────────────────────┼──────────────────────┼──────────────────────┤
+  │                           │                      │ tout motif, 3        │
+  │ Seuil 3 tentatives        │ escalade uniquement  │ tentatives =         │
+  │                           │ pour motifs différés │ remontée prioritaire │
+  │                           │                      │  visible             │
+  └───────────────────────────┴──────────────────────┴──────────────────────┘
+
+  ---
+  3. Nouvelle logique recommandée pour les statuts
+
+  Quatre statuts, cycle strictement linéaire :
+
+  1. Envoyée — la demande vient d'être créée, elle est dans la file globale,
+  aucune confirmatrice n'a encore cliqué dessus.
+  2. En cours de traitement — une confirmatrice a cliqué "Prendre en charge". Un
+   verrou logique évite qu'une autre la traite en parallèle.
+  3. Clôturée — la demande est résolue (correction appliquée, échange créé,
+  livraison faite, etc.).
+  4. Refusée — la demande n'est pas recevable (doublon, motif invalide, preuve
+  insuffisante). Motif de refus obligatoire.
+
+  Règles :
+  - Une demande ne peut revenir en arrière (pas de "réouverture"). Si un nouveau
+   cas apparaît, on crée une nouvelle demande liée à la commande.
+  - Clôturée = visible en historique, plus d'actions.
+  - Deux statuts "ouverts" (Envoyée + En cours de traitement), deux statuts
+  "fermés" (Clôturée + Refusée).
+
+  ---
+  4. Nouvelle logique recommandée pour le changement d'adresse
+
+  Ce flux s'applique uniquement dans deux cas :
+  - Le client crée une réclamation avec motif CHANGEMENT_ADRESSE.
+  - Le client répond à une demande livreur de type ADRESSE_INCORRECTE,
+  ADRESSE_INCOMPLETE ou ADRESSE_INTROUVABLE.
+
+  Écran unifié, trois zones :
+
+  1. Bloc information : rappelle la commande concernée, l'ancienne adresse, qui
+  demande la correction (soi-même ou le livreur).
+  2. Bloc saisie adresse :
+    - Champ texte adresse (obligatoire, pour la lisibilité humaine)
+    - Bouton principal "Prendre mon adresse actuelle" → capture
+  latitude/longitude via GPS, pin posé automatiquement sur la carte, zoom
+    - Widget carte interactive en dessous : le client peut déplacer le pin s'il
+  veut corriger l'emplacement
+    - Affichage textuel des coordonnées capturées (pour confiance)
+  3. Bouton final : "Appliquer" → envoie adresse + latitude + longitude au
+  backend. Le backend stocke les 3 sur la demande, et seule la confirmatrice
+  peut propager vers le profil/commande en cliquant sur "Appliquer la
+  correction".
+
+  Côté confirmatrice, elle voit :
+  - L'ancienne adresse
+  - La nouvelle adresse texte
+  - Un mini-aperçu de carte centré sur les coordonnées (lecture seule)
+  - Un seul bouton "Appliquer la correction"
+
+  Ce bloc carte est masqué pour tous les autres motifs (changement de numéro,
+  annulation, colis endommagé, etc.).
+
+  ---
+  5. Nouvelle logique recommandée pour la répartition / attribution des 
+  commandes entre confirmatrices
+
+  Principe : une seule agence virtuelle, pas de frontière gouvernorat. Toutes
+  les confirmatrices voient une file commune.
+
+  5.1 Score de priorité (tri de la file)
+
+  Chaque demande reçoit un score calculé dynamiquement :
+
+  ┌────────────────────────────────────────────────────┬────────────────────┐
+  │                      Facteur                       │  Poids indicatif   │
+  ├────────────────────────────────────────────────────┼────────────────────┤
+  │ Ancienneté de la demande (minutes depuis création) │ +1 point / 10      │
+  │                                                    │ minutes            │
+  ├────────────────────────────────────────────────────┼────────────────────┤
+  │ Nombre de tentatives livreur ≥ 3                   │ +50 points         │
+  │                                                    │ (booster fort)     │
+  ├────────────────────────────────────────────────────┼────────────────────┤
+  │ Motif urgent (COLIS_ENDOMMAGE, CLIENT_REFUSE,      │ +30 points         │
+  │ COLIS_NON_CORRESPONDANT)                           │                    │
+  ├────────────────────────────────────────────────────┼────────────────────┤
+  │ Créneau de livraison dépassé                       │ +20 points         │
+  ├────────────────────────────────────────────────────┼────────────────────┤
+  │ Source = LIVREUR (bloque une livraison en cours)   │ +10 points         │
+  └────────────────────────────────────────────────────┴────────────────────┘
+
+  La file est triée par score décroissant. Un badge "URGENT" s'affiche au-delà
+  d'un certain seuil.
+
+  5.2 Score de disponibilité (pour router la notification de création)
+
+  Quand une demande est créée, on notifie en priorité la confirmatrice avec le
+  meilleur score de disponibilité :
+
+  ┌──────────────────────────────────────────┬──────────────────────────────┐
+  │                 Facteur                  │            Effet             │
+  ├──────────────────────────────────────────┼──────────────────────────────┤
+  │ Statut connexion (en ligne / hors ligne) │ exclut les hors ligne        │
+  ├──────────────────────────────────────────┼──────────────────────────────┤
+  │ Nombre de cas "En cours de traitement"   │ pénalise                     │
+  │ sur elle                                 │                              │
+  ├──────────────────────────────────────────┼──────────────────────────────┤
+  │ Cas clôturés dans les 30 dernières       │ bonus (elle est productive)  │
+  │ minutes                                  │                              │
+  ├──────────────────────────────────────────┼──────────────────────────────┤
+  │ Inactivité > 15 min                      │ pénalise (probablement en    │
+  │                                          │ pause)                       │
+  └──────────────────────────────────────────┴──────────────────────────────┘
+
+  Cette notification est indicative, non exclusive : la demande reste visible
+  pour toutes les confirmatrices dans la file globale.
+
+  5.3 Flux concret
+
+  1. Confirmatrice se connecte → voit la file globale triée par score.
+  2. Bouton "Suivant" en haut → pioche automatiquement le cas le mieux
+  prioritaire non encore pris en charge.
+  3. Ou sélection manuelle dans la liste.
+  4. "Prendre en charge" → verrouille la demande sur elle et passe en "En cours
+  de traitement".
+  5. Si une demande "En cours de traitement" n'a pas eu d'action pendant 30 
+  minutes, elle redevient disponible dans la file (timer silencieux).
+  6. Admin voit une vue supplémentaire : charge par confirmatrice, temps moyen
+  de traitement, cas re-libérés. Utile pour monitoring.
+
+  Cette logique est simple à expliquer, moderne dans le ressenti, et 
+  auto-régulée. Pas de machine learning, pas de règles obscures.
+
+  ---
+  6. Motifs à garder côté client
+
+  ┌──────────────┬──────────────────────────────────────────────────────────┐
+  │  Contexte    │                          Motifs                          │
+  │   commande   │                                                          │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ Non livrée   │ Changement d'adresse · Changement de numéro · Annulation │
+  │              │  · Reprogrammation · Colis non reçu                      │
+  ├──────────────┼──────────────────────────────────────────────────────────┤
+  │ Livrée       │ Colis endommagé (photo obligatoire) · Colis non          │
+  │              │ correspondant (photo obligatoire)                        │
+  └──────────────┴──────────────────────────────────────────────────────────┘
+
+  Supprimé : Mauvais comportement du livreur (sortie complète des deux listes).
+
+  La reprogrammation reste exclusivement client : c'est l'écran où il choisit
+  une nouvelle date/créneau et envoie.
+
+  ---
+  7. Motifs à garder côté livreur
+
+  Liste revue, mieux alignée sur le terrain et sans doublons flous :
+
+  Code: CLIENT_NON_JOIGNABLE
+  Intitulé: Client non joignable (ne répond pas, téléphone éteint, boîte vocale)
+  Nature: Différé, compte tentative
+  Photo: —
+  ────────────────────────────────────────
+  Code: CLIENT_ABSENT
+  Intitulé: Client absent au rendez-vous
+  Nature: Différé, compte tentative
+  Photo: —
+  ────────────────────────────────────────
+  Code: ADRESSE_INTROUVABLE
+  Intitulé: Adresse introuvable ou inexistante
+  Nature: Demande client (adresse)
+  Photo: —
+  ────────────────────────────────────────
+  Code: ADRESSE_INCOMPLETE
+  Intitulé: Adresse incomplète ou imprécise
+  Nature: Demande client (adresse)
+  Photo: —
+  ────────────────────────────────────────
+  Code: NUMERO_INVALIDE
+  Intitulé: Numéro de téléphone invalide ou inaccessible
+  Nature: Demande client (numéro)
+  Photo: —
+  ────────────────────────────────────────
+  Code: CLIENT_REFUSE_COMMANDE
+  Intitulé: Client refuse de réceptionner la commande
+  Nature: Escalade directe confirmatrice
+  Photo: —
+  ────────────────────────────────────────
+  Code: COLIS_ENDOMMAGE_DEPOT
+  Intitulé: Colis constaté endommagé à la livraison
+  Nature: Escalade directe confirmatrice
+  Photo: Obligatoire
+  ────────────────────────────────────────
+  Code: AUTRE_INCIDENT
+  Intitulé: Autre incident (description courte obligatoire)
+  Nature: Escalade directe confirmatrice
+  Photo: —
+
+  Corrections apportées
+
+  - Fusion de CLIENT_INJOIGNABLE + TELEPHONE_ETEINT → CLIENT_NON_JOIGNABLE (même
+   réalité terrain).
+  - Suppression de TENTATIVE_ECHOUEE (flou, redondant avec les autres).
+  - Suppression de ADRESSE_INCORRECTE (redondant avec ADRESSE_INCOMPLETE).
+  - Suppression de CLIENT_DEMANDE_REPORT : si le client veut un report, il le
+  fait lui-même depuis son espace. Le livreur coche simplement CLIENT_ABSENT ou
+  CLIENT_REFUSE_COMMANDE selon ce qu'il a vu. Une notification automatique
+  invite le client à utiliser son bouton "Reprogrammer" s'il le souhaite.
+  - NUMERO_INCORRECT renommé NUMERO_INVALIDE (plus juste sémantiquement).
+  - COLIS_ENDOMMAGE renommé COLIS_ENDOMMAGE_DEPOT pour le distinguer du motif
+  client après livraison.
+  - AUTRE renommé AUTRE_INCIDENT + description courte obligatoire (pour éviter
+  le fourre-tout silencieux).
+
+  ---
+  8. Logique des tentatives et remontée vers la confirmatrice
+
+  8.1 Définition d'une tentative
+
+  Une tentative = une journée d'échec de livraison sur une commande, quel que
+  soit le motif. Règle anti-spam : un seul enregistrement par couple (commande, 
+  jour calendaire) — si le livreur change de statut plusieurs fois le même jour,
+   on garde le dernier motif et on ne recompte pas.
+
+  8.2 Création de la demande
+
+  - Motif différé (CLIENT_NON_JOIGNABLE, CLIENT_ABSENT) : aucune demande n'est
+  créée aux tentatives 1 et 2. À la tentative n° 3, une demande est créée
+  automatiquement avec badge "URGENT — 3 tentatives échouées".
+  - Motif immédiat (adresse, numéro, refus, colis endommagé, autre) : demande
+  créée dès la tentative n° 1. Le compteur continue de monter.
+
+  8.3 Règle transversale : seuil 3 tentatives
+
+  À partir de 3 tentatives sur la même commande (peu importe le motif), qu'une
+  demande existe déjà ou pas :
+  - La demande concernée reçoit le booster de priorité +50 points → remonte en
+  tête de la file globale.
+  - Elle reçoit un badge rouge "3 TENTATIVES — À TRAITER".
+  - Une notification push est envoyée à la confirmatrice la plus disponible.
+  - Dans l'onglet "À traiter" de la confirmatrice, un filtre rapide "3+ 
+  tentatives" est visible en haut pour isoler ces cas.
+
+  8.4 Côté livreur
+
+  Le livreur voit sur sa fiche de livraison : "Tentative 2/3 — au 3e échec le
+  cas remonte au support". Transparent et dissuasif sur le sérieux du suivi.
+
+  ---
+  9. Plan global mis à jour étape par étape
+
+  Chaque étape est un livrable autonome. Entre chaque, on valide ensemble avant
+  la suivante.
+
+  Étape A — Statuts et intitulés
+  - Renommer RESOLUE → CLOTUREE et EN_COURS → EN_COURS_DE_TRAITEMENT côté
+  backend, DB, et Flutter.
+  - Mettre à jour tous les libellés affichés à l'utilisateur.
+
+  Étape B — Motifs
+  - Supprimer MAUVAIS_COMPORTEMENT_LIVREUR des listes client.
+  - Refondre la liste des motifs livreur selon §7 (renommages, suppressions,
+  fusions).
+  - Mettre à jour les écrans de création (client et livreur).
+
+  Étape C — Changement d'adresse avec carte
+  - Intégrer un widget carte interactive (recommandation : flutter_map + tuiles
+  OSM, déjà dans l'écosystème OSRM utilisé).
+  - Bouton "Prendre mon adresse actuelle" avec capture GPS.
+  - Pin déplaçable.
+  - Envoi adresse + latitude + longitude au backend, côté client (création
+  réclamation ADRESSE) et côté réponse demande livreur.
+  - Affichage lecture seule côté confirmatrice.
+
+  Étape D — Reprogrammation client only
+  - Supprimer toute action de reprogrammation côté livreur (bouton, motif).
+  - Vérifier l'écran client "Reprogrammer" : flux de choix de nouvelle date +
+  envoi au backend.
+  - Quand un livreur coche CLIENT_ABSENT ou CLIENT_REFUSE_COMMANDE, notification
+   push vers le client avec deep link "Reprogrammer".
+
+  Étape E — Agence globale et attribution intelligente
+  - Retirer le filtre gouvernorat dans FindConfirmateurForClientGouvernoratAsync
+   et dans les requêtes de la file confirmatrice.
+  - Ajouter un champ ScorePriorite calculé sur la demande (soit en colonne
+  matérialisée recalculée à chaque mutation, soit en calcul au fly SQL).
+  - Ajouter un mécanisme de "prise en charge" avec timer de libération 30 min.
+  - Endpoint /api/confirmateur/reclamations/suivant qui renvoie le meilleur cas
+  pour la confirmatrice appelante.
+  - Vue de file triée par score, avec badges (urgent, 3+ tentatives, délivrée
+  bientôt).
+
+  Étape F — Remontée 3 tentatives
+  - Étendre RecordLivreurAttempt : à chaque tentative, recalculer
+  TentativesCount sur la commande.
+  - Pour les motifs immédiats : si ≥ 3, mettre à jour la demande existante
+  (badge, boost score).
+  - Pour les motifs différés : créer la demande exactement à la 3e tentative.
+  - Afficher compteur "Tentative X/3" côté livreur, filtre "3+ tentatives" côté
+  confirmatrice.
+
+  Étape G — Nettoyage et tests
+  - Retirer les anciennes notifications et libellés résiduels.
+  - Scénarios de test manuels (voir doc existante REFONTE_FINAL.md à mettre à
+  jour).
+
+  Ordre recommandé : A → B → D → F → C → E → G. On commence par le plus simple
+  (renommages) et on finit par le plus ambitieux (agence globale + carte).
+
+  ---
+  10. Questions ou points à clarifier avant développement
+
+  1. Widget carte : on part sur flutter_map (OpenStreetMap, gratuit, déjà aligné
+   avec l'usage d'OSRM du projet) ou Google Maps (meilleur rendu, payant, clé
+  API) ?
+  2. Seuil de temps avant libération automatique d'un cas "En cours de
+  traitement" sans activité : 30 minutes convient-il, ou plus long (1 h) ?
+  3. Admin vue monitoring : on livre dès l'étape E (avec la refonte agence
+  globale) ou on la reporte en phase ultérieure ?
+  4. Suppression de CLIENT_DEMANDE_REPORT livreur : acceptes-tu la suppression
+  complète (le livreur coche juste CLIENT_ABSENT / CLIENT_REFUSE_COMMANDE et le
+  client se reprogramme), ou tu préfères garder un motif information "Client
+  demande un report" sans aucune action automatique ?
+  5. Notification push "reprogrammer" au client après absence/refus : envoyée
+  immédiatement, ou seulement après validation par la confirmatrice ?
+  6. Pondérations du score de priorité (§5.1) : les valeurs que je propose sont
+  indicatives. On les fige maintenant ou on prévoit un paramétrage admin plus
+  tard ?
+  7. Score de disponibilité confirmatrice (§5.2) : on implémente la version
+  complète dès l'étape E, ou une version simplifiée (juste "connectée + charge
+  ouverte") pour démarrer ?
+  8. Historique des confirmatrices par gouvernorat : on conserve le champ
+  Gouvernorat sur le profil confirmatrice pour d'autres usages (reporting,
+  droits spécifiques plus tard), ou on le supprime ?
+
+  Une fois ces 8 points tranchés, je peux enchaîner sur l'étape A (statuts) avec
+   un livrable concret avant d'aller plus loin.
+
+✻ Baked for 3m 20s
+
+※ recap: Objectif : refonte des demandes du projet PFE ; tâche en cours : je t'ai livré le plan produit mis à jour (statuts renommés, agence globale, carte adresse, motifs livreur revus, seuil 3 tentatives). Prochaine action : tu tranches les 8 questions de la section 10 pour lancer l'étape A. (disable recaps in /config)
+
+> Je veux que tu mettes à jour complètement ta dernière proposition, car il y a 
+   encore des corrections importantes dans la logique métier et dans            
+  l’interface.                                                                  
+                                                                                
+  Important :                                                                   
+  - Je veux d’abord une réponse orientée logique produit / workflow / UX        
+  - Je ne veux pas encore de code                                               
+  - Je veux une réponse simple, claire, lisible et professionnelle              
+  - Si tu vois une incohérence, corrige-la franchement                          
+  - Je veux que tu insistes bien sur les noms exacts des motifs côté client et  
+  côté livreur pour éviter toute confusion                                      
+                                                                                
+  Voici la logique finale que je veux :                                         
+                                                                                
+  1) Structure générale des flux                                                
+  Je veux garder deux flux distincts :                                          
+                                                                                
+  - Réclamations = côté client vers livreur / système                           
+  - Demandes = côté livreur vers client                                         
+                                                                                
+  La confirmatrice doit voir les deux et pouvoir les gérer clairement.          
+                                                                                
+  2) Statuts métier                                                             
+  Je veux garder les mêmes statuts métier pour les réclamations et les demandes 
+   :                                                                            
+  - Envoyée                                                                     
+  - En cours de traitement                                                      
+  - Clôturée                                                                    
+  - Refusée                                                                     
+                                                                                
+  Mais je veux que tu distingues bien :                                         
+  - les statuts métier                                                          
+  - les indicateurs visuels dans l’interface client                             
+                                                                                
+  3) Demandes du livreur vers le client                                         
+  Le livreur doit déclencher une demande au client uniquement pour ces deux     
+  motifs :                                                                      
+  - Adresse incorrecte                                                          
+  - Numéro incorrect                                                            
+                                                                                
+  Dans ces deux cas :                                                           
+  - le client voit une demande dans son espace                                  
+  - la demande apparaît en rouge tant qu’il n’a pas encore corrigé              
+  - si le client fait la correction, elle passe en vert                         
+  - rouge / vert = seulement un indicateur visuel côté client                   
+  - rouge / vert ne sont pas des statuts métier                                 
+                                                                                
+  Très important :                                                              
+  dans ce cas précis de demande livreur vers client, si le client a bien        
+  corrigé, la demande doit passer automatiquement au statut métier “En cours de 
+   traitement”, afin que la confirmatrice comprenne que le client a bien        
+  répondu et qu’il reste maintenant la validation / le traitement final côté    
+  confirmatrice.                                                                
+                                                                                
+  Je veux que tu expliques cela clairement dans la logique.                     
+                                                                                
+  4) Cas qui ne doivent PAS créer une demande au client                         
+  Je ne veux pas qu’une demande soit envoyée au client pour :                   
+  - Refus client                                                                
+  - Téléphone fermé                                                             
+  - Client non joignable                                                        
+  - Client absent                                                               
+                                                                                
+  Logique attendue :                                                            
+                                                                                
+  - Refus client :                                                              
+    - remonte directement à la confirmatrice dès la première fois               
+    - statut initial : Envoyée                                                  
+    - ensuite la confirmatrice peut le passer en En cours de traitement         
+                                                                                
+  - Téléphone fermé / Client non joignable / Client absent :                    
+    - pas de demande au client                                                  
+    - ces cas remontent à la confirmatrice seulement après 3 tentatives         
+    - avant cela, ils restent dans la logique de tentative côté livreur         
+                                                                                
+  Je veux que tu détailles très clairement la différence entre :                
+  - demande envoyée au client                                                   
+  - remontée directe à la confirmatrice                                         
+  - remontée à la confirmatrice après 3 tentatives                              
+                                                                                
+  5) Rôle de la confirmatrice                                                   
+  Je veux une logique flexible et lisible pour la confirmatrice.                
+                                                                                
+  La confirmatrice doit voir :                                                  
+  - les commandes                                                               
+  - les réclamations                                                            
+  - les demandes                                                                
+  - le profil                                                                   
+                                                                                
+  Elle doit pouvoir traiter les cas de manière claire.                          
+                                                                                
+  Je veux qu’elle puisse :                                                      
+  - ouvrir le détail complet du cas                                             
+  - voir le détail de la commande                                               
+  - voir s’il s’agit d’une réclamation ou d’une demande                         
+  - voir si cela vient du client ou du livreur                                  
+  - voir si le client a déjà corrigé ou non dans le cas d’une demande livreur → 
+   client                                                                       
+  - faire des appels si nécessaire                                              
+  - changer le statut métier du cas                                             
+  - changer aussi le statut de la commande selon le résultat de son             
+  intervention                                                                  
+                                                                                
+  Je veux que tu prennes en compte cette flexibilité côté confirmatrice :       
+  - elle peut passer une commande en Reportée                                   
+  - elle peut remettre une commande en Livraison                                
+  - elle peut mettre une commande en Retournée                                  
+  - selon le cas traité et le résultat de son intervention                      
+                                                                                
+  Je veux que cette partie soit pensée avec une interface simple, lisible et    
+  professionnelle.                                                              
+                                                                                
+  6) Tracking côté client                                                       
+  Je veux que la page Tracking contienne le détail complet de la commande.      
+                                                                                
+  Dans le tracking, le client doit pouvoir voir au minimum :                    
+  - référence de la commande                                                    
+  - statut de la commande                                                       
+  - date de création                                                            
+  - mode de livraison / méthode si pertinent                                    
+  - nom                                                                         
+  - téléphone                                                                   
+  - adresse                                                                     
+  - gouvernorat / ville                                                         
+  - liste des articles                                                          
+  - quantité                                                                    
+  - total ou résumé utile                                                       
+  - état de la livraison                                                        
+  - réclamation liée si elle existe                                             
+  - demande liée si elle existe                                                 
+                                                                                
+  Je veux que tu ajoutes clairement cette partie au plan.                       
+                                                                                
+  7) Réclamations côté client                                                   
+  Je veux que tu rappelles clairement les motifs côté client.                   
+                                                                                
+  Si la commande n’est pas livrée, le client peut créer une réclamation pour :  
+  - Changement d’adresse                                                        
+  - Changement de numéro                                                        
+  - Demande d’annulation                                                        
+  - Demande de reprogrammation                                                  
+  - Colis non reçu                                                              
+                                                                                
+  Si la commande est livrée, le client peut créer une réclamation seulement     
+  pour :                                                                        
+  - Colis endommagé                                                             
+  - Colis non correspondant                                                     
+                                                                                
+  Je veux que tu insistes bien sur ces noms de motifs.                          
+                                                                                
+  8) Demandes / motifs côté livreur                                             
+  Je veux que tu rappelles clairement les motifs côté livreur avec une          
+  séparation nette :                                                            
+                                                                                
+  A. Motifs qui créent une demande au client :                                  
+  - Adresse incorrecte                                                          
+  - Numéro incorrect                                                            
+                                                                                
+  B. Motifs qui remontent directement à la confirmatrice :                      
+  - Refus client                                                                
+  - Autre incident                                                              
+                                                                                
+  C. Motifs qui remontent à la confirmatrice après 3 tentatives :               
+  - Téléphone fermé                                                             
+  - Client non joignable                                                        
+  - Client absent                                                               
+                                                                                
+  Je veux que tu gardes “Autre incident” comme escalade directe à la            
+  confirmatrice.                                                                
+  Mais je veux que la description soit obligatoire seulement pour ce motif.     
+  Pour tous les autres motifs, je veux supprimer le champ description ou le     
+  rendre non bloquant.                                                          
+                                                                                
+  Je veux aussi que tu insistes bien sur ces noms de motifs pour éviter tout    
+  malentendu.                                                                   
+                                                                                
+  9) Changement d’adresse                                                       
+  Quand il s’agit d’un changement d’adresse, que ce soit :                      
+  - dans une réclamation créée par le client                                    
+  - ou dans une demande envoyée par le livreur au client                        
+                                                                                
+  je veux cette logique :                                                       
+  - bouton “Prendre mon adresse actuelle”                                       
+  - si le client clique dessus, on récupère latitude et longitude               
+  automatiquement                                                               
+  - sinon, il peut choisir sa position dans une carte avec un pin               
+  - ensuite il clique sur “Appliquer”                                           
+                                                                                
+  Je veux que cette interface n’apparaisse que si le cas concerne une           
+  modification d’adresse.                                                       
+                                                                                
+  10) Simplification de la logique confirmatrice                                
+  Dans ta version précédente, la logique de score confirmatrice était trop      
+  compliquée.                                                                   
+                                                                                
+  Je veux maintenant une version plus simple et plus compréhensible :           
+                                                                                
+  - une file globale unique                                                     
+  - priorité d’abord aux cas urgents                                            
+  - ensuite aux cas avec 3 tentatives ou plus                                   
+  - ensuite aux cas les plus anciens                                            
+  - une confirmatrice peut cliquer sur “Prendre en charge”                      
+  - un bouton “Suivant” peut charger automatiquement le prochain cas            
+  prioritaire                                                                   
+                                                                                
+  Je ne veux pas de système compliqué de score de disponibilité ou de           
+  pondérations difficiles à comprendre.                                         
+                                                                                
+  11) Reprogrammation                                                           
+  La reprogrammation doit être déclenchée uniquement côté client.               
+  Je ne veux pas de logique de reprogrammation côté livreur.                    
+  Si tu vois une incohérence dans la version précédente, corrige-la.            
+                                                                                
+  12) Ce que je veux dans ta nouvelle réponse                                   
+  Je veux que tu me redonnes, proprement et sans code :                         
+                                                                                
+  1. Un résumé corrigé de la logique finale                                     
+  2. La différence claire entre :                                               
+     - réclamation client                                                       
+     - demande livreur → client                                                 
+     - remontée confirmatrice                                                   
+  3. Les motifs exacts côté client                                              
+  4. Les motifs exacts côté livreur                                             
+  5. Les cas qui créent une demande au client                                   
+  6. Les cas qui vont directement à la confirmatrice                            
+  7. Les cas qui vont à la confirmatrice après 3 tentatives                     
+  8. La logique rouge / vert côté client                                        
+  9. La logique des statuts métier                                              
+  10. La logique du tracking avec détail complet de commande                    
+  11. La logique simplifiée de la file confirmatrice                            
+  12. Le plan global mis à jour étape par étape                                 
+  13. Les points encore flous à clarifier avant développement                   
+                                                                                
+  Important :                                                                   
+  - réponse claire                                                              
+  - réponse structurée                                                          
+  - pas de code                                                                 
+  - corrige les incohérences de ta dernière version                             
+  - je veux une logique simple, lisible et professionnelle                      
+
+● Voici la version mise à jour du plan, alignée strictement sur tes consignes.
+  Aucune ambiguïté sur les motifs, aucun code.
+
+  ---
+  1. Résumé corrigé de la logique finale
+
+  Une plateforme de gestion à deux flux visibles :
+
+  - Réclamations — initiées par le client, dirigées vers le support (livreur ou
+  confirmatrice).
+  - Demandes — initiées par le livreur, dirigées vers le client lorsqu'une
+  action est attendue de lui.
+
+  Et un troisième flux interne, jamais visible par le client mais pleinement
+  géré par la confirmatrice : les Incidents livreur — remontées livreur →
+  confirmatrice sans action client (refus, autre incident, tentatives répétées).
+
+  Les quatre statuts métier sont uniformes : Envoyée, En cours de traitement, 
+  Clôturée, Refusée. Ils s'appliquent à chaque cas quel que soit le flux.
+
+  Côté client, un code couleur rouge / vert est ajouté uniquement sur les
+  demandes reçues du livreur pour rendre immédiatement visible si la correction
+  est à fournir ou déjà envoyée. Ce rouge/vert n'est pas un statut métier, c'est
+   un indicateur visuel UX.
+
+  La confirmatrice traite une file globale unique, triée par ordre de priorité
+  simple : urgents → tentatives répétées → anciens. Elle peut traiter les cas de
+   tout gouvernorat, et peut changer à la fois le statut du cas et le statut de
+  la commande rattachée.
+
+  La reprogrammation est exclusivement client : aucun acteur ne peut choisir une
+   nouvelle date à la place du client.
+
+  ---
+  2. Différence claire entre les trois flux
+
+  ┌─────────────────┬─────────┬─────────────────┬─────────────┬─────────────┐
+  │                 │         │                 │   Action    │             │
+  │      Flux       │  Qui    │   Qui voit ?    │  attendue   │ Nom affiché │
+  │                 │ crée ?  │                 │ côté client │             │
+  │                 │         │                 │      ?      │             │
+  ├─────────────────┼─────────┼─────────────────┼─────────────┼─────────────┤
+  │                 │         │ Client (auteur) │ Non (c'est  │ «           │
+  │ Réclamation     │ Le      │  +              │ lui qui a   │ Réclamation │
+  │                 │ client  │ confirmatrice   │ ouvert le   │  »          │
+  │                 │         │                 │ cas)        │             │
+  ├─────────────────┼─────────┼─────────────────┼─────────────┼─────────────┤
+  │                 │         │                 │ Oui —       │             │
+  │ Demande livreur │ Le      │ Client +        │ corriger    │ « Demande » │
+  │  → client       │ livreur │ confirmatrice   │ adresse ou  │             │
+  │                 │         │                 │ numéro      │             │
+  ├─────────────────┼─────────┼─────────────────┼─────────────┼─────────────┤
+  │ Incident        │ Le      │ Confirmatrice   │             │ « Incident  │
+  │ livreur →       │ livreur │ uniquement      │ Non         │ »           │
+  │ confirmatrice   │         │                 │             │             │
+  └─────────────────┴─────────┴─────────────────┴─────────────┴─────────────┘
+
+  Point critique : le client ne voit jamais les incidents livreur. Pour lui, il
+  y a deux onglets seulement (Réclamations, Demandes). Pour la confirmatrice il
+  y en a trois types techniques regroupés dans un même tableau avec un filtre.
+
+  ---
+  3. Motifs exacts côté client
+
+  Insistance sur les noms exacts — toute autre formulation est à bannir du code
+  et de l'UI.
+
+  Commande non livrée — 5 motifs
+
+  - Changement d'adresse
+  - Changement de numéro
+  - Demande d'annulation
+  - Demande de reprogrammation
+  - Colis non reçu
+
+  Commande livrée — 2 motifs
+
+  - Colis endommagé (photo obligatoire)
+  - Colis non correspondant (photo obligatoire)
+
+  Motif supprimé définitivement : Mauvais comportement du livreur (ne figure
+  plus nulle part).
+
+  ---
+  4. Motifs exacts côté livreur
+
+  Insistance sur les noms exacts — à utiliser tels quels partout (UI, DB, docs).
+
+  A. Créent une demande au client — 2 motifs
+
+  - Adresse incorrecte
+  - Numéro incorrect
+
+  B. Remontent directement à la confirmatrice — 2 motifs
+
+  - Refus client
+  - Autre incident (description obligatoire)
+
+  C. Remontent à la confirmatrice après 3 tentatives — 3 motifs
+
+  - Téléphone fermé
+  - Client non joignable
+  - Client absent
+
+  Description de l'incident : obligatoire uniquement pour Autre incident.
+  Retirée de tous les autres motifs (elle était source de friction, et les
+  autres motifs se passent d'explication).
+
+  Motifs supprimés définitivement : Tentative échouée, Adresse incomplète,
+  Adresse introuvable, Colis endommagé (côté livreur), Client demande un report.
+   Si l'adresse est incomplète ou introuvable, le livreur coche Adresse 
+  incorrecte. Si un colis arrive endommagé, il coche Autre incident avec
+  description. Si le client demande un report, le livreur coche Client absent ou
+   Refus client selon la situation réelle, et le client reprogramme depuis son
+  espace.
+
+  ---
+  5. Cas qui créent une demande au client
+
+  Uniquement les motifs A (Adresse incorrecte, Numéro incorrect).
+
+  Cycle de vie d'une demande livreur → client
+
+  1. Livreur coche Adresse incorrecte ou Numéro incorrect sur la commande.
+  2. Une Demande est créée immédiatement.
+  3. Statut métier initial : Envoyée.
+  4. Indicateur visuel client : rouge — « Correction requise ».
+  5. Client ouvre sa demande dans son espace, clique sur le bouton de
+  correction, renseigne la nouvelle adresse (avec carte GPS) ou le nouveau
+  numéro, clique sur Appliquer.
+  6. Au moment du clic « Appliquer » :
+    - Le statut métier passe automatiquement à En cours de traitement.
+    - L'indicateur visuel client passe au vert — « Correction envoyée ».
+    - La confirmatrice reçoit une notification : un cas attend validation.
+  7. Confirmatrice ouvre le détail, vérifie la correction proposée, clique sur
+  Appliquer la correction pour propager la modification au profil client et/ou à
+   la commande. Puis clique sur Clôturer — le statut métier passe à Clôturée.
+  8. Si la correction est refusée (suspect, incohérent) → Refuser avec motif →
+  statut Refusée.
+
+  ---
+  6. Cas qui vont directement à la confirmatrice
+
+  Motifs B — Refus client et Autre incident.
+
+  Cycle de vie
+
+  1. Livreur coche le motif.
+  2. Un Incident est créé immédiatement.
+  3. Statut métier initial : Envoyée.
+  4. Aucune visibilité côté client, aucun indicateur rouge/vert.
+  5. Le cas apparaît dans la file confirmatrice avec badge « Incident livreur ».
+  6. La confirmatrice clique sur Prendre en charge → statut En cours de 
+  traitement.
+  7. Elle traite (appel client, appel livreur, consultation commande), puis :
+    - Clôturer → Clôturée
+    - Refuser → Refusée (avec motif de refus)
+
+  ---
+  7. Cas qui vont à la confirmatrice après 3 tentatives
+
+  Motifs C — Téléphone fermé, Client non joignable, Client absent.
+
+  Logique de comptage
+
+  - Une tentative = une journée d'échec sur une commande (unicité par couple
+  commande + jour calendaire pour éviter le spam).
+  - Aux tentatives 1 et 2 : aucun cas créé. Le livreur voit « Tentative 1/3 »
+  puis « Tentative 2/3 » sur sa fiche.
+  - À la tentative 3 : un Incident est créé automatiquement, statut métier
+  Envoyée, avec le badge rouge « 3 tentatives échouées ».
+  - Le cas remonte en tête de la file confirmatrice (cf. §11).
+  - Le livreur voit alors « Cas remonté au support ».
+
+  Différence essentielle à retenir :
+
+  ┌────────────────────────────────────┬─────────────────┬─────────────────┐
+  │           Motif livreur            │   Où ça va ?    │     Quand ?     │
+  ├────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ Adresse incorrecte · Numéro        │ Au client       │ Dès la 1re fois │
+  │ incorrect                          │                 │                 │
+  ├────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ Refus client · Autre incident      │ À la            │ Dès la 1re fois │
+  │                                    │ confirmatrice   │                 │
+  ├────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ Téléphone fermé · Client non       │ À la            │ Après la 3e     │
+  │ joignable · Client absent          │ confirmatrice   │ tentative       │
+  └────────────────────────────────────┴─────────────────┴─────────────────┘
+
+  ---
+  8. Logique rouge / vert côté client
+
+  Elle s'applique uniquement sur les demandes reçues du livreur (motifs A :
+  Adresse incorrecte, Numéro incorrect). Elle ne s'applique jamais aux
+  réclamations que le client a créées lui-même.
+
+  ┌────────────────────────────┬─────────────────────────┬─────────────────┐
+  │         Indicateur         │      Signification      │ Statut métier   │
+  │                            │                         │     associé     │
+  ├────────────────────────────┼─────────────────────────┼─────────────────┤
+  │ Rouge (pastille + bandeau  │ Le livreur attend une   │ Envoyée         │
+  │ « Correction requise »)    │ action du client        │                 │
+  ├────────────────────────────┼─────────────────────────┼─────────────────┤
+  │ Vert (pastille + bandeau « │ Le client a appliqué la │ En cours de     │
+  │  Correction envoyée »)     │  correction             │ traitement      │
+  └────────────────────────────┴─────────────────────────┴─────────────────┘
+
+  Points clés :
+  - Rouge et vert ne sont pas stockés en base comme des statuts ; ils sont
+  dérivés du statut métier + du flag « correction appliquée par le client ».
+  - Une fois la confirmatrice validant la correction et clôturant le cas, le cas
+   bascule dans l'historique côté client (plus de bandeau rouge ni vert).
+  - Ce code couleur reste indépendant du statut de la commande elle-même.
+
+  ---
+  9. Logique des statuts métier
+
+  Quatre statuts partagés par tous les types (Réclamation, Demande, Incident) :
+
+  1. Envoyée — cas créé, non encore pris en charge par la confirmatrice.
+  2. En cours de traitement — la confirmatrice l'a pris en main, ou le client a
+  répondu à une demande livreur.
+  3. Clôturée — traitement terminé, cas résolu.
+  4. Refusée — cas non recevable, motif de refus obligatoire.
+
+  Transitions autorisées
+
+  ┌────────────────┬───────────────────────────┬───────────────────────────┐
+  │   De → Vers    │      Qui déclenche ?      │         Condition         │
+  ├────────────────┼───────────────────────────┼───────────────────────────┤
+  │ Envoyée → En   │ Confirmatrice (« Prendre  │                           │
+  │ cours de       │ en charge ») ou Client    │ —                         │
+  │ traitement     │ (répond à une demande A)  │                           │
+  ├────────────────┼───────────────────────────┼───────────────────────────┤
+  │ En cours de    │                           │ Action résolutoire        │
+  │ traitement →   │ Confirmatrice             │ effectuée (correction     │
+  │ Clôturée       │                           │ appliquée, échange créé,  │
+  │                │                           │ etc.)                     │
+  ├────────────────┼───────────────────────────┼───────────────────────────┤
+  │ En cours de    │                           │                           │
+  │ traitement →   │ Confirmatrice             │ Motif de refus renseigné  │
+  │ Refusée        │                           │                           │
+  ├────────────────┼───────────────────────────┼───────────────────────────┤
+  │ Envoyée →      │                           │ Cas manifestement         │
+  │ Refusée        │ Confirmatrice             │ irrecevable (doublon,     │
+  │                │                           │ etc.)                     │
+  └────────────────┴───────────────────────────┴───────────────────────────┘
+
+  Pas de réouverture d'un cas clôturé ou refusé — si la situation ressurgit, on
+  crée un nouveau cas lié.
+
+  Distinction essentielle : statut métier du cas vs. statut de la commande
+
+  Ce sont deux axes indépendants :
+  - Statut du cas (Envoyée / En cours / Clôturée / Refusée) = état du traitement
+   administratif.
+  - Statut de la commande (Confirmée / En livraison / Livrée / Reportée /
+  Retournée) = état logistique.
+
+  La confirmatrice, depuis un cas, peut agir sur les deux séparément.
+
+  ---
+  10. Logique du tracking avec détail complet de commande
+
+  Page Tracking de commande côté client, accessible depuis la liste des
+  commandes. Elle centralise tout le contexte.
+
+  Contenu attendu (en une seule page ou en sections déroulantes)
+
+  Bloc 1 — En-tête commande
+  - Référence de la commande
+  - Statut de la commande (avec pastille couleur)
+  - Date de création
+  - Mode de livraison / méthode si pertinent
+  - Créneau prévu (si applicable)
+
+  Bloc 2 — Destinataire
+  - Nom complet
+  - Téléphone
+  - Adresse complète
+  - Gouvernorat · Ville · Code postal
+
+  Bloc 3 — Contenu
+  - Liste des articles (désignation, référence)
+  - Quantité par article
+  - Prix unitaire (si affiché)
+  - Total commande
+
+  Bloc 4 — État de la livraison
+  - Timeline des statuts : Confirmée → En livraison → Livrée (ou Reportée /
+  Retournée)
+  - Horodatage de chaque changement
+  - Nom du livreur assigné si disponible
+
+  Bloc 5 — Réclamation liée
+  - Affiché uniquement si une réclamation existe sur cette commande
+  - Motif, date, statut métier, accès au détail
+
+  Bloc 6 — Demande liée
+  - Affiché uniquement si une demande livreur → client existe sur cette commande
+  - Motif, indicateur rouge/vert, bouton d'action « Corriger »
+
+  Bloc d'actions contextuelles en bas
+  - Bouton « Créer une réclamation » (si pas encore livré, ou livré avec motifs
+  post-livraison disponibles)
+  - Bouton « Reprogrammer » (si le statut commande le permet, et uniquement côté
+   client)
+
+  ---
+  11. Logique simplifiée de la file confirmatrice
+
+  Fin du système de score pondéré. Règles de tri strictement ordonnées, faciles
+  à expliquer à n'importe quelle confirmatrice :
+
+  1. Urgence — cas dont le motif est Refus client, Autre incident, Colis 
+  endommagé, Colis non correspondant. Ils passent en premier.
+  2. 3 tentatives ou plus — cas ayant atteint le seuil, quel que soit le motif.
+  3. Ancienneté — parmi les cas restants, le plus vieux en premier (FIFO).
+
+  Autrement dit : la file trie en trois passes successives, pas un score
+  mystérieux.
+
+  Interface de la file
+
+  - Onglets : À traiter · En cours · Historique · (filtre Type : Réclamation ·
+  Demande · Incident).
+  - Chaque ligne affiche : badge couleur (urgent / 3 tentatives / normal), type,
+   motif, référence commande, client, ancienneté.
+  - Bouton « Suivant » en haut : la confirmatrice clique, le système lui ouvre
+  le cas de plus haute priorité non encore en cours.
+  - Bouton « Prendre en charge » dans le détail → verrouille le cas sur elle et
+  passe en En cours de traitement.
+  - Libération automatique : si un cas En cours de traitement n'a aucune action
+  pendant 30 minutes, il redevient disponible dans la file.
+
+  Actions possibles depuis le détail d'un cas
+
+  La confirmatrice dispose de deux barres d'actions bien séparées :
+
+  Actions sur le cas :
+  - Prendre en charge · Clôturer · Refuser (avec motif) · Ajouter note interne
+  - Appliquer la correction (uniquement pour demandes d'adresse / numéro)
+  - Créer un échange (uniquement pour colis endommagé / non correspondant)
+
+  Actions sur la commande rattachée :
+  - Reporter la commande (la commande passe en « Reportée »)
+  - Remettre en livraison (la commande repasse en « En livraison » / « Confirmée
+   »)
+  - Retourner la commande (la commande passe en « Retournée »)
+
+  Ces actions commande sont distinctes du statut du cas. Clôturer un cas
+  n'implique rien sur la commande, et inversement. La confirmatrice choisit
+  explicitement les deux.
+
+  Appels
+
+  - Bouton « Appeler le client » (lance le composeur téléphonique).
+  - Bouton « Appeler le livreur » (affiché si un livreur est assigné).
+
+  ---
+  12. Plan global mis à jour étape par étape
+
+  Chaque étape a un livrable autonome. Entre chaque, on valide avant la
+  suivante.
+
+  Étape 1 — Renommage statuts et nettoyage motifs
+  - Renommer RESOLUE → CLOTUREE et EN_COURS → EN_COURS_DE_TRAITEMENT partout.
+  - Retirer Mauvais comportement du livreur des motifs client.
+  - Retirer les motifs livreur supprimés (Tentative échouée, Adresse incomplète,
+   Adresse introuvable, Colis endommagé livreur, Client demande un report).
+  - Aligner les libellés UI sur les noms exacts du §3 et §4.
+
+  Étape 2 — Ajout du type Incident
+  - Ajouter le type INCIDENT à côté de RECLAMATION et DEMANDE dans le modèle de
+  cas.
+  - Masquer les incidents côté client (filtre d'affichage).
+  - Les faire apparaître côté confirmatrice avec badge distinct.
+
+  Étape 3 — Demande livreur → client (motifs A)
+  - Un cas de type Demande est créé uniquement pour Adresse incorrecte ou Numéro
+   incorrect.
+  - UI client avec indicateur rouge / vert.
+  - Transition automatique vers En cours de traitement dès que le client clique
+  Appliquer.
+
+  Étape 4 — Remontée directe confirmatrice (motifs B)
+  - Refus client et Autre incident créent un Incident en Envoyée.
+  - Description obligatoire pour Autre incident uniquement.
+
+  Étape 5 — Remontée après 3 tentatives (motifs C)
+  - Comptage unicité par (commande, jour).
+  - Tentatives 1 et 2 silencieuses côté confirmatrice, visibles côté livreur («
+  1/3 », « 2/3 »).
+  - À la 3e tentative : Incident créé automatiquement avec badge « 3 tentatives
+  échouées » et priorité haute.
+
+  Étape 6 — Widget carte pour changement d'adresse
+  - Intégrer une carte interactive (recommandation flutter_map + OSM).
+  - Bouton « Prendre mon adresse actuelle » (GPS).
+  - Pin déplaçable.
+  - Bouton « Appliquer ».
+  - Widget disponible dans deux contextes : création d'une réclamation
+  Changement d'adresse par le client, et réponse à une demande livreur Adresse 
+  incorrecte.
+  - Jamais affiché pour les autres motifs.
+
+  Étape 7 — File globale confirmatrice simplifiée
+  - Supprimer le filtre par gouvernorat du code d'affectation.
+  - Implémenter les trois passes de tri (urgence → tentatives → ancienneté).
+  - Bouton « Suivant ».
+  - Verrouillage avec libération auto 30 min.
+
+  Étape 8 — Détail cas avec actions commande séparées
+  - Deux barres d'actions (cas / commande) dans l'écran détail.
+  - Actions commande : Reporter · Remettre en livraison · Retourner.
+  - Appel client + appel livreur.
+
+  Étape 9 — Tracking client avec détail complet
+  - Refonte de la page Tracking côté client selon §10.
+  - Intégration des blocs Réclamation liée et Demande liée.
+
+  Étape 10 — Reprogrammation client uniquement
+  - Vérifier que l'action Reprogrammer n'apparaît nulle part ailleurs que dans
+  l'espace client.
+  - Notification automatique au client après Client absent ou Refus client
+  livreur, invitant à reprogrammer lui-même.
+
+  Étape 11 — Tests scénarisés
+  - 5 à 7 scénarios bout-en-bout couvrant les 3 flux et les cas limites (3
+  tentatives, correction adresse, refus, etc.).
+
+  Ordre recommandé : 1 → 2 → 4 → 5 → 3 → 6 → 8 → 9 → 7 → 10 → 11. On commence
+  par le moins risqué (renommages) et on termine par la file et les tests.
+
+  ---
+  13. Points encore flous à clarifier avant développement
+
+  1. Nommage du 3e type — je propose Incident pour les cas livreur remontant
+  directement à la confirmatrice (refus, autre, 3+ tentatives). Tu confirmes ce
+  mot, ou tu préfères Signalement, Escalade, ou un autre terme ?
+  2. Widget carte — on part sur flutter_map (OpenStreetMap, gratuit, cohérent
+  avec OSRM déjà utilisé) ou tu veux Google Maps (rendu plus moderne, clé API
+  payante) ?
+  3. Délai de libération d'un cas « En cours de traitement » — 30 minutes sans
+  action convient-il, ou tu veux 1 heure ? (affecte la souplesse pour les
+  confirmatrices)
+  4. Notification « reprogrammer » envoyée au client après un Client absent /
+  Refus client livreur — elle part immédiatement quand le livreur coche le
+  motif, ou seulement après validation par la confirmatrice ?
+  5. Description courte sur Autre incident — longueur minimale requise (par ex.
+  10 caractères) ou juste « non vide » ?
+  6. Visibilité livreur : doit-il voir ce que la confirmatrice a fait (cas
+  clôturé, correction appliquée), ou seulement l'info brute « cas remonté, ne
+  plus tenter cette commande aujourd'hui » ?
+  7. Historique confirmatrice — limité aux cas qu'elle a traités, ou vue globale
+   de tous les cas clôturés/refusés de l'agence ?
+  8. Ordre de priorité à l'intérieur de la catégorie « urgents » — à ancienneté
+  égale, un Refus client prime-t-il sur un Colis endommagé ou on les traite
+  strictement en FIFO interne ?
+  9. Statut commande après un Incident « Refus client » — la confirmatrice
+  doit-elle systématiquement basculer la commande en Retournée, ou garde-t-on la
+   souplesse (Reporter / Retourner selon le contexte) ?
+
+  Une fois ces 9 points tranchés, on peut démarrer l'étape 1 avec un périmètre
+  totalement figé.
+
+✻ Baked for 2m 51s
+
+> [Pasted text #4 +357 lines] essai d'utilise SignalR tres imporant dans        
+  prequqye tous les envois SignalR / temps réel — point obligatoire             
+                                                                                
+  Je veux que tu prennes en compte dès le plan la communication en temps réel   
+  avec SignalR.                                                                 
+                                                                                
+  Je veux que la logique suivante soit pensée avec SignalR, pas seulement avec  
+  refresh manuel :                                                              
+                                                                                
+  1. Côté client                                                                
+  - quand une Demande est créée par le livreur (Adresse incorrecte, Numéro      
+  incorrect), elle doit apparaître immédiatement dans l’espace client           
+  - quand le client corrige la demande, la confirmatrice doit voir la mise à    
+  jour immédiatement                                                            
+  - quand le statut du cas change, le client doit voir la mise à jour en temps  
+  réel                                                                          
+  - quand le statut de la commande change, le client doit voir la mise à jour   
+  en temps réel                                                                 
+                                                                                
+  2. Côté confirmatrice                                                         
+  - quand une nouvelle Réclamation est créée par le client, elle doit           
+  apparaître immédiatement                                                      
+  - quand une nouvelle Demande est déclenchée par le livreur, elle doit         
+  apparaître immédiatement                                                      
+  - quand une Demande atteint 3 tentatives et remonte à la confirmatrice, elle  
+  doit apparaître immédiatement                                                 
+  - quand le client corrige une Demande, la confirmatrice doit être notifiée    
+  immédiatement                                                                 
+  - quand une autre confirmatrice prend en charge un cas, les autres ne doivent 
+   plus pouvoir le traiter en parallèle                                         
+                                                                                
+  3. Côté livreur                                                               
+  - quand la confirmatrice change le statut de la commande après traitement, le 
+   livreur doit voir la mise à jour en temps réel                               
+  - quand une correction d’adresse ou de numéro est validée, le livreur doit    
+  recevoir l’information mise à jour sans refresh manuel                        
+                                                                                
+  4. Contraintes importantes                                                    
+  - je veux éviter les incohérences entre plusieurs utilisateurs connectés      
+  - je veux éviter qu’un même cas soit traité en parallèle par plusieurs        
+  confirmatrices                                                                
+  - je veux que SignalR soit utilisé pour les notifications temps réel et la    
+  synchronisation des écrans                                                    
+  - je veux que tu prennes cela en compte dans la logique produit et dans le    
+  plan, pas comme un détail secondaire                                          
+                                                                                
+  Dans ta réponse, indique clairement :                                         
+  - où SignalR est nécessaire                                                   
+  - quels écrans doivent se mettre à jour en temps réel                         
+  - quels événements doivent être envoyés en temps réel                         
+  - comment éviter les conflits de traitement entre confirmatrices    analyser  
+  bien si il vous plait                                                         
+
+● Voici l'intégration complète de SignalR dans le plan, traité comme pilier et
+  non comme détail secondaire. Toujours orienté produit, sans code.
+
+  ---
+  1. Principe général
+
+  SignalR n'est pas une option de confort : c'est le mécanisme principal de 
+  cohérence entre les trois acteurs (client, livreur, confirmatrice) et entre
+  plusieurs confirmatrices connectées simultanément.
+
+  Trois règles de fond guident toute la conception :
+
+  - Chaque mutation serveur (création de cas, changement de statut, prise en
+  charge, correction appliquée, changement de statut commande) déclenche
+  obligatoirement un événement SignalR.
+  - La source de vérité reste la base de données. SignalR ne transporte jamais
+  de données complètes, seulement des identifiants + résumés légers ; le client
+  reçoit l'événement puis recharge le détail depuis l'API s'il en a besoin. Ça
+  protège contre les races et les messages manqués.
+  - La prévention des conflits (deux confirmatrices sur un même cas) est double
+  : verrou serveur en base (source de vérité) + notification SignalR (retour
+  visuel immédiat).
+
+  ---
+  2. Catalogue complet des événements SignalR
+
+  Huit événements couvrent tous les besoins. Noms stables, documentés, utilisés
+  partout.
+
+  Événement: NouveauCas
+  Qui l'émet (serveur): Création d'une Réclamation, Demande ou Incident
+  Destinataires: Confirmatrices (groupe) + client concerné si Demande
+  Charge utile minimale: caseId, type, motif, commandeId, priorité
+  ────────────────────────────────────────
+  Événement: StatutCasChange
+  Qui l'émet (serveur): Statut métier modifié (Envoyée / En cours / Clôturée /
+    Refusée)
+  Destinataires: Client concerné + confirmatrice assignée
+  Charge utile minimale: caseId, nouveauStatut, auteur
+  ────────────────────────────────────────
+  Événement: CasPrisEnCharge
+  Qui l'émet (serveur): Une confirmatrice clique « Prendre en charge »
+  Destinataires: Confirmatrices (groupe)
+  Charge utile minimale: caseId, confirmatriceId, confirmatriceNom
+  ────────────────────────────────────────
+  Événement: CasLibere
+  Qui l'émet (serveur): Cas libéré après 30 min d'inactivité ou abandon
+    volontaire
+  Destinataires: Confirmatrices (groupe)
+  Charge utile minimale: caseId
+  ────────────────────────────────────────
+  Événement: ClientARepondu
+  Qui l'émet (serveur): Client clique « Appliquer » sur une Demande livreur
+    (adresse/numéro)
+  Destinataires: Confirmatrices (groupe) + confirmatrice assignée
+  Charge utile minimale: caseId, indicateurVertActif
+  ────────────────────────────────────────
+  Événement: SeuilTentativesAtteint
+  Qui l'émet (serveur): 3e tentative livreur atteinte → Incident créé
+  Destinataires: Confirmatrices (groupe)
+  Charge utile minimale: caseId, commandeId, livreurId
+  ────────────────────────────────────────
+  Événement: StatutCommandeChange
+  Qui l'émet (serveur): Confirmatrice change le statut de la commande (Reporter
+  /
+    Remettre / Retourner / Confirmer)
+  Destinataires: Client (propriétaire commande) + livreur assigné
+  Charge utile minimale: commandeId, nouveauStatut, auteur
+  ────────────────────────────────────────
+  Événement: CorrectionAppliquee
+  Qui l'émet (serveur): Confirmatrice applique une correction d'adresse ou de
+    numéro
+  Destinataires: Livreur assigné + client concerné
+  Charge utile minimale: commandeId, champ (adresse ou numéro), nouvelleValeur
+
+  Routage :
+  - Groupe confirmatrices = tous les utilisateurs ayant le rôle CONFIRMATEUR,
+  rejoint automatiquement à la connexion SignalR.
+  - User-specific = Clients.User(userId) pour client et livreur.
+  - Un cas pris en charge par une confirmatrice continue d'envoyer les
+  événements au groupe (pour que les autres voient le verrou disparaître ou le
+  cas se clôturer), plus un envoi direct à la confirmatrice assignée pour les
+  mises à jour personnelles.
+
+  ---
+  3. Côté client — écrans temps réel et événements reçus
+
+  Écrans qui doivent vivre en temps réel
+
+  Écran: Liste des commandes
+  Événements écoutés: StatutCommandeChange
+  Ce qui est rafraîchi: Pastille de statut, ordre de tri
+  ────────────────────────────────────────
+  Écran: Tracking d'une commande
+  Événements écoutés: StatutCommandeChange, CorrectionAppliquee, NouveauCas,
+    StatutCasChange
+  Ce qui est rafraîchi: Timeline, bloc adresse, blocs Réclamation liée / Demande
+
+    liée
+  ────────────────────────────────────────
+  Écran: Liste des réclamations
+  Événements écoutés: StatutCasChange (pour ses propres cas)
+  Ce qui est rafraîchi: Pastille de statut
+  ────────────────────────────────────────
+  Écran: Liste des demandes
+  Événements écoutés: NouveauCas (si type Demande), StatutCasChange
+  Ce qui est rafraîchi: Apparition d'une nouvelle ligne rouge + bannière push «
+    Correction requise », bascule rouge → vert après réponse
+  ────────────────────────────────────────
+  Écran: Détail d'un cas (réclamation ou demande)
+  Événements écoutés: StatutCasChange, CorrectionAppliquee
+  Ce qui est rafraîchi: Badge statut, bannière « Correction validée par le
+    support »
+
+  Comportements produit
+
+  - Une Demande livreur arrive → push local immédiat (notification système) +
+  ligne rouge qui apparaît sans refresh dans l'onglet Demandes.
+  - Le client corrige et clique « Appliquer » → animation rouge → vert + statut
+  du cas qui passe à En cours de traitement en direct.
+  - La confirmatrice clôture → pastille devient grise « Clôturée » sans
+  intervention.
+  - La commande passe de En livraison à Livrée pendant que le client regarde
+  l'écran Tracking → la timeline se met à jour, la pastille change.
+
+  ---
+  4. Côté confirmatrice — écrans temps réel et événements reçus
+
+  C'est le côté qui exige la synchronisation la plus fine, car plusieurs 
+  confirmatrices peuvent être connectées en même temps sur la même file.
+
+  Écrans qui doivent vivre en temps réel
+
+  Écran: File globale (« À traiter »)
+  Événements écoutés: NouveauCas, SeuilTentativesAtteint, CasPrisEnCharge,
+    CasLibere, StatutCasChange
+  Ce qui est rafraîchi: Insertion / retrait / re-tri d'une ligne, badges
+  (urgent,
+    3 tentatives, pris en charge par X)
+  ────────────────────────────────────────
+  Écran: Onglet « En cours »
+  Événements écoutés: CasLibere, ClientARepondu, StatutCasChange
+  Ce qui est rafraîchi: Retrait de la ligne libérée, pastille rouge → vert,
+    statut mis à jour
+  ────────────────────────────────────────
+  Écran: Détail d'un cas ouvert
+  Événements écoutés: CasPrisEnCharge, ClientARepondu, StatutCasChange,
+    StatutCommandeChange, CorrectionAppliquee
+  Ce qui est rafraîchi: Bannière de verrou, bouton « Appliquer correction »
+    activé dès qu'une correction arrive, mise à jour du statut commande
+  ────────────────────────────────────────
+  Écran: Historique
+  Événements écoutés: StatutCasChange (transitions vers Clôturée / Refusée)
+  Ce qui est rafraîchi: Insertion immédiate dans l'historique
+
+  Comportements produit clés
+
+  - Une nouvelle réclamation arrive du client → bip discret + ligne surlignée
+  pendant 5 secondes en haut de la file.
+  - Seuil 3 tentatives atteint → badge rouge « 3 TENTATIVES » qui apparaît en
+  tête de file, push prioritaire.
+  - Une autre confirmatrice prend un cas → la ligne reste visible mais apparaît
+  grisée avec la mention « Pris en charge par Marie (il y a 5 sec) ». Le bouton
+  « Prendre en charge » disparaît pour tous les autres.
+  - Le client répond à une Demande que je suis en train de traiter → bannière
+  verte en haut du détail : « Le client a envoyé sa correction. Vous pouvez
+  l'appliquer. » Le bouton « Appliquer la correction » devient actif. Statut en
+  tête de fiche passe de Envoyée à En cours de traitement.
+  - Cas libéré après 30 min d'inactivité → la confirmatrice qui l'avait perd le
+  verrou, bannière orange « Cas libéré par inactivité », le cas remonte dans la
+  file globale pour tout le monde.
+
+  ---
+  5. Côté livreur — écrans temps réel et événements reçus
+
+  Écrans qui doivent vivre en temps réel
+
+  ┌────────────────┬──────────────────────────┬─────────────────────────────┐
+  │     Écran      │    Événements écoutés    │    Ce qui est rafraîchi     │
+  ├────────────────┼──────────────────────────┼─────────────────────────────┤
+  │ Fiche d'une    │                          │ Statut de la commande,      │
+  │ livraison en   │ StatutCommandeChange,    │ adresse, téléphone client   │
+  │ cours          │ CorrectionAppliquee      │ (avec bandeau « Adresse     │
+  │                │                          │ corrigée par le support »)  │
+  ├────────────────┼──────────────────────────┼─────────────────────────────┤
+  │ Liste de ses   │                          │ Pastille de statut,         │
+  │ livraisons du  │ StatutCommandeChange     │ disparition des commandes   │
+  │ jour           │                          │ passées en Reportée /       │
+  │                │                          │ Retournée                   │
+  ├────────────────┼──────────────────────────┼─────────────────────────────┤
+  │ Pool des       │                          │ Disponibilité d'une         │
+  │ livraisons     │ StatutCommandeChange     │ commande (si rebasculée en  │
+  │ disponibles    │                          │ En livraison après          │
+  │                │                          │ traitement)                 │
+  └────────────────┴──────────────────────────┴─────────────────────────────┘
+
+  Comportements produit
+
+  - Confirmatrice valide la nouvelle adresse pendant que le livreur roule →
+  bandeau jaune sur la fiche : « Nouvelle adresse : [adresse] » + mise à jour de
+   l'itinéraire proposé.
+  - Confirmatrice bascule la commande en Reportée → la fiche disparaît de la
+  liste du jour + notification « Commande reportée, vous pouvez passer à la
+  suivante ».
+  - Confirmatrice remet la commande en En livraison après un refus client mal
+  interprété → le livreur la récupère dans sa liste avec bannière « Remise en
+  livraison ».
+  - 3 tentatives atteintes → sur la fiche livreur : compteur passe de «
+  Tentative 3/3 » à « Cas remonté au support » en direct.
+
+  ---
+  6. Mécanisme anti-conflit entre confirmatrices (prise en charge exclusive)
+
+  C'est le point critique du plan temps réel. Deux couches complémentaires :
+
+  Couche 1 — Verrou serveur (source de vérité)
+
+  Le cas possède un champ ConfirmatriceEnCharge (nullable).
+
+  Quand une confirmatrice clique « Prendre en charge », le serveur exécute une
+  opération atomique :
+  - Condition : le champ doit être null (ou expiré après 30 min).
+  - Action : on écrit l'ID de la confirmatrice appelante + horodatage.
+  - Si la condition est fausse → erreur 409 « Cas déjà pris en charge par [Nom]
+  ».
+
+  Aucun scénario de course à deux gagnants n'est possible : un seul des deux
+  appels réussit.
+
+  Couche 2 — Notification SignalR (retour visuel immédiat)
+
+  Dès que le verrou est posé, le serveur émet CasPrisEnCharge vers le groupe
+  confirmatrices.
+
+  Toutes les autres confirmatrices :
+  - Voient la ligne de file basculer en état grisé avec « Pris en charge par
+  [Nom] ».
+  - Si elles avaient ce cas ouvert en détail → bannière rouge : « Ce cas est
+  maintenant traité par [Nom]. Vous ne pouvez plus intervenir. » Les boutons
+  d'action sont désactivés.
+
+  Libération automatique après 30 min
+
+  Un service d'arrière-plan serveur (hosted service) tourne toutes les minutes :
+  - Cherche les cas avec ConfirmatriceEnCharge != null + DateDerniereAction < 
+  maintenant - 30 min + statut En cours de traitement.
+  - Libère : remet ConfirmatriceEnCharge = null, repasse le statut à Envoyée.
+  - Émet CasLibere vers le groupe confirmatrices.
+  - La confirmatrice qui avait le cas reçoit en plus un événement ciblé pour
+  afficher la bannière orange « Cas libéré pour inactivité ».
+
+  Abandon volontaire
+
+  Un bouton « Abandonner le cas » sur le détail permet de libérer volontairement
+   (même effet que la libération auto). Utile si la confirmatrice est coupée ou
+  réalise qu'un collègue est mieux placé.
+
+  Résumé du garde-fou
+
+  ┌──────────────────────────────────┬──────────────────────────────────────┐
+  │              Risque              │              Protection              │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Deux clics simultanés sur «      │ Verrou SQL atomique, un seul gagne   │
+  │ Prendre en charge »              │                                      │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Confirmatrice figée sur un cas   │ Libération auto 30 min + événement   │
+  │                                  │ CasLibere                            │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ UI qui ment à une confirmatrice  │ Événement CasPrisEnCharge met à jour │
+  │ (elle croit avoir le cas)        │  tout le monde en 1 seconde          │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Confirmatrice qui perd le réseau │ Reconnexion SignalR + recharge du    │
+  │  et revient                      │ détail → statut réel restauré        │
+  └──────────────────────────────────┴──────────────────────────────────────┘
+
+  ---
+  7. Gestion des reconnexions, multi-sessions, pertes réseau
+
+  Trois réalités à couvrir :
+
+  Reconnexion
+
+  Quand la connexion SignalR se coupe et revient (tunnel, 4G qui bascule), les
+  événements émis pendant la coupure sont perdus. Règle : à la reconnexion, le 
+  client recharge automatiquement l'état depuis l'API.
+  - File globale confirmatrice → rechargée en entier.
+  - Détail d'un cas ouvert → rechargé.
+  - Liste des demandes client → rechargée.
+
+  Ce pattern « événement = signal, API = vérité » rend l'app robuste aux pertes
+  réseau.
+
+  Multi-sessions
+
+  Une même confirmatrice peut être connectée sur son mobile et son PC. SignalR
+  gère ça nativement (une connexion par session, toutes dans le même groupe
+  utilisateur). Les événements arrivent sur les deux écrans, l'état reste
+  cohérent.
+
+  Ordre des événements
+
+  Si deux événements arrivent très proches (ex. NouveauCas puis CasPrisEnCharge
+  2 secondes après), l'UI doit appliquer les deux dans l'ordre. Solution :
+  chaque événement porte un timestamp serveur + le client applique par ordre
+  chronologique, et si l'écart entre maintenant et l'événement > 10 secondes, on
+   recharge l'API pour être sûr.
+
+  ---
+  8. Plan global mis à jour étape par étape (intégration SignalR)
+
+  Le plan précédent tenait en 11 étapes. On l'enrichit avec deux étapes dédiées
+  SignalR, et on adapte chaque étape pour émettre les bons événements.
+
+  Étape 1 — Renommage statuts et nettoyage motifs
+  SignalR : n/a (pas de nouveau événement, les existants continuent de 
+  fonctionner)
+
+  Étape 2 — Ajout du type Incident
+  SignalR : l'événement NouveauCas inclut désormais le champ type avec les 3 
+  valeurs possibles
+
+  Étape 3 — Demande livreur → client (motifs A)
+  SignalR :
+  - Émission NouveauCas (destinataires : client concerné + groupe
+  confirmatrices)
+  - Émission StatutCasChange quand le client clique « Appliquer »
+  - Émission ClientARepondu vers groupe confirmatrices
+  - Côté client : l'écran Demandes s'abonne à ces événements
+
+  Étape 4 — Remontée directe confirmatrice (motifs B)
+  SignalR : émission NouveauCas vers groupe confirmatrices uniquement (client 
+  non notifié)
+
+  Étape 5 — Remontée après 3 tentatives (motifs C)
+  SignalR : émission SeuilTentativesAtteint vers groupe confirmatrices
+
+  Étape 6 — Widget carte pour changement d'adresse
+  SignalR : émission CorrectionAppliquee quand la confirmatrice valide
+
+  Étape 7 — File globale confirmatrice simplifiée
+  SignalR : tous les événements de la file (NouveauCas, CasPrisEnCharge, 
+  CasLibere) doivent rafraîchir le tri en live
+
+  Étape 8 — Détail cas avec actions commande séparées
+  SignalR :
+  - Émission StatutCommandeChange vers client + livreur
+  - Émission CasPrisEnCharge + verrou serveur lorsque la confirmatrice
+  ouvre/prend
+
+  Étape 9 — Tracking client avec détail complet
+  SignalR : l'écran Tracking s'abonne à StatutCommandeChange + 
+  CorrectionAppliquee + StatutCasChange
+
+  Étape 10 — Reprogrammation client uniquement
+  SignalR : émission StatutCommandeChange vers livreur quand le client 
+  reprogramme
+
+  Étape 11 — Nouveau : backbone SignalR (nouveau)
+  Étape transversale, à faire en parallèle de l'étape 2 pour que tout le reste
+  en bénéficie :
+  - Création du hub unifié avec les 8 événements du catalogue §2
+  - Groupe confirmatrices auto-joint au login (côté serveur : quand on construit
+   le token)
+  - Mécanisme d'émission mutualisé (service NotificationRealtime côté backend)
+  - Abonnement automatique à la connexion côté Flutter (RealtimeService)
+  - Reconnexion auto + recharge API
+  - Logger d'audit de chaque émission (pour debug)
+
+  Étape 12 — Nouveau : service de libération automatique
+  Service d'arrière-plan serveur qui tourne toutes les minutes, libère les cas
+  inactifs > 30 min, émet CasLibere.
+
+  Étape 13 — Tests scénarisés (décalé)
+  5 à 7 scénarios bout-en-bout, dont obligatoirement :
+  - Deux confirmatrices cliquent simultanément « Prendre en charge » → une seule
+   gagne, l'autre voit la bannière rouge.
+  - Une confirmatrice perd le réseau 1 minute et revient → son écran se
+  recharge, état cohérent.
+  - Cas oublié 30 min → libération visible sur toutes les sessions connectées.
+
+  ---
+  9. Points flous à trancher avant développement
+
+  1. Délai de libération automatique : 30 min est-il confirmé ? Ou tu préfères
+  20 min (plus réactif) ou 45 min (plus tolérant pour les appels clients longs)
+  ?
+  2. Notification sonore côté confirmatrice à l'arrivée d'un cas urgent (Refus 
+  client, 3 tentatives) : activée par défaut ou option désactivable dans le
+  profil ?
+  3. Affichage du nom de la confirmatrice qui détient le verrou : prénom seul,
+  prénom + nom, ou un identifiant (C07) ? (question de vie privée interne)
+  4. Abandon volontaire : bouton visible en permanence dans le détail, ou caché
+  derrière un menu « Actions avancées » pour éviter les clics accidentels ?
+  5. Périmètre du groupe confirmatrices : tous les utilisateurs avec rôle
+  CONFIRMATEUR sans distinction, ou aussi l'admin (pour qu'il voie en temps réel
+   sans pouvoir prendre un cas) ?
+  6. Tolérance d'un multi-tab confirmatrice : si elle prend un cas sur le PC et
+  l'ouvre aussi sur le mobile, les deux tabs affichent-ils le cas comme « pris
+  par elle-même » (transparent) ou faut-il bloquer le 2e tab ?
+  7. Événement StatutCommandeChange : on le diffuse aussi au dashboard admin en
+  temps réel (indicateurs globaux) ou on garde l'admin sur du polling plus léger
+   ?
+  8. Durée de conservation d'un événement côté client pour l'appliquer au bon
+  moment : on accepte une réplication complète à la reconnexion, ou on met en
+  place un système de séquence numérotée plus sophistiqué ? (ma recommandation :
+   la réplication complète suffit pour la volumétrie attendue)
+  9. Confirmation lecteur sur les événements critiques (SeuilTentativesAtteint)
+  : on demande à la confirmatrice de cliquer un accusé pour s'assurer qu'elle a
+  bien vu, ou on se repose uniquement sur l'affichage visuel ?
+
+  Une fois ces 9 points tranchés, l'étape 1 et l'étape 11 peuvent démarrer en
+  parallèle avec un périmètre totalement figé.
+
+  ---
+  En résumé : SignalR devient une brique de premier plan avec 8 événements, deux
+   mécanismes anti-conflit (verrou DB + notification temps réel), une libération
+   automatique après 30 min, et une règle d'or « événement = signal, API =
+  vérité » qui protège de tout scénario réseau dégradé. Chaque écran (client,
+  livreur, confirmatrice) a un catalogue précis de ce qui se met à jour en
+  direct.
+
+✻ Churned for 2m 24s
+
+> Je veux que tu reprennes toute la logique fonctionnelle de mon application et 
+   que tu me proposes une version finale corrigée, détaillée, cohérente et      
+  professionnelle.                                                              
+                                                                                
+  Important :                                                                   
+  - Je ne veux pas encore de code.                                              
+  - Je veux une réponse orientée logique produit / workflow / UX.               
+  - Je veux que tu corriges franchement les incohérences si tu en vois.         
+  - Je veux une réponse détaillée, structurée, claire et facile à comprendre.   
+  - Je veux que tu insistes bien sur les noms exacts des motifs.                
+  - Je veux une logique simple à maintenir, pas trop compliquée.                
+                                                                                
+  ==================================================                            
+  1. RÈGLE MÉTIER PRINCIPALE : SEULEMENT 2 TYPES                                
+  ==================================================                            
+                                                                                
+  Je veux seulement 2 types métier dans toute l’application :                   
+                                                                                
+  1. Réclamation                                                                
+  2. Demande                                                                    
+                                                                                
+  Je ne veux pas de 3e type comme :                                             
+  - Incident                                                                    
+  - Escalade                                                                    
+  - Signalement séparé                                                          
+  - ou toute autre catégorie technique visible                                  
+                                                                                
+  Règle absolue :                                                               
+  - Réclamation = toujours lancée par le client                                 
+  - Demande = toujours lancée par le livreur                                    
+                                                                                
+  Donc dans ma logique :                                                        
+  - si c’est une Réclamation, alors ça vient du client                          
+  - si c’est une Demande, alors ça vient du livreur                             
+                                                                                
+  Je veux que toute ta réponse respecte strictement cette règle.                
+                                                                                
+  ==================================================                            
+  2. STATUTS MÉTIER                                                             
+  ==================================================                            
+                                                                                
+  Je veux garder exactement les mêmes statuts métier pour les Réclamations et   
+  les Demandes :                                                                
+                                                                                
+  - Envoyée                                                                     
+  - En cours de traitement                                                      
+  - Clôturée                                                                    
+  - Refusée                                                                     
+                                                                                
+  Je veux que tu expliques clairement :                                         
+  - le sens de chaque statut                                                    
+  - les transitions possibles                                                   
+  - la différence entre le statut du cas et le statut de la commande            
+                                                                                
+  Je veux aussi que tu distingues bien :                                        
+  - les statuts métier                                                          
+  - les indicateurs visuels dans l’interface                                    
+                                                                                
+  ==================================================                            
+  3. RÉCLAMATIONS = TOUJOURS CÔTÉ CLIENT                                        
+  ==================================================                            
+                                                                                
+  La Réclamation est toujours créée par le client.                              
+                                                                                
+  Je veux que tu rappelles clairement les motifs exacts côté client.            
+                                                                                
+  A. Si la commande n’est pas livrée, le client peut créer une Réclamation pour 
+   :                                                                            
+  - Changement d’adresse                                                        
+  - Changement de numéro                                                        
+  - Demande d’annulation                                                        
+  - Demande de reprogrammation                                                  
+  - Colis non reçu                                                              
+                                                                                
+  B. Si la commande est livrée, le client peut créer une Réclamation seulement  
+  pour :                                                                        
+  - Colis endommagé                                                             
+  - Colis non correspondant                                                     
+                                                                                
+  Je ne veux plus le motif :                                                    
+  - Mauvais comportement du livreur                                             
+                                                                                
+  Je veux que tu insistes sur ces noms exacts.                                  
+                                                                                
+  ==================================================                            
+  4. DEMANDES =                                                                 
+  ──── (220 lines hidden) ───────────────────────────────────────────────────── 
+  ée ou non                                                                     
+  - nombre de commandes actuellement en cours de traitement                     
+  - nombre de commandes déjà confirmées aujourd’hui                             
+  - temps depuis la dernière commande attribuée                                 
+  - activité récente / inactivité                                               
+  - éventuellement vitesse moyenne de traitement si c’est utile                 
+                                                                                
+  Je veux une logique simple :                                                  
+  - plus une confirmatrice est chargée, plus son score baisse                   
+  - plus elle est libre, plus son score monte                                   
+  - si elle n’a rien reçu depuis longtemps, son score remonte                   
+  - si elle est hors ligne ou inactive, elle ne doit pas être prioritaire       
+                                                                                
+  Je veux que tu sépares bien :                                                 
+  1. la file confirmatrice des Réclamations / Demandes                          
+  2. la distribution des nouvelles commandes à confirmer                        
+                                                                                
+  Je veux une version simple pour une V1 :                                      
+  - auto-attribution à la meilleure confirmatrice disponible                    
+  - possibilité de reprise manuelle si besoin                                   
+  - si la commande n’est pas traitée dans un délai, elle peut revenir           
+  disponible                                                                    
+                                                                                
+  ==================================================                            
+  14. CE QUE JE VEUX DANS TA RÉPONSE                                            
+  ==================================================                            
+                                                                                
+  Je veux que tu me répondes avec une structure très claire, détaillée et       
+  finale :                                                                      
+                                                                                
+  1. Résumé final corrigé de toute la logique                                   
+  2. Différence claire entre Réclamation et Demande                             
+  3. Sens précis des statuts métier                                             
+  4. Motifs exacts côté client                                                  
+  5. Motifs exacts côté livreur                                                 
+  6. Cas qui créent une Demande visible côté client                             
+  7. Cas qui vont directement à la confirmatrice                                
+  8. Cas qui vont à la confirmatrice après 3 tentatives                         
+  9. Logique rouge / vert côté client                                           
+  10. Logique du changement d’adresse                                           
+  11. Logique de la reprogrammation                                             
+  12. Logique du tracking avec détail complet de commande                       
+  13. Interface client : sections et comportement                               
+  14. Interface confirmatrice : sections et comportement                        
+  15. File confirmatrice simplifiée pour traiter Réclamations et Demandes       
+  16. Logique de distribution des commandes à confirmer entre les               
+  confirmatrices                                                                
+  17. Proposition d’un score simple de disponibilité des confirmatrices         
+  18. Plan global mis à jour étape par étape, sans code                         
+  19. Points encore flous à clarifier avant développement                       
+                                                                                
+  Important :                                                                   
+  - je veux seulement 2 types : Réclamation et Demande                          
+  - je ne veux pas de 3e type                                                   
+  - réponse sans code                                                           
+  - réponse détaillée                                                           
+  - réponse structurée                                                          
+  - réponse claire et professionnelle                                           
+  - insiste bien sur les noms exacts des motifs                                 
+  - insiste bien sur la différence entre statuts métier et indicateurs visuels  
+  rouge / vert                                                                  
+  - distingue clairement la file confirmatrice de traitement des cas, et la     
+  logique d’attribution des nouvelles commandes à confirmer                     
+
+● Voici la version finale consolidée, respectant strictement la règle des 2 
+  types uniquement (Réclamation et Demande).
+
+  ---
+  1. Résumé final corrigé
+
+  L'application repose sur deux types métier et rien d'autre :
+
+  - Réclamation = toujours créée par le client vers le support.
+  - Demande = toujours créée par le livreur. Selon le motif, la Demande est soit
+   visible par le client (action attendue de lui), soit traitée uniquement entre
+   le livreur et la confirmatrice.
+
+  Les deux types partagent exactement les 4 statuts métier : Envoyée → En cours 
+  de traitement → Clôturée (ou Refusée).
+
+  Un indicateur visuel rouge / vert existe côté client uniquement pour les
+  Demandes qui attendent une action de sa part. Cet indicateur n'est pas un
+  statut métier.
+
+  Deux mécanismes de routage distincts, à ne jamais confondre :
+  - File des cas à traiter (Réclamations et Demandes) = la confirmatrice tire
+  elle-même depuis une file globale simple.
+  - Distribution des commandes à confirmer = le système pousse chaque nouvelle
+  commande vers la confirmatrice la plus disponible via un score clair.
+
+  La reprogrammation est exclusivement côté client. Aucun acteur ne peut choisir
+   une nouvelle date à la place du client.
+
+  La communication temps réel (SignalR) est un pilier : chaque mutation serveur
+  déclenche un événement qui rafraîchit les écrans concernés sans refresh
+  manuel. Détails dans les sections dédiées.
+
+  ---
+  2. Différence claire entre Réclamation et Demande
+
+  ┌──────────────────┬──────────────────────┬───────────────────────────────┐
+  │                  │     Réclamation      │            Demande            │
+  ├──────────────────┼──────────────────────┼───────────────────────────────┤
+  │ Qui la crée ?    │ Le client            │ Le livreur                    │
+  ├──────────────────┼──────────────────────┼───────────────────────────────┤
+  │                  │ Client +             │ Confirmatrice toujours ;      │
+  │ Qui la voit ?    │ confirmatrice        │ client seulement si le motif  │
+  │                  │                      │ exige son action              │
+  ├──────────────────┼──────────────────────┼───────────────────────────────┤
+  │ Action attendue  │ Non, il en est       │ Oui si motif A, non sinon     │
+  │ côté client ?    │ l'auteur             │                               │
+  ├──────────────────┼──────────────────────┼───────────────────────────────┤
+  │ Indicateur       │                      │ Oui, uniquement pour les      │
+  │ rouge/vert côté  │ Non                  │ motifs A                      │
+  │ client           │                      │                               │
+  ├──────────────────┼──────────────────────┼───────────────────────────────┤
+  │ Statuts métier   │ Envoyée / En cours / │ Identiques                    │
+  │                  │  Clôturée / Refusée  │                               │
+  └──────────────────┴──────────────────────┴───────────────────────────────┘
+
+  Il n'existe pas de 3e type. Les cas livreur qui ne sont pas visibles par le
+  client (Refus client, Autre incident, 3 tentatives dépassées) restent des
+  Demandes, simplement non affichées au client. C'est une caractéristique
+  d'affichage, pas un nouveau type.
+
+  ---
+  3. Sens précis des statuts métier
+
+  Les 4 statuts
+
+  ┌────────────────┬────────────────────────────────────────────────────────┐
+  │     Statut     │                     Signification                      │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ Envoyée        │ Le cas vient d'être créé. Aucune confirmatrice ne l'a  │
+  │                │ encore pris en main.                                   │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ En cours de    │ Soit une confirmatrice l'a pris en charge, soit (pour  │
+  │ traitement     │ les Demandes A) le client a fourni sa correction et    │
+  │                │ attend la validation finale.                           │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ Clôturée       │ Traitement terminé avec succès. Plus aucune action     │
+  │                │ possible.                                              │
+  ├────────────────┼────────────────────────────────────────────────────────┤
+  │ Refusée        │ Cas non recevable (doublon, preuve insuffisante, motif │
+  │                │  invalide). Motif de refus obligatoire.                │
+  └────────────────┴────────────────────────────────────────────────────────┘
+
+  Transitions autorisées
+
+  ┌─────────────────┬─────────────────────────────────┬────────────────────┐
+  │    De → Vers    │         Qui déclenche ?         │     Condition      │
+  ├─────────────────┼─────────────────────────────────┼────────────────────┤
+  │ Envoyée → En    │ Confirmatrice (bouton « Prendre │                    │
+  │ cours de        │  en charge ») ou client (clic « │ —                  │
+  │ traitement      │  Appliquer » sur une Demande A) │                    │
+  ├─────────────────┼─────────────────────────────────┼────────────────────┤
+  │ En cours de     │                                 │ Action résolutoire │
+  │ traitement →    │ Confirmatrice                   │  effectuée         │
+  │ Clôturée        │                                 │                    │
+  ├─────────────────┼─────────────────────────────────┼────────────────────┤
+  │ En cours de     │                                 │ Motif de refus     │
+  │ traitement →    │ Confirmatrice                   │ renseigné          │
+  │ Refusée         │                                 │                    │
+  ├─────────────────┼─────────────────────────────────┼────────────────────┤
+  │ Envoyée →       │                                 │ Cas irrecevable,   │
+  │ Refusée         │ Confirmatrice                   │ sans besoin de     │
+  │                 │                                 │ traitement         │
+  └─────────────────┴─────────────────────────────────┴────────────────────┘
+
+  Pas de réouverture : un cas Clôturée ou Refusée reste figé. Si la situation
+  ressurgit, on crée un nouveau cas lié à la même commande.
+
+  Statut du cas ≠ statut de la commande
+
+  Ce sont deux axes indépendants.
+
+  - Statut du cas = état administratif du traitement (4 valeurs ci-dessus).
+  - Statut de la commande = état logistique (Confirmée, En livraison, Livrée,
+  Reportée, Retournée).
+
+  La confirmatrice peut agir sur l'un sans l'autre : clôturer un cas ne modifie
+  pas automatiquement la commande, et inversement.
+
+  Statut métier vs indicateur visuel
+
+  - Statut métier = stocké en base, source de vérité, identique côté client et
+  côté confirmatrice.
+  - Indicateur rouge/vert = purement visuel côté client, dérivé du statut métier
+   + du flag « correction appliquée ». Jamais stocké séparément.
+
+  ---
+  4. Motifs exacts côté client
+
+  Noms à utiliser tels quels partout (UI, base, API, docs).
+
+  Commande non livrée — 5 motifs
+
+  - Changement d'adresse
+  - Changement de numéro
+  - Demande d'annulation
+  - Demande de reprogrammation
+  - Colis non reçu
+
+  Commande livrée — 2 motifs
+
+  - Colis endommagé — photo obligatoire
+  - Colis non correspondant — photo obligatoire
+
+  Motif supprimé
+
+  - Mauvais comportement du livreur — retiré définitivement des deux listes.
+
+  ---
+  5. Motifs exacts côté livreur
+
+  Noms à utiliser tels quels partout.
+
+  A. Créent une Demande visible côté client — 2 motifs
+
+  - Adresse incorrecte
+  - Numéro incorrect
+
+  B. Remontent directement à la confirmatrice — 2 motifs
+
+  - Refus client
+  - Autre incident — description obligatoire
+
+  C. Remontent à la confirmatrice après 3 tentatives — 3 motifs
+
+  - Téléphone fermé
+  - Client non joignable
+  - Client absent
+
+  Motifs supprimés définitivement
+
+  - Tentative échouée, Adresse incomplète, Adresse introuvable, Colis endommagé
+  (côté livreur), Client demande un report.
+
+  Règle description (insistance) : le champ description existe uniquement pour
+  le motif Autre incident, et il est obligatoire dans ce cas. Pour les 7 autres
+  motifs livreur, le champ description est supprimé de l'UI. Pas de description
+  saisie, pas de description stockée.
+
+  ---
+  6. Cas qui créent une Demande visible côté client
+
+  Uniquement Adresse incorrecte et Numéro incorrect (motifs A).
+
+  Cycle complet
+
+  1. Livreur coche l'un des deux motifs A sur la commande.
+  2. Une Demande est créée.
+  3. Statut métier initial : Envoyée.
+  4. Indicateur visuel côté client : rouge — « Correction requise ».
+  5. Le client ouvre sa section Demandes, accède au formulaire de correction.
+    - Si Adresse incorrecte : écran avec carte (cf. §10).
+    - Si Numéro incorrect : champ numéro avec validation tunisienne.
+  6. Le client clique Appliquer :
+    - Statut métier passe automatiquement à En cours de traitement.
+    - Indicateur visuel bascule au vert — « Correction envoyée ».
+    - Notification temps réel à la confirmatrice.
+  7. Confirmatrice vérifie, clique Appliquer la correction → la nouvelle valeur
+  est propagée au profil client et/ou à la commande.
+  8. Confirmatrice clique Clôturer → statut métier Clôturée. Côté client, la
+  Demande passe en historique.
+  9. Ou confirmatrice refuse (suspicion, incohérence) → Refusée avec motif de
+  refus.
+
+  ---
+  7. Cas qui vont directement à la confirmatrice
+
+  Refus client et Autre incident (motifs B).
+
+  Cycle complet
+
+  1. Livreur coche l'un des deux motifs B.
+  2. Une Demande est créée.
+  3. Statut métier initial : Envoyée.
+  4. Aucune visibilité côté client. La Demande n'apparaît dans aucune de ses
+  sections.
+  5. La Demande apparaît dans la file confirmatrice, taggée comme urgente.
+  6. Confirmatrice clique Prendre en charge → En cours de traitement.
+  7. Elle traite (appel client, appel livreur, décision).
+  8. Elle clôture (Clôturée) ou refuse (Refusée).
+  9. Selon la décision, elle peut en parallèle changer le statut de la commande
+  : Reportée, En livraison (remise en route), Retournée.
+
+  ---
+  8. Cas qui vont à la confirmatrice après 3 tentatives
+
+  Téléphone fermé, Client non joignable, Client absent (motifs C).
+
+  Règle de comptage
+
+  Une tentative = un jour d'échec sur une commande. Un seul enregistrement par
+  couple (commande, date calendaire) — si le livreur change de statut plusieurs
+  fois dans la journée, la tentative n'est comptée qu'une fois.
+
+  Ce que voit le livreur
+
+  - Tentative 1/3 : il coche le motif, enregistre. Rien ne remonte à personne.
+  Il voit « Tentative 1 sur 3 enregistrée ».
+  - Tentative 2/3 : pareil. Il voit « Tentative 2 sur 3 ».
+  - Tentative 3/3 : il coche le motif. Une Demande est automatiquement créée,
+  statut Envoyée, badge rouge « 3 tentatives échouées ». Le livreur voit « Cas
+  remonté au support — ne plus tenter cette commande aujourd'hui ».
+
+  Ce que voit la confirmatrice
+
+  - La Demande apparaît en tête de file avec le badge rouge « 3 tentatives ».
+  - Elle accède au détail et voit l'historique des 3 tentatives (date, heure,
+  motif, livreur concerné).
+  - Elle contacte le client par téléphone.
+
+  Ce qu'elle peut faire ensuite
+
+  Selon le résultat de son appel :
+  - Client atteint, souhaite réessayer → statut cas Clôturée + statut commande
+  Confirmée / En livraison (remise en route pour le jour suivant).
+  - Client atteint, souhaite reporter → statut cas Clôturée + notification au
+  client pour qu'il reprogramme depuis son espace (la reprogrammation est
+  déclenchée par lui).
+  - Client atteint, refuse la commande → statut cas Clôturée + statut commande
+  Retournée.
+  - Client reste injoignable → statut cas Clôturée + statut commande Retournée.
+  - Dans tous les cas, elle peut ajouter une note interne pour traçabilité.
+
+  ---
+  9. Logique rouge / vert côté client
+
+  Portée
+
+  S'applique uniquement aux Demandes affichées côté client (motifs A : Adresse
+  incorrecte, Numéro incorrect). Jamais sur une Réclamation créée par le client.
+
+  Règle visuelle
+
+  ┌─────────────────────────────┬─────────────────────────┬────────────────┐
+  │         Indicateur          │      Signification      │ Statut métier  │
+  │                             │                         │     dérivé     │
+  ├─────────────────────────────┼─────────────────────────┼────────────────┤
+  │ Rouge — pastille rouge +    │ Le livreur attend que   │                │
+  │ bandeau « Correction        │ le client corrige       │ Envoyée        │
+  │ requise »                   │                         │                │
+  ├─────────────────────────────┼─────────────────────────┼────────────────┤
+  │ Vert — pastille verte +     │ Le client a cliqué «    │ En cours de    │
+  │ bandeau « Correction        │ Appliquer »             │ traitement     │
+  │ envoyée »                   │                         │                │
+  ├─────────────────────────────┼─────────────────────────┼────────────────┤
+  │ Gris (neutre)               │ Cas clôturé ou refusé   │ Clôturée /     │
+  │                             │                         │ Refusée        │
+  └─────────────────────────────┴─────────────────────────┴────────────────┘
+
+  Insistance
+
+  - Rouge et vert ne sont pas stockés en base comme des statuts.
+  - Ils sont calculés à l'affichage à partir du statut métier.
+  - Ils ne figurent pas dans les APIs de données — c'est une règle UI
+  strictement côté Flutter.
+
+  ---
+  10. Logique du changement d'adresse
+
+  Un écran unique et partagé, déclenché dans deux contextes seulement :
+  - Création d'une Réclamation avec motif Changement d'adresse.
+  - Réponse à une Demande livreur avec motif Adresse incorrecte.
+
+  Jamais pour les autres motifs.
+
+  Contenu de l'écran
+
+  1. En-tête contextuel : rappel de la commande, de l'ancienne adresse, et de
+  qui demande la correction.
+  2. Champ texte : nouvelle adresse (obligatoire, pour lisibilité humaine).
+  3. Bouton principal « Prendre mon adresse actuelle » : déclenche la capture
+  GPS, pose un pin automatiquement sur la carte, remplit les coordonnées.
+  4. Carte interactive sous le bouton : le client peut déplacer le pin pour
+  ajuster.
+  5. Affichage textuel des coordonnées sélectionnées (pour confiance).
+  6. Bouton de validation « Appliquer » : envoie adresse + latitude + longitude
+  au backend.
+
+  Côté confirmatrice
+
+  Elle voit l'ancienne adresse, la nouvelle adresse texte, un mini-aperçu de
+  carte centré sur les coordonnées (lecture seule), et un unique bouton
+  Appliquer la correction qui propage la valeur au profil et/ou à la commande.
+
+  Technique recommandée
+
+  flutter_map + tuiles OpenStreetMap. Cohérent avec l'utilisation d'OSRM déjà en
+   place dans le projet et gratuit.
+
+  ---
+  11. Logique de la reprogrammation
+
+  - La reprogrammation est exclusivement client.
+  - Aucun bouton, aucun motif, aucune action livreur ou confirmatrice ne permet
+  de choisir une nouvelle date à la place du client.
+  - Le client la déclenche depuis son espace Commandes (ou depuis le tracking)
+  via un motif de Réclamation Demande de reprogrammation.
+  - Si un livreur coche Client absent ou Refus client, une notification push
+  invite automatiquement le client à reprogrammer lui-même. Le bouton de
+  reprogrammation dans son espace devient mis en avant.
+  - La confirmatrice peut, dans le cadre du traitement d'un cas, Reporter la
+  commande (statut commande Reportée) — mais elle ne fixe pas de date. La
+  nouvelle date viendra du client.
+
+  ---
+  12. Logique du tracking avec détail complet de commande
+
+  La page Tracking est accessible depuis la liste des commandes côté client.
+  Elle centralise tout le contexte nécessaire.
+
+  Contenu
+
+  Bloc 1 — En-tête commande
+  - Référence de la commande
+  - Statut de la commande (avec pastille couleur)
+  - Date de création
+  - Mode de livraison / méthode si pertinent
+
+  Bloc 2 — Destinataire
+  - Nom complet
+  - Téléphone
+  - Adresse complète
+  - Gouvernorat · Ville
+
+  Bloc 3 — Contenu de la commande
+  - Liste des articles (désignation, référence)
+  - Quantité par article
+  - Total / résumé utile
+
+  Bloc 4 — État de la livraison
+  - Timeline des statuts : Confirmée → En livraison → Livrée (ou Reportée /
+  Retournée)
+  - Horodatage de chaque transition
+  - Nom du livreur assigné si disponible
+
+  Bloc 5 — Réclamation liée (affiché si applicable)
+  - Motif, date, statut métier
+  - Bouton « Voir le détail »
+
+  Bloc 6 — Demande liée (affiché si applicable)
+  - Motif, indicateur rouge / vert, bouton « Corriger » si rouge
+
+  Actions contextuelles en bas d'écran
+  - « Créer une réclamation » (disponible si des motifs sont éligibles selon le
+  statut commande)
+  - « Reprogrammer » (uniquement côté client, uniquement si le statut le permet)
+
+  Temps réel
+
+  L'écran s'abonne aux événements SignalR StatutCommandeChange,
+  CorrectionAppliquee, NouveauCas, StatutCasChange. Les blocs se rafraîchissent
+  sans refresh manuel.
+
+  ---
+  13. Interface client : sections et comportement
+
+  4 sections principales
+
+  1. Commandes — liste de ses commandes, pastille statut, accès à Tracking
+  2. Réclamations — ses propres cas ouverts et historique
+  3. Demandes — cas reçus du livreur (motifs A uniquement)
+  4. Profil — ses informations et paramètres
+
+  Détail des sections
+
+  Commandes
+  - Liste triée par date décroissante
+  - Pastille de statut commande
+  - Clic → Tracking (§12)
+  - Bouton « Créer une réclamation » si motifs éligibles
+
+  Réclamations
+  - Liste triée par date de création décroissante
+  - Pour chaque ligne : motif, commande liée, statut métier (pastille), date
+  - Pas d'indicateur rouge/vert ici
+  - Clic → détail avec historique des actions de la confirmatrice
+
+  Demandes
+  - Liste triée par urgence (rouge en premier, puis vert, puis historique gris)
+  - Pour chaque ligne : motif, commande liée, indicateur rouge/vert, bouton
+  d'action si rouge
+  - Bandeau d'alerte en haut : « Vous avez N correction(s) en attente » si au
+  moins une rouge
+  - Clic sur une ligne rouge → écran de correction (avec carte si adresse)
+  - Clic sur une ligne verte → détail d'attente de validation confirmatrice
+  - Clic sur historique → détail figé
+
+  Profil
+  - Informations personnelles, adresse par défaut, téléphone
+  - Déconnexion
+
+  Distinctions à bien afficher
+
+  - Les Réclamations affichent uniquement le statut métier — car c'est le client
+   qui les a créées, aucune action n'est attendue de lui après.
+  - Les Demandes affichent le statut métier ET l'indicateur rouge/vert. Le
+  rouge/vert est ce qui lui parle le plus immédiatement, le statut métier est
+  secondaire.
+
+  ---
+  14. Interface confirmatrice : sections et comportement
+
+  4 sections principales
+
+  1. Commandes — les commandes à confirmer qui lui sont attribuées + pool
+  2. Réclamations — Réclamations clients à traiter
+  3. Demandes — Demandes livreurs à traiter
+  4. Profil — ses informations, ses statistiques du jour
+
+  Détail des sections
+
+  Commandes
+  Cf. section §16 (distribution automatique par score).
+  - Onglet « Mes commandes » — les commandes à confirmer qui lui sont attribuées
+   par le système.
+  - Onglet « Pool global » — les commandes non attribuées ou libérées, qu'elle
+  peut prendre manuellement.
+  - Onglet « Historique » — ce qu'elle a confirmé récemment.
+
+  Réclamations
+  - Onglets : À traiter / En cours / Historique.
+  - La file À traiter est la file simplifiée décrite en §15.
+  - Chaque ligne : type (Réclamation), motif, commande, ancienneté, badges
+  (urgent, 3 tentatives si applicable).
+  - Clic → détail complet.
+
+  Demandes
+  - Mêmes 3 onglets.
+  - Chaque ligne : type (Demande), motif, commande, ancienneté, badges,
+  indicateur d'état client pour les Demandes A (en rouge si le client n'a pas
+  encore corrigé, en vert si il vient de corriger).
+  - Clic → détail complet.
+
+  Profil
+  - Nom, rôle, statut (En ligne / Indisponible)
+  - Statistiques du jour : commandes confirmées, cas traités, temps moyen
+  - Bouton « Se mettre en pause » (permet de ne plus recevoir de nouvelles
+  attributions)
+
+  Écran détail d'un cas
+
+  Tout sur une seule page, 5 blocs + 2 barres d'actions.
+
+  Blocs
+  1. Client — nom, téléphone, email, adresse, GPS si disponible, historique (nb
+  commandes, nb réclamations/demandes), bouton Appeler le client
+  2. Livreur (seulement si Demande) — nom, téléphone, position GPS, bouton
+  Appeler le livreur
+  3. Commande — référence, articles, montants, mode paiement, mode livraison,
+  timeline statuts
+  4. Cas — type (Réclamation ou Demande), motif, description si Autre incident,
+  photos si applicable, correction proposée (pour Demandes A si client a
+  répondu), historique des tentatives si applicable
+  5. Note interne — zone de texte libre visible uniquement par les
+  confirmatrices
+
+  Barre 1 — Actions sur le cas
+  - Prendre en charge (si Envoyée) · Abandonner (si elle le détient)
+  - Appliquer la correction (Demandes A uniquement)
+  - Créer un échange (Réclamations Colis endommagé / Colis non correspondant)
+  - Clôturer · Refuser (avec motif)
+  - Ajouter / modifier note interne
+
+  Barre 2 — Actions sur la commande
+  - Remettre en livraison (statut Confirmée ou En livraison)
+  - Reporter (statut Reportée)
+  - Retourner (statut Retournée)
+
+  Les deux barres sont séparées visuellement pour rappeler que ce sont deux axes
+   distincts. La confirmatrice peut cliquer sur l'un sans toucher à l'autre.
+
+  Flexibilité mise en avant
+
+  La confirmatrice peut systématiquement :
+  - Clore un cas sans modifier la commande (ex. l'information est traitée mais
+  la livraison continue).
+  - Modifier la commande sans clore le cas (ex. elle remet en livraison mais
+  laisse le cas ouvert pour surveillance).
+  - Modifier les deux indépendamment dans n'importe quel ordre.
+
+  ---
+  15. File confirmatrice simplifiée (Réclamations + Demandes)
+
+  Il s'agit de la file de traitement des cas. À ne pas confondre avec la 
+  distribution des commandes à confirmer (§16).
+
+  Principe
+
+  Une file globale unique partagée par toutes les confirmatrices, quel que soit
+  le gouvernorat du client. Pas de score pondéré, pas de complexité.
+
+  Tri en trois passes successives
+
+  1. Urgents d'abord — cas dont le motif est Refus client, Autre incident, Colis
+   endommagé, Colis non correspondant.
+  2. 3 tentatives ou plus ensuite — cas ayant atteint le seuil.
+  3. Anciens ensuite (FIFO) — le plus vieux en premier.
+
+  Facile à expliquer à n'importe quelle confirmatrice. Facile à débugger.
+
+  Interaction
+
+  - Chaque confirmatrice voit la file triée.
+  - Bouton Prendre en charge sur chaque ligne → verrou serveur + statut En cours
+   de traitement.
+  - Bouton global Suivant en haut → système ouvre le cas de plus haute priorité
+  non verrouillé.
+  - Si une autre confirmatrice détient déjà le cas → bannière rouge « Pris en
+  charge par [Nom] » et actions désactivées.
+  - Libération automatique si inactivité > 30 min → le cas revient dans la file.
+
+  Temps réel
+
+  La file se met à jour automatiquement via les événements SignalR NouveauCas,
+  CasPrisEnCharge, CasLibere, SeuilTentativesAtteint.
+
+  ---
+  16. Distribution des commandes à confirmer entre confirmatrices
+
+  Mécanisme distinct et indépendant de la file de cas. Il s'agit ici des
+  nouvelles commandes créées qui attendent d'être confirmées (statut En 
+  attente).
+
+  Principe général
+
+  - Agence globale : une confirmatrice peut confirmer une commande de n'importe
+  quel gouvernorat.
+  - Attribution automatique : chaque nouvelle commande est poussée vers la
+  confirmatrice la plus disponible via un score simple.
+  - Après confirmation : la commande part chez les livreurs du gouvernorat du 
+  client (pas de changement de ce côté).
+
+  Deux volets qui cohabitent
+
+  1. Mes commandes à confirmer (push) — commandes auto-attribuées à la
+  confirmatrice. Elle les voit dans son onglet dédié dès leur création.
+  2. Pool global (pull) — commandes non attribuées ou libérées. Toute
+  confirmatrice peut en prendre manuellement. Permet la reprise si l'attribuée
+  est absente ou lente.
+
+  Timer de libération
+
+  Si une commande attribuée n'est pas traitée en 30 minutes, elle est libérée :
+  - Elle retourne dans le Pool global.
+  - Elle est automatiquement réattribuée à la prochaine confirmatrice la plus
+  disponible.
+  - La confirmatrice concernée reçoit une notification « Commande libérée pour
+  inactivité ».
+
+  Admin
+
+  L'admin voit une vue de supervision : nombre de commandes attribuées à
+  chacune, taux de libération, temps moyen de traitement. Permet de rééquilibrer
+   manuellement si nécessaire.
+
+  ---
+  17. Score simple de disponibilité des confirmatrices
+
+  Formule claire, tenant en 4 lignes. Calculée en temps réel à chaque nouvelle
+  commande.
+
+  Score = BaseConnexion
+        − (ChargeEnCours × 15)
+        − (Fatigue × 1)
+        + (AttenteDepuisDernièreAttribution × 2)
+
+  Détail des facteurs
+
+  Facteur: BaseConnexion
+  Définition: 100 si la confirmatrice est en ligne ET active (dernière action <
+    10 min), sinon 0 (exclue du tirage)
+  Plafond: 100
+  ────────────────────────────────────────
+  Facteur: ChargeEnCours
+  Définition: Nombre de commandes attribuées non encore confirmées
+  Plafond: —
+  ────────────────────────────────────────
+  Facteur: Fatigue
+  Définition: max(0 ; nbConfirméesAujourdhui − 25)
+  Plafond: Pénalise au-delà de 25 confirmations dans la journée
+  ────────────────────────────────────────
+  Facteur: AttenteDepuisDernièreAttribution
+  Définition: Minutes depuis la dernière commande qu'elle a reçue
+  Plafond: Plafonné à 30 minutes
+
+  Exemple concret
+
+  ┌──────────────┬──────────┬───────┬────────────┬────────┬───────┬──────┐
+  │ Confirmatric │ Connecté │ Charg │ Confirmées │ Attent │ Calcu │ Scor │
+  │      e       │    e     │   e   │  aujourd'h │   e    │   l   │  e   │
+  │              │          │       │     ui     │        │       │      │
+  ├──────────────┼──────────┼───────┼────────────┼────────┼───────┼──────┤
+  │              │          │       │            │        │ 100 − │      │
+  │ Amira        │ Oui      │ 2     │ 10         │ 5 min  │  30 − │ 80   │
+  │              │          │       │            │        │  0 +  │      │
+  │              │          │       │            │        │ 10    │      │
+  ├──────────────┼──────────┼───────┼────────────┼────────┼───────┼──────┤
+  │              │          │       │            │        │ 100 − │      │
+  │ Sonia        │ Oui      │ 0     │ 40         │ 15 min │  0 −  │ 115  │
+  │              │          │       │            │        │ 15 +  │      │
+  │              │          │       │            │        │ 30    │      │
+  ├──────────────┼──────────┼───────┼────────────┼────────┼───────┼──────┤
+  │ Lina         │ Non      │ 0     │ 0          │ —      │ 0     │ 0    │
+  └──────────────┴──────────┴───────┴────────────┴────────┴───────┴──────┘
+
+  → Sonia remporte la prochaine commande : libre et en attente depuis longtemps.
+
+  Logique d'attribution
+
+  1. À la création d'une commande, calculer le score de chaque confirmatrice
+  active.
+  2. Sélectionner celle avec le score le plus élevé. En cas d'égalité : tirage
+  aléatoire.
+  3. Attribuer la commande (champ ConfirmatriceAttribuée) + émission d'un
+  événement SignalR « CommandeAttribuée » vers cette confirmatrice.
+  4. Si aucune confirmatrice disponible (toutes hors ligne) → la commande reste
+  dans le Pool global, visible dès qu'une confirmatrice se connecte.
+
+  Pourquoi cette formule ?
+
+  - Exclusion stricte des hors-ligne (score à 0).
+  - Punition forte de la charge (coefficient 15) — l'objectif est d'étaler le
+  travail.
+  - Punition légère de la fatigue (coefficient 1) — on ne bloque pas quelqu'un,
+  on oriente légèrement les suivantes ailleurs.
+  - Protection anti-famine (coefficient 2) — une personne peu sollicitée remonte
+   naturellement.
+
+  Quatre facteurs suffisent. Pas besoin d'aller plus loin en V1.
+
+  V1 simple, évolutions possibles plus tard
+
+  - V1 : 4 facteurs, auto-attribution.
+  - V2 éventuelle : ajouter vitesse moyenne de traitement, ou ajustement manuel
+  par l'admin.
+  - V3 éventuelle : affinage par heure de la journée, jour de semaine.
+
+  On ne part qu'avec V1.
+
+  ---
+  18. Plan global mis à jour étape par étape
+
+  Chaque étape a un livrable autonome. Entre chaque, validation avant la
+  suivante.
+
+  Étape 1 — Renommage statuts et nettoyage motifs
+  Renommer RESOLUE → CLOTUREE et EN_COURS → EN_COURS_DE_TRAITEMENT. Retirer
+  Mauvais comportement du livreur côté client et les motifs livreur supprimés
+  (§5). Aligner tous les libellés UI.
+
+  Étape 2 — Flag de visibilité client sur Demandes
+  Ajouter un flag interne VisibleClient (bool) sur les Demandes. Pas de nouveau
+  type. Le flag détermine si la Demande apparaît dans la section Demandes du
+  client ou uniquement chez la confirmatrice.
+
+  Étape 3 — Backbone SignalR unifié
+  Créer les 8 événements (cf. plan SignalR précédent), le groupe confirmatrices
+  auto-joint au login, le mécanisme de reconnexion auto.
+
+  Étape 4 — Demande livreur → client (motifs A)
+  Création de Demande avec VisibleClient = true. Indicateur rouge/vert.
+  Transition auto vers En cours de traitement au clic « Appliquer » du client.
+
+  Étape 5 — Remontée directe confirmatrice (motifs B)
+  Création de Demande avec VisibleClient = false. Description obligatoire pour
+  Autre incident uniquement.
+
+  Étape 6 — Logique des 3 tentatives (motifs C)
+  Comptage par (commande, jour). Compteur visible côté livreur (1/3, 2/3, 3/3).
+  À la 3e : Demande avec VisibleClient = false + badge rouge « 3 tentatives ».
+
+  Étape 7 — Widget carte pour changement d'adresse
+  Intégration flutter_map. Bouton « Prendre mon adresse actuelle ». Pin
+  déplaçable. Bouton « Appliquer ». Utilisé dans la création de Réclamation
+  Changement d'adresse ET la réponse à Demande Adresse incorrecte.
+
+  Étape 8 — File globale simplifiée confirmatrice (cas)
+  Tri en 3 passes (urgent → 3+ tentatives → FIFO). Boutons Prendre en charge et
+  Suivant. Verrou serveur + notification SignalR. Libération auto après 30 min.
+
+  Étape 9 — Détail cas avec deux barres d'actions
+  Barre « Actions sur le cas » et barre « Actions sur la commande » séparées.
+  Appel client et livreur. Appliquer correction. Créer échange si colis
+  endommagé.
+
+  Étape 10 — Distribution des commandes à confirmer (§16-17)
+  Implémentation du score (4 facteurs). Attribution auto à la création. Onglet
+  Mes commandes (attribuées) et Pool global (libres). Timer de libération 30
+  min.
+
+  Étape 11 — Tracking client avec détail complet
+  Refonte de la page Tracking selon §12. Abonnement SignalR aux 4 événements
+  concernés.
+
+  Étape 12 — Reprogrammation exclusivement client
+  Vérifier que toute entrée « Reprogrammer » côté livreur ou confirmatrice est
+  supprimée. Notification push au client après Client absent / Refus client pour
+   l'inviter à reprogrammer lui-même.
+
+  Étape 13 — Tests scénarisés
+  5 à 8 scénarios bout-en-bout, dont obligatoirement :
+  - Demande A → correction → application → clôture
+  - 3 tentatives → remontée confirmatrice → retour
+  - Deux confirmatrices clics simultanés « Prendre en charge »
+  - Attribution d'une commande à la confirmatrice avec le meilleur score
+  - Libération auto d'une commande attribuée non traitée
+
+  Ordre recommandé d'exécution : 1 → 2 → 3 → 4 → 5 → 6 → 7 → 9 → 8 → 11 → 10 →
+  12 → 13. On enchaîne les simples en premier, puis les plus ambitieux (file
+  globale et distribution).
+
+  ---
+  19. Points encore flous à clarifier avant développement
+
+  1. Timer de libération — pour la file de cas (§15) et pour la distribution de
+  commandes (§16) : même durée (30 min) ou deux durées différentes ?
+  2. Fatigue dans le score de distribution (§17) — seuil de 25 commandes par
+  jour : adapté à votre volumétrie réelle ou à ajuster ?
+  3. Attribution lors de l'arrivée d'une confirmatrice — si une confirmatrice se
+   connecte alors que le pool global contient des commandes en attente, on lui
+  en pousse immédiatement ou elle doit cliquer « Suivant » ?
+  4. Notification sonore confirmatrice pour nouveau cas urgent / nouvelle
+  commande attribuée — activée par défaut ou désactivable au profil ?
+  5. Nom de la confirmatrice qui détient un verrou — on affiche prénom, prénom +
+   initiale, ou un alias (C07) ?
+  6. Abandon volontaire d'un cas (§15) — bouton visible ou caché dans un menu
+  pour éviter les clics accidentels ?
+  7. Affichage de l'indicateur d'état client dans la section Demandes côté
+  confirmatrice (§14) — pastille rouge/vert visible directement sur chaque
+  ligne, ou uniquement dans le détail pour éviter l'encombrement ?
+  8. Taille minimale de la description pour Autre incident — 10 caractères, 20,
+  ou juste « non vide » ?
+  9. Visibilité par le livreur des actions confirmatrice (cas clôturé,
+  correction appliquée) — on affiche juste « cas remonté, ne plus tenter » ou on
+   lui renvoie la décision finale ?
+  10. Ancienneté maximale d'un cas avant escalade admin — faut-il un troisième
+  seuil (ex. 48h sans clôture) ou on se contente des 3 passes ?
+  11. Commande attribuée à une confirmatrice qui se déconnecte — on libère
+  immédiatement, on attend le timer, ou on lui laisse sa file à son retour ?
+  12. Reprogrammation du client suite à Client absent / Refus client — la
+  notification push est envoyée immédiatement, ou seulement après validation par
+   la confirmatrice ?
+
+  Une fois ces 12 points tranchés, l'Étape 1 démarre avec un périmètre
+  entièrement figé.
+
+  ---
+  En résumé : 2 types (Réclamation, Demande), 4 statuts métier, 7 motifs client,
+   7 motifs livreur répartis en 3 catégories claires (A visible client, B direct
+   confirmatrice, C après 3 tentatives), un indicateur rouge/vert uniquement
+  visuel sur les Demandes A, une file de cas simple à 3 passes, une distribution
+   de commandes à confirmer pilotée par un score à 4 facteurs, et une séparation
+   stricte entre ces deux mécanismes de routage.
+
+✻ Cogitated for 3m 49s
+
+※ recap: Refonte du module Réclamations/Demandes pour l'app PFE : plan produit final validé avec 2 types, 4 statuts, motifs figés, file confirmatrice simplifiée et distribution de commandes par score. Prochaine action : trancher les 12 points flous avant de démarrer l'Étape 1 (renommage statuts et nettoyage motifs). (disable recaps in /config)
+
+> essai de memorisé                                                             
+
+  Recalled 1 memory, wrote 2 memories (ctrl+o to expand)
+
+● Mémorisé.
+
+  Nouveau fichier : refonte_plan_v_final.md — plan cible validé au 2026-04-22,
+  avec :
+  - La règle d'or des 2 types seulement (Réclamation / Demande)
+  - Les 4 statuts métier uniformes + règle des renommages
+  - Les motifs exacts client (7) et livreur (7, classés A/B/C)
+  - La logique rouge/vert UX
+  - La séparation stricte entre file de cas et distribution de commandes
+  - Le score de disponibilité à 4 facteurs
+  - Les 8 événements SignalR
+  - Les 13 étapes d'exécution ordonnées
+  - Le delta par rapport à l'état livré actuel
+
+  MEMORY.md mis à jour : nouvelle entrée en tête, anciennes entrées
+  refonte_phase* marquées « état livré » pour éviter toute confusion entre ce
+  qui est en base et ce qui reste à faire.
+
+  Les 12 points flous restent à trancher avant de démarrer l'étape 1. Quand tu
+  veux reprendre, dis-moi juste « go étape 1 » et on embraye.
+
+✻ Worked for 2m 10s
