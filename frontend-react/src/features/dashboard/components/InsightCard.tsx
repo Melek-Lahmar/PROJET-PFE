@@ -5,6 +5,7 @@ export function InsightCard({ insight }: { insight: DashboardInsight }) {
   return (
     <article className={`pro-insight pro-insight--${insight.severity}`}>
       <div className="pro-insight__header">
+        <span className="pro-insight__icon" aria-hidden="true">✦</span>
         <strong>{insight.title}</strong>
         <StatusBadge label={insight.impact || String(insight.severity)} severity={insight.severity} />
       </div>

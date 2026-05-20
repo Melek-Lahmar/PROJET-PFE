@@ -91,7 +91,7 @@ export function DashboardAnalyticsPage({ pageKey }: { pageKey: DashboardPageKey 
       {query.isError ? <ErrorState title={t("dashboard.errors.title")} description={(query.error as Error)?.message || t("dashboard.errors.description")} onRetry={() => query.refetch()} /> : null}
       {!query.isLoading && !query.isError && !data ? <EmptyState title={t("dashboard.empty.title")} description={t("dashboard.empty.description")} /> : null}
       {data ? (
-        <>
+        <div className="pro-content-stack">
           {data.executiveSummary ? (
             <section className={`pro-executive pro-executive--${data.executiveSummary.status}`}>
               <div><span>{t("dashboard.meta.executiveSummary")}</span><h2>{data.executiveSummary.title}</h2><p>{data.executiveSummary.description}</p></div>
@@ -99,16 +99,52 @@ export function DashboardAnalyticsPage({ pageKey }: { pageKey: DashboardPageKey 
             </section>
           ) : null}
           {data.warnings.length ? <div className="pro-warning-strip">{data.warnings.map((w) => <span key={w}>{w}</span>)}</div> : null}
-          <div className="pro-kpi-grid">{data.kpis.map((metric) => <KpiCard key={metric.key} metric={metric} />)}</div>
-          <PowerBiGrid>
-            <ChartCard title={t("dashboard.charts.primaryTrend")} description={data.dataCompletenessNote}><LineArea data={data.primaryTrend} secondary /></ChartCard>
-            <ChartCard title={t("dashboard.charts.statusDistribution")}><Donut data={data.statusDistribution} /></ChartCard>
-            <ChartCard title={t("dashboard.charts.topEntities")}><BarTop data={data.topEntities} /></ChartCard>
-            <ChartCard title={t("dashboard.charts.secondaryTrend")}><LineArea data={data.secondaryTrend} /></ChartCard>
-          </PowerBiGrid>
-          <div className="pro-insights-grid">{data.insights.map((insight) => <InsightCard key={insight.key} insight={insight} />)}</div>
-          <div className="pro-bottom-grid"><AlertPanel alerts={data.alerts} title={t("dashboard.sections.alerts")} /><DataTableCard table={data.table} /></div>
-        </>
+          <section className="pro-section">
+            <div className="pro-section-heading">
+              <span>01</span>
+              <div>
+                <h2>Synthèse opérationnelle</h2>
+                <p>Indicateurs clés issus de l'API dashboard, sans données statiques de remplacement.</p>
+              </div>
+            </div>
+            <div className="pro-kpi-grid">{data.kpis.map((metric) => <KpiCard key={metric.key} metric={metric} />)}</div>
+          </section>
+          <section className="pro-section">
+            <div className="pro-section-heading">
+              <span>02</span>
+              <div>
+                <h2>Analyse détaillée</h2>
+                <p>Tendances, répartitions et classements métier pour piloter les priorités.</p>
+              </div>
+            </div>
+            <PowerBiGrid>
+              <ChartCard title={t("dashboard.charts.primaryTrend")} description={data.dataCompletenessNote}><LineArea data={data.primaryTrend} secondary /></ChartCard>
+              <ChartCard title={t("dashboard.charts.statusDistribution")}><Donut data={data.statusDistribution} /></ChartCard>
+              <ChartCard title={t("dashboard.charts.topEntities")}><BarTop data={data.topEntities} /></ChartCard>
+              <ChartCard title={t("dashboard.charts.secondaryTrend")}><LineArea data={data.secondaryTrend} /></ChartCard>
+            </PowerBiGrid>
+          </section>
+          <section className="pro-section">
+            <div className="pro-section-heading">
+              <span>03</span>
+              <div>
+                <h2>Insights métier</h2>
+                <p>Signaux faibles et recommandations calculés côté backend.</p>
+              </div>
+            </div>
+            {data.insights.length ? <div className="pro-insights-grid">{data.insights.map((insight) => <InsightCard key={insight.key} insight={insight} />)}</div> : <EmptyState title="Aucun insight" description="Aucune recommandation n'est disponible avec les filtres actuels." />}
+          </section>
+          <section className="pro-section">
+            <div className="pro-section-heading">
+              <span>04</span>
+              <div>
+                <h2>Pilotage opérationnel</h2>
+                <p>Alertes prioritaires et lignes récentes retournées par le backend.</p>
+              </div>
+            </div>
+            <div className="pro-bottom-grid"><AlertPanel alerts={data.alerts} title={t("dashboard.sections.alerts")} /><DataTableCard table={data.table} /></div>
+          </section>
+        </div>
       ) : null}
     </DashboardShell>
   );
