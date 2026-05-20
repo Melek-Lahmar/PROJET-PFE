@@ -5,6 +5,7 @@ export function ChartCard({ title, description, children }: { title: string; des
     <section className="pro-card pro-chart-card">
       <div className="pro-card__header">
         <div>
+          <span className="pro-card__eyebrow">Analyse</span>
           <h3>{title}</h3>
           {description ? <p>{description}</p> : null}
         </div>

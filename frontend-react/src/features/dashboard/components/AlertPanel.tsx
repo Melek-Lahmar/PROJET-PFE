@@ -10,12 +10,16 @@ export function AlertPanel({ alerts, title }: { alerts: DashboardAlert[]; title:
         <div className="pro-alert-list">
           {alerts.map((alert) => (
             <article key={alert.key} className={`pro-alert pro-alert--${alert.severity}`}>
+              <span className="pro-alert__rail" aria-hidden="true" />
               <div>
                 <strong>{alert.title}</strong>
                 <p>{alert.description}</p>
                 {alert.action ? <small>{alert.action}</small> : null}
               </div>
-              <StatusBadge label={alert.module || alert.severity} severity={alert.severity} />
+              <div className="pro-alert__meta">
+                {alert.count != null ? <span className="pro-alert__count">{alert.count}</span> : null}
+                <StatusBadge label={alert.module || alert.severity} severity={alert.severity} />
+              </div>
             </article>
           ))}
         </div>
