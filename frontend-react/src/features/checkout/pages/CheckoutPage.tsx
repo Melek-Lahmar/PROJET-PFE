@@ -1,9 +1,9 @@
+// src/features/checkout/pages/CheckoutPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "../../../shared/components/Button";
-import { Input } from "../../../shared/components/Input";
 import { Loader } from "../../../shared/components/Loader";
 
 import { useCartStore } from "../../cart/store/cartStore";
@@ -19,12 +19,16 @@ import {
 } from "../../payments/api/virtualPaymentsApi";
 import { CheckoutPaymentMethodSelector } from "../../payments/components/CheckoutPaymentMethodSelector";
 import type { CheckoutPaymentMethod } from "../../payments/types/konnectPayment";
-import {
-  EmptyView,
-  PremiumHero,
-} from "../../../shared/components/premium";
+import { EmptyView, PremiumHero } from "../../../shared/components/premium";
+
+// ── NOUVEAU : composant sélecteur d'adresse ──────────────────────────────────
+import { DeliveryAddressSelector } from "../components/DeliveryAddressSelector";
+
+// ─── Types helpers ────────────────────────────────────────────────────────────
 
 type AnyObj = Record<string, unknown>;
+type FlatEntry = { path: string; value: unknown };
+type StringFlatEntry = { path: string; value: string };
 
 type ShippingDefaults = {
   address: string;
@@ -34,25 +38,18 @@ type ShippingDefaults = {
   longitude: number | null;
 };
 
-type FlatEntry = { path: string; value: unknown };
-type StringFlatEntry = { path: string; value: string };
-
 function isRecord(v: unknown): v is AnyObj {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
-
 function isStringFlatEntry(entry: FlatEntry): entry is StringFlatEntry {
   return typeof entry.value === "string";
 }
-
 function flatten(obj: unknown, prefix = "", out: FlatEntry[] = []): FlatEntry[] {
   if (obj === null || obj === undefined) return out;
-
   if (Array.isArray(obj)) {
     obj.forEach((item, idx) => flatten(item, `${prefix}[${idx}]`, out));
     return out;
   }
-
   if (isRecord(obj)) {
     Object.keys(obj).forEach((k) => {
       const p = prefix ? `${prefix}.${k}` : k;
@@ -60,36 +57,29 @@ function flatten(obj: unknown, prefix = "", out: FlatEntry[] = []): FlatEntry[] 
     });
     return out;
   }
-
   out.push({ path: prefix, value: obj });
   return out;
 }
-
 function normKey(path: string) {
   return path.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
-
 function looksLikePostalCode(v: unknown): string | null {
   if (typeof v === "number") {
     const s = String(v);
     return /^\d{4}$/.test(s) ? s : null;
   }
-
   if (typeof v === "string") {
     const s = v.trim();
     return /^\d{4}$/.test(s) ? s : null;
   }
-
   return null;
 }
-
 function looksLikeLat(v: unknown): number | null {
   const n =
     typeof v === "number" ? v : typeof v === "string" ? Number(v) : Number.NaN;
   if (Number.isNaN(n)) return null;
   return n >= 20 && n <= 45 ? n : null;
 }
-
 function looksLikeLng(v: unknown): number | null {
   const n =
     typeof v === "number" ? v : typeof v === "string" ? Number(v) : Number.NaN;
@@ -118,15 +108,7 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
     .map((x) => ({
       path: x.path,
       value: x.value.trim(),
-      s: score(x.path, [
-        "adresse",
-        "address",
-        "addressline",
-        "rue",
-        "street",
-        "livraison",
-        "shipping",
-      ]),
+      s: score(x.path, ["adresse", "address", "addressline", "rue", "street", "livraison", "shipping"]),
     }))
     .sort((a, b) => b.s - a.s);
 
@@ -136,16 +118,7 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
     .map((x) => ({
       path: x.path,
       value: x.value.trim(),
-      s: score(x.path, [
-        "delegation",
-        "deleg",
-        "ville",
-        "city",
-        "town",
-        "commune",
-        "gouvernorat",
-        "governorate",
-      ]),
+      s: score(x.path, ["delegation", "deleg", "ville", "city", "town", "commune", "gouvernorat", "governorate"]),
     }))
     .sort((a, b) => b.s - a.s);
 
@@ -153,14 +126,9 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
     .map((x) => {
       const cp = looksLikePostalCode(x.value);
       if (!cp) return null;
-      return {
-        path: x.path,
-        value: cp,
-        s: score(x.path, ["codepostal", "postalcode", "zip", "cp", "postcode"]),
-      };
+      return { path: x.path, value: cp, s: score(x.path, ["codepostal", "postalcode", "zip", "cp", "postcode"]) };
     })
     .filter(Boolean) as { path: string; value: string; s: number }[];
-
   postalCandidates.sort((a, b) => b.s - a.s);
 
   const latCandidates = flat
@@ -170,7 +138,6 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
       return { path: x.path, value: n, s: score(x.path, ["latitude", "lat"]) };
     })
     .filter(Boolean) as { path: string; value: number; s: number }[];
-
   latCandidates.sort((a, b) => b.s - a.s);
 
   const lngCandidates = flat
@@ -180,7 +147,6 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
       return { path: x.path, value: n, s: score(x.path, ["longitude", "lng", "lon"]) };
     })
     .filter(Boolean) as { path: string; value: number; s: number }[];
-
   lngCandidates.sort((a, b) => b.s - a.s);
 
   return {
@@ -192,13 +158,14 @@ function extractShippingDefaults(meData: unknown): ShippingDefaults {
   };
 }
 
+// ─── Composant principal ──────────────────────────────────────────────────────
+
 export function CheckoutPage() {
   const nav = useNavigate();
 
   const items = useCartStore((s) => s.items);
   const deliveryMode = useCartStore((s) => s.deliveryMode);
   const setDeliveryMode = useCartStore((s) => s.setDeliveryMode);
-
   const subtotal = useCartStore((s) => s.subtotal());
   const shipping = useCartStore((s) => s.shipping());
   const stamp = useCartStore((s) => s.stamp());
@@ -226,10 +193,10 @@ export function CheckoutPage() {
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [postalCode, setPostalCode] = useState<string>("");
-
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
+  // Suivi des champs touchés manuellement (empêche l'écrasement par les données profil)
   const touched = useRef({
     address: false,
     city: false,
@@ -238,39 +205,34 @@ export function CheckoutPage() {
     longitude: false,
   });
 
+  // ── NOUVEAU : callback transmis à DeliveryAddressSelector ─────────────────
+  const handleTouched = (
+    field: "address" | "city" | "postalCode" | "latitude" | "longitude"
+  ) => {
+    touched.current[field] = true;
+  };
+
   const effectiveDepotNo = useMemo(() => {
     if (isHome) return 0;
     if (depotNo > 0) return depotNo;
-    const principal = depots.find((d) => d.dE_Principal === 1);
+    const principal = depots.find((d: DepotDto) => d.dE_Principal === 1);
     return (principal?.dE_No ?? depots[0]?.dE_No ?? 0) || 0;
   }, [depots, depotNo, isHome]);
 
+  // Pré-remplissage depuis le profil utilisateur (seulement si non touché)
   useEffect(() => {
     if (!meQuery.data) return;
-
     const s = extractShippingDefaults(meQuery.data);
-
     setAddress((prev) => (touched.current.address ? prev : prev || s.address));
     setCity((prev) => (touched.current.city ? prev : prev || s.city));
-    setPostalCode((prev) =>
-      touched.current.postalCode ? prev : prev || s.postalCode
-    );
-
-    setLatitude((prev) =>
-      touched.current.latitude ? prev : prev !== null ? prev : s.latitude
-    );
-    setLongitude((prev) =>
-      touched.current.longitude ? prev : prev !== null ? prev : s.longitude
-    );
+    setPostalCode((prev) => (touched.current.postalCode ? prev : prev || s.postalCode));
+    setLatitude((prev) => (touched.current.latitude ? prev : prev !== null ? prev : s.latitude));
+    setLongitude((prev) => (touched.current.longitude ? prev : prev !== null ? prev : s.longitude));
   }, [meQuery.data]);
 
   const lines = useMemo(
-    () =>
-      items.map((x) => ({
-        articleRef: x.arRef,
-        qty: x.qty,
-      })),
-    [items]
+    () => items.map((x) => ({ articleRef: x.arRef, qty: x.qty })),
+    [items],
   );
 
   const payload = useMemo<CreateBonCommandeRequestDto>(
@@ -285,28 +247,21 @@ export function CheckoutPage() {
       longitude: isHome ? longitude : null,
       lines,
     }),
-    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, latitude, longitude, lines]
+    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, latitude, longitude, lines],
   );
 
   const canSubmit = useMemo(() => {
     if (items.length === 0) return false;
     if (!isHome && effectiveDepotNo <= 0) return false;
-
     if (isHome) {
       if (!address.trim() || !city.trim() || !postalCode.trim()) return false;
     }
-
     return true;
   }, [items.length, isHome, effectiveDepotNo, address, city, postalCode]);
 
   const codMutation = useMutation({
     mutationFn: async () => {
-      const codPayload: CreateBonCommandeRequestDto = {
-        ...payload,
-        paymentMethod: "COD",
-      };
-
-      return createOrder(codPayload);
+      return createOrder({ ...payload, paymentMethod: "COD" });
     },
     onSuccess: (created) => {
       clearCart();
@@ -316,16 +271,8 @@ export function CheckoutPage() {
 
   const virtualMutation = useMutation({
     mutationFn: async () => {
-      const virtualPayload: CreateBonCommandeRequestDto = {
-        ...payload,
-        paymentMethod: "VIRTUAL",
-      };
-
-      const response = await initiateVirtualPayment(virtualPayload);
-      if (!response.payUrl) {
-        throw new Error("URL de paiement virtuelle manquante.");
-      }
-
+      const response = await initiateVirtualPayment({ ...payload, paymentMethod: "VIRTUAL" });
+      if (!response.payUrl) throw new Error("URL de paiement virtuelle manquante.");
       return response;
     },
     onSuccess: (created) => {
@@ -336,7 +283,6 @@ export function CheckoutPage() {
         amount: created.amount,
         createdAt: Date.now(),
       });
-
       clearCart();
       window.location.assign(created.payUrl);
     },
@@ -347,26 +293,26 @@ export function CheckoutPage() {
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-
     if (paymentMethod === "VIRTUAL") {
       virtualMutation.mutate();
       return;
     }
-
     codMutation.mutate();
   };
+
+  // ── Panier vide ────────────────────────────────────────────────────────────
 
   if (items.length === 0) {
     return (
       <div className="w-full space-y-6 py-10">
         <PremiumHero
           kicker="Validation"
-          title="Validation de commande"gradientTitle
+          title="Validation de commande"
           description="Ajoutez des articles avant de passer commande."
         />
         <EmptyView
           title="Votre panier est vide"
-          description="Le checkout n’est accessible qu’avec au moins un article dans votre panier."
+          description="Le checkout n'est accessible qu'avec au moins un article dans votre panier."
           iconPath="M3 3h2l.4 2 M7 13h10l4-8H5.4 M7 13 5.4 5 M7 13l-2 7h13"
           action={
             <Link to="/articles">
@@ -382,11 +328,13 @@ export function CheckoutPage() {
 
   if (meQuery.isLoading) return <Loader />;
 
+  // ── Rendu principal ────────────────────────────────────────────────────────
+
   return (
     <div className="w-full space-y-8 pb-10">
       <PremiumHero
         kicker="Bon de Commande (BC)"
-        title="Validation de commande"gradientTitle
+        title="Validation de commande"
         description="Vérifiez vos informations de livraison et confirmez le mode de paiement avant la création du BC."
         actions={
           <Link to="/cart">
@@ -398,6 +346,7 @@ export function CheckoutPage() {
       />
 
       <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
+        {/* ── Colonne principale ───────────────────────────────────────────── */}
         <div className="lg:col-span-7 space-y-6">
           <div className="app-surface p-8 space-y-6">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -405,6 +354,7 @@ export function CheckoutPage() {
               Informations de commande
             </h2>
 
+            {/* ── Mode de livraison ──────────────────────────────────────── */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Mode de livraison
@@ -435,16 +385,34 @@ export function CheckoutPage() {
                 >
                   <div className="text-2xl mb-1">🏪</div>
                   <div className="font-bold text-card-foreground">Retrait au dépôt</div>
-                  <div className="text-xs text-[hsl(var(--success))] font-medium mt-0.5">
-                    Gratuit
-                  </div>
+                  <div className="text-xs font-medium text-[hsl(var(--success))] mt-0.5">Gratuit</div>
                 </button>
               </div>
             </div>
 
+            {/* ── ADRESSE DE LIVRAISON — NOUVEAU composant ───────────────── */}
+            {isHome ? (
+              <DeliveryAddressSelector
+                address={address}
+                city={city}
+                postalCode={postalCode}
+                latitude={latitude}
+                longitude={longitude}
+                setAddress={setAddress}
+                setCity={setCity}
+                setPostalCode={setPostalCode}
+                setLatitude={setLatitude}
+                setLongitude={setLongitude}
+                onTouched={handleTouched}
+              />
+            ) : null}
+
+            {/* ── Sélection dépôt PICKUP ─────────────────────────────────── */}
             {!isHome ? (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Dépôt</label>
+              <div className="space-y-2 pt-2">
+                <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Dépôt de retrait
+                </label>
                 {depotsQuery.isLoading ? (
                   <div className="text-sm text-muted-foreground">Chargement des dépôts...</div>
                 ) : depots.length === 0 ? (
@@ -466,165 +434,100 @@ export function CheckoutPage() {
               </div>
             ) : null}
 
-            <CheckoutPaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} total={total} />
+            {/* ── Mode de paiement ───────────────────────────────────────── */}
+            <CheckoutPaymentMethodSelector
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              total={total}
+            />
 
             {paymentMethod === "VIRTUAL" ? (
               <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] p-4 text-sm text-card-foreground space-y-2">
                 <div className="font-semibold">Paiement virtuel sécurisé activé</div>
                 <p className="leading-6 text-muted-foreground">
-                  En cliquant sur le bouton final, le backend créera la commande locale, initialisera la tentative B_PAIEMENT, puis tu seras redirigé vers la page bancaire virtuelle.
+                  En cliquant sur le bouton final, le backend créera la commande locale, initialisera la tentative de paiement, puis vous serez redirigé vers la page bancaire virtuelle.
                 </p>
               </div>
             ) : null}
+          </div>
+        </div>
 
-            {isHome ? (
-              <div className="space-y-4 pt-2">
-                <h3 className="font-bold">Adresse de livraison</h3>
+        {/* ── Colonne récapitulatif ─────────────────────────────────────────── */}
+        <aside className="lg:col-span-5 space-y-6">
+          <div className="app-surface p-7 space-y-5">
+            <h2 className="text-xl font-bold text-card-foreground">Récapitulatif</h2>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Adresse</label>
-                  <Input
-                    value={address}
-                    onChange={(e) => {
-                      touched.current.address = true;
-                      setAddress(e.target.value);
-                    }}
-                    placeholder="Ex: Rue ... bâtiment ..."
-                  />
+            <div className="space-y-2 text-sm">
+              {items.map((item) => (
+                <div key={item.arRef} className="flex justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium text-card-foreground">{item.arRef}</div>
+                    <div className="text-xs text-muted-foreground">× {item.qty}</div>
+                  </div>
+                  <span className="shrink-0 font-semibold text-card-foreground">
+                    {Number(item.price * item.qty).toFixed(3)} TND
+                  </span>
                 </div>
+              ))}
+            </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Ville</label>
-                    <Input
-                      value={city}
-                      onChange={(e) => {
-                        touched.current.city = true;
-                        setCity(e.target.value);
-                      }}
-                    />
-                  </div>
+            <div className="h-px bg-border/70" />
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Code postal</label>
-                    <Input
-                      value={postalCode}
-                      onChange={(e) => {
-                        touched.current.postalCode = true;
-                        setPostalCode(e.target.value);
-                      }}
-                      placeholder="Ex: 3000"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Latitude</label>
-                    <Input
-                      value={latitude ?? ""}
-                      onChange={(e) => {
-                        touched.current.latitude = true;
-                        setLatitude(e.target.value ? Number(e.target.value) : null);
-                      }}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Longitude</label>
-                    <Input
-                      value={longitude ?? ""}
-                      onChange={(e) => {
-                        touched.current.longitude = true;
-                        setLongitude(e.target.value ? Number(e.target.value) : null);
-                      }}
-                    />
-                  </div>
-                </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sous-total</span>
+                <span className="font-medium">{subtotal.toFixed(3)} TND</span>
               </div>
-            ) : null}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Livraison</span>
+                <span className="font-medium">{shipping.toFixed(3)} TND</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Timbre fiscal</span>
+                <span className="font-medium">{stamp.toFixed(3)} TND</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-card-foreground">Total</span>
+                <span className="text-xl font-black tracking-tight text-primary">
+                  {total.toFixed(3)} TND
+                </span>
+              </div>
+            </div>
 
             {currentError ? (
-              <div className="rounded-2xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.12)] p-4 text-sm text-[hsl(var(--danger))] space-y-2">
-                <div className="font-semibold">
-                  {paymentMethod === "VIRTUAL"
-                    ? "Erreur lors de l’initialisation du paiement"
-                    : "Erreur lors de la création du BC"}
-                </div>
-                <div>{getApiErrorMessage(currentError)}</div>
-                {paymentMethod === "VIRTUAL" ? (
-                  <div className="text-xs opacity-90">
-                    La commande locale peut déjà avoir été créée côté backend si l’erreur s’est produite après l’initiation.
-                  </div>
-                ) : null}
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700">
+                {getApiErrorMessage(currentError)}
               </div>
             ) : null}
 
             <Button
-              className="w-full rounded-2xl h-12 text-base font-bold"
+              type="button"
+              variant="primary"
+              className="h-13 w-full rounded-2xl text-base font-extrabold shadow-lg shadow-primary/20"
               disabled={!canSubmit || isSubmitting}
               onClick={handleSubmit}
             >
               {isSubmitting
-                ? paymentMethod === "VIRTUAL"
-                  ? "Redirection vers le paiement virtuel..."
-                  : "Création en cours..."
+                ? "Création en cours..."
                 : paymentMethod === "VIRTUAL"
-                ? "Payer maintenant"
-                : "Confirmer et créer le BC"}
+                  ? "Payer en ligne →"
+                  : "Confirmer la commande"}
             </Button>
+
+            <Link to="/cart" className="block">
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-11 w-full rounded-2xl text-card-foreground/80"
+              >
+                ← Retour au panier
+              </Button>
+            </Link>
           </div>
-        </div>
-
-        <div className="lg:col-span-5">
-          <div className="app-surface p-8 sticky top-24 shadow-[0_30px_90px_-55px_rgba(2,6,23,0.75)]">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-primary to-indigo-500 inline-block" />
-              Résumé
-            </h2>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Sous-total</span>
-                <span className="font-medium text-card-foreground">{subtotal.toFixed(3)} TND</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Frais livraison</span>
-                <span className="font-medium text-card-foreground">{shipping.toFixed(3)} TND</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Timbre fiscal</span>
-                <span className="font-medium text-card-foreground">{stamp.toFixed(3)} TND</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Paiement</span>
-                <span className="font-medium text-card-foreground">
-                  {paymentMethod === "VIRTUAL" ? "Paiement virtuel sécurisé" : "Paiement à la livraison"}
-                </span>
-              </div>
-
-              <div className="border-t-2 border-dashed border-border/60 my-4" />
-
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-card-foreground">Total TTC</span>
-                <span className="text-2xl font-black text-primary">
-                  {total.toFixed(3)}{" "}
-                  <span className="text-sm font-medium text-muted-foreground/70">TND</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-border/50 text-xs text-muted-foreground space-y-2">
-              <p>Le backend recalculera les totaux finaux.</p>
-              <p>Le flux COD reste strictement inchangé.</p>
-              {paymentMethod === "VIRTUAL" ? (
-                <p>
-                  Le panier sera vidé après initiation réussie, car le BC et la tentative de paiement seront déjà créés côté serveur.
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
+        </aside>
       </div>
     </div>
   );
