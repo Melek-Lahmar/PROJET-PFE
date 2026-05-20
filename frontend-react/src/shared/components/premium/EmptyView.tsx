@@ -9,10 +9,6 @@ interface EmptyViewProps {
   className?: string;
 }
 
-/**
- * Empty state card used when a list/section has no data yet.
- * Mirrors flutter `lib/ui/widgets/premium/empty_view.dart`.
- */
 export function EmptyView({
   title,
   description,
@@ -22,9 +18,9 @@ export function EmptyView({
 }: EmptyViewProps) {
   return (
     <div
-      className={`app-surface-soft anim-fade-in flex flex-col items-center justify-center gap-3 px-8 py-12 text-center ${className}`}
+      className={`app-surface-soft anim-fade-up flex flex-col items-center justify-center gap-4 px-8 py-14 text-center ${className}`}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -32,7 +28,7 @@ export function EmptyView({
           strokeWidth={1.6}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-8 w-8"
+          className="h-9 w-9"
           aria-hidden="true"
         >
           {iconPath
@@ -42,11 +38,15 @@ export function EmptyView({
             ))}
         </svg>
       </div>
-      <p className="text-base font-semibold text-card-foreground">{title}</p>
-      {description && (
-        <p className="max-w-sm text-sm leading-6 text-muted-foreground">{description}</p>
-      )}
-      {action && <div className="pt-2">{action}</div>}
+
+      <div className="space-y-2">
+        <p className="text-base font-semibold text-card-foreground">{title}</p>
+        {description && (
+          <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{description}</p>
+        )}
+      </div>
+
+      {action && <div className="pt-1">{action}</div>}
     </div>
   );
 }

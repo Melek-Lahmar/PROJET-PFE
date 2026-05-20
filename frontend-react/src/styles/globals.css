@@ -1028,6 +1028,169 @@
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
     border-radius: 12px;
   }
+
+  /* =========================================================
+     Phase 3 — Form element utilities
+     ========================================================= */
+
+  .ds-select {
+    @apply h-11 w-full appearance-none rounded-2xl border border-border/80 bg-input px-4 text-sm text-card-foreground outline-none transition-all duration-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-55 disabled:bg-muted/40;
+    padding-right: 2.75rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 1rem;
+  }
+
+  .ds-textarea {
+    @apply w-full resize-y rounded-2xl border border-border/80 bg-input px-4 py-3 text-sm text-card-foreground shadow-[inset_0_1px_2px_rgba(15,23,42,0.05)] outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-55 disabled:bg-muted/40;
+    min-height: 100px;
+  }
+
+  .ds-checkbox {
+    @apply h-4 w-4 cursor-pointer rounded border border-border/80 accent-primary transition-colors;
+  }
+
+  .ds-radio {
+    @apply h-4 w-4 cursor-pointer rounded-full border border-border/80 accent-primary transition-colors;
+  }
+
+  /* =========================================================
+     Phase 3 — Alert / notification banners
+     ========================================================= */
+
+  .ds-alert {
+    @apply flex items-start gap-3 rounded-2xl border p-4 text-sm;
+  }
+
+  .ds-alert-success {
+    background-color: hsl(var(--success) / 0.08);
+    border-color: hsl(var(--success) / 0.25);
+    color: hsl(var(--success));
+  }
+
+  .ds-alert-warning {
+    background-color: hsl(var(--warning) / 0.08);
+    border-color: hsl(var(--warning) / 0.25);
+    color: hsl(var(--warning));
+  }
+
+  .ds-alert-danger {
+    background-color: hsl(var(--danger) / 0.08);
+    border-color: hsl(var(--danger) / 0.25);
+    color: hsl(var(--danger));
+  }
+
+  .ds-alert-info {
+    background-color: hsl(var(--info) / 0.08);
+    border-color: hsl(var(--info) / 0.25);
+    color: hsl(var(--info));
+  }
+
+  .ds-alert-neutral {
+    @apply bg-muted/50 border-border/70 text-card-foreground;
+  }
+
+  /* =========================================================
+     Phase 3 — Dropdown menu
+     ========================================================= */
+
+  .ds-dropdown {
+    @apply absolute z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border/80 bg-card/96 p-1.5 backdrop-blur-xl;
+    box-shadow: 0 24px 56px -24px rgba(2, 6, 23, 0.45), 0 8px 16px -8px rgba(2, 6, 23, 0.18);
+  }
+
+  .ds-dropdown-item {
+    @apply flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-card-foreground transition-colors hover:bg-accent;
+  }
+
+  .ds-dropdown-item-danger {
+    @apply flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10;
+  }
+
+  .ds-dropdown-separator {
+    @apply mx-1 my-1.5 h-px bg-border/60;
+  }
+
+  .ds-dropdown-label {
+    @apply px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  /* =========================================================
+     Phase 3 — Breadcrumb navigation
+     ========================================================= */
+
+  .ds-breadcrumb {
+    @apply flex flex-wrap items-center gap-1 text-sm text-muted-foreground;
+  }
+
+  .ds-breadcrumb-item {
+    @apply flex items-center gap-1;
+  }
+
+  .ds-breadcrumb-item a,
+  .ds-breadcrumb-item button {
+    @apply rounded-md px-1 py-0.5 text-muted-foreground transition-colors hover:text-card-foreground;
+  }
+
+  .ds-breadcrumb-item:last-child a,
+  .ds-breadcrumb-item:last-child span {
+    @apply font-medium text-card-foreground;
+  }
+
+  .ds-breadcrumb-sep {
+    @apply text-border select-none;
+  }
+
+  /* =========================================================
+     Phase 3 — Improved table utilities
+     ========================================================= */
+
+  .table-shell {
+    @apply overflow-hidden rounded-[24px] border border-border/70 bg-card;
+    box-shadow: var(--surface-shadow-md);
+  }
+
+  .table-head {
+    @apply bg-muted/50 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  .table-head th {
+    @apply px-4 py-3.5;
+  }
+
+  .table-row {
+    @apply border-t border-border/50 transition-colors duration-150 hover:bg-accent/40;
+  }
+
+  .table-row td {
+    @apply px-4 py-3.5 text-sm text-card-foreground;
+  }
+
+  .table-cell-muted {
+    @apply text-muted-foreground;
+  }
+
+  /* =========================================================
+     Phase 3 — Page header with breadcrumb
+     ========================================================= */
+
+  .ds-page-header {
+    @apply space-y-1.5;
+  }
+
+  .ds-page-header-breadcrumb {
+    @apply mb-2 flex flex-wrap items-center gap-1 text-sm text-muted-foreground;
+  }
+
+  .ds-page-title {
+    @apply text-2xl font-bold tracking-tight text-card-foreground md:text-3xl;
+    letter-spacing: -0.025em;
+  }
+
+  .ds-page-description {
+    @apply text-sm leading-relaxed text-muted-foreground;
+  }
 }
 
 /* =====================================================

@@ -8,7 +8,7 @@ interface CardProps {
 
 export function Card({ children, className = "", noPadding = false }: CardProps) {
   return (
-    <div className={`app-surface ${noPadding ? "" : "p-5"} ${className}`}>
+    <div className={`app-surface ${noPadding ? "" : "p-5 md:p-6"} ${className}`}>
       {children}
     </div>
   );

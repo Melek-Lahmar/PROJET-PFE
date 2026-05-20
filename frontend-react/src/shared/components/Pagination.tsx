@@ -32,6 +32,9 @@ function buildPageItems(current: number, totalPages: number) {
   return items;
 }
 
+const baseBtn =
+  "inline-flex h-10 items-center justify-center rounded-xl border border-border/80 bg-card text-sm font-medium text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-accent/60 hover:shadow-md disabled:pointer-events-none disabled:opacity-40 active:scale-[0.97]";
+
 export function Pagination({ currentPage, totalPages, onPageChange, disabled = false }: PaginationProps) {
   const safeCurrent = Math.max(1, Math.min(currentPage, totalPages || 1));
   const pageItems = buildPageItems(safeCurrent, totalPages);
@@ -41,14 +44,14 @@ export function Pagination({ currentPage, totalPages, onPageChange, disabled = f
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-1.5">
       <button
         type="button"
         onClick={() => canPrev && onPageChange(safeCurrent - 1)}
         disabled={!canPrev}
-        className="inline-flex h-11 items-center justify-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm font-medium text-card-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-card disabled:cursor-not-allowed disabled:opacity-50"
+        className={`${baseBtn} px-4`}
       >
-        Précédent
+        ← Précédent
       </button>
 
       {pageItems.map((item, index) => {
@@ -56,7 +59,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, disabled = f
           return (
             <span
               key={`dots-${index}`}
-              className="inline-flex h-11 min-w-[44px] items-center justify-center px-2 text-sm font-semibold text-muted-foreground"
+              className="inline-flex h-10 min-w-[40px] items-center justify-center px-2 text-sm font-semibold text-muted-foreground"
             >
               …
             </span>
@@ -72,10 +75,10 @@ export function Pagination({ currentPage, totalPages, onPageChange, disabled = f
             onClick={() => !disabled && onPageChange(item)}
             disabled={disabled}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex h-11 min-w-[44px] items-center justify-center rounded-2xl px-3 text-sm font-semibold transition ${
+            className={`inline-flex h-10 min-w-[40px] items-center justify-center rounded-xl px-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
               active
-                ? "border border-primary/20 bg-primary text-white shadow-[0_18px_40px_-24px_hsl(var(--primary)/0.8)]"
-                : "border border-border bg-[hsl(var(--input))] text-card-foreground shadow-sm hover:-translate-y-0.5 hover:bg-card disabled:cursor-not-allowed disabled:opacity-50"
+                ? "border border-primary/30 bg-primary text-white shadow-[0_12px_28px_-16px_hsl(var(--primary)/0.75)]"
+                : `${baseBtn}`
             }`}
           >
             {item}
@@ -87,9 +90,9 @@ export function Pagination({ currentPage, totalPages, onPageChange, disabled = f
         type="button"
         onClick={() => canNext && onPageChange(safeCurrent + 1)}
         disabled={!canNext}
-        className="inline-flex h-11 items-center justify-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm font-medium text-card-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-card disabled:cursor-not-allowed disabled:opacity-50"
+        className={`${baseBtn} px-4`}
       >
-        Suivant
+        Suivant →
       </button>
     </div>
   );
