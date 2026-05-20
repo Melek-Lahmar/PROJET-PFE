@@ -7,6 +7,7 @@
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 
+  /* ── Core semantic colors ── */
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -32,6 +33,36 @@
   --color-shell-foreground: hsl(var(--shell-foreground));
   --color-shell-border: hsl(var(--shell-border));
   --color-shell-elevated: hsl(var(--shell-elevated));
+
+  /* ── Extended palette tokens ── */
+  --color-indigo: hsl(var(--indigo));
+  --color-indigo-foreground: hsl(var(--indigo-foreground));
+  --color-green: hsl(var(--green));
+  --color-green-foreground: hsl(var(--green-foreground));
+  --color-purple: hsl(var(--purple));
+  --color-purple-foreground: hsl(var(--purple-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+
+  /* ── Radius tokens ── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ── Shadow tokens ── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.05);
 }
 
 /* =====================================================
@@ -40,13 +71,15 @@
 
 @layer base {
   :root {
-    --background: 220 33% 97%;
+    /* ── Spec: fond #F3F6FA, surface #FFFFFF, texte #0F172A ── */
+    --background: 213 40% 97%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
-    --primary: 221 83% 58%;
+    /* ── Spec: bleu #2563EB ── */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 216 33% 96%;
@@ -60,20 +93,31 @@
 
     --border: 214 28% 88%;
     --input: 216 33% 97%;
-    --ring: 221 83% 58%;
+    --ring: 221 83% 53%;
 
     --shell: 0 0% 100%;
     --shell-foreground: 222 47% 16%;
     --shell-border: 214 28% 88%;
-    --shell-elevated: 220 33% 97%;
+    --shell-elevated: 213 40% 97%;
 
-    --success: 142 71% 45%;
+    /* ── Extended palette: spec colors ── */
+    /* indigo #4F46E5 */
+    --indigo: 243 75% 59%;
+    --indigo-foreground: 0 0% 100%;
+    /* green #16A34A */
+    --green: 142 71% 36%;
+    --green-foreground: 0 0% 100%;
+    /* purple #7C3AED */
+    --purple: 262 83% 58%;
+    --purple-foreground: 0 0% 100%;
+
+    --success: 142 71% 36%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 10%;
-    --info: 213 94% 55%;
+    --info: 217 91% 53%;
     --info-foreground: 0 0% 100%;
-    /* Aligned with Flutter AppColors.error #DC2626 */
+    /* rouge #DC2626 */
     --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
 
@@ -82,6 +126,42 @@
     --teal-foreground: 0 0% 100%;
     --sky: 199 89% 60%;
     --sky-foreground: 0 0% 100%;
+
+    /* ── Transition tokens ── */
+    --transition-fast: 150ms;
+    --transition-base: 220ms;
+    --transition-slow: 360ms;
+
+    /* ── Design system typography tokens ── */
+    --ds-text-xs: 0.75rem;
+    --ds-text-sm: 0.875rem;
+    --ds-text-base: 1rem;
+    --ds-text-lg: 1.125rem;
+    --ds-text-xl: 1.25rem;
+    --ds-text-2xl: 1.5rem;
+    --ds-text-3xl: 1.875rem;
+    --ds-text-4xl: 2.25rem;
+
+    --ds-leading-tight: 1.25;
+    --ds-leading-snug: 1.375;
+    --ds-leading-normal: 1.5;
+    --ds-leading-relaxed: 1.625;
+
+    --ds-font-normal: 400;
+    --ds-font-medium: 500;
+    --ds-font-semibold: 600;
+    --ds-font-bold: 700;
+    --ds-font-black: 900;
+
+    /* ── Design system spacing tokens (4/8/12/16/24/32/48/64px) ── */
+    --ds-space-1: 0.25rem;
+    --ds-space-2: 0.5rem;
+    --ds-space-3: 0.75rem;
+    --ds-space-4: 1rem;
+    --ds-space-6: 1.5rem;
+    --ds-space-8: 2rem;
+    --ds-space-12: 3rem;
+    --ds-space-16: 4rem;
 
     /* Status palette aligned 1:1 with flutter app_status_palette.dart */
     --status-pending-fg: 36 100% 24%;
@@ -122,40 +202,54 @@
   }
 
   .dark {
-    --background: 223 66% 9%;
-    --foreground: 214 32% 92%;
+    /* ── Spec: fond #020617, surface #0F172A, texte #F8FAFC ── */
+    --background: 229 84% 5%;
+    --foreground: 210 40% 98%;
 
-    --card: 223 40% 13%;
-    --card-foreground: 214 32% 92%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
 
-    --primary: 221 90% 62%;
+    /* ── Spec: bleu #3B82F6 ── */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 223 32% 16%;
-    --secondary-foreground: 214 32% 92%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 223 28% 16%;
     --muted-foreground: 215 20% 72%;
 
     --accent: 223 28% 18%;
-    --accent-foreground: 214 32% 92%;
+    --accent-foreground: 210 40% 98%;
 
     --border: 223 24% 22%;
     --input: 223 24% 16%;
-    --ring: 221 90% 62%;
+    --ring: 217 91% 60%;
 
-    --shell: 223 68% 11%;
+    --shell: 222 57% 9%;
     --shell-foreground: 214 28% 88%;
     --shell-border: 223 33% 22%;
     --shell-elevated: 223 54% 14%;
+
+    /* ── Extended palette: spec dark colors ── */
+    /* indigo #818CF8 */
+    --indigo: 239 87% 74%;
+    --indigo-foreground: 222 47% 11%;
+    /* green #22C55E */
+    --green: 142 71% 45%;
+    --green-foreground: 222 47% 11%;
+    /* purple #A78BFA */
+    --purple: 258 80% 76%;
+    --purple-foreground: 222 47% 11%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 10%;
-    --info: 213 94% 55%;
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
-    --danger: 0 72% 56%;
+    /* rouge #F87171 */
+    --danger: 0 91% 71%;
     --danger-foreground: 0 0% 100%;
 
     --teal: 173 80% 50%;

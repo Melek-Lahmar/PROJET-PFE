@@ -465,7 +465,7 @@ export function CheckoutPage() {
                     <div className="text-xs text-muted-foreground">× {item.qty}</div>
                   </div>
                   <span className="shrink-0 font-semibold text-card-foreground">
-                    {Number(item.price * item.qty).toFixed(3)} TND
+                    {Number(item.unitPrice * item.qty).toFixed(3)} TND
                   </span>
                 </div>
               ))}

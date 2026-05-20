@@ -65,7 +65,7 @@ function buildSavedLabel(a: ClientAddress) {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-export function DeliveryAddressSelector({ address, city, postalCode, latitude, longitude, setAddress, setCity, setPostalCode, setLatitude, setLongitude, onTouched }: Props) {
+export function DeliveryAddressSelector({ address: _address, city: _city, postalCode: _postalCode, latitude, longitude, setAddress, setCity, setPostalCode, setLatitude, setLongitude, onTouched }: Props) {
   const { data: savedAddresses = [], isPending: addrPending } = useAddresses();
 
   const [mode, setMode] = useState<"saved" | "temp">("saved");
@@ -231,7 +231,7 @@ export function DeliveryAddressSelector({ address, city, postalCode, latitude, l
   }
 
   const hasGps = typeof latitude === "number" && typeof longitude === "number";
-  const gouvernoratCenter = getCenterForTunisia(gouvernoratId);
+  void getCenterForTunisia(gouvernoratId);
 
   // ─── Rendu ──────────────────────────────────────────────────────────────────
   return (

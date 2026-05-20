@@ -362,7 +362,7 @@ export function VendeurCheckoutPage() {
                     <div className="truncate font-medium text-card-foreground">{item.arRef}</div>
                     <div className="text-xs text-muted-foreground">× {item.qty}</div>
                   </div>
-                  <span className="shrink-0 font-semibold text-card-foreground">{money(item.price * item.qty)}</span>
+                  <span className="shrink-0 font-semibold text-card-foreground">{money(item.unitPrice * item.qty)}</span>
                 </div>
               ))}
             </div>
