@@ -58,9 +58,9 @@ export function ChatbotOverviewPage() {
   return (
     <div className="container-app space-y-6 py-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-violet-500/10 via-card to-card p-6 shadow-sm">
-        <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-violet-500/15 blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 h-32 w-32 rounded-full bg-indigo-500/15 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-purple/10 via-card to-card p-6 shadow-sm">
+        <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-purple/15 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 h-32 w-32 rounded-full bg-indigo/15 blur-3xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export function ChatbotOverviewPage() {
                 </svg>
               </span>
               <div>
-                <div className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Chatbot admin</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-purple">Chatbot admin</div>
                 <h1 className="text-3xl font-black tracking-tight text-card-foreground">Vue d'ensemble</h1>
               </div>
             </div>
@@ -83,13 +83,13 @@ export function ChatbotOverviewPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link to="/admin/chatbot/sandbox" className="inline-flex h-10 items-center gap-2 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-violet-700">
+            <Link to="/admin/chatbot/sandbox" className="inline-flex h-10 items-center gap-2 rounded-2xl bg-purple px-4 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-purple/90">
               🧪 Sandbox
             </Link>
-            <Link to="/admin/chatbot/conversations" className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-bold transition hover:border-violet-300">
+            <Link to="/admin/chatbot/conversations" className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-bold transition hover:border-purple/40">
               💬 Conversations
             </Link>
-            <Link to="/admin/chatbot/insights" className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-bold transition hover:border-violet-300">
+            <Link to="/admin/chatbot/insights" className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-bold transition hover:border-purple/40">
               💡 Insights
             </Link>
           </div>
@@ -103,7 +103,7 @@ export function ChatbotOverviewPage() {
           ))}
         </div>
       ) : isError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="ds-alert ds-alert-danger">
           Impossible de charger les statistiques chatbot.
         </div>
       ) : !stats ? null : (
@@ -159,7 +159,7 @@ export function ChatbotOverviewPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={actionData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                       <XAxis dataKey="action" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
@@ -177,23 +177,23 @@ export function ChatbotOverviewPage() {
 
           {/* Liens rapides */}
           <section className="grid gap-3 md:grid-cols-3">
-            <Link to="/admin/chatbot/sandbox" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-violet-50 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="text-xs font-bold uppercase text-violet-600">Sandbox</div>
+            <Link to="/admin/chatbot/sandbox" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-purple/5 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="text-xs font-bold uppercase text-purple">Sandbox</div>
               <div className="mt-2 text-lg font-black">Tester une question</div>
               <p className="mt-1 text-xs text-muted-foreground">Posez une question sans persistance + voir l'action retenue.</p>
-              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-violet-700">Ouvrir →</div>
+              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-purple">Ouvrir →</div>
             </Link>
-            <Link to="/admin/chatbot/conversations" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-blue-50 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="text-xs font-bold uppercase text-blue-600">Conversations</div>
+            <Link to="/admin/chatbot/conversations" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/5 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="text-xs font-bold uppercase text-primary">Conversations</div>
               <div className="mt-2 text-lg font-black">Voir l'historique</div>
               <p className="mt-1 text-xs text-muted-foreground">Sessions et messages échangés. Lecture seule.</p>
-              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700">Ouvrir →</div>
+              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary">Ouvrir →</div>
             </Link>
-            <Link to="/admin/chatbot/insights" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-amber-50 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="text-xs font-bold uppercase text-amber-600">Insights</div>
+            <Link to="/admin/chatbot/insights" className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-warning/5 to-card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="text-xs font-bold uppercase text-warning">Insights</div>
               <div className="mt-2 text-lg font-black">Alertes proactives</div>
               <p className="mt-1 text-xs text-muted-foreground">Insights pré-calculés par le job Hangfire.</p>
-              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-700">Ouvrir →</div>
+              <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-warning">Ouvrir →</div>
             </Link>
           </section>
         </>

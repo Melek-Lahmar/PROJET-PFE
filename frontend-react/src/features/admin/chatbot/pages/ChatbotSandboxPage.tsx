@@ -63,11 +63,11 @@ export function ChatbotSandboxPage() {
   return (
     <div className="container-app space-y-5 py-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-violet-500/10 via-card to-card p-6 shadow-sm">
-        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-violet-500/15 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-purple/10 via-card to-card p-6 shadow-sm">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-purple/15 blur-3xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Chatbot admin</div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-purple">Chatbot admin</div>
             <h1 className="mt-1 text-3xl font-black tracking-tight">Sandbox</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Posez une question. Aucune persistance — utilisez ce mode pour tester. Le panneau de droite explique l'action retenue (intent, action, données brutes).
@@ -76,7 +76,7 @@ export function ChatbotSandboxPage() {
           <select
             className="h-11 rounded-2xl border border-border bg-card px-3 text-sm font-bold shadow-sm"
             value={language}
-            onChange={(e) => setLanguage(e.target.value as any)}
+            onChange={(e) => setLanguage(e.target.value as "fr" | "en" | "ar")}
           >
             <option value="fr">🇫🇷 Français</option>
             <option value="en">🇬🇧 English</option>
@@ -95,7 +95,7 @@ export function ChatbotSandboxPage() {
                 key={s}
                 type="button"
                 onClick={() => handleSend(s)}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:border-violet-300 hover:bg-violet-50"
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:border-purple/30 hover:bg-purple/5"
               >
                 {s}
               </button>
@@ -113,7 +113,7 @@ export function ChatbotSandboxPage() {
               type="button"
               onClick={() => setMessages([])}
               disabled={messages.length === 0}
-              className="text-xs font-semibold text-rose-600 hover:underline disabled:opacity-40"
+              className="text-xs font-semibold text-danger hover:underline disabled:opacity-40"
             >
               Effacer
             </button>
@@ -145,7 +145,7 @@ export function ChatbotSandboxPage() {
                   ].join(" ")}
                 >
                   {m.role === "bot" && m.meta?.action && (
-                    <div className={`mb-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${ACTION_BADGE[m.meta.action] ?? "bg-slate-50 text-slate-600 ring-slate-100"}`}>
+                    <div className={`mb-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ${ACTION_BADGE[m.meta.action] ?? "bg-muted/50 text-muted-foreground ring-border"}`}>
                       {m.meta.action}
                     </div>
                   )}
@@ -161,11 +161,11 @@ export function ChatbotSandboxPage() {
                     <rect x="4" y="8" width="16" height="12" rx="3" />
                   </svg>
                 </span>
-                <div className="rounded-3xl border border-border bg-card px-4 py-2 text-sm italic text-muted-foreground">
+                <div className="rounded-3xl border border-border bg-card px-4 py-2 text-sm">
                   <span className="inline-flex gap-1">
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:0ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:150ms]" />
-                    <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:300ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:0ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:150ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:300ms]" />
                   </span>
                 </div>
               </div>
@@ -177,13 +177,13 @@ export function ChatbotSandboxPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())}
               placeholder="Posez votre question..."
-              className="h-11 flex-1 rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+              className="h-11 flex-1 rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-purple/40 focus:ring-2 focus:ring-purple/10"
             />
             <button
               type="button"
               onClick={() => handleSend()}
               disabled={ask.isPending || !input.trim()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-purple px-4 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-purple/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {ask.isPending ? "..." : "Envoyer"} →
             </button>
@@ -208,9 +208,9 @@ export function ChatbotSandboxPage() {
                   <div className="text-[11px] font-bold uppercase text-muted-foreground">Statut</div>
                   <div className="mt-1 font-bold">
                     {lastBot.meta.success ? (
-                      <span className="text-emerald-600">✓ succès</span>
+                      <span className="text-success">✓ succès</span>
                     ) : (
-                      <span className="text-rose-600">✗ échec</span>
+                      <span className="text-danger">✗ échec</span>
                     )}
                   </div>
                 </div>

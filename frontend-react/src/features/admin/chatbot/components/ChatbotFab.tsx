@@ -5,10 +5,19 @@ import { useAuthStore } from "../../../auth/store/authStore";
 
 type Msg = { role: "user" | "bot"; content: string; meta?: SandboxResponse };
 
+const ACTION_BADGE: Record<string, string> = {
+  query:    "bg-info/10 text-info",
+  analyze:  "bg-purple/10 text-purple",
+  predict:  "bg-indigo/10 text-indigo",
+  kb:       "bg-info/10 text-info",
+  chitchat: "bg-warning/10 text-warning",
+  action:   "bg-success/10 text-success",
+  error:    "bg-danger/10 text-danger",
+};
+
 /**
- * Module 12 — Widget chatbot flottant pour les admins.
- * Apparaît en bas à droite uniquement si rôle ADMIN. Consomme l'endpoint
- * `/api/admin/chatbot/sandbox` (passe-plat vers l'orchestrator existant).
+ * Widget chatbot flottant pour les admins (bas-droite, rôle ADMIN uniquement).
+ * Consomme /api/admin/chatbot/sandbox — sans persistance.
  */
 export function ChatbotFab() {
   const isAdmin = useAuthStore((s) => Array.isArray(s.roles) && s.roles.includes("ADMIN"));
@@ -95,8 +104,16 @@ export function ChatbotFab() {
 
           <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto px-3 py-3 text-sm">
             {messages.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-border p-3 text-xs text-muted-foreground">
-                Posez une question ("combien de commandes hier ?", "top 3 produits", ...).
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border p-4 text-center">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40 text-muted-foreground">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    <circle cx="9" cy="11" r="0.5" fill="currentColor" />
+                    <circle cx="12" cy="11" r="0.5" fill="currentColor" />
+                    <circle cx="15" cy="11" r="0.5" fill="currentColor" />
+                  </svg>
+                </span>
+                <p className="text-xs text-muted-foreground">Posez une question ("combien de commandes hier ?", "top 3 produits", ...).</p>
               </div>
             )}
             {messages.map((m, i) => (
@@ -110,14 +127,20 @@ export function ChatbotFab() {
                 ].join(" ")}
               >
                 {m.role === "bot" && m.meta?.action && (
-                  <div className="mb-1 text-[10px] font-bold uppercase opacity-70">{m.meta.action}</div>
+                  <span className={`mb-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${ACTION_BADGE[m.meta.action] ?? "bg-muted/50 text-muted-foreground"}`}>
+                    {m.meta.action}
+                  </span>
                 )}
                 <div className="whitespace-pre-wrap break-words">{m.content}</div>
               </div>
             ))}
             {ask.isPending && (
-              <div className="bg-muted text-muted-foreground rounded-2xl px-3 py-2 text-xs italic">
-                Le chatbot réfléchit…
+              <div className="rounded-2xl border border-border bg-card px-3 py-2.5">
+                <span className="inline-flex gap-1">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:0ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:150ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-purple/60 [animation-delay:300ms]" />
+                </span>
               </div>
             )}
           </div>
