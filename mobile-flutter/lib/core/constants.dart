@@ -6,7 +6,7 @@ class Statut {
   static const int retourne = 5;
   static const int depot = 6;
 }
-const String apiBaseUrl = "http://192.168.100.19:5123";
+const String apiBaseUrl = "http://192.168.100.18:5123";
 const String osrmBaseUrl ="https://router.project-osrm.org";
 
 /// URL du webhook n8n du chatbot admin (étape 10).
