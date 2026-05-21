@@ -4,6 +4,7 @@ import { Button } from "../../../shared/components/Button";
 import { Card } from "../../../shared/components/Card";
 import { Input } from "../../../shared/components/Input";
 import { Loader } from "../../../shared/components/Loader";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 import { getArticles } from "../../catalog/api/articlesApi";
 import { getCatalogues } from "../../catalog/api/cataloguesApi";
 import { getDepots, type DepotDto } from "../../catalog/api/depotsApi";
@@ -14,13 +15,14 @@ import {
 } from "../api/homepageApi";
 import { HomepageRenderer } from "../components/HomepageRenderer";
 import {
-  HOMEPAGE_SECTION_TYPES,
   cloneHomepageDocument,
   createLocalHomepageView,
   createSectionByType,
   duplicateSection,
   sortHomepageSections,
   type HomepageDocument,
+  type HomepageAdvantagesPayload,
+  type HomepageFinalCtaPayload,
   type HomepageSection,
   type HomepageSectionType,
   type HomepageStoresPayload,
@@ -40,6 +42,15 @@ import {
   CtaFieldsEditor,
   ImageFieldsEditor,
 } from "../components/admin/HomepageAdminPrimitives";
+import { HomepageTemplateSelector } from "../components/admin/HomepageTemplateSelector";
+import { HomepageTemplatePreviewModal } from "../components/admin/HomepageTemplatePreviewModal";
+import { HomepageTemplateApplyConfirmModal } from "../components/admin/HomepageTemplateApplyConfirmModal";
+import {
+  HOMEPAGE_TEMPLATES,
+  SAFE_HOMEPAGE_TEMPLATE_SECTION_TYPES,
+  createBoutiqueModerneTemplate,
+  type HomepageTemplateDefinition,
+} from "../templates/homepageTemplates";
 
 function formatDate(value?: string | null) {
   if (!value) return "-";
@@ -73,27 +84,6 @@ function getSafeStoresPayload(
     viewAllCta: payload?.viewAllCta ?? { text: "Nous contacter", href: "/contact" },
     depotNos: payload?.depotNos ?? [],
     items: payload?.items ?? [],
-  };
-}
-
-function applyPremiumHomepagePreset(): HomepageDocument {
-  const carousel = createSectionByType("carousel", 1);
-  const featuredProducts = createSectionByType("featuredProducts", 2);
-  const contact = createSectionByType("contact", 3);
-  const catalogues = createSectionByType("catalogues", 4);
-  const stores = createSectionByType("stores", 5);
-
-  carousel.name = "Hero carousel principal";
-  featuredProducts.name = "Sélection d’articles";
-  contact.name = "Contactez-nous";
-  catalogues.name = "Le meilleur de nos catégories";
-  stores.name = "Nos magasins";
-
-  return {
-    pageTitle: "Homepage e-commerce premium",
-    pageSubtitle:
-      "Hero fort, sélection produits, contact, catalogues et magasins pilotés depuis l’administration.",
-    sections: [carousel, featuredProducts, contact, catalogues, stores],
   };
 }
 
@@ -151,7 +141,7 @@ function buildLocalPreview(
 }
 
 function getSectionTypeOptions(): HomepageSectionType[] {
-  return [...HOMEPAGE_SECTION_TYPES, "contact", "stores"];
+  return SAFE_HOMEPAGE_TEMPLATE_SECTION_TYPES;
 }
 
 function getSectionLabel(section: HomepageSection) {
@@ -160,18 +150,32 @@ function getSectionLabel(section: HomepageSection) {
 
 function getSectionShortType(type: HomepageSectionType) {
   switch (type) {
+    case "hero":
+      return "Bannière principale";
     case "carousel":
-      return "Hero";
+      return "Carrousel";
     case "featuredProducts":
-      return "Produits";
+      return "Produits en vedette";
+    case "audiences":
+      return "Parcours clients";
+    case "advantages":
+      return "Avantages";
     case "contact":
       return "Contact";
     case "catalogues":
       return "Catalogues";
+    case "stats":
+      return "Statistiques";
+    case "finalCta":
+      return "Appel final";
     case "stores":
-      return "Magasins";
+      return "Dépôts";
     case "featuredCategories":
       return "Catégories";
+    case "promoBanner":
+      return "Bandeau commercial";
+    case "brands":
+      return "Marques";
     default:
       return type;
   }
@@ -226,11 +230,11 @@ function SectionMetaEditor({
         </div>
       </div>
 
-      <AdminField label="Nom interne de cette section">
+      <AdminField label="Nom de la section">
         <Input
           value={section.name ?? ""}
           onChange={(e) => onChange({ ...section, name: e.target.value })}
-          placeholder="Ex. Hero principal, Top produits…"
+          placeholder="Ex. Bannière principale, produits populaires..."
         />
       </AdminField>
 
@@ -239,24 +243,24 @@ function SectionMetaEditor({
         onClick={() => setShowAdvanced((c) => !c)}
         className="self-start text-sm font-semibold text-primary hover:underline"
       >
-        {showAdvanced ? "▾ Masquer les options avancées" : "▸ Options avancées (variants & planning)"}
+        {showAdvanced ? "▾ Masquer les options d’affichage" : "▸ Options d’affichage"}
       </button>
 
       {showAdvanced ? (
         <div className="grid gap-4 rounded-2xl border border-dashed border-border/70 bg-muted/30 p-4 md:grid-cols-2 xl:grid-cols-4">
-          <AdminField label="Variant layout">
+          <AdminField label="Présentation visuelle">
             <Input
               value={section.layoutVariant ?? ""}
               onChange={(e) => onChange({ ...section, layoutVariant: e.target.value })}
-              placeholder="hero-premium"
+              placeholder="sobre, premium, compact"
             />
           </AdminField>
 
-          <AdminField label="Variant thème">
+          <AdminField label="Ambiance visuelle">
             <Input
               value={section.themeVariant ?? ""}
               onChange={(e) => onChange({ ...section, themeVariant: e.target.value })}
-              placeholder="dark / light / neutral"
+              placeholder="clair, sombre, accent"
             />
           </AdminField>
 
@@ -300,11 +304,11 @@ function LegacySectionEditor({
 }) {
   switch (section.type) {
     case "advantages": {
-      const payload = section.payload as any;
+      const payload = section.payload as HomepageAdvantagesPayload;
       return (
         <AdminSectionShell
-          title="Section legacy / secondaire"
-          subtitle="Cette section reste compatible. Tu peux la garder, la déplacer ou la supprimer."
+          title="Section compatible"
+          subtitle="Cette section peut être gardée, déplacée ou supprimée."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <AdminField label="Titre">
@@ -348,12 +352,12 @@ function LegacySectionEditor({
     }
 
     case "finalCta": {
-      const payload = section.payload as any;
+      const payload = section.payload as HomepageFinalCtaPayload;
       return (
         <div className="space-y-4">
           <AdminSectionShell
-            title="CTA final"
-            subtitle="Compatible avec l’ancien système si tu veux garder ce bloc."
+            title="Appel à l’action final"
+            subtitle="Bloc final affiché en bas de la page d’accueil."
           >
             <div className="grid gap-4 md:grid-cols-2">
               <AdminField label="Titre">
@@ -407,7 +411,7 @@ function LegacySectionEditor({
 
           <div className="grid gap-4 xl:grid-cols-2">
             <CtaFieldsEditor
-              label="CTA principal"
+              label="Bouton principal"
               value={payload.primaryCta}
               onChange={(primaryCta) =>
                 onChange({
@@ -418,7 +422,7 @@ function LegacySectionEditor({
             />
 
             <CtaFieldsEditor
-              label="CTA secondaire"
+              label="Bouton secondaire"
               value={payload.secondaryCta}
               onChange={(secondaryCta) =>
                 onChange({
@@ -440,13 +444,12 @@ function LegacySectionEditor({
         >
           <div className="rounded-2xl border border-dashed border-border/70 bg-card px-4 py-5 text-sm text-muted-foreground">
             Cette section peut être conservée, réordonnée, dupliquée ou supprimée.
-            La refonte admin de cette phase cible surtout : carousel, produits,
-            contact, catalogues et magasins.
+            La gestion actuelle cible surtout les sections persistées par le module de publication.
           </div>
         </AdminSectionShell>
       );
-    }
   }
+}
 
 
 function SectionAccordion({
@@ -495,7 +498,7 @@ function SectionAccordion({
             </span>
             {!section.isActive ? (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                Inactive
+                Désactivée
               </span>
             ) : null}
           </div>
@@ -521,7 +524,7 @@ function SectionAccordion({
             }}
             className="hidden md:inline-flex h-8 cursor-pointer items-center rounded-md border border-border/70 bg-card px-3 text-xs font-semibold hover:border-primary/30 hover:bg-accent/55"
           >
-            Focus
+            Isoler
           </span>
           <span
             aria-hidden
@@ -543,14 +546,16 @@ export function AdminHomepagePage() {
   const queryClient = useQueryClient();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const [draft, setDraft] = useState<HomepageDocument>(
-    applyPremiumHomepagePreset(),
-  );
+  const [draft, setDraft] = useState<HomepageDocument>(() => createBoutiqueModerneTemplate());
   const [message, setMessage] = useState<string | null>(null);
   const [sectionTypeToAdd, setSectionTypeToAdd] =
-    useState<HomepageSectionType>("carousel");
+    useState<HomepageSectionType>("hero");
   const [showPreview, setShowPreview] = useState(false);
   const [expandedSectionIds, setExpandedSectionIds] = useState<string[]>([]);
+  const [templateToPreview, setTemplateToPreview] =
+    useState<HomepageTemplateDefinition | null>(null);
+  const [templateToApply, setTemplateToApply] =
+    useState<HomepageTemplateDefinition | null>(null);
 
   const adminQuery = useQuery({
     queryKey: ["homepage", "admin"],
@@ -582,9 +587,18 @@ export function AdminHomepagePage() {
 
   useEffect(() => {
     if (adminQuery.data?.draft) {
-      setDraft(cloneHomepageDocument(adminQuery.data.draft));
+      const nextDraft = cloneHomepageDocument(adminQuery.data.draft);
+      let cancelled = false;
+      queueMicrotask(() => {
+        if (!cancelled) setDraft(nextDraft);
+      });
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [adminQuery.data?.updatedAt]);
+
+    return undefined;
+  }, [adminQuery.data?.draft, adminQuery.data?.updatedAt]);
 
   const saveMutation = useMutation({
     mutationFn: saveHomepageDraft,
@@ -596,37 +610,34 @@ export function AdminHomepagePage() {
         queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
       ]);
     },
-    onError: (error: any) => {
-      setMessage(
-        error?.response?.data?.message ??
-          error?.message ??
-          "Erreur lors de l’enregistrement du brouillon.",
-      );
+    onError: (error: unknown) => {
+      setMessage(getApiErrorMessage(error) || "Erreur lors de l’enregistrement du brouillon.");
     },
   });
 
   const publishMutation = useMutation({
     mutationFn: publishHomepage,
     onSuccess: async () => {
-      setMessage("Homepage publiée.");
+      setMessage("Page d’accueil publiée.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
         queryClient.invalidateQueries({ queryKey: ["homepage", "preview"] }),
         queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
       ]);
     },
-    onError: (error: any) => {
-      setMessage(
-        error?.response?.data?.message ??
-          error?.message ??
-          "Erreur lors de la publication.",
-      );
+    onError: (error: unknown) => {
+      setMessage(getApiErrorMessage(error) || "Erreur lors de la publication.");
     },
   });
 
-  const availableArticles = articlesQuery.data ?? [];
-  const availableCatalogues = cataloguesQuery.data ?? [];
-  const availableDepots = depotsQuery.data ?? [];
+  const availableArticles = useMemo(() => articlesQuery.data ?? [], [articlesQuery.data]);
+  const availableCatalogues = useMemo(() => cataloguesQuery.data ?? [], [cataloguesQuery.data]);
+  const availableDepots = useMemo(() => depotsQuery.data ?? [], [depotsQuery.data]);
+
+  const templateContext = useMemo(
+    () => ({ articles: availableArticles, catalogues: availableCatalogues }),
+    [availableArticles, availableCatalogues],
+  );
 
   const sortedSections = useMemo(
     () => sortHomepageSections(draft.sections),
@@ -634,15 +645,22 @@ export function AdminHomepagePage() {
   );
 
   useEffect(() => {
-    setExpandedSectionIds((current) => {
-      const validIds = current.filter((id) =>
-        sortedSections.some((section) => section.id === id),
-      );
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setExpandedSectionIds((current) => {
+        const validIds = current.filter((id) =>
+          sortedSections.some((section) => section.id === id),
+        );
 
-      if (validIds.length > 0) return validIds;
-      if (sortedSections.length === 0) return [];
-      return [sortedSections[0].id];
+        if (validIds.length > 0) return validIds;
+        if (sortedSections.length === 0) return [];
+        return [sortedSections[0].id];
+      });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [sortedSections]);
 
   const localPreview = useMemo(
@@ -655,6 +673,37 @@ export function AdminHomepagePage() {
       ),
     [draft, sortedSections, availableArticles, availableCatalogues, availableDepots],
   );
+
+  const templatePreviewDocument = useMemo(
+    () => templateToPreview?.createDocument(templateContext) ?? null,
+    [templateContext, templateToPreview],
+  );
+
+  const templatePreviewView = useMemo(
+    () =>
+      templatePreviewDocument
+        ? buildLocalPreview(
+            templatePreviewDocument,
+            availableArticles,
+            availableCatalogues,
+            availableDepots,
+          )
+        : null,
+    [templatePreviewDocument, availableArticles, availableCatalogues, availableDepots],
+  );
+
+  const applyTemplateToDraft = (template: HomepageTemplateDefinition) => {
+    const nextDraft = template.createDocument(templateContext);
+    const nextSections = sortHomepageSections(nextDraft.sections);
+
+    setDraft({ ...nextDraft, sections: nextSections });
+    setExpandedSectionIds(nextSections.slice(0, 2).map((section) => section.id));
+    setTemplateToApply(null);
+    setTemplateToPreview(null);
+    setMessage(
+      `Le modèle « ${template.name} » a été appliqué au brouillon. La version publiée n’a pas changé.`,
+    );
+  };
 
   const updateSection = (
     sectionId: string,
@@ -727,10 +776,10 @@ export function AdminHomepagePage() {
       <div className="app-surface p-8 text-center">
         <div className="app-kicker">Administration</div>
         <h1 className="mt-2 text-2xl font-black text-card-foreground">
-          Homepage
+          Page d’accueil
         </h1>
         <p className="mt-3 app-description">
-          Impossible de charger le module homepage.
+          Impossible de charger le module de page d’accueil.
         </p>
       </div>
     );
@@ -743,7 +792,7 @@ export function AdminHomepagePage() {
 
   return (
     <div className="container-app space-y-5 pb-10">
-      {/* Hero Homepage Builder — visuel pro, statut clair */}
+      {/* Éditeur de page d’accueil — visuel pro, statut clair */}
       <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-rose-500/10 via-card to-card p-6 shadow-sm md:p-7">
         <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-rose-500/15 blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-32 w-32 rounded-full bg-amber-500/15 blur-3xl" />
@@ -756,7 +805,7 @@ export function AdminHomepagePage() {
                 </svg>
               </span>
               <div>
-                <div className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600">Administration • Homepage</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600">Administration • Page d’accueil</div>
                 <h1 className="text-3xl font-black tracking-tight text-card-foreground">Éditeur de la page d'accueil</h1>
               </div>
             </div>
@@ -786,7 +835,7 @@ export function AdminHomepagePage() {
               onClick={() => saveMutation.mutate({ content: draft })}
               className="gap-2"
             >
-              💾 Enregistrer brouillon
+              💾 Enregistrer le brouillon
             </Button>
             <Button
               type="button"
@@ -807,7 +856,7 @@ export function AdminHomepagePage() {
               <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-sm font-black text-rose-700">1</span>
               <div className="text-xs leading-5">
                 <strong className="block text-card-foreground">Ajoutez des sections</strong>
-                <span className="text-muted-foreground">Hero, carousels, produits, dépôts, contact… Cliquez sur "+ Ajouter une section" en bas.</span>
+                <span className="text-muted-foreground">Bannière, produits, catalogues, avantages, statistiques… Cliquez sur "+ Ajouter une section" en bas.</span>
               </div>
             </div>
           </div>
@@ -815,7 +864,7 @@ export function AdminHomepagePage() {
             <div className="flex items-start gap-2">
               <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-sm font-black text-rose-700">2</span>
               <div className="text-xs leading-5">
-                <strong className="block text-card-foreground">Modifiez & ré-ordonnez</strong>
+                <strong className="block text-card-foreground">Modifiez et réordonnez</strong>
                 <span className="text-muted-foreground">Cliquez une section pour l'ouvrir, utilisez ↑ ↓ pour la déplacer, dupliquez ou supprimez.</span>
               </div>
             </div>
@@ -825,7 +874,7 @@ export function AdminHomepagePage() {
               <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-sm font-black text-rose-700">3</span>
               <div className="text-xs leading-5">
                 <strong className="block text-card-foreground">Publiez quand prêt</strong>
-                <span className="text-muted-foreground">"Enregistrer" sauve un brouillon. "Publier" met en ligne pour les visiteurs.</span>
+                <span className="text-muted-foreground">"Enregistrer le brouillon" sauvegarde vos changements. "Publier en ligne" les rend visibles aux visiteurs.</span>
               </div>
             </div>
           </div>
@@ -837,6 +886,12 @@ export function AdminHomepagePage() {
           </div>
         ) : null}
       </section>
+
+      <HomepageTemplateSelector
+        templates={HOMEPAGE_TEMPLATES}
+        onPreview={setTemplateToPreview}
+        onApply={setTemplateToApply}
+      />
 
       <section className="app-surface sticky top-20 z-20 space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -876,7 +931,7 @@ export function AdminHomepagePage() {
               size="sm"
               onClick={() => setShowPreview((c) => !c)}
             >
-              {showPreview ? "🙈 Masquer preview" : "👁 Preview"}
+              {showPreview ? "Masquer la prévisualisation" : "Prévisualiser le brouillon"}
             </Button>
             <details className="relative">
               <summary className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-border/70 bg-card px-3 text-sm font-semibold text-card-foreground hover:bg-accent/55 list-none">
@@ -888,14 +943,14 @@ export function AdminHomepagePage() {
                   onClick={() => setDraft(cloneHomepageDocument(adminQuery.data.draft))}
                   className="rounded-lg px-3 py-2 text-left text-sm hover:bg-accent/55"
                 >
-                  Recharger le draft serveur
+                  Recharger le brouillon enregistré
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDraft(applyPremiumHomepagePreset())}
+                  onClick={() => setTemplateToApply(HOMEPAGE_TEMPLATES[0])}
                   className="rounded-lg px-3 py-2 text-left text-sm hover:bg-accent/55"
                 >
-                  Appliquer le preset premium
+                  Réinitialiser avec Boutique moderne
                 </button>
               </div>
             </details>
@@ -913,7 +968,7 @@ export function AdminHomepagePage() {
             <details className="group">
               <summary className="flex cursor-pointer items-center justify-between list-none">
                 <span className="text-sm font-bold text-card-foreground">
-                  ⚙ Métadonnées globales de la page
+                  ⚙ Informations générales de la page
                 </span>
                 <span className="text-xs text-muted-foreground group-open:hidden">Cliquer pour modifier</span>
               </summary>
@@ -956,7 +1011,7 @@ export function AdminHomepagePage() {
                 >
                   {getSectionTypeOptions().map((type) => (
                     <option key={type} value={type}>
-                      {getSectionShortType(type)} — {type}
+                      {getSectionShortType(type)}
                     </option>
                   ))}
                 </select>
@@ -1057,7 +1112,11 @@ export function AdminHomepagePage() {
 
                     setExpandedSectionIds((current) => [...current, copy.id]);
                   }}
-                  onDelete={() =>
+                  onDelete={() => {
+                    if (!window.confirm("Voulez-vous supprimer cette section du brouillon ?")) {
+                      return;
+                    }
+
                     setDraft((current) => ({
                       ...current,
                       sections: sortHomepageSections(
@@ -1065,8 +1124,8 @@ export function AdminHomepagePage() {
                           (entry) => entry.id !== section.id,
                         ),
                       ),
-                    }))
-                  }
+                    }));
+                  }}
                   isFirst={index === 0}
                   isLast={index === sortedSections.length - 1}
                 />
@@ -1151,7 +1210,7 @@ export function AdminHomepagePage() {
                 Rendu instantané
               </div>
               <p className="app-description">
-                La preview reflète directement tes modifications locales. Tu peux
+                La prévisualisation reflète directement tes modifications locales. Tu peux
                 la masquer à tout moment pour travailler plus confortablement.
               </p>
             </Card>
@@ -1164,6 +1223,26 @@ export function AdminHomepagePage() {
           </div>
         ) : null}
       </section>
+
+      {templateToPreview && templatePreviewView ? (
+        <HomepageTemplatePreviewModal
+          template={templateToPreview}
+          view={templatePreviewView}
+          onClose={() => setTemplateToPreview(null)}
+          onApply={(template) => {
+            setTemplateToPreview(null);
+            setTemplateToApply(template);
+          }}
+        />
+      ) : null}
+
+      {templateToApply ? (
+        <HomepageTemplateApplyConfirmModal
+          template={templateToApply}
+          onCancel={() => setTemplateToApply(null)}
+          onConfirm={() => applyTemplateToDraft(templateToApply)}
+        />
+      ) : null}
     </div>
   );
 }

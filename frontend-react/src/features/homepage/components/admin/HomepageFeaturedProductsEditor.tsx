@@ -29,7 +29,7 @@ export function HomepageFeaturedProductsEditor({
   const payload = section.payload as HomepageFeaturedProductsPayload;
   const [search, setSearch] = useState("");
 
-  const selectedRefs = payload.articleRefs ?? [];
+  const selectedRefs = useMemo(() => payload.articleRefs ?? [], [payload.articleRefs]);
   const selectedArticles = useMemo(
     () => selectedRefs.map((ref) => articles.find((article) => article.aR_Ref === ref)).filter((article): article is Article => Boolean(article)),
     [articles, selectedRefs],
@@ -55,7 +55,7 @@ export function HomepageFeaturedProductsEditor({
 
   return (
     <div className="space-y-4">
-      <AdminSectionShell title="Sélection d’articles" subtitle="Sous le hero, pour mettre en avant des produits choisis manuellement.">
+      <AdminSectionShell title="Sélection d’articles" subtitle="Sous la bannière principale, pour mettre en avant des produits choisis manuellement.">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <AdminField label="Titre de section">
             <Input value={payload.title ?? ""} onChange={(e) => onChange({ ...section, payload: { ...payload, title: e.target.value } })} />
@@ -78,7 +78,7 @@ export function HomepageFeaturedProductsEditor({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <CtaFieldsEditor
-          label="CTA “Voir tout”"
+          label="Bouton « Voir tout »"
           value={payload.viewAllCta ?? { text: "Voir tout", href: "/articles" }}
           onChange={(viewAllCta) => onChange({ ...section, payload: { ...payload, viewAllCta } })}
         />

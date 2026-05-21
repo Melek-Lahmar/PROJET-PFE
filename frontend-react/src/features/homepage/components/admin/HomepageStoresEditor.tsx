@@ -128,12 +128,12 @@ export function HomepageStoresEditor({
               }
             >
               <option value="grid">Grille</option>
-              <option value="slider">Slider</option>
+              <option value="slider">Carrousel</option>
             </select>
           </AdminField>
 
           <CtaFieldsEditor
-            label="CTA “Voir plus”"
+            label="Bouton « Voir plus »"
             value={payload.viewAllCta}
             onChange={(viewAllCta) => setPayload({ ...payload, viewAllCta })}
           />
@@ -260,7 +260,7 @@ export function HomepageStoresEditor({
 
       <AdminSectionShell
         title="Ajouter des dépôts"
-        subtitle="Sélectionne les magasins à mettre en avant sur la homepage."
+        subtitle="Sélectionne les magasins à mettre en avant sur la page d’accueil."
       >
         <AdminField label="Recherche">
           <Input

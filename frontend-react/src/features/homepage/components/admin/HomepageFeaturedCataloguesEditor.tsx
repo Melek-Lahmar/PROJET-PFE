@@ -103,9 +103,13 @@ export function HomepageFeaturedCataloguesEditor({
 
   const payload = isPremiumCatalogues ? premiumPayload : categoryPayload;
 
-  const selectedCatalogueNos = isPremiumCatalogues
-    ? premiumPayload.catalogueNos
-    : categoryPayload.items.map((item) => item.catalogueNo);
+  const selectedCatalogueNos = useMemo(
+    () =>
+      isPremiumCatalogues
+        ? premiumPayload.catalogueNos
+        : categoryPayload.items.map((item) => item.catalogueNo),
+    [categoryPayload.items, isPremiumCatalogues, premiumPayload.catalogueNos],
+  );
 
   const availableCatalogues = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -217,13 +221,13 @@ export function HomepageFeaturedCataloguesEditor({
               }
             >
               <option value="grid">Grille</option>
-              <option value="slider">Slider</option>
+              <option value="slider">Carrousel</option>
             </select>
           </AdminField>
 
           {isPremiumCatalogues ? (
             <CtaFieldsEditor
-              label="CTA “Voir tout”"
+              label="Bouton « Voir tout »"
               value={premiumPayload.viewAllCta}
               onChange={(viewAllCta) => setPremiumPayload({ ...premiumPayload, viewAllCta })}
             />

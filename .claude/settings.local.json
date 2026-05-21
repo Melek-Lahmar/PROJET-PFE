@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJET-PFE\\\\frontend-react\\\\src\\\\shared\\\\components\" -Filter \"*.tsx\" -File)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJET-PFE\\\\frontend-react\\\\src\\\\features\" -Directory)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJET-PFE\\\\frontend-react\\\\src\\\\features\\\\dashboard\\\\pages\" -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "PowerShell(head *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

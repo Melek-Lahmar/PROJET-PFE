@@ -105,10 +105,10 @@ export function CtaFieldsEditor({
           <Input
             value={safeValue.text ?? ""}
             onChange={(e) => onChange({ ...safeValue, text: e.target.value })}
-            placeholder="Ex: Découvrir"
+            placeholder="Ex. Découvrir"
           />
         </AdminField>
-        <AdminField label="Lien / URL">
+        <AdminField label="Lien du bouton">
           <Input
             value={safeValue.href ?? ""}
             onChange={(e) => onChange({ ...safeValue, href: e.target.value })}
@@ -139,7 +139,7 @@ export function ImageFieldsEditor({
   };
 
   return (
-    <AdminSectionShell title={label} subtitle="Version URL directe ou référence Cloudinary.">
+    <AdminSectionShell title={label} subtitle="Image depuis un lien direct ou la médiathèque.">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AdminField label="Source">
           <select
@@ -147,25 +147,25 @@ export function ImageFieldsEditor({
             value={safeValue.sourceType}
             onChange={(e) => onChange({ ...safeValue, sourceType: e.target.value as HomepageImage["sourceType"] })}
           >
-            <option value="url">URL</option>
-            <option value="cloudinary">Cloudinary</option>
+            <option value="url">Lien direct</option>
+            <option value="cloudinary">Médiathèque</option>
           </select>
         </AdminField>
-        <AdminField label="URL image" hint="Utilisée par défaut">
+        <AdminField label="Lien de l’image" hint="Utilisé par défaut">
           <Input
             value={safeValue.url ?? ""}
             onChange={(e) => onChange({ ...safeValue, url: e.target.value })}
             placeholder="https://..."
           />
         </AdminField>
-        <AdminField label="Public ID Cloudinary">
+        <AdminField label="Référence média">
           <Input
             value={safeValue.cloudinaryPublicId ?? ""}
             onChange={(e) => onChange({ ...safeValue, cloudinaryPublicId: e.target.value })}
             placeholder="folder/asset"
           />
         </AdminField>
-        <AdminField label="Texte alt">
+        <AdminField label="Description de l’image">
           <Input
             value={safeValue.alt ?? ""}
             onChange={(e) => onChange({ ...safeValue, alt: e.target.value })}
@@ -213,7 +213,7 @@ export function ImageFieldsEditor({
               <img src={safeValue.url} alt={safeValue.alt ?? ""} className="h-48 w-full object-cover" />
             ) : (
               <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-                Aperçu Cloudinary disponible après résolution côté frontend.
+                Aperçu disponible après résolution de la médiathèque.
               </div>
             )}
           </div>

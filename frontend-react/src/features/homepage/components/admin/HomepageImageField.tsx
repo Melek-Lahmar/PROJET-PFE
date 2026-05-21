@@ -131,7 +131,7 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
             }`}
             onClick={() => switchSourceType('url')}
           >
-            URL directe
+            Lien direct
           </button>
           <button
             type="button"
@@ -142,7 +142,7 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
             }`}
             onClick={() => switchSourceType('cloudinary')}
           >
-            Cloudinary
+            Médiathèque
           </button>
         </div>
       </div>
@@ -156,7 +156,7 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
 
           {image.sourceType === 'url' ? (
             <label className="block space-y-2">
-              <span className="app-kicker">URL de l’image</span>
+              <span className="app-kicker">Lien de l’image</span>
               <Input
                 placeholder="https://..."
                 value={image.url ?? ''}
@@ -167,7 +167,7 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
             <div className="space-y-3">
               <div className="rounded-2xl border border-dashed border-border px-4 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Téléverse un fichier image pour cette section homepage.
+                  Téléversez un fichier image pour cette section de page d’accueil.
                 </div>
                 <div className="mt-3 flex flex-wrap gap-3">
                   <input
@@ -183,7 +183,7 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
                     isLoading={uploading}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Uploader une image
+                    Téléverser une image
                   </Button>
                   <Button type="button" variant="outline" onClick={clearFromForm}>
                     Retirer du bloc
@@ -194,18 +194,18 @@ export function HomepageImageField({ label, value, onChange, helperText }: Props
                     isLoading={deleting}
                     onClick={removeFromCloudinary}
                   >
-                    Supprimer du cloud
+                    Supprimer de la médiathèque
                   </Button>
                 </div>
               </div>
 
               <label className="block space-y-2">
-                <span className="app-kicker">URL sécurisée retournée</span>
+                <span className="app-kicker">Lien sécurisé retourné</span>
                 <Input value={image.url ?? ''} readOnly />
               </label>
 
               <label className="block space-y-2">
-                <span className="app-kicker">Cloudinary publicId</span>
+                <span className="app-kicker">Référence média</span>
                 <Input value={image.cloudinaryPublicId ?? ''} readOnly />
               </label>
             </div>

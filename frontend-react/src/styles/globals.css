@@ -1596,3 +1596,344 @@
   opacity: 0;
   transform: scale(0.4) rotate(90deg);
 }
+/* =====================================================
+   AUTH PAGES — LIGHT / DARK MODE FIX
+   Login / Register / Forgot Password
+===================================================== */
+
+.auth-page-wrapper {
+  width: 100%;
+}
+
+.auth-split-card {
+  overflow: hidden;
+  border-radius: 28px;
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+/* ---------- LIGHT MODE ---------- */
+
+html:not(.dark) .auth-split-card {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #dbe3ef;
+  box-shadow: 0 42px 120px -62px rgba(15, 23, 42, 0.55);
+}
+
+html:not(.dark) .auth-form-panel {
+  color: #0f172a;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+html:not(.dark) .auth-form-panel h1,
+html:not(.dark) .auth-form-panel h2,
+html:not(.dark) .auth-form-panel h3,
+html:not(.dark) .auth-form-panel label {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .auth-form-panel p {
+  color: #475569 !important;
+}
+
+html:not(.dark) .auth-form-panel input,
+html:not(.dark) .auth-form-panel textarea,
+html:not(.dark) .auth-form-panel select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #dbe3ef !important;
+}
+
+html:not(.dark) .auth-form-panel input::placeholder,
+html:not(.dark) .auth-form-panel textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html:not(.dark) .auth-form-panel .auth-muted-text {
+  color: #64748b !important;
+}
+
+html:not(.dark) .auth-divider-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.55),
+    transparent
+  );
+}
+
+html:not(.dark) .auth-divider-chip {
+  background: #ffffff;
+  color: #64748b;
+}
+
+html:not(.dark) .auth-google-button {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .auth-google-button:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .auth-secondary-button {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #dbe3ef !important;
+}
+
+/* ---------- DARK MODE ---------- */
+
+html.dark .auth-split-card {
+  background: #020617;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 42px 120px -62px rgba(2, 6, 23, 0.95);
+}
+
+html.dark .auth-form-panel {
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.12), transparent 34%),
+    linear-gradient(180deg, #0f172a 0%, #020617 100%);
+}
+
+html.dark .auth-form-panel h1,
+html.dark .auth-form-panel h2,
+html.dark .auth-form-panel h3,
+html.dark .auth-form-panel label {
+  color: #f8fafc !important;
+}
+
+html.dark .auth-form-panel p {
+  color: #cbd5e1 !important;
+}
+
+html.dark .auth-form-panel input,
+html.dark .auth-form-panel textarea,
+html.dark .auth-form-panel select {
+  background-color: rgba(15, 23, 42, 0.72) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark .auth-form-panel input::placeholder,
+html.dark .auth-form-panel textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.dark .auth-form-panel .auth-muted-text {
+  color: #cbd5e1 !important;
+}
+
+html.dark .auth-divider-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+}
+
+html.dark .auth-divider-chip {
+  background: #0b1220;
+  color: #94a3b8;
+}
+
+html.dark .auth-google-button {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark .auth-google-button:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.dark .auth-secondary-button {
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ---------- SOCIAL / STATUS ---------- */
+
+.auth-facebook-button {
+  background: #1877f2 !important;
+  color: #ffffff !important;
+  border-color: rgba(24, 119, 242, 0.35) !important;
+}
+
+.auth-facebook-button:hover {
+  background: #166fe5 !important;
+}
+
+.auth-error-message {
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185;
+}
+
+.auth-success-message {
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+/* =====================================================
+   REGISTER PAGE — SEGMENT SWITCH + GPS BUTTON FIX
+===================================================== */
+
+/* ---------- B2C / B2B SEGMENT ---------- */
+
+.auth-segment {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border-radius: 18px;
+  border: 1px solid #dbe3ef;
+  background: #f1f5f9;
+}
+
+html.dark .auth-segment {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.auth-segment-option {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 900;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.auth-segment-option:hover {
+  transform: translateY(-1px);
+}
+
+.auth-segment-option-active {
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.45) !important;
+  background: linear-gradient(135deg, #0f63ff 0%, #4f46e5 100%) !important;
+  box-shadow: 0 18px 42px -24px rgba(37, 99, 235, 0.95);
+}
+
+.auth-segment-option-inactive {
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+.auth-segment-option-inactive:hover {
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  background: #f8fafc !important;
+}
+
+html.dark .auth-segment-option-inactive {
+  color: #cbd5e1 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+}
+
+html.dark .auth-segment-option-inactive:hover {
+  color: #ffffff !important;
+  border-color: rgba(96, 165, 250, 0.35) !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+
+/* ---------- GPS BUTTON ---------- */
+
+.auth-gps-button {
+  height: 44px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #bfdbfe !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 12px 28px -22px rgba(37, 99, 235, 0.75);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.auth-gps-button:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd !important;
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  box-shadow: 0 18px 40px -24px rgba(37, 99, 235, 0.95);
+}
+
+html.dark .auth-gps-button {
+  border-color: rgba(96, 165, 250, 0.32) !important;
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #bfdbfe !important;
+}
+
+html.dark .auth-gps-button:hover {
+  border-color: rgba(147, 197, 253, 0.55) !important;
+  background: rgba(37, 99, 235, 0.24) !important;
+  color: #ffffff !important;
+}
+
+/* ---------- RECALCULER BUTTON ---------- */
+
+.auth-recalculate-button {
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid #dbe3ef !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.auth-recalculate-button:hover:not(:disabled) {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.auth-recalculate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+html.dark .auth-recalculate-button {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark .auth-recalculate-button:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  color: #ffffff !important;
+}

@@ -379,9 +379,9 @@ export function createDefaultHomepageImage(): HomepageImage {
 
 export function createDefaultHomepageDocument(): HomepageDocument {
   return {
-    pageTitle: 'Homepage e-commerce administrable',
+    pageTitle: 'Page d’accueil e-commerce administrable',
     pageSubtitle:
-      'Pilotez les contenus de la page d’accueil depuis l’administration React, avec support URL ou Cloudinary.',
+      'Pilotez les contenus de la page d’accueil depuis l’administration, avec brouillon séparé et publication maîtrisée.',
     sections: [
       createSectionByType('hero', 1),
       createSectionByType('featuredProducts', 2),
@@ -420,7 +420,7 @@ export function createSectionByType(type: HomepageSectionType, order: number): H
           textAlignment: 'left',
           contentPosition: 'left',
           overlayOpacity: 0.2,
-          reassuranceText: 'Cloudinary • Draft / Publish • Sections dynamiques',
+          reassuranceText: 'Images flexibles • Brouillon séparé • Sections dynamiques',
         } satisfies HomepageHeroPayload,
       };
     case 'carousel':
@@ -459,7 +459,7 @@ export function createSectionByType(type: HomepageSectionType, order: number): H
           maxItems: 8,
           showPrices: true,
           showBadges: true,
-          viewAllCta: { text: 'Voir tout', href: '/articles' },
+          viewAllCta: { text: 'Voir tous les articles', href: '/articles' },
           articleRefs: [],
           resolvedProducts: [],
           emptyMessage: 'Aucun produit mis en avant n’est encore configuré.',
@@ -505,12 +505,12 @@ export function createSectionByType(type: HomepageSectionType, order: number): H
         ...base,
         payload: {
           title: 'Pourquoi nous choisir ? ',
-          subtitle: 'Des avantages éditables côté admin.',
+          subtitle: 'Des avantages éditables côté administration.',
           description: 'Cette zone rassure l’utilisateur et renforce la crédibilité du projet.',
           items: [
-            createAdvantageItem(1, 'Catalogue synchronisé', 'Le contenu homepage reste aligné avec les données réelles.', '📦'),
-            createAdvantageItem(2, 'Images flexibles', 'Chaque visuel peut venir d’une URL directe ou de Cloudinary.', '🖼️'),
-            createAdvantageItem(3, 'Workflow pro', 'Brouillon, prévisualisation et publication maîtrisés.', '🚀'),
+            createAdvantageItem(1, 'Catalogue synchronisé', 'Le contenu de la page d’accueil reste aligné avec les données réelles.', '📦'),
+            createAdvantageItem(2, 'Images flexibles', 'Chaque visuel peut venir d’un lien direct ou de la médiathèque.', '🖼️'),
+            createAdvantageItem(3, 'Processus professionnel', 'Brouillon, prévisualisation et publication maîtrisés.', '🚀'),
           ],
         } satisfies HomepageAdvantagesPayload,
       };
@@ -661,7 +661,7 @@ export function sortHomepageSections(sections: HomepageSection[]): HomepageSecti
 export function getHomepageSectionLabel(type: HomepageSectionType): string {
   switch (type) {
     case 'hero':
-      return 'Hero principal';
+      return 'Bannière principale';
     case 'carousel':
       return 'Carrousel marketing';
     case 'featuredCategories':
@@ -685,7 +685,7 @@ export function getHomepageSectionLabel(type: HomepageSectionType): string {
     case 'stats':
       return 'Statistiques';
     case 'finalCta':
-      return 'CTA final';
+      return 'Appel à l’action final';
   }
 }
 
@@ -861,10 +861,10 @@ export function getImagePreviewUrl(image?: HomepageImage | null): string | undef
 function createCarouselSlide(order: number): HomepageCarouselSlide {
   return {
     id: createLocalId('slide'),
-    badgeText: order === 1 ? 'Slide principal' : '',
-    title: `Slide ${order}`,
+    badgeText: order === 1 ? 'Visuel principal' : '',
+    title: `Visuel ${order}`,
     subtitle: 'Titre marketing',
-    description: 'Ajoute ici un message court, un visuel et un CTA.',
+    description: 'Ajoutez ici un message court, un visuel et un bouton.',
     primaryCta: { text: 'Découvrir', href: '/articles' },
     secondaryCta: { text: 'Contact', href: '/contact' },
     image: createDefaultHomepageImage(),

@@ -21,10 +21,10 @@ import {
 function createSlide(order: number): HomepageCarouselSlide {
   return {
     id: createLocalId("slide"),
-    badgeText: order === 1 ? "Slide principal" : "",
-    title: `Slide ${order}`,
+    badgeText: order === 1 ? "Visuel principal" : "",
+    title: `Visuel ${order}`,
     subtitle: "Titre marketing",
-    description: "Ajoutez ici un message fort avec un visuel et un CTA.",
+    description: "Ajoutez ici un message fort avec un visuel et un bouton.",
     primaryCta: { text: "Découvrir", href: "/articles" },
     secondaryCta: { text: "Contacter", href: "/contact" },
     image: createDefaultHomepageImage(),
@@ -53,8 +53,8 @@ export function HomepageHeroCarouselEditor({
     return (
       <div className="space-y-4">
         <AdminSectionShell
-          title="Hero principal"
-          subtitle="Bloc héroïque unique, utile comme fallback legacy ou landing très sobre."
+          title="Bannière principale"
+          subtitle="Bloc principal de la page d’accueil, clair et commercial."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <AdminField label="Badge">
@@ -115,7 +115,7 @@ export function HomepageHeroCarouselEditor({
                 <option value="right">Droite</option>
               </select>
             </AdminField>
-            <AdminField label="Overlay" hint="0 à 1">
+            <AdminField label="Assombrissement" hint="0 à 1">
               <Input
                 type="number"
                 min="0"
@@ -140,12 +140,12 @@ export function HomepageHeroCarouselEditor({
         />
         <div className="grid gap-4 xl:grid-cols-2">
           <CtaFieldsEditor
-            label="CTA principal"
+            label="Bouton principal"
             value={payload.primaryCta}
             onChange={(primaryCta) => onChange({ ...section, payload: { ...payload, primaryCta } })}
           />
           <CtaFieldsEditor
-            label="CTA secondaire"
+            label="Bouton secondaire"
             value={payload.secondaryCta}
             onChange={(secondaryCta) => onChange({ ...section, payload: { ...payload, secondaryCta } })}
           />
@@ -187,8 +187,8 @@ export function HomepageHeroCarouselEditor({
   return (
     <div className="space-y-4">
       <AdminSectionShell
-        title="Hero carousel principal"
-        subtitle="Carousel premium pour la première impression homepage."
+        title="Carrousel principal"
+        subtitle="Carrousel commercial pour la première impression de la page d’accueil."
         actions={
           <Button
             type="button"
@@ -204,7 +204,7 @@ export function HomepageHeroCarouselEditor({
               })
             }
           >
-            Ajouter un slide
+            Ajouter un visuel
           </Button>
         }
       >
@@ -221,7 +221,7 @@ export function HomepageHeroCarouselEditor({
               onChange={(e) => onChange({ ...section, payload: { ...payload, subtitle: e.target.value } })}
             />
           </AdminField>
-          <AdminField label="Autoplay (ms)">
+          <AdminField label="Défilement automatique (ms)">
             <Input
               type="number"
               min="1500"
@@ -233,7 +233,7 @@ export function HomepageHeroCarouselEditor({
         </div>
         <div className="flex flex-wrap gap-3">
           <AdminToggle
-            label="Autoplay"
+            label="Défilement automatique"
             checked={payload.autoplay}
             onChange={(autoplay) => onChange({ ...section, payload: { ...payload, autoplay } })}
           />
@@ -254,7 +254,7 @@ export function HomepageHeroCarouselEditor({
         {payload.slides.map((slide, index) => (
           <AdminSectionShell
             key={slide.id}
-            title={`Slide ${index + 1}`}
+            title={`Visuel ${index + 1}`}
             subtitle="Contenu marketing éditable individuellement."
             actions={
               <ItemToolbar
@@ -278,7 +278,7 @@ export function HomepageHeroCarouselEditor({
           >
             <div className="flex flex-wrap gap-3">
               <AdminToggle
-                label="Slide actif"
+                label="Visuel actif"
                 checked={slide.isActive}
                 onChange={(isActive) => updateSlide(slide.id, (current) => ({ ...current, isActive }))}
               />
@@ -342,7 +342,7 @@ export function HomepageHeroCarouselEditor({
               />
             </AdminField>
             <div className="grid gap-4 md:grid-cols-3">
-              <AdminField label="Overlay" hint="0 à 1">
+              <AdminField label="Assombrissement" hint="0 à 1">
                 <Input
                   type="number"
                   min="0"
@@ -370,7 +370,7 @@ export function HomepageHeroCarouselEditor({
 
             <div className="grid gap-4 xl:grid-cols-2">
               <ImageFieldsEditor
-                label="Image desktop"
+                label="Image grand écran"
                 value={slide.image}
                 onChange={(image) => updateSlide(slide.id, (current) => ({ ...current, image }))}
               />
@@ -383,12 +383,12 @@ export function HomepageHeroCarouselEditor({
 
             <div className="grid gap-4 xl:grid-cols-2">
               <CtaFieldsEditor
-                label="CTA principal"
+                label="Bouton principal"
                 value={slide.primaryCta}
                 onChange={(primaryCta) => updateSlide(slide.id, (current) => ({ ...current, primaryCta }))}
               />
               <CtaFieldsEditor
-                label="CTA secondaire"
+                label="Bouton secondaire"
                 value={slide.secondaryCta ?? {}}
                 onChange={(secondaryCta) => updateSlide(slide.id, (current) => ({ ...current, secondaryCta }))}
               />

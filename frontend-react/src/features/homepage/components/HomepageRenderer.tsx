@@ -276,10 +276,6 @@ function HomepageCarouselSection({
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    setActiveIndex(0);
-  }, [slides.length, section.id]);
-
-  useEffect(() => {
     if (slides.length <= 1 || !payload.autoplay || preview) return;
     const delay = Math.max(2500, Number(payload.autoplayDelayMs || 5000));
     const id = window.setInterval(() => {
@@ -305,7 +301,7 @@ function HomepageCarouselSection({
         <div className="absolute inset-0">
           <SmartImage
             src={imageSrc}
-            alt={activeSlide.image?.alt ?? activeSlide.title ?? 'Carousel homepage'}
+            alt={activeSlide.image?.alt ?? activeSlide.title ?? 'Carrousel de la page d’accueil'}
             className="h-full w-full"
             fit="cover"
             loading="eager"
@@ -354,7 +350,7 @@ function HomepageCarouselSection({
               type="button"
               onClick={() => setActiveIndex((current) => (current - 1 + slides.length) % slides.length)}
               className="absolute left-5 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/16 bg-white/10 text-2xl text-white shadow-[0_18px_40px_-28px_rgba(2,6,23,0.72)] backdrop-blur-sm transition hover:bg-white/16"
-              aria-label="Slide précédent"
+              aria-label="Visuel précédent"
             >
               ‹
             </button>
@@ -362,7 +358,7 @@ function HomepageCarouselSection({
               type="button"
               onClick={() => setActiveIndex((current) => (current + 1) % slides.length)}
               className="absolute right-5 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/16 bg-white/10 text-2xl text-white shadow-[0_18px_40px_-28px_rgba(2,6,23,0.72)] backdrop-blur-sm transition hover:bg-white/16"
-              aria-label="Slide suivant"
+              aria-label="Visuel suivant"
             >
               ›
             </button>
@@ -377,7 +373,7 @@ function HomepageCarouselSection({
                 type="button"
                 onClick={() => setActiveIndex(index)}
                 className={`h-2.5 rounded-full transition-all ${index === safeIndex ? 'w-8 bg-white' : 'w-2.5 bg-white/36 hover:bg-white/58'}`}
-                aria-label={`Aller au slide ${index + 1}`}
+                aria-label={`Aller au visuel ${index + 1}`}
               />
             ))}
           </div>
@@ -387,7 +383,7 @@ function HomepageCarouselSection({
   );
 }
 
-function renderHero(section: HomepageSection, _preview: boolean, _isPublished: boolean) {
+function renderHero(section: HomepageSection) {
   const payload = section.payload as HomepageHeroPayload;
   const imageSrc = getImagePreviewUrl(payload.image);
   const textAlignmentClass = getTextAlignClass(payload.textAlignment);
@@ -401,7 +397,7 @@ function renderHero(section: HomepageSection, _preview: boolean, _isPublished: b
         <div className="absolute inset-0">
           <SmartImage
             src={imageSrc}
-            alt={payload.image?.alt ?? payload.title ?? 'Hero homepage'}
+            alt={payload.image?.alt ?? payload.title ?? 'Bannière principale de la page d’accueil'}
             className="h-full w-full"
             fit="cover"
             loading="eager"
@@ -824,7 +820,7 @@ function renderContact(section: HomepageSection) {
             <div className="rounded-[26px] border border-border/70 bg-muted/22 p-5">
               <div className="app-kicker">Confiance</div>
               <div className="mt-2 text-lg font-black text-card-foreground">Coordonnées visibles</div>
-              <p className="mt-2 app-description">Une homepage premium rassure quand les moyens de contact sont directs et lisibles.</p>
+              <p className="mt-2 app-description">Une page d’accueil premium rassure quand les moyens de contact sont directs et lisibles.</p>
             </div>
           </div>
 
@@ -911,7 +907,7 @@ function renderFinalCta(section: HomepageSection) {
       <div className="relative px-6 py-10 md:px-10 md:py-14">
         {getImagePreviewUrl(payload.backgroundImage) ? (
           <div className="absolute inset-0 opacity-15">
-            <SmartImage src={getImagePreviewUrl(payload.backgroundImage)} alt={payload.backgroundImage?.alt ?? payload.title ?? 'Final CTA'} className="h-full w-full" fit="cover" />
+            <SmartImage src={getImagePreviewUrl(payload.backgroundImage)} alt={payload.backgroundImage?.alt ?? payload.title ?? 'Appel à l’action final'} className="h-full w-full" fit="cover" />
           </div>
         ) : null}
 
@@ -929,12 +925,12 @@ function renderFinalCta(section: HomepageSection) {
   );
 }
 
-function renderSection(section: HomepageSection, preview: boolean, isPublished: boolean) {
+function renderSection(section: HomepageSection, preview: boolean) {
   if (!isSectionVisible(section, preview)) return null;
 
   switch (section.type) {
     case 'hero':
-      return renderHero(section, preview, isPublished);
+      return renderHero(section);
     case 'carousel':
       return <HomepageCarouselSection key={section.id} section={section} payload={section.payload as HomepageCarouselPayload} preview={preview} />;
     case 'featuredCategories':
@@ -966,5 +962,25 @@ function renderSection(section: HomepageSection, preview: boolean, isPublished: 
 
 export function HomepageRenderer({ view, preview = false }: { view: HomepageView; preview?: boolean }) {
   const sections = [...(view.content.sections ?? [])].sort((a, b) => a.displayOrder - b.displayOrder);
-  return <div className="space-y-10 md:space-y-14">{sections.map((section) => renderSection(section, preview, view.isPublished))}</div>;
+  const visibleSections = sections.filter((section) => isSectionVisible(section, preview));
+
+  if (visibleSections.length === 0) {
+    return (
+      <div className="app-surface p-8 text-center">
+        <div className="app-kicker">Page d’accueil</div>
+        <h1 className="mt-2 text-2xl font-black text-card-foreground">
+          La page d’accueil sera bientôt disponible
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Le contenu publié n’est pas encore disponible. Vous pouvez parcourir le catalogue ou contacter l’équipe.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <ActionLink href="/articles">Voir les articles</ActionLink>
+          <ActionLink href="/contact" variant="outline">Nous contacter</ActionLink>
+        </div>
+      </div>
+    );
+  }
+
+  return <div className="space-y-10 md:space-y-14">{visibleSections.map((section) => renderSection(section, preview))}</div>;
 }

@@ -32,7 +32,7 @@ export function HomepageContactEditor({
         </AdminField>
       </AdminSectionShell>
 
-      <AdminSectionShell title="Coordonnées" subtitle="Réutilise ici les données de contact publiques que tu veux pousser sur la homepage.">
+      <AdminSectionShell title="Coordonnées" subtitle="Réutilise ici les données de contact publiques que tu veux afficher sur la page d’accueil.">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <AdminField label="Libellé téléphone">
             <Input value={payload.phoneLabel ?? ""} onChange={(e) => onChange({ ...section, payload: { ...payload, phoneLabel: e.target.value } })} />
@@ -80,8 +80,8 @@ export function HomepageContactEditor({
       </AdminSectionShell>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <CtaFieldsEditor label="CTA principal" value={payload.primaryCta} onChange={(primaryCta) => onChange({ ...section, payload: { ...payload, primaryCta } })} />
-        <CtaFieldsEditor label="CTA secondaire" value={payload.secondaryCta} onChange={(secondaryCta) => onChange({ ...section, payload: { ...payload, secondaryCta } })} />
+        <CtaFieldsEditor label="Bouton principal" value={payload.primaryCta} onChange={(primaryCta) => onChange({ ...section, payload: { ...payload, primaryCta } })} />
+        <CtaFieldsEditor label="Bouton secondaire" value={payload.secondaryCta} onChange={(secondaryCta) => onChange({ ...section, payload: { ...payload, secondaryCta } })} />
       </div>
     </div>
   );
