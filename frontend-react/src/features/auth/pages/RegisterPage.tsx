@@ -121,9 +121,6 @@ export function RegisterPage() {
     },
   });
 
-  const selectClass =
-    "h-11 w-full rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-card-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_2px_rgba(15,23,42,0.04)] outline-none transition focus:border-primary/45 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60";
-
   function getMyPosition() {
     if (!navigator.geolocation) {
       alert("Geolocation non supportée par ce navigateur.");
@@ -213,48 +210,34 @@ export function RegisterPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-card-foreground">Gouvernorat</label>
-              <div className="relative">
-                <select
-                  className={selectClass}
-                  value={gouvernorat}
-                  onChange={(e) => setGouvernorat(Number(e.target.value))}
-                  disabled={govQuery.isLoading || govQuery.isError}
-                >
-                  {(govQuery.data ?? []).map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </div>
-              </div>
+              <select
+                className="ds-select"
+                value={gouvernorat}
+                onChange={(e) => setGouvernorat(Number(e.target.value))}
+                disabled={govQuery.isLoading || govQuery.isError}
+              >
+                {(govQuery.data ?? []).map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-card-foreground">Délégation</label>
-              <div className="relative">
-                <select
-                  className={selectClass}
-                  value={delegation}
-                  onChange={(e) => setDelegation(e.target.value)}
-                  disabled={delQuery.isLoading || (delQuery.data?.length ?? 0) === 0}
-                >
-                  {(delQuery.data ?? []).map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </div>
-              </div>
+              <select
+                className="ds-select"
+                value={delegation}
+                onChange={(e) => setDelegation(e.target.value)}
+                disabled={delQuery.isLoading || (delQuery.data?.length ?? 0) === 0}
+              >
+                {(delQuery.data ?? []).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -289,7 +272,7 @@ export function RegisterPage() {
           </div>
 
           {mutation.isError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <div className="ds-alert ds-alert-danger">
               Erreur : vérifiez email unique + gouvernorat/délégation + champs requis (adresse).
             </div>
           ) : null}

@@ -336,7 +336,7 @@ export function ArticleDetailsPage() {
       </nav>
 
       {articleQuery.isError ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        <div className="ds-alert ds-alert-warning">
           Le rafraîchissement du détail a échoué, mais l’article chargé depuis le catalogue reste affiché.
         </div>
       ) : null}
@@ -496,7 +496,7 @@ export function ArticleDetailsPage() {
             </div>
 
             {!canOrder ? (
-              <div className="mt-4 rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="ds-alert ds-alert-danger mt-4">
                 {isVendorRoute
                   ? "Cet article est indisponible dans le dépôt du vendeur. Consultez le détail de disponibilité ci-dessous pour voir les autres dépôts."
                   : "Cet article est en rupture. Ajout au panier désactivé."}

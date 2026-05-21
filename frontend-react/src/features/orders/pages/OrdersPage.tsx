@@ -92,7 +92,7 @@ function getDeliveryMeta(order: Pick<BonCommandeResponseDto, "deliveryType" | "c
   if (deliveryType === "HOME") {
     return {
       label: "Livraison à domicile",
-      badgeClass: "bg-blue-50 text-blue-700 ring-1 ring-blue-100",
+      badgeClass: "bg-info/10 text-info ring-1 ring-info/20",
       summary: order.city?.trim() ? `Destination : ${order.city.trim()}` : "Adresse client renseignée",
     };
   }
@@ -100,7 +100,7 @@ function getDeliveryMeta(order: Pick<BonCommandeResponseDto, "deliveryType" | "c
   if (deliveryType === "PICKUP") {
     return {
       label: "Retrait au dépôt",
-      badgeClass: "bg-violet-50 text-violet-700 ring-1 ring-violet-100",
+      badgeClass: "bg-indigo/10 text-indigo ring-1 ring-indigo/20",
       summary: order.depotNo > 0 ? `Dépôt n°${order.depotNo}` : "Retrait en point dépôt",
     };
   }
@@ -277,10 +277,9 @@ export function OrdersPage() {
   if (q.isError) {
     return (
       <div className="w-full py-10">
-        <div className="rounded-[28px] border border-rose-200 bg-rose-50/60 p-6 shadow-sm">
-          <div className="text-sm font-bold text-rose-700">Erreur</div>
-          <div className="mt-1 text-sm text-muted-foreground">Impossible de charger vos commandes.</div>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <div className="ds-alert ds-alert-danger space-y-4">
+          <div>Impossible de charger vos commandes.</div>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="button" onClick={() => q.refetch()} className="h-11 rounded-2xl px-5">
               Réessayer
             </Button>

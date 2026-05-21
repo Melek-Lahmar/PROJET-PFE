@@ -124,7 +124,7 @@ export function LoginPage() {
             </div>
 
             {mutation.isError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="ds-alert ds-alert-danger">
                 Identifiants invalides ou erreur serveur.
               </div>
             ) : null}

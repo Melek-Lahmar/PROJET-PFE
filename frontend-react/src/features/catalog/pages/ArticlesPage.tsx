@@ -6,7 +6,6 @@ import { getArticleFilterMetadata, getArticles } from "../api/articlesApi";
 import { getMainImagesMap } from "../api/articleImagesApi";
 import { getDepots } from "../api/depotsApi";
 import type { ArticleSortBy, SortDirection } from "../types/article";
-import { Card } from "../../../shared/components/Card";
 import { Pagination } from "../../../shared/components/Pagination";
 import { env } from "../../../core/config/env";
 import { resolveImageUrl } from "../../../shared/utils/image";
@@ -416,12 +415,9 @@ export function ArticlesPage() {
           </section>
 
           {showInlineError ? (
-            <Card className="border-amber-200 bg-amber-50 p-4">
-              <div className="text-sm font-semibold text-amber-800">Navigation temporairement indisponible</div>
-              <div className="mt-1 text-sm text-amber-700">
-                {(error as Error)?.message ?? "Le changement de page a échoué. Les derniers articles chargés restent affichés."}
-              </div>
-            </Card>
+            <div className="ds-alert ds-alert-warning">
+              {(error as Error)?.message ?? "Le changement de page a échoué. Les derniers articles chargés restent affichés."}
+            </div>
           ) : null}
 
           {isPending ? (
@@ -438,12 +434,9 @@ export function ArticlesPage() {
               ))}
             </div>
           ) : showBlockingError ? (
-            <Card className="p-6">
-              <div className="text-sm font-semibold text-rose-700">Erreur</div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                {(error as Error)?.message ?? "Impossible de charger les articles."}
-              </div>
-            </Card>
+            <div className="ds-alert ds-alert-danger">
+              {(error as Error)?.message ?? "Impossible de charger les articles."}
+            </div>
           ) : items.length === 0 ? (
             <EmptyView
               title="Aucun article"
