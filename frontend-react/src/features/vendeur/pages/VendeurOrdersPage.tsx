@@ -53,7 +53,7 @@ export function VendeurOrdersPage() {
       />
 
       {isError ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-700 shadow-sm">{getApiErrorMessage(error)}</div>
+        <div className="ds-alert ds-alert-danger">{getApiErrorMessage(error)}</div>
       ) : null}
 
       {!isError && (data?.length ?? 0) === 0 ? (

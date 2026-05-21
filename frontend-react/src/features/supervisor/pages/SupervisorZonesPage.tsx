@@ -4,6 +4,7 @@ import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
+import { PremiumHero } from "../../../shared/components/premium";
 import { getGouvernorats, getDelegations } from "../../geo/api/geoApi";
 import { getDepots } from "../../catalog/api/depotsApi";
 
@@ -72,8 +73,8 @@ function getLivreurTypeLabel(livreur: Livreur) {
 
 function getLivreurTypeClass(livreur: Livreur) {
   return livreur.isTransit
-    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200"
-    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200";
+    ? "bg-indigo/10 text-indigo"
+    : "bg-success/10 text-success";
 }
 
 export function SupervisorZonesPage() {
@@ -309,24 +310,15 @@ export function SupervisorZonesPage() {
     : Boolean(baseInfoValid && form.zones.length > 0);
 
   return (
-    <main className="min-h-screen space-y-6 bg-background p-6">
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-            Espace superviseur
-          </p>
-          <h1 className="text-2xl font-black text-foreground">Gestion des livreurs</h1>
-          <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
-            Cette page affiche uniquement la liste des livreurs. Le superviseur clique sur
-            le détail d’un livreur pour modifier ses coordonnées, ses zones de livraison
-            ou son dépôt de transit.
-          </p>
-        </div>
-
-        <Button type="button" variant="primary" onClick={openCreateModal} className="rounded-2xl">
-          + Ajouter un livreur
-        </Button>
-      </header>
+    <div className="min-h-screen space-y-6 bg-background pb-10">
+      <PremiumHero
+        kicker="Espace superviseur"
+        title="Gestion des livreurs"
+        description="Affiche la liste des livreurs. Cliquez sur un livreur pour modifier ses zones ou son dépôt de transit."
+        actions={
+          <Button type="button" variant="primary" onClick={openCreateModal}>+ Ajouter un livreur</Button>
+        }
+      />
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -491,7 +483,7 @@ export function SupervisorZonesPage() {
         )}
 
         {livreursQuery.isError && (
-          <div className="rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">
+          <div className="ds-alert ds-alert-danger">
             Erreur lors du chargement des livreurs.
           </div>
         )}
@@ -540,7 +532,7 @@ export function SupervisorZonesPage() {
                   </div>
 
                   {livreur.isTransit ? (
-                    <div className="mt-4 rounded-2xl bg-indigo-50 p-3 text-sm text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-100">
+                    <div className="mt-4 rounded-2xl bg-indigo/5 p-3 text-sm text-indigo">
                       <span className="font-black">Dépôt rattaché : </span>
                       {depotLabel(livreur.depotRattacheNo, livreur.depotRattacheName)}
                       <p className="mt-1 text-xs">
@@ -564,7 +556,7 @@ export function SupervisorZonesPage() {
                             </span>
                           ))
                         ) : (
-                          <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-black text-amber-800">
+                          <span className="rounded-full bg-warning/10 px-3 py-1 text-sm font-black text-warning">
                             Aucune zone : aucun BL ne doit s’afficher
                           </span>
                         )}
@@ -827,7 +819,7 @@ export function SupervisorZonesPage() {
                 </div>
 
                 {form.isTransit ? (
-                  <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/30">
+                  <div className="rounded-2xl border border-indigo/20 bg-indigo/5 p-4">
                     <h3 className="mb-3 text-base font-black">Affectation dépôt transit</h3>
 
                     <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
@@ -853,15 +845,15 @@ export function SupervisorZonesPage() {
                       ))}
                     </select>
 
-                    <p className="mt-2 text-sm text-indigo-800 dark:text-indigo-100">
+                    <p className="mt-2 text-sm text-indigo">
                       Pour la logique PFE actuelle, chaque dépôt peut avoir son propre livreur-transit.
                       Ce livreur déplace les articles entre le dépôt source et le dépôt destinataire.
                     </p>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+                  <div className="rounded-2xl border border-success/20 bg-success/10 p-4">
                     <h3 className="text-base font-black">Zones exactes de livraison</h3>
-                    <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-100">
+                    <p className="mt-1 text-sm text-success">
                       Ces zones déterminent les BL visibles par le livreur. Le BL doit avoir le même
                       gouvernorat et la même délégation.
                     </p>
@@ -922,7 +914,7 @@ export function SupervisorZonesPage() {
                       <p className="mb-2 text-sm font-black">Zones affectées</p>
 
                       {form.zones.length === 0 ? (
-                        <p className="rounded-2xl bg-amber-100 p-3 text-sm font-bold text-amber-800">
+                        <p className="rounded-2xl bg-warning/10 p-3 text-sm font-bold text-warning">
                           Aucune zone affectée. Ce livreur ne doit voir aucun BL.
                         </p>
                       ) : (
@@ -932,7 +924,7 @@ export function SupervisorZonesPage() {
                               key={`${zone.gouvernorat}-${zone.delegation}-${index}`}
                               type="button"
                               onClick={() => removeZone(index)}
-                              className="rounded-full bg-muted px-3 py-1 text-sm font-bold text-foreground transition hover:bg-rose-100 hover:text-rose-700"
+                              className="rounded-full bg-muted px-3 py-1 text-sm font-bold text-foreground transition hover:bg-danger/10 hover:text-danger"
                               title="Cliquer pour supprimer cette zone"
                             >
                               {zone.gouvernorat} / {zone.delegation} ×
@@ -945,7 +937,7 @@ export function SupervisorZonesPage() {
                 )}
 
                 {saveMutation.isError && (
-                  <div className="rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">
+                  <div className="ds-alert ds-alert-danger">
                     Erreur lors de l’enregistrement. Vérifiez les champs obligatoires et réessayez.
                   </div>
                 )}
@@ -970,6 +962,6 @@ export function SupervisorZonesPage() {
           </section>
         </div>
       )}
-    </main>
+    </div>
   );
 }

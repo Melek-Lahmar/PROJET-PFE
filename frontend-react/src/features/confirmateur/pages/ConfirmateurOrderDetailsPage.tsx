@@ -75,7 +75,7 @@ function workflowSteps(workflowState: ReturnType<typeof getConfirmateurStatusMet
 function workflowNodeClass(state: "done" | "active" | "pending" | "failed") {
   switch (state) {
     case "done":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-success/20 bg-success/10 text-success";
     case "active":
       return "border-primary/25 bg-primary text-white shadow-lg shadow-primary/20";
     case "failed":
@@ -136,9 +136,9 @@ export function ConfirmateurOrderDetailsPage() {
   if (isError || !data) {
     return (
       <div className="w-full py-10">
-        <div className="rounded-[30px] border border-rose-200 bg-rose-50/60 p-6 shadow-sm">
-          <div className="text-sm font-bold text-rose-700">BC introuvable</div>
-          <div className="mt-1 text-sm text-muted-foreground">
+        <div className="ds-alert ds-alert-danger rounded-[30px] p-6">
+          <div className="text-sm font-bold">BC introuvable</div>
+          <div className="mt-1 text-sm opacity-80">
             {(error as Error)?.message ?? "Impossible de charger le détail confirmateur."}
           </div>
           <div className="mt-4">
@@ -338,20 +338,20 @@ export function ConfirmateurOrderDetailsPage() {
                 Confirmer et générer le BL
               </Button>
 
-              <div className={`rounded-[20px] border px-4 py-3 text-sm ${isTransformed ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-border/70 bg-muted/20 text-muted-foreground"}`}>
+              <div className={`rounded-[20px] border px-4 py-3 text-sm ${isTransformed ? "border-success/20 bg-success/10 text-success" : "border-border/70 bg-muted/20 text-muted-foreground"}`}>
                 {isTransformed
                   ? "Ce BC est déjà transformé en BL. Les actions sont verrouillées dans cette vue pour éviter une double confirmation depuis l’interface."
                   : "La confirmation conserve le parcours existant et redirige vers le BL généré lorsque l’opération réussit."}
               </div>
 
               {statusMutation.isError ? (
-                <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                <div className="ds-alert ds-alert-danger">
                   Erreur lors de la mise à jour du statut.
                 </div>
               ) : null}
 
               {confirmMutation.isError ? (
-                <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                <div className="ds-alert ds-alert-danger">
                   Erreur lors de la transformation BC → BL.
                 </div>
               ) : null}

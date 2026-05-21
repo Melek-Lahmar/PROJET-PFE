@@ -81,7 +81,7 @@ export function BlListPage({ title, subtitle, detailsBasePath }: Props) {
           )}
 
           {isError && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 text-sm font-semibold text-rose-700">
+            <div className="ds-alert ds-alert-danger">
               Erreur: {(error as any)?.message ?? "Impossible de charger les BL."}
             </div>
           )}
@@ -105,7 +105,7 @@ export function BlListPage({ title, subtitle, detailsBasePath }: Props) {
                   />
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-border/50">
                   {filtered.map((bl: BonLivraison) => (
                     <div key={bl.piece} className="grid grid-cols-12 items-center gap-3 px-5 py-4 hover:bg-muted/35">
                       <div className="col-span-3 min-w-0">

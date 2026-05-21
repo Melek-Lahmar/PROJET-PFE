@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
+import { Button } from "../../../shared/components/Button";
+import { PremiumHero } from "../../../shared/components/premium";
 
 type Stats = { pending: number; inProgress: number; completed: number };
 type Transfert = {
@@ -27,6 +29,13 @@ function isCompleted(status: string) {
   return status === "RECU_AU_DEPOT" || status === "RECU_DEPOT_DESTINE" || status === "TRANSIT_TERMINE";
 }
 
+function missionBadgeClass(status: string) {
+  if (isCompleted(status)) return "badge-success";
+  if (isInProgress(status)) return "badge-info";
+  if (status === "EN_ATTENTE_AFFECTATION_TRANSIT") return "badge-danger";
+  return "badge-warning";
+}
+
 function MissionList({ title, items }: { title: string; items: Transfert[] }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -42,7 +51,7 @@ function MissionList({ title, items }: { title: string; items: Transfert[] }) {
           <div key={x.id} className="rounded-xl border border-border/70 bg-muted/20 p-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-bold text-card-foreground">{x.doPiece}</span>
-              <span className="rounded-full bg-card px-2.5 py-1 text-[11px] font-bold uppercase text-card-foreground ring-1 ring-border">
+              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${missionBadgeClass(x.status)}`}>
                 {x.status}
               </span>
             </div>
@@ -94,23 +103,31 @@ export function TransitDashboardPage() {
   );
 
   return (
-    <main className="space-y-6 p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Transit</div>
-          <h1 className="text-2xl font-bold text-card-foreground">Espace livreur-transit</h1>
-        </div>
-        <button type="button" onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-          Actualiser
-        </button>
-      </div>
+    <div className="space-y-6 pb-10">
+      <PremiumHero
+        kicker="Transit"
+        title="Espace livreur-transit"
+        description="Missions inter-dépôts affectées. Visualisez les flux en attente, en cours et terminés."
+        actions={
+          <Button type="button" variant="outline" onClick={() => void load()}>Actualiser</Button>
+        }
+      />
 
-      {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
+      {error ? <div className="ds-alert ds-alert-danger">{error}</div> : null}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">À prendre: <b>{stats?.pending ?? grouped.waiting.length}</b></div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">En cours: <b>{stats?.inProgress ?? grouped.progress.length}</b></div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">Terminés: <b>{stats?.completed ?? grouped.completed.length}</b></div>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-sm text-muted-foreground">À prendre</p>
+          <p className="mt-2 text-3xl font-bold text-warning">{stats?.pending ?? grouped.waiting.length}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-sm text-muted-foreground">En cours</p>
+          <p className="mt-2 text-3xl font-bold text-info">{stats?.inProgress ?? grouped.progress.length}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-sm text-muted-foreground">Terminés</p>
+          <p className="mt-2 text-3xl font-bold text-success">{stats?.completed ?? grouped.completed.length}</p>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
@@ -118,6 +135,6 @@ export function TransitDashboardPage() {
         <MissionList title="En cours" items={grouped.progress} />
         <MissionList title="Historique" items={grouped.completed} />
       </div>
-    </main>
+    </div>
   );
 }

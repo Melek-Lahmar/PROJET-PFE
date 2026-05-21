@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
+import { Button } from "../../../shared/components/Button";
+import { PremiumHero } from "../../../shared/components/premium";
 
 type Stats = { pending: number; inProgress: number; receivedToday: number; blocked24h: number };
 type Transfert = {
@@ -64,18 +66,17 @@ export function SupervisorDashboardPage() {
   ] as const;
 
   return (
-    <main className="space-y-6 p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Superviseur</div>
-          <h1 className="text-2xl font-bold text-card-foreground">Dashboard superviseur</h1>
-        </div>
-        <button type="button" onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-          Actualiser
-        </button>
-      </div>
+    <div className="space-y-6 pb-10">
+      <PremiumHero
+        kicker="Superviseur"
+        title="Dashboard superviseur"
+        description="Suivi des missions transit en temps réel."
+        actions={
+          <Button type="button" variant="outline" onClick={() => void load()}>Actualiser</Button>
+        }
+      />
 
-      {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
+      {error ? <div className="ds-alert ds-alert-danger">{error}</div> : null}
 
       <div className="grid gap-4 md:grid-cols-4">
         {cards.map(([label, value]) => (
@@ -117,13 +118,9 @@ export function SupervisorDashboardPage() {
                 </div>
 
                 {!t.transitLivreurUserId ? (
-                  <button
-                    type="button"
-                    onClick={() => void retryAssignment(t.doPiece)}
-                    className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold"
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={() => void retryAssignment(t.doPiece)}>
                     Relancer affectation
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             </div>
@@ -132,6 +129,6 @@ export function SupervisorDashboardPage() {
           {items.length === 0 ? <div className="py-8 text-sm text-muted-foreground">Aucune mission transit.</div> : null}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

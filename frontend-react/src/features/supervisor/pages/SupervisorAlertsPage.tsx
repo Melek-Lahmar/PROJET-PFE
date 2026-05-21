@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
+import { Button } from "../../../shared/components/Button";
+import { PremiumHero } from "../../../shared/components/premium";
 
 type Alert = {
   id: string;
@@ -47,18 +49,17 @@ export function SupervisorAlertsPage() {
   }
 
   return (
-    <main className="space-y-4 p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Superviseur</div>
-          <h1 className="text-2xl font-bold text-card-foreground">Problèmes et alertes</h1>
-        </div>
-        <button type="button" onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-          Actualiser
-        </button>
-      </div>
+    <div className="space-y-6 pb-10">
+      <PremiumHero
+        kicker="Superviseur"
+        title="Problèmes et alertes"
+        description="Alertes opérationnelles. Résolvez les problèmes bloquants."
+        actions={
+          <Button type="button" variant="outline" onClick={() => void load()}>Actualiser</Button>
+        }
+      />
 
-      {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div> : null}
+      {error ? <div className="ds-alert ds-alert-danger">{error}</div> : null}
 
       {items.map((a) => (
         <div key={a.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -75,9 +76,9 @@ export function SupervisorAlertsPage() {
             </div>
 
             {!a.acknowledgedAt ? (
-              <button onClick={() => void resolve(a.id)} className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">
+              <Button type="button" variant="outline" size="sm" onClick={() => void resolve(a.id)}>
                 Résoudre
-              </button>
+              </Button>
             ) : (
               <span className="rounded-full bg-muted/55 px-3 py-1 text-xs font-bold text-muted-foreground ring-1 ring-border">
                 Résolu
@@ -88,6 +89,6 @@ export function SupervisorAlertsPage() {
       ))}
 
       {items.length === 0 ? <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">Aucun problème superviseur.</div> : null}
-    </main>
+    </div>
   );
 }

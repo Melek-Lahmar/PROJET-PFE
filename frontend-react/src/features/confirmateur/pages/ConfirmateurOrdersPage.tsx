@@ -23,12 +23,12 @@ const TABS: Array<{ label: string; value?: OrderStatusValue }> = [
 type DateRangeFilter = "ALL" | "TODAY" | "THIS_WEEK" | "ONE_MONTH" | "SIX_MONTHS" | "ONE_YEAR";
 
 const DATE_FILTERS: Array<{ label: string; value: DateRangeFilter }> = [
-  { label: "All", value: "ALL" },
-  { label: "Today", value: "TODAY" },
-  { label: "This week", value: "THIS_WEEK" },
-  { label: "1 month", value: "ONE_MONTH" },
-  { label: "6 months", value: "SIX_MONTHS" },
-  { label: "1 year", value: "ONE_YEAR" },
+  { label: "Tout", value: "ALL" },
+  { label: "Aujourd'hui", value: "TODAY" },
+  { label: "Cette semaine", value: "THIS_WEEK" },
+  { label: "1 mois", value: "ONE_MONTH" },
+  { label: "6 mois", value: "SIX_MONTHS" },
+  { label: "1 an", value: "ONE_YEAR" },
 ];
 
 function SummaryCard({
@@ -291,7 +291,7 @@ export function ConfirmateurOrdersPage() {
       {isLoading ? <div className="text-sm text-muted-foreground">Chargement des bons de commande...</div> : null}
 
       {isError ? (
-        <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700">
+        <div className="ds-alert ds-alert-danger">
           Erreur : {(error as Error)?.message ?? "Impossible de charger les commandes confirmateur."}
         </div>
       ) : null}
@@ -330,12 +330,12 @@ export function ConfirmateurOrdersPage() {
                           <span
                             className={`mt-1 h-12 w-1 rounded-full ${
                               statusMeta.workflowState === "refused"
-                                ? "bg-rose-400"
+                                ? "bg-danger"
                                 : statusMeta.workflowState === "attempted"
-                                  ? "bg-sky-400"
+                                  ? "bg-info"
                                   : statusMeta.workflowState === "transformed"
-                                    ? "bg-emerald-400"
-                                    : "bg-amber-400"
+                                    ? "bg-success"
+                                    : "bg-warning"
                             }`}
                           />
                           <div className="min-w-0 space-y-2">
