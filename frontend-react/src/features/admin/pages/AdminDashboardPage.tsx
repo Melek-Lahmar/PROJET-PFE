@@ -242,7 +242,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Dashboard analytique",
         descKey: "admin.control.analytics.desc",
         descFallback: "Ventes, commandes, stock, livraison et insights.",
-        tone: "text-blue-600 dark:text-blue-300",
+        tone: "text-primary",
       },
       {
         key: "orders",
@@ -252,7 +252,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Commandes",
         descKey: "admin.control.orders.desc",
         descFallback: "Suivi des commandes, statuts et bons de livraison.",
-        tone: "text-amber-600 dark:text-amber-300",
+        tone: "text-warning",
       },
       {
         key: "users",
@@ -262,7 +262,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Utilisateurs & rôles",
         descKey: "admin.control.users.desc",
         descFallback: "Comptes, permissions et rôles applicatifs.",
-        tone: "text-violet-600 dark:text-violet-300",
+        tone: "text-purple",
       },
       {
         key: "clients",
@@ -272,7 +272,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Clients",
         descKey: "admin.control.clients.desc",
         descFallback: "Profils clients, adresses et informations commerciales.",
-        tone: "text-emerald-600 dark:text-emerald-300",
+        tone: "text-success",
       },
     ],
   },
@@ -290,7 +290,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Personnel",
         descKey: "admin.control.staff.desc",
         descFallback: "Vendeurs, confirmateurs, livreurs et superviseurs.",
-        tone: "text-cyan-600 dark:text-cyan-300",
+        tone: "text-info",
       },
       {
         key: "b2b",
@@ -300,7 +300,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Clients B2B",
         descKey: "admin.control.b2b.desc",
         descFallback: "Remises, comptes professionnels et conditions commerciales.",
-        tone: "text-teal-600 dark:text-teal-300",
+        tone: "text-info",
       },
       {
         key: "products",
@@ -310,7 +310,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Articles",
         descKey: "admin.control.products.desc",
         descFallback: "Catalogue produit, visibilité et données Sage.",
-        tone: "text-fuchsia-600 dark:text-fuchsia-300",
+        tone: "text-purple",
       },
       {
         key: "images",
@@ -320,7 +320,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Images articles",
         descKey: "admin.control.images.desc",
         descFallback: "Illustrations, qualité visuelle et publication.",
-        tone: "text-pink-600 dark:text-pink-300",
+        tone: "text-danger/80",
       },
       {
         key: "homepage",
@@ -330,7 +330,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Page d’accueil",
         descKey: "admin.control.homepage.desc",
         descFallback: "Bannières, sections et contenu public.",
-        tone: "text-rose-600 dark:text-rose-300",
+        tone: "text-danger",
       },
     ],
   },
@@ -348,7 +348,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Stock",
         descKey: "admin.control.stock.desc",
         descFallback: "Quantités disponibles, réservées et critiques.",
-        tone: "text-sky-600 dark:text-sky-300",
+        tone: "text-info",
       },
       {
         key: "depots",
@@ -358,7 +358,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Dépôts",
         descKey: "admin.control.depots.desc",
         descFallback: "Emplacements, disponibilité et affectations.",
-        tone: "text-lime-600 dark:text-lime-300",
+        tone: "text-success",
       },
       {
         key: "zones",
@@ -368,7 +368,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Zones de livraison",
         descKey: "admin.control.zones.desc",
         descFallback: "Affectations dépôt-zone et gouvernorats couverts.",
-        tone: "text-orange-600 dark:text-orange-300",
+        tone: "text-warning",
       },
       {
         key: "map",
@@ -378,7 +378,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Carte de couverture",
         descKey: "admin.control.map.desc",
         descFallback: "Visualisation géographique de la couverture.",
-        tone: "text-red-600 dark:text-red-300",
+        tone: "text-danger",
       },
     ],
   },
@@ -396,7 +396,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Synchronisation Sage",
         descKey: "admin.control.sync.desc",
         descFallback: "Données Sage, intégrité et cohérence.",
-        tone: "text-purple-600 dark:text-purple-300",
+        tone: "text-purple",
       },
       {
         key: "chatbot",
@@ -406,7 +406,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Chatbot admin",
         descKey: "admin.control.chatbot.desc",
         descFallback: "Analyse, test et conversations clients.",
-        tone: "text-indigo-600 dark:text-indigo-300",
+        tone: "text-indigo",
       },
       {
         key: "settings",
@@ -416,7 +416,7 @@ const groups: AdminGroup[] = [
         titleFallback: "Paramètres",
         descKey: "admin.control.settings.desc",
         descFallback: "Langue, thème, branding, SEO et coordonnées.",
-        tone: "text-slate-600 dark:text-slate-300",
+        tone: "text-muted-foreground",
       },
     ],
   },

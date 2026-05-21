@@ -3,9 +3,9 @@ import { listInsights } from "../api/chatbotApi";
 import { PremiumHero, EmptyView } from "../../../../shared/components/premium";
 
 const SEVERITY_STYLES: Record<string, string> = {
-  info: "bg-sky-50 text-sky-700 ring-sky-100",
-  warning: "bg-amber-50 text-amber-700 ring-amber-100",
-  critical: "bg-rose-50 text-rose-700 ring-rose-100",
+  info:     "bg-info/10 text-info ring-1 ring-info/20",
+  warning:  "bg-warning/10 text-warning ring-1 ring-warning/20",
+  critical: "bg-danger/10 text-danger ring-1 ring-danger/20",
 };
 
 export function ChatbotInsightsPage() {

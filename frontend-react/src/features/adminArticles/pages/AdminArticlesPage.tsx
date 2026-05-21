@@ -108,9 +108,9 @@ export function AdminArticlesPage() {
 
         <div className="mt-5 grid gap-4 md:grid-cols-4">
           <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">Articles filtrés</div><div className="mt-1 text-2xl font-black text-card-foreground">{summary.total}</div></div>
-          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">En stock</div><div className="mt-1 text-2xl font-black text-emerald-600">{summary.inStock}</div></div>
-          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">Stock faible</div><div className="mt-1 text-2xl font-black text-amber-600">{summary.lowStock}</div></div>
-          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">Ruptures</div><div className="mt-1 text-2xl font-black text-rose-600">{summary.outOfStock}</div></div>
+          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">En stock</div><div className="mt-1 text-2xl font-black text-success">{summary.inStock}</div></div>
+          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">Stock faible</div><div className="mt-1 text-2xl font-black text-warning">{summary.lowStock}</div></div>
+          <div className="rounded-3xl border border-border bg-card/70 p-4"><div className="text-sm text-muted-foreground">Ruptures</div><div className="mt-1 text-2xl font-black text-danger">{summary.outOfStock}</div></div>
         </div>
       </section>
 

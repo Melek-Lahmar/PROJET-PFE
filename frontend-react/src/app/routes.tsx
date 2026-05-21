@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { MainLayout } from "../shared/layouts/MainLayout";
+import { AdminLayout } from "../shared/layouts/AdminLayout";
 import { RouteErrorPage } from "../shared/pages/RouteErrorPage";
 
 import { ArticlesPage } from "../features/catalog/pages/ArticlesPage";
@@ -155,12 +156,9 @@ export const router = createBrowserRouter([
             element: <RoleRoute roles={["ADMIN"]} />,
             children: [
               /*
-                Important :
-                /admin doit rester le panneau admin classique.
-                Le dashboard BI professionnel commence à /admin/dashboard.
+                Dashboard BI professionnel (/admin/dashboard/*) — PAS de AdminLayout :
+                ces pages utilisent déjà DashboardShell avec sa propre sidebar.
               */
-              { path: "admin", element: <AdminDashboardPage /> },
-
               { path: "admin/dashboard", element: <AdminOverviewDashboardPage /> },
               { path: "admin/dashboard/overview", element: <AdminOverviewDashboardPage /> },
               { path: "admin/dashboard/sales", element: <AdminSalesDashboardPage /> },
@@ -174,32 +172,38 @@ export const router = createBrowserRouter([
               { path: "admin/dashboard/reclamations", element: <AdminReclamationsDashboardPage /> },
               { path: "admin/dashboard/sync", element: <AdminSyncDashboardPage /> },
               { path: "admin/dashboard/insights", element: <AdminInsightsDashboardPage /> },
-
-              /*
-                Anciennes routes conservées pour éviter de casser les anciens liens.
-              */
               { path: "admin/dashboard/confirmateur", element: <AdminConfirmateurDashboardPage /> },
               { path: "admin/dashboard/admin-sync", element: <AdminAdminSyncDashboardPage /> },
               { path: "admin/dashboard/strategic-insights", element: <AdminStrategicInsightsDashboardPage /> },
 
-              { path: "admin/users", element: <AdminUsersPage /> },
-              { path: "admin/personnel", element: <AdminPersonnelPage /> },
-              { path: "admin/clients", element: <AdminClientsPage /> },
-              { path: "admin/orders", element: <AdminOrdersPage /> },
-              { path: "admin/stocks", element: <AdminStockPage /> },
-              { path: "admin/depots", element: <AdminDepotsPage /> },
-              { path: "admin/depot-zones", element: <AdminDepotZonesPage /> },
-              { path: "admin/coverage-map", element: <AdminCoverageMapPage /> },
-              { path: "admin/sync", element: <AdminSyncPage /> },
-              { path: "admin/articles", element: <AdminArticlesPage /> },
-              { path: "admin/articles/:arRef/images", element: <AdminArticleImagesPage /> },
-              { path: "admin/homepage", element: <AdminHomepagePage /> },
-              { path: "admin/clients/b2b", element: <AdminB2BClientsPage /> },
-              { path: "admin/settings", element: <AdminSettingsPage /> },
-              { path: "admin/chatbot", element: <ChatbotOverviewPage /> },
-              { path: "admin/chatbot/sandbox", element: <ChatbotSandboxPage /> },
-              { path: "admin/chatbot/conversations", element: <ChatbotConversationsPage /> },
-              { path: "admin/chatbot/insights", element: <ChatbotInsightsPage /> },
+              /*
+                Toutes les autres pages admin — avec AdminLayout (sidebar persistante).
+                Important : /admin doit rester le panneau admin classique.
+              */
+              {
+                element: <AdminLayout />,
+                children: [
+                  { path: "admin", element: <AdminDashboardPage /> },
+                  { path: "admin/users", element: <AdminUsersPage /> },
+                  { path: "admin/personnel", element: <AdminPersonnelPage /> },
+                  { path: "admin/clients", element: <AdminClientsPage /> },
+                  { path: "admin/orders", element: <AdminOrdersPage /> },
+                  { path: "admin/stocks", element: <AdminStockPage /> },
+                  { path: "admin/depots", element: <AdminDepotsPage /> },
+                  { path: "admin/depot-zones", element: <AdminDepotZonesPage /> },
+                  { path: "admin/coverage-map", element: <AdminCoverageMapPage /> },
+                  { path: "admin/sync", element: <AdminSyncPage /> },
+                  { path: "admin/articles", element: <AdminArticlesPage /> },
+                  { path: "admin/articles/:arRef/images", element: <AdminArticleImagesPage /> },
+                  { path: "admin/homepage", element: <AdminHomepagePage /> },
+                  { path: "admin/clients/b2b", element: <AdminB2BClientsPage /> },
+                  { path: "admin/settings", element: <AdminSettingsPage /> },
+                  { path: "admin/chatbot", element: <ChatbotOverviewPage /> },
+                  { path: "admin/chatbot/sandbox", element: <ChatbotSandboxPage /> },
+                  { path: "admin/chatbot/conversations", element: <ChatbotConversationsPage /> },
+                  { path: "admin/chatbot/insights", element: <ChatbotInsightsPage /> },
+                ],
+              },
             ],
           },
 

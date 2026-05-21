@@ -45,10 +45,10 @@ export function ChatbotConversationsPage() {
   return (
     <div className="container-app space-y-5 py-6">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-blue-500/10 via-card to-card p-6 shadow-sm">
-        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-blue-500/15 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative">
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Chatbot admin</div>
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Chatbot admin</div>
           <h1 className="mt-1 text-3xl font-black tracking-tight">Conversations</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Sessions et messages échangés avec le chatbot. Lecture seule. Refresh chaque 30 s.

@@ -14,13 +14,13 @@ const SUGGESTIONS = [
 ];
 
 const ACTION_BADGE: Record<string, string> = {
-  query: "bg-blue-50 text-blue-700 ring-blue-100",
-  analyze: "bg-violet-50 text-violet-700 ring-violet-100",
-  predict: "bg-pink-50 text-pink-700 ring-pink-100",
-  kb: "bg-teal-50 text-teal-700 ring-teal-100",
-  chitchat: "bg-amber-50 text-amber-700 ring-amber-100",
-  action: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  error: "bg-rose-50 text-rose-700 ring-rose-100",
+  query:    "bg-info/10 text-info ring-1 ring-info/20",
+  analyze:  "bg-purple/10 text-purple ring-1 ring-purple/20",
+  predict:  "bg-indigo/10 text-indigo ring-1 ring-indigo/20",
+  kb:       "bg-info/10 text-info ring-1 ring-info/20",
+  chitchat: "bg-warning/10 text-warning ring-1 ring-warning/20",
+  action:   "bg-success/10 text-success ring-1 ring-success/20",
+  error:    "bg-danger/10 text-danger ring-1 ring-danger/20",
 };
 
 export function ChatbotSandboxPage() {
