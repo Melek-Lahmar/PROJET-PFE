@@ -1,0 +1,416 @@
+/* ============================================================
+   FICHIER: homepage-themes.css
+   CHEMIN: frontend-react/src/features/homepage/styles/homepage-themes.css
+   
+   Description: Styles CSS pour les thèmes de la homepage
+   Utilise les variables CSS pour la personnalisation par thème
+   ============================================================ */
+
+:root {
+  /* Variables par défaut (thème minimaliste) */
+  --homepage-primary: #000000;
+  --homepage-secondary: #666666;
+  --homepage-tertiary: #CCCCCC;
+  --homepage-accent: #F5F5F5;
+  --homepage-bg: #FFFFFF;
+  --homepage-surface: #FAFAFA;
+  --homepage-text: #1A1A1A;
+  --homepage-text-light: #808080;
+  --homepage-border: #E0E0E0;
+
+  /* Boutons */
+  --homepage-btn-primary-bg: #000000;
+  --homepage-btn-primary-text: #FFFFFF;
+  --homepage-btn-primary-hover: #333333;
+  
+  --homepage-btn-secondary-bg: #F5F5F5;
+  --homepage-btn-secondary-text: #000000;
+  --homepage-btn-secondary-hover: #E8E8E8;
+  
+  --homepage-btn-tertiary-bg: transparent;
+  --homepage-btn-tertiary-text: #000000;
+  --homepage-btn-tertiary-hover: #F0F0F0;
+
+  /* Border Radius */
+  --homepage-radius-button: 0px;
+  --homepage-radius-card: 0px;
+  --homepage-radius-container: 0px;
+
+  /* Shadows */
+  --homepage-shadow-card: none;
+  --homepage-shadow-hover: 0 2px 4px rgba(0,0,0,0.1);
+  --homepage-shadow-subtle: 0 1px 2px rgba(0,0,0,0.05);
+
+  /* Spacing */
+  --homepage-gap-section: 4rem;
+  --homepage-gap-item: 1.5rem;
+  --homepage-padding: 2rem;
+
+  /* Typography */
+  --homepage-font-family: 'Inter', sans-serif;
+  --homepage-font-weight-heading: 600;
+  --homepage-font-weight-body: 400;
+}
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+
+.homepage-hero {
+  background-color: var(--homepage-bg);
+  color: var(--homepage-text);
+  padding: var(--homepage-padding);
+  border-radius: var(--homepage-radius-container);
+}
+
+.homepage-hero-title {
+  font-family: var(--homepage-font-family);
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+}
+
+.homepage-hero-subtitle {
+  font-family: var(--homepage-font-family);
+  font-weight: var(--homepage-font-weight-body);
+  color: var(--homepage-text-light);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.homepage-btn {
+  font-family: var(--homepage-font-family);
+  font-weight: var(--homepage-font-weight-heading);
+  border-radius: var(--homepage-radius-button);
+  transition: all 0.3s ease;
+}
+
+.homepage-btn-primary {
+  background-color: var(--homepage-btn-primary-bg);
+  color: var(--homepage-btn-primary-text);
+  border: none;
+}
+
+.homepage-btn-primary:hover {
+  background-color: var(--homepage-btn-primary-hover);
+  box-shadow: var(--homepage-shadow-hover);
+}
+
+.homepage-btn-secondary {
+  background-color: var(--homepage-btn-secondary-bg);
+  color: var(--homepage-btn-secondary-text);
+  border: 1px solid var(--homepage-border);
+}
+
+.homepage-btn-secondary:hover {
+  background-color: var(--homepage-btn-secondary-hover);
+  box-shadow: var(--homepage-shadow-hover);
+}
+
+.homepage-btn-tertiary {
+  background-color: var(--homepage-btn-tertiary-bg);
+  color: var(--homepage-btn-tertiary-text);
+  border: none;
+}
+
+.homepage-btn-tertiary:hover {
+  background-color: var(--homepage-btn-tertiary-hover);
+}
+
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+
+.homepage-categories {
+  display: grid;
+  gap: var(--homepage-gap-item);
+  padding: var(--homepage-padding);
+}
+
+.homepage-category-card {
+  background-color: var(--homepage-surface);
+  border: 1px solid var(--homepage-border);
+  border-radius: var(--homepage-radius-card);
+  padding: var(--homepage-padding);
+  box-shadow: var(--homepage-shadow-card);
+  transition: all 0.3s ease;
+}
+
+.homepage-category-card:hover {
+  box-shadow: var(--homepage-shadow-hover);
+  border-color: var(--homepage-primary);
+}
+
+.homepage-category-title {
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+}
+
+/* ============================================================
+   PRODUCTS / ARTICLES
+   ============================================================ */
+
+.homepage-products {
+  display: grid;
+  gap: var(--homepage-gap-item);
+  padding: var(--homepage-padding);
+}
+
+/* Affichage grille */
+.homepage-products.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.homepage-products.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.homepage-products.grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+@media (max-width: 1200px) {
+  .homepage-products.grid-5 { grid-template-columns: repeat(4, 1fr); }
+  .homepage-products.grid-4 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .homepage-products.grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .homepage-products.grid-5 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.homepage-product-card {
+  background-color: var(--homepage-surface);
+  border: 1px solid var(--homepage-border);
+  border-radius: var(--homepage-radius-card);
+  padding: var(--homepage-padding);
+  box-shadow: var(--homepage-shadow-subtle);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.homepage-product-card:hover {
+  box-shadow: var(--homepage-shadow-hover);
+  transform: translateY(-4px);
+}
+
+.homepage-product-image {
+  width: 100%;
+  height: 200px;
+  background-color: var(--homepage-tertiary);
+  border-radius: var(--homepage-radius-card);
+  margin-bottom: var(--homepage-gap-item);
+  object-fit: cover;
+}
+
+.homepage-product-title {
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+  margin-bottom: 0.5rem;
+}
+
+.homepage-product-price {
+  color: var(--homepage-primary);
+  font-weight: var(--homepage-font-weight-heading);
+  margin-bottom: var(--homepage-gap-item);
+  flex-grow: 1;
+}
+
+.homepage-product-description {
+  color: var(--homepage-text-light);
+  font-size: 0.875rem;
+  margin-bottom: var(--homepage-gap-item);
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.homepage-section {
+  background-color: var(--homepage-bg);
+  padding: var(--homepage-padding);
+  margin-bottom: var(--homepage-gap-section);
+  border-radius: var(--homepage-radius-container);
+}
+
+.homepage-section-title {
+  font-size: 2rem;
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+  margin-bottom: 0.5rem;
+}
+
+.homepage-section-subtitle {
+  font-size: 1.125rem;
+  color: var(--homepage-primary);
+  margin-bottom: 1rem;
+}
+
+.homepage-section-description {
+  color: var(--homepage-text-light);
+  margin-bottom: var(--homepage-gap-section);
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.homepage-badge {
+  font-size: 0.75rem;
+  font-weight: var(--homepage-font-weight-heading);
+  background-color: var(--homepage-accent);
+  color: var(--homepage-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--homepage-radius-button);
+  display: inline-block;
+}
+
+.homepage-badge-rounded {
+  border-radius: 999px;
+}
+
+.homepage-badge-pill {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+}
+
+/* ============================================================
+   ADVANTAGES / STATS
+   ============================================================ */
+
+.homepage-advantages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--homepage-gap-item);
+  padding: var(--homepage-padding);
+}
+
+.homepage-advantage-item {
+  background-color: var(--homepage-surface);
+  padding: var(--homepage-padding);
+  border-radius: var(--homepage-radius-card);
+  border: 1px solid var(--homepage-border);
+  text-align: center;
+}
+
+.homepage-advantage-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.homepage-advantage-title {
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+  margin-bottom: 0.5rem;
+}
+
+.homepage-advantage-description {
+  color: var(--homepage-text-light);
+  font-size: 0.875rem;
+}
+
+/* ============================================================
+   AUDIENCES (B2B/B2C)
+   ============================================================ */
+
+.homepage-audiences {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--homepage-gap-item);
+  padding: var(--homepage-padding);
+}
+
+@media (max-width: 768px) {
+  .homepage-audiences {
+    grid-template-columns: 1fr;
+  }
+}
+
+.homepage-audience-card {
+  background: linear-gradient(135deg, var(--homepage-surface), var(--homepage-bg));
+  border: 2px solid var(--homepage-border);
+  border-radius: var(--homepage-radius-container);
+  padding: var(--homepage-padding);
+  transition: all 0.3s ease;
+}
+
+.homepage-audience-card:hover {
+  box-shadow: var(--homepage-shadow-hover);
+  border-color: var(--homepage-primary);
+}
+
+.homepage-audience-badge {
+  background-color: var(--homepage-primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--homepage-radius-button);
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-weight: var(--homepage-font-weight-heading);
+}
+
+.homepage-audience-title {
+  font-size: 1.5rem;
+  font-weight: var(--homepage-font-weight-heading);
+  color: var(--homepage-text);
+  margin-bottom: 0.5rem;
+}
+
+.homepage-audience-description {
+  color: var(--homepage-text-light);
+  margin-bottom: var(--homepage-gap-item);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .homepage-section {
+    padding: calc(var(--homepage-padding) * 0.8);
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-section {
+    padding: calc(var(--homepage-padding) * 0.6);
+  }
+
+  .homepage-products.grid-4,
+  .homepage-products.grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .homepage-advantages {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.homepage-product-card,
+.homepage-category-card,
+.homepage-advantage-item {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Gradient animation pour les thèmes avec gradient */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.has-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 10s ease infinite;
+}

@@ -32,7 +32,12 @@ export function App() {
         <AuthBootstrapper />
         <ThemeBootstrapper />
         <CursorEffect />
-        <RouterProvider />
+        
+        {/* HomepageThemeProvider wraps RouterProvider */}
+        <HomepageThemeProvider initialThemeId="minimaliste">
+          <RouterProvider />
+        </HomepageThemeProvider>
+        
         <ChatbotFab />
       </ToastProvider>
     </QueryProvider>

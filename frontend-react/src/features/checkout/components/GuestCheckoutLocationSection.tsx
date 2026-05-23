@@ -1,233 +1,63 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import L from "leaflet";
+
+// ============================================================
+// IMPORTS - Map & Geo Components
+// ============================================================
 import {
-  CircleMarker,
-  MapContainer,
-  Popup,
-  TileLayer,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-
-import { Button } from "../../../shared/components/Button";
-import { Input } from "../../../shared/components/Input";
-import type { GouvernoratItem } from "../../geo/types/geo";
-import { getDelegations } from "../../geo/api/geoApi";
-import { fetchCenterByGovDelegation } from "../../geo/api/nominatimGeo";
+  createMapPin,
+  type AddressMapChangeReason,
+} from "../../auth/components/AddressMapField";
+import { AddressMapModal } from "../../auth/components/AddressMapModal";
+import { reverseGeocodeNominatim } from "../../features/geo/api/nominatimApi";
 import {
-  reverseGeocodeNominatim,
-  type NominatimReverseResponse,
-} from "../../geo/api/nominatimApi";
-import { getCenterForTunisia } from "../../geo/data/tunisiaCenters";
+  resolveGouvernoratIdFromReverse,
+  resolveDelegationFromReverse,
+  getGovernoratCandidates,
+  buildAddressFromReverse,
+  extractPostalCode,
+} from "../../features/geo/utils/tunisiaLocationSync";
+import { getDelegations } from "../../features/geo/api/geoApi";
+import { TUNISIA_GOUVERNORATS } from "../../features/geo/constants/governorates";
 
-type Props = {
-  gouvernorat: number;
-  setGouvernorat: (next: number) => void;
-  delegation: string;
-  setDelegation: (next: string) => void;
-
-  gouvernorats: GouvernoratItem[];
-  delegations: string[];
-  delegationsLoading: boolean;
-
+// ============================================================
+// Types & Constants
+// ============================================================
+interface GuestCheckoutLocationSectionProps {
+  gouvernorat: string | null;
+  setGouvernorat: (value: string | null) => void;
+  delegation: string | null;
+  setDelegation: (value: string | null) => void;
   address: string;
-  setAddress: (next: string) => void;
-
+  setAddress: (value: string) => void;
   postalCode: string;
-  setPostalCode: (next: string) => void;
-
+  setPostalCode: (value: string) => void;
   latitude: number | null;
-  setLatitude: (next: number | null) => void;
-
+  setLatitude: (value: number | null) => void;
   longitude: number | null;
-  setLongitude: (next: number | null) => void;
+  setLongitude: (value: number | null) => void;
+  gouvernorats: Array<{ id: string; name: string }>;
+  delegations: Array<{ id: string; name: string }>;
+}
+
+const roundCoordinate = (coord: number): number => {
+  return Math.round(coord * 1000000) / 1000000;
 };
 
-function normalizeText(value?: string | null) {
-  return (value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .toLowerCase()
-    .replace(
-      /\b(el|al|la|le|delegation|delegationde|delegation du|delegation de|delegationd|délégation|gouvernorat|gouvernement|commune|ville)\b/g,
-      " "
-    )
-    .replace(/[^a-z0-9]/g, "")
-    .trim();
-}
+const DEFAULT_TUNISIA_LAT = 35.8989;
+const DEFAULT_TUNISIA_LNG = 9.537;
+const DEFAULT_ZOOM = 6;
 
-function textMatches(a?: string | null, b?: string | null) {
-  const left = normalizeText(a);
-  const right = normalizeText(b);
-
-  if (!left || !right) return false;
-  if (left === right) return true;
-  if (left.includes(right)) return true;
-  if (right.includes(left)) return true;
-
-  return false;
-}
-
-function roundCoordinate(value: number) {
-  return Number(value.toFixed(6));
-}
-
-function buildAddressFromReverse(result: NominatimReverseResponse) {
-  const address = result.address ?? {};
-
-  const firstLine = [
-    address.house_number?.trim(),
-    address.road?.trim(),
-    address.neighbourhood?.trim(),
-    address.suburb?.trim(),
-    address.city_district?.trim(),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  if (firstLine) return firstLine;
-
-  return (result.display_name ?? "").split(",").slice(0, 3).join(", ").trim();
-}
-
-function extractPostalCode(result: NominatimReverseResponse) {
-  return result.address?.postcode?.trim() ?? "";
-}
-
-function getGovernoratCandidates(result: NominatimReverseResponse) {
-  return [
-    result.address?.state,
-    result.address?.state_district,
-    result.address?.county,
-    result.address?.municipality,
-    result.address?.city,
-    result.address?.town,
-    result.address?.village,
-    result.display_name,
-  ].filter(Boolean) as string[];
-}
-
-function getDelegationCandidates(result: NominatimReverseResponse) {
-  return [
-    result.address?.city,
-    result.address?.town,
-    result.address?.village,
-    result.address?.hamlet,
-    result.address?.municipality,
-    result.address?.suburb,
-    result.address?.city_district,
-    result.address?.neighbourhood,
-    result.address?.county,
-    result.display_name,
-  ].filter(Boolean) as string[];
-}
-
-function resolveGouvernoratIdFromReverse(
-  result: NominatimReverseResponse,
-  gouvernorats: GouvernoratItem[]
-) {
-  const candidates = getGovernoratCandidates(result);
-
-  for (const candidate of candidates) {
-    const found = gouvernorats.find((g) => textMatches(g.name, candidate));
-    if (found) return found.id;
-  }
-
-  return null;
-}
-
-function resolveDelegationFromReverse(
-  result: NominatimReverseResponse,
-  delegationPool: string[]
-) {
-  const candidates = getDelegationCandidates(result);
-
-  for (const candidate of candidates) {
-    const found = delegationPool.find((item) => textMatches(item, candidate));
-    if (found) return found;
-  }
-
-  return null;
-}
-
-function MapViewportSync({
-  latitude,
-  longitude,
-  zoom,
-}: {
-  latitude: number | null;
-  longitude: number | null;
-  zoom: number;
-}) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (typeof latitude !== "number" || typeof longitude !== "number") return;
-
-    map.setView([latitude, longitude], zoom, {
-      animate: true,
-    });
-
-    window.setTimeout(() => {
-      map.invalidateSize();
-    }, 0);
-  }, [map, latitude, longitude, zoom]);
-
-  return null;
-}
-
-function MapPicker({
-  latitude,
-  longitude,
-  onPick,
-}: {
-  latitude: number | null;
-  longitude: number | null;
-  onPick: (lat: number, lng: number) => void;
-}) {
-  useMapEvents({
-    click(event) {
-      onPick(event.latlng.lat, event.latlng.lng);
-    },
-  });
-
-  if (typeof latitude !== "number" || typeof longitude !== "number") {
-    return null;
-  }
-
-  return (
-    <CircleMarker
-      center={[latitude, longitude]}
-      radius={10}
-      pathOptions={{
-        color: "#2563eb",
-        fillColor: "#3b82f6",
-        fillOpacity: 0.85,
-        weight: 3,
-      }}
-    >
-      <Popup>
-        <div className="text-sm font-medium">
-          Position sélectionnée
-          <br />
-          {latitude.toFixed(6)}, {longitude.toFixed(6)}
-        </div>
-      </Popup>
-    </CircleMarker>
-  );
-}
-
+// ============================================================
+// GuestCheckoutLocationSection Component
+// ============================================================
 export function GuestCheckoutLocationSection({
   gouvernorat,
   setGouvernorat,
   delegation,
   setDelegation,
-  gouvernorats,
-  delegations,
-  delegationsLoading,
   address,
   setAddress,
   postalCode,
@@ -236,369 +66,389 @@ export function GuestCheckoutLocationSection({
   setLatitude,
   longitude,
   setLongitude,
-}: Props) {
-  const [mapZoom, setMapZoom] = useState<number>(12);
-  const [syncMessage, setSyncMessage] = useState<string>(
-    "Choisissez un gouvernorat, puis une délégation, ou cliquez sur la carte pour synchroniser automatiquement la localisation."
-  );
+  gouvernorats,
+  delegations,
+}: GuestCheckoutLocationSectionProps) {
+  // ────────────────────────────────────────────────────────
+  // État - Map & Geolocation
+  // ────────────────────────────────────────────────────────
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapSyncMsg, setMapSyncMsg] = useState<string>("");
+  const [mapSource, setMapSource] = useState<AddressMapChangeReason | null>(null);
+  const [locatingGps, setLocatingGps] = useState(false);
+
+  // Safe values with type narrowing
+  const resolvedLatitude = latitude ?? DEFAULT_TUNISIA_LAT;
+  const resolvedLongitude = longitude ?? DEFAULT_TUNISIA_LNG;
+
+  // ────────────────────────────────────────────────────────
+  // Mutations
+  // ────────────────────────────────────────────────────────
+  const reverseMutation = useMutation({
+    mutationFn: async () => {
+      if (latitude === null || longitude === null) return null;
+      return reverseGeocodeNominatim(latitude, longitude);
+    },
+  });
+
+  // ────────────────────────────────────────────────────────
+  // Functions - GPS Geolocation
+  // ────────────────────────────────────────────────────────
+  const handleUseCurrentLocation = useCallback(async () => {
+    setLocatingGps(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+        });
+      });
+
+      const { latitude: lat, longitude: lng } = position.coords;
+      await handleMapPick(lat, lng);
+      setMapSource("gps");
+    } catch (error) {
+      setMapSyncMsg("Impossible d'accéder à votre position GPS.");
+      console.error("Geolocation error:", error);
+    } finally {
+      setLocatingGps(false);
+    }
+  }, []);
+
+  // ────────────────────────────────────────────────────────
+  // Functions - Map Pick Handler
+  // ────────────────────────────────────────────────────────
+  async function handleMapPick(lat: number, lng: number) {
+    const latRounded = roundCoordinate(lat);
+    const lngRounded = roundCoordinate(lng);
+    setLatitude(latRounded);
+    setLongitude(lngRounded);
+    setMapSource("map_click");
+    setMapSyncMsg("Analyse de la position…");
+
+    try {
+      const result = await reverseGeocodeNominatim(latRounded, lngRounded);
+
+      const govCandidates = getGovernoratCandidates(result);
+      const govId = resolveGouvernoratIdFromReverse(result, gouvernorats);
+      if (govId !== null) {
+        setGouvernorat(govId);
+      }
+
+      let delegPool = delegations;
+      if (govId !== null && govId !== gouvernorat) {
+        delegPool = await getDelegations(govId).catch(() => delegations);
+      }
+
+      const delegResolved = resolveDelegationFromReverse(result, delegPool);
+      if (delegResolved) {
+        setDelegation(delegResolved);
+      }
+
+      const addr = buildAddressFromReverse(result);
+      if (addr) setAddress(addr);
+
+      const cp = extractPostalCode(result);
+      if (cp) setPostalCode(cp);
+
+      setMapSyncMsg(
+        `✅ Position épinglée · ${TUNISIA_GOUVERNORATS[govId ?? gouvernorat] ?? ""}`
+      );
+    } catch (error) {
+      setMapSyncMsg("Position enregistrée. Vérifiez le gouvernorat.");
+      console.error("Reverse geocode error:", error);
+    }
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Functions - Form Handling
+  // ────────────────────────────────────────────────────────
+  const handleGouvernoratChange = (value: string | null) => {
+    setGouvernorat(value);
+    if (value === null) {
+      setDelegation(null);
+    }
+  };
+
+  const handleClearLocation = () => {
+    setLatitude(null);
+    setLongitude(null);
+    setMapSource(null);
+    setMapSyncMsg("");
+  };
+
+  // ────────────────────────────────────────────────────────
+  // Computed Values
+  // ────────────────────────────────────────────────────────
+  const filteredDelegations = useMemo(() => {
+    if (!gouvernorat || !delegations) return [];
+    return delegations.filter((d) => d.gouvernorat_id === gouvernorat);
+  }, [gouvernorat, delegations]);
 
   const gouvernoratName = useMemo(() => {
-    return gouvernorats.find((g) => g.id === gouvernorat)?.name ?? "";
-  }, [gouvernorats, gouvernorat]);
+    return gouvernorat ? gouvernorats.find((g) => g.id === gouvernorat)?.name : "";
+  }, [gouvernorat, gouvernorats]);
 
-  const fallbackCenter = useMemo(() => {
-    const center = getCenterForTunisia(gouvernorat);
-    return {
-      lat: center.lat,
-      lng: center.lng,
-      zoom: center.zoom,
-    };
-  }, [gouvernorat]);
+  const delegationName = useMemo(() => {
+    return delegation
+      ? delegations.find((d) => d.id === delegation)?.name
+      : "";
+  }, [delegation, delegations]);
 
-  const resolvedLatitude =
-    typeof latitude === "number" ? latitude : fallbackCenter.lat;
-  const resolvedLongitude =
-    typeof longitude === "number" ? longitude : fallbackCenter.lng;
-
-  const mapCenter: LatLngExpression = [resolvedLatitude, resolvedLongitude];
-
-  function applyMapPosition(lat: number, lng: number, zoom: number) {
-    setLatitude(roundCoordinate(lat));
-    setLongitude(roundCoordinate(lng));
-    setMapZoom(zoom);
-  }
-
-  function handleGovernoratChange(nextGovernoratId: number) {
-    const nextGovernoratCenter = getCenterForTunisia(nextGovernoratId);
-    const nextGovernoratName =
-      gouvernorats.find((g) => g.id === nextGovernoratId)?.name ?? "ce gouvernorat";
-
-    setGouvernorat(nextGovernoratId);
-    setDelegation("");
-    applyMapPosition(
-      nextGovernoratCenter.lat,
-      nextGovernoratCenter.lng,
-      nextGovernoratCenter.zoom
-    );
-
-    setSyncMessage(
-      `Carte recentrée sur ${nextGovernoratName}. Sélectionnez maintenant une délégation pour un positionnement plus précis.`
-    );
-  }
-
-  function handleDelegationChange(nextDelegation: string) {
-    setDelegation(nextDelegation);
-
-    if (!nextDelegation.trim()) {
-      setSyncMessage(
-        "Délégation réinitialisée. La carte reste centrée sur le gouvernorat sélectionné."
-      );
-      return;
-    }
-
-    setSyncMessage(
-      `Recherche du centre exact de ${nextDelegation}${
-        gouvernoratName ? `, ${gouvernoratName}` : ""
-      }...`
-    );
-  }
-
-  const centerMutation = useMutation({
-    mutationFn: async (payload: {
-      gouvernoratName: string;
-      delegation: string;
-    }) => {
-      return fetchCenterByGovDelegation(
-        payload.gouvernoratName,
-        payload.delegation
-      );
-    },
-    onSuccess: (result, variables) => {
-      applyMapPosition(result.lat, result.lng, result.bbox ? 13 : 14);
-
-      setSyncMessage(
-        result.displayName
-          ? `Carte synchronisée sur : ${result.displayName}`
-          : `Carte synchronisée sur ${variables.delegation}${
-              variables.gouvernoratName ? `, ${variables.gouvernoratName}` : ""
-            }.`
-      );
-    },
-    onError: () => {
-      setSyncMessage(
-        "Impossible de centrer exactement la carte sur cette délégation pour le moment."
-      );
-    },
-  });
-
-  useEffect(() => {
-    if (!gouvernoratName || !delegation.trim()) return;
-
-    centerMutation.mutate({
-      gouvernoratName,
-      delegation,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gouvernoratName, delegation]);
-
-  const reverseMutation = useMutation({
-    mutationFn: async (payload: { lat: number; lng: number }) => {
-      return reverseGeocodeNominatim(payload.lat, payload.lng);
-    },
-    onSuccess: async (result, variables) => {
-      applyMapPosition(variables.lat, variables.lng, 15);
-
-      const nextAddress = buildAddressFromReverse(result);
-      if (nextAddress) {
-        setAddress(nextAddress);
-      }
-
-      const nextPostalCode = extractPostalCode(result);
-      if (nextPostalCode) {
-        setPostalCode(nextPostalCode);
-      }
-
-      const matchedGovernoratId = resolveGouvernoratIdFromReverse(
-        result,
-        gouvernorats
-      );
-
-      let delegationPool = delegations;
-      let matchedDelegation: string | null = null;
-
-      if (matchedGovernoratId !== null) {
-        if (matchedGovernoratId !== gouvernorat) {
-          setGouvernorat(matchedGovernoratId);
-        }
-
-        try {
-          delegationPool =
-            matchedGovernoratId === gouvernorat
-              ? delegations
-              : await getDelegations(matchedGovernoratId);
-        } catch {
-          delegationPool = delegations;
-        }
-
-        matchedDelegation = resolveDelegationFromReverse(result, delegationPool);
-
-        if (matchedDelegation) {
-          setDelegation(matchedDelegation);
-        } else {
-          setDelegation("");
-        }
-      }
-
-      const updatedAddress = Boolean(nextAddress);
-      const updatedPostalCode = Boolean(nextPostalCode);
-      const updatedGovernorat = matchedGovernoratId !== null;
-      const updatedDelegation = Boolean(matchedDelegation);
-
-      if (updatedGovernorat && updatedDelegation) {
-        setSyncMessage(
-          "Localisation détectée depuis la carte. Gouvernorat, délégation, adresse et code postal ont été synchronisés."
-        );
-        return;
-      }
-
-      if (updatedGovernorat) {
-        setSyncMessage(
-          "Localisation détectée depuis la carte. Le gouvernorat, l’adresse et la position ont été synchronisés, mais aucune délégation exacte n’a pu être confirmée."
-        );
-        return;
-      }
-
-      if (updatedAddress || updatedPostalCode) {
-        setSyncMessage(
-          "Adresse et code postal synchronisés. Le gouvernorat ou la délégation n’ont pas pu être déduits exactement depuis ce point."
-        );
-        return;
-      }
-
-      setSyncMessage(
-        "Position mise à jour sur la carte, mais les informations administratives n’ont pas pu être synchronisées pour ce point."
-      );
-    },
-    onError: () => {
-      setSyncMessage(
-        "Position mise à jour, mais certaines informations d’adresse n’ont pas pu être récupérées."
-      );
-    },
-  });
-
-  function handlePick(lat: number, lng: number) {
-    reverseMutation.mutate({ lat, lng });
-  }
-
-  function handleUseCurrentLocation() {
-    if (!navigator.geolocation) {
-      setSyncMessage("La géolocalisation n’est pas supportée par ce navigateur.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        handlePick(position.coords.latitude, position.coords.longitude);
-      },
-      (error) => {
-        setSyncMessage(`Impossible de récupérer la position : ${error.message}`);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-
-  const selectClass =
-    "h-11 w-full rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-card-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_1px_2px_rgba(15,23,42,0.04)] outline-none transition focus:border-primary/45 focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60";
-
+  // ────────────────────────────────────────────────────────
+  // Render
+  // ────────────────────────────────────────────────────────
   return (
-    <div className="app-surface space-y-6 p-8">
-      <div>
-        <h2 className="text-xl font-bold text-card-foreground">
-          Localisation synchronisée
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Choisissez le gouvernorat et la délégation pour déplacer la carte, ou
-          cliquez directement sur la carte pour tenter de remplir automatiquement
-          les champs.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-card-foreground">
+    <div className="space-y-6">
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      {/* Sélection Gouvernorat & Délégation */}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-card-foreground mb-2">
             Gouvernorat
           </label>
-          <div className="relative">
-            <select
-              className={selectClass}
-              value={gouvernorat}
-              onChange={(e) => handleGovernoratChange(Number(e.target.value))}
-              disabled={gouvernorats.length === 0}
-            >
-              {gouvernorats.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={gouvernorat || ""}
+            onChange={(e) => handleGouvernoratChange(e.target.value || null)}
+            className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+          >
+            <option value="">Sélectionner un gouvernorat</option>
+            {gouvernorats.map((gov) => (
+              <option key={gov.id} value={gov.id}>
+                {gov.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-card-foreground">
+        <div>
+          <label className="block text-sm font-semibold text-card-foreground mb-2">
             Délégation
           </label>
-          <div className="relative">
-            <select
-              className={selectClass}
-              value={delegation}
-              onChange={(e) => handleDelegationChange(e.target.value)}
-              disabled={delegationsLoading || delegations.length === 0}
-            >
-              <option value="">Choisir une délégation</option>
-              {delegations.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="overflow-hidden rounded-[28px] border border-border/70 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-muted/30 px-4 py-3">
-          <div className="text-sm font-semibold text-card-foreground">
-            Carte interactive
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-xl"
-            onClick={handleUseCurrentLocation}
-            isLoading={reverseMutation.isPending}
-            disabled={reverseMutation.isPending}
+          <select
+            value={delegation || ""}
+            onChange={(e) => setDelegation(e.target.value || null)}
+            disabled={!gouvernorat}
+            className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Utiliser ma position
-          </Button>
-        </div>
-
-        <div className="h-[360px] w-full">
-          <MapContainer
-            center={mapCenter}
-            zoom={mapZoom}
-            scrollWheelZoom
-            className="h-full w-full"
-          >
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            <MapViewportSync
-              latitude={resolvedLatitude}
-              longitude={resolvedLongitude}
-              zoom={mapZoom}
-            />
-
-            <MapPicker
-              latitude={resolvedLatitude}
-              longitude={resolvedLongitude}
-              onPick={handlePick}
-            />
-          </MapContainer>
+            <option value="">Sélectionner une délégation</option>
+            {filteredDelegations.map((deleg) => (
+              <option key={deleg.id} value={deleg.id}>
+                {deleg.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div className="rounded-[22px] border border-border/70 bg-muted/35 px-4 py-3 text-sm text-muted-foreground">
-        {syncMessage}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      {/* Champs Adresse et Code Postal */}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div>
+        <label className="block text-sm font-semibold text-card-foreground mb-2">
+          Adresse
+        </label>
+        <input
+          type="text"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="123 Rue de la Paix"
+          className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground placeholder-muted-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-semibold text-card-foreground">
-            Adresse
-          </label>
-          <Input
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Rue, résidence, repère..."
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-card-foreground">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-card-foreground mb-2">
             Code postal
           </label>
-          <Input
+          <input
+            type="text"
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
-            placeholder="Ex: 3000"
+            placeholder="1000"
+            className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground placeholder-muted-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
           />
         </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-[20px] border border-border/70 bg-card px-4 py-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Latitude
-            </div>
-            <div className="mt-2 text-sm font-bold text-card-foreground">
-              {typeof latitude === "number" ? latitude.toFixed(6) : "—"}
-            </div>
-          </div>
-
-          <div className="rounded-[20px] border border-border/70 bg-card px-4 py-3 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Longitude
-            </div>
-            <div className="mt-2 text-sm font-bold text-card-foreground">
-              {typeof longitude === "number" ? longitude.toFixed(6) : "—"}
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      {/* Carte Interactive - Contrôles GPS & Épinglage */}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="overflow-hidden rounded-[28px] border border-border/70 shadow-sm">
+        <div className="space-y-3 border-b border-border/70 bg-muted/30 px-4 py-4">
+          {/* Titre + boutons */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm font-semibold text-card-foreground">
+              Carte interactive · Sélectionner une position
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {/* Bouton GPS */}
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={locatingGps || reverseMutation.isPending}
+                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-border/70 bg-background hover:bg-muted text-foreground transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {locatingGps || reverseMutation.isPending ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="text-xs font-medium">Localisation…</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                    </svg>
+                    <span className="text-xs font-medium">Ma position GPS</span>
+                  </>
+                )}
+              </button>
+
+              {/* Bouton Épingler sur la carte */}
+              <button
+                type="button"
+                onClick={() => setMapOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-border/70 bg-background hover:bg-muted text-foreground transition"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z" />
+                  <line x1="9" y1="4" x2="9" y2="17" />
+                  <line x1="15" y1="7" x2="15" y2="20" />
+                </svg>
+                <span className="text-xs font-medium">Épingler sur la carte</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Badge source + message sync */}
+          {(mapSource || mapSyncMsg) && (
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+              {mapSource && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-bold ${
+                    mapSource === "gps"
+                      ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-900/50 dark:text-blue-400"
+                      : "bg-violet-50 border-violet-200 text-violet-700 dark:bg-violet-900/20 dark:border-violet-900/50 dark:text-violet-400"
+                  }`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {mapSource === "gps"
+                    ? "GPS"
+                    : mapSource === "map_click"
+                    ? "Carte"
+                    : "Déplacé"}
+                </span>
+              )}
+              {mapSyncMsg && (
+                <span
+                  className={
+                    mapSyncMsg.startsWith("✅")
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-500 dark:text-slate-400"
+                  }
+                >
+                  {mapSyncMsg}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Carte Leaflet */}
+        <div className="h-96 bg-slate-50 dark:bg-slate-900">
+          <MapContainer
+            center={[resolvedLatitude, resolvedLongitude]}
+            zoom={DEFAULT_ZOOM}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            />
+
+            {latitude !== null && longitude !== null && (
+              <Marker
+                position={[latitude, longitude]}
+                draggable
+                icon={createMapPin(mapSource || "map_drag")}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const m = e.target;
+                    const ll = m.getLatLng();
+                    setMapSource("map_drag");
+                    void handleMapPick(ll.lat, ll.lng);
+                  },
+                }}
+              />
+            )}
+          </MapContainer>
+        </div>
+
+        {/* Résumé de la position */}
+        {latitude !== null && longitude !== null && (
+          <div className="border-t border-border/70 bg-muted/10 px-4 py-3 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <strong>Position:</strong> {latitude.toFixed(4)}, {longitude.toFixed(4)}
+              </div>
+              {gouvernoratName && (
+                <div>
+                  <strong>Gouvernorat:</strong> {gouvernoratName}
+                </div>
+              )}
+              {delegationName && (
+                <div>
+                  <strong>Délégation:</strong> {delegationName}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleClearLocation}
+                className="ml-auto text-rose-500 hover:text-rose-700 transition font-medium text-xs"
+              >
+                ✕ Effacer
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      {/* MODAL DE CARTE PLEIN ÉCRAN */}
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AddressMapModal
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        gouvernorat={gouvernorat}
+        delegation={delegation}
+        latitude={latitude}
+        longitude={longitude}
+        onChange={(lat, lng) => {
+          void handleMapPick(lat, lng);
+          setMapOpen(false);
+        }}
+      />
     </div>
   );
 }
+
+export default GuestCheckoutLocationSection;

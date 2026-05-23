@@ -1,3 +1,10 @@
+// src/features/addresses/components/AddressForm.tsx
+//
+// CORRECTION :
+//  - onChange gouvernorat : efface lat/lng si GPS présent (coords devenues invalides)
+//  - onChange délégation  : idem
+//  - applyReverseGeocode était déjà correct (applique gov+deleg depuis GPS)
+
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -68,7 +75,7 @@ export function AddressForm({
   const [reverseBusy, setReverseBusy] = useState(false);
   const lastReverseKey = useRef("");
 
-  // Délégations dynamiques selon gouvernorat — utilise l'API existante /api/geo/gouvernorats/{id}/delegations
+  // Délégations dynamiques selon gouvernorat
   const delegationsQuery = useQuery({
     queryKey: ["delegations", gouvernoratId],
     queryFn: () => getDelegations(gouvernoratId as number),
@@ -89,7 +96,9 @@ export function AddressForm({
   const handleLocateMe = async () => {
     setLocError(null);
 
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
     if (!window.isSecureContext && !isLocalhost) {
       setLocError("La géolocalisation nécessite HTTPS ou localhost.");
       return;
@@ -114,16 +123,20 @@ export function AddressForm({
       },
       (err) => {
         setLocating(false);
-        if (err.code === err.PERMISSION_DENIED) setLocError("Permission refusée. Autorisez la localisation dans le navigateur.");
-        else if (err.code === err.POSITION_UNAVAILABLE) setLocError("Position indisponible. Activez le GPS ou réseau.");
-        else if (err.code === err.TIMEOUT) setLocError("La localisation a expiré. Réessayez.");
-        else setLocError("Échec de la localisation.");
+        if (err.code === err.PERMISSION_DENIED)
+          setLocError("Permission refusée. Autorisez la localisation dans le navigateur.");
+        else if (err.code === err.POSITION_UNAVAILABLE)
+          setLocError("Position indisponible. Activez le GPS ou réseau.");
+        else if (err.code === err.TIMEOUT)
+          setLocError("La localisation a expiré. Réessayez.");
+        else
+          setLocError("Échec de la localisation.");
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     );
   };
 
-  // Reverse geocoding (utilisé après "Me localiser" et après clic carte)
+  // Reverse geocoding — applique gov+délégation depuis les coordonnées (déjà correct)
   const applyReverseGeocode = async (lat: number, lng: number) => {
     const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
     if (lastReverseKey.current === key) return;
@@ -131,12 +144,14 @@ export function AddressForm({
     try {
       setReverseBusy(true);
       const reverse = await reverseGeocodeNominatim(lat, lng);
+
+      // Applique le gouvernorat résolu (correct)
       const govId = resolveGouvernoratIdFromReverse(reverse);
       if (govId !== null) setGouvernoratId(govId);
 
-      // Important : récupérer la délégation après la mise à jour des délégations
-      // (le useQuery se relance automatiquement). On tente une résolution locale.
-      const delegList = govId !== null ? await getDelegations(govId).catch(() => []) : [];
+      // Applique la délégation résolue (correct)
+      const delegList =
+        govId !== null ? await getDelegations(govId).catch(() => []) : [];
       const delegResolved = resolveDelegationFromReverse(reverse, delegList);
       if (delegResolved) setDelegation(delegResolved);
 
@@ -145,7 +160,11 @@ export function AddressForm({
       const cp = extractPostalCode(reverse);
       if (cp) setCodePostal(cp);
 
-      const cityVal = reverse.address?.city ?? reverse.address?.town ?? reverse.address?.village ?? reverse.address?.municipality;
+      const cityVal =
+        reverse.address?.city ??
+        reverse.address?.town ??
+        reverse.address?.village ??
+        reverse.address?.municipality;
       if (cityVal) setVille(cityVal);
 
       toast.info("Adresse localisée", "Vérifiez les champs avant d'enregistrer.");
@@ -166,18 +185,9 @@ export function AddressForm({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!adresse.trim()) {
-      toast.error("Adresse requise");
-      return;
-    }
-    if (!govLabel) {
-      toast.error("Gouvernorat requis");
-      return;
-    }
-    if (!ville.trim()) {
-      toast.error("Ville requise");
-      return;
-    }
+    if (!adresse.trim()) { toast.error("Adresse requise"); return; }
+    if (!govLabel) { toast.error("Gouvernorat requis"); return; }
+    if (!ville.trim()) { toast.error("Ville requise"); return; }
 
     onSubmit({
       label: label.trim() || "Adresse",
@@ -196,10 +206,13 @@ export function AddressForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+
       {/* Section 1 — Identité de l'adresse */}
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <header className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Identité</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Identité
+          </h3>
           <span className="text-[11px] text-muted-foreground">3 adresses max par compte</span>
         </header>
         <div className="grid gap-3 md:grid-cols-2">
@@ -246,7 +259,9 @@ export function AddressForm({
       {/* Section 2 — Géolocalisation rapide */}
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <header className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Géolocalisation rapide</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Géolocalisation rapide
+          </h3>
           {(reverseBusy || delegationsQuery.isFetching) && (
             <span className="text-[11px] text-primary">Synchronisation...</span>
           )}
@@ -260,14 +275,22 @@ export function AddressForm({
             disabled={locating}
             className="gap-2"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v3 M12 19v3 M2 12h3 M19 12h3" />
             </svg>
             {locating ? "Localisation en cours..." : "Me localiser maintenant"}
           </Button>
-          {(latitude !== null && longitude !== null) && (
+          {latitude !== null && longitude !== null && (
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100">
               📍 GPS détecté
             </span>
@@ -290,20 +313,25 @@ export function AddressForm({
           />
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Cliquez/glissez le marqueur sur la carte pour ajuster manuellement. L'adresse texte se met à jour automatiquement.
+          Cliquez/glissez le marqueur sur la carte pour ajuster manuellement.
+          L'adresse texte se met à jour automatiquement.
         </p>
       </section>
 
       {/* Section 3 — Adresse détaillée */}
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <header className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Adresse détaillée</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Adresse détaillée
+          </h3>
           <span className="text-[11px] text-muted-foreground">Champs requis : *</span>
         </header>
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label className="mb-1 block text-xs font-bold text-muted-foreground">Adresse complète *</label>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">
+              Adresse complète *
+            </label>
             <textarea
               value={adresse}
               onChange={(e) => setAdresse(e.target.value)}
@@ -314,13 +342,21 @@ export function AddressForm({
             />
           </div>
 
+          {/* Gouvernorat */}
           <div>
-            <label className="mb-1 block text-xs font-bold text-muted-foreground">Gouvernorat *</label>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">
+              Gouvernorat *
+            </label>
             <select
               value={gouvernoratId !== null ? String(gouvernoratId) : ""}
               onChange={(e) => {
                 const v = e.target.value;
                 setGouvernoratId(v === "" ? null : Number(v));
+                // FIX : gouvernorat changé manuellement → coordonnées GPS invalides
+                if (latitude !== null || longitude !== null) {
+                  setLatitude(null);
+                  setLongitude(null);
+                }
               }}
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
               required
@@ -332,11 +368,21 @@ export function AddressForm({
             </select>
           </div>
 
+          {/* Délégation */}
           <div>
-            <label className="mb-1 block text-xs font-bold text-muted-foreground">Délégation</label>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">
+              Délégation
+            </label>
             <select
               value={delegation}
-              onChange={(e) => setDelegation(e.target.value)}
+              onChange={(e) => {
+                setDelegation(e.target.value);
+                // FIX : délégation changée manuellement → coordonnées GPS invalides
+                if (latitude !== null || longitude !== null) {
+                  setLatitude(null);
+                  setLongitude(null);
+                }
+              }}
               disabled={gouvernoratId === null || delegationsQuery.isPending}
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
             >
@@ -353,6 +399,7 @@ export function AddressForm({
             </select>
           </div>
 
+          {/* Ville */}
           <div>
             <label className="mb-1 block text-xs font-bold text-muted-foreground">Ville *</label>
             <Input
@@ -363,8 +410,11 @@ export function AddressForm({
             />
           </div>
 
+          {/* Code postal */}
           <div>
-            <label className="mb-1 block text-xs font-bold text-muted-foreground">Code postal</label>
+            <label className="mb-1 block text-xs font-bold text-muted-foreground">
+              Code postal
+            </label>
             <Input
               value={codePostal ?? ""}
               onChange={(e) => setCodePostal(e.target.value)}
@@ -373,14 +423,19 @@ export function AddressForm({
             />
           </div>
 
-          {(latitude !== null && longitude !== null) && (
+          {/* Coordonnées GPS (readonly, affichage informatif) */}
+          {latitude !== null && longitude !== null && (
             <>
               <div>
-                <label className="mb-1 block text-xs font-bold text-muted-foreground">Latitude</label>
+                <label className="mb-1 block text-xs font-bold text-muted-foreground">
+                  Latitude
+                </label>
                 <Input value={latitude.toFixed(6)} readOnly className="bg-muted/30" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-muted-foreground">Longitude</label>
+                <label className="mb-1 block text-xs font-bold text-muted-foreground">
+                  Longitude
+                </label>
                 <Input value={longitude.toFixed(6)} readOnly className="bg-muted/30" />
               </div>
             </>
@@ -391,7 +446,9 @@ export function AddressForm({
       {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 p-3">
         <div className="text-xs text-muted-foreground">
-          {formIncomplete ? "Complétez les champs requis pour activer le bouton." : "Formulaire prêt."}
+          {formIncomplete
+            ? "Complétez les champs requis pour activer le bouton."
+            : "Formulaire prêt."}
         </div>
         <div className="flex gap-2">
           {onCancel && (

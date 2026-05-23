@@ -2,11 +2,16 @@
 //
 // Mode "saved"  → adresses enregistrées (cartes cliquables)
 // Mode "temp"   → gouvernorat SELECT + délégation SELECT + GPS + carte + sync
+//
+// CORRECTIONS :
+//  - reverseMutation.onSuccess : applique maintenant gov+delegation depuis GPS
+//    (avant : comparait seulement et affichait un warning sans rien changer)
+//  - onChange gouvernorat : efface lat/lng si GPS présent (coords devenues invalides)
+//  - onChange délégation  : idem
 
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import { useAddresses } from "../../addresses/hooks/useAddresses";
 import { Button } from "../../../shared/components/Button";
@@ -28,19 +33,16 @@ import type { ClientAddress } from "../../addresses/types";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
-  // valeurs contrôlées par CheckoutPage
   address: string;
-  city: string;        // ← contiendra le nom de délégation
+  city: string;
   postalCode: string;
   latitude: number | null;
   longitude: number | null;
-
   setAddress: (v: string) => void;
   setCity: (v: string) => void;
   setPostalCode: (v: string) => void;
   setLatitude: (v: number | null) => void;
   setLongitude: (v: number | null) => void;
-
   onTouched: (f: "address" | "city" | "postalCode" | "latitude" | "longitude") => void;
 };
 
@@ -53,7 +55,12 @@ const SELECT_CLASS =
 
 function RadioDot({ checked }: { checked: boolean }) {
   return (
-    <span className={["mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors", checked ? "border-primary" : "border-muted-foreground/40"].join(" ")}>
+    <span
+      className={[
+        "mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+        checked ? "border-primary" : "border-muted-foreground/40",
+      ].join(" ")}
+    >
       {checked && <span className="h-2 w-2 rounded-full bg-primary" />}
     </span>
   );
@@ -65,14 +72,26 @@ function buildSavedLabel(a: ClientAddress) {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-export function DeliveryAddressSelector({ address: _address, city: _city, postalCode: _postalCode, latitude, longitude, setAddress, setCity, setPostalCode, setLatitude, setLongitude, onTouched }: Props) {
+export function DeliveryAddressSelector({
+  address: _address,
+  city: _city,
+  postalCode: _postalCode,
+  latitude,
+  longitude,
+  setAddress,
+  setCity,
+  setPostalCode,
+  setLatitude,
+  setLongitude,
+  onTouched,
+}: Props) {
   const { data: savedAddresses = [], isPending: addrPending } = useAddresses();
 
   const [mode, setMode] = useState<"saved" | "temp">("saved");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Adresse temporaire — état local
-  const [gouvernoratId, setGouvernoratId] = useState<number>(22); // Tunis par défaut
+  const [gouvernoratId, setGouvernoratId] = useState<number>(22);
   const [delegation, setDelegation] = useState<string>("");
   const [adresseText, setAdresseText] = useState<string>("");
   const [codePostalLocal, setCodePostalLocal] = useState<string>("");
@@ -109,7 +128,10 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
 
   // Pré-sélection adresse par défaut
   useEffect(() => {
-    if (addrPending || savedAddresses.length === 0) { setMode("temp"); return; }
+    if (addrPending || savedAddresses.length === 0) {
+      setMode("temp");
+      return;
+    }
     setMode("saved");
     const def = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
     if (def && !selectedId) applyAddress(def);
@@ -125,13 +147,27 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
     setLongitude(a.longitude ?? null);
   }
 
+  // ── FIX : Efface le GPS quand l'user change la zone manuellement ──────────
+  // Les coordonnées ne correspondent plus à la nouvelle sélection.
+  function clearGpsIfPresent() {
+    if (latitude !== null || longitude !== null) {
+      setLatitude(null);
+      setLongitude(null);
+      onTouched("latitude");
+      onTouched("longitude");
+    }
+  }
+
   function handleModeChange(next: "saved" | "temp") {
     setMode(next);
     setSyncStatus("idle");
     setSyncMessage("");
     setGpsError(null);
     if (next === "saved" && savedAddresses.length > 0) {
-      const a = savedAddresses.find((x) => x.id === selectedId) ?? savedAddresses.find((x) => x.isDefault) ?? savedAddresses[0];
+      const a =
+        savedAddresses.find((x) => x.id === selectedId) ??
+        savedAddresses.find((x) => x.isDefault) ??
+        savedAddresses[0];
       if (a) applyAddress(a);
     } else if (next === "temp") {
       setSelectedId(null);
@@ -159,18 +195,19 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
     onSuccess: async ({ id, lat, lng, result }) => {
       if (id !== syncRef.current) return;
 
+      // Coordonnées GPS → parent
       setLatitude(roundCoordinate(lat));
       setLongitude(roundCoordinate(lng));
       onTouched("latitude");
       onTouched("longitude");
 
-      // Essai de remplissage automatique de l'adresse
+      // Remplissage automatique de l'adresse texte
       const addr = buildAddressFromReverse(result);
       const cp = extractPostalCode(result);
       if (addr) { setAdresseText(addr); setAddress(addr); onTouched("address"); }
       if (cp) { setCodePostalLocal(cp); setPostalCode(cp); onTouched("postalCode"); }
 
-      // Résolution gouvernorat + délégation depuis le reverse
+      // Résolution gouvernorat + délégation depuis le reverse geocode
       const resolvedGovId = resolveGouvernoratIdFromReverse(result);
 
       let delegPool = delegations;
@@ -179,23 +216,26 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
       }
       const resolvedDeleg = resolveDelegationFromReverse(result, delegPool);
 
-      // Contrôle de cohérence avec ce que l'utilisateur a sélectionné
-      const govMatch = resolvedGovId === null || resolvedGovId === gouvernoratId;
-      const delegMatch = !resolvedDeleg || !delegation || resolveDelegationFromReverse(result, [delegation]) !== null;
-
-      const govName = TUNISIA_GOUVERNORATS[gouvernoratId] ?? "";
-      const resolvedGovName = resolvedGovId !== null ? (TUNISIA_GOUVERNORATS[resolvedGovId] ?? "") : "";
-
-      if (govMatch && delegMatch) {
-        setSyncStatus("ok");
-        setSyncMessage(`✅ Position synchronisée avec ${govName}${delegation ? ` · ${delegation}` : ""}`);
-      } else {
-        setSyncStatus("mismatch");
-        const parts: string[] = [];
-        if (!govMatch) parts.push(`gouvernorat détecté : ${resolvedGovName || "?"}`);
-        if (!delegMatch && resolvedDeleg) parts.push(`délégation détectée : ${resolvedDeleg}`);
-        setSyncMessage(`⚠️ La position GPS ne correspond pas à votre sélection (${parts.join(", ")}). Vérifiez ou ajustez.`);
+      // ── FIX PRINCIPAL ────────────────────────────────────────────────────
+      // AVANT : comparait seulement et affichait ⚠️ sans rien écrire dans les states
+      // APRÈS : applique toujours le résultat GPS (identique à AddressForm.tsx)
+      if (resolvedGovId !== null) {
+        setGouvernoratId(resolvedGovId);
       }
+      if (resolvedDeleg) {
+        setDelegation(resolvedDeleg);
+      } else if (resolvedGovId !== null && resolvedGovId !== gouvernoratId) {
+        // Gouvernorat changé par GPS mais délégation non détectée → reset
+        setDelegation("");
+      }
+
+      const appliedGovName = TUNISIA_GOUVERNORATS[resolvedGovId ?? gouvernoratId] ?? "";
+      setSyncStatus("ok");
+      setSyncMessage(
+        `✅ GPS appliqué · ${appliedGovName}${
+          resolvedDeleg ? ` · ${resolvedDeleg}` : " · sélectionnez une délégation"
+        }`,
+      );
     },
     onError: () => {
       setSyncStatus("error");
@@ -206,9 +246,15 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
   // ── GPS ────────────────────────────────────────────────────────────────────
   function handleGps() {
     setGpsError(null);
-    if (!navigator.geolocation) { setGpsError("Géolocalisation non supportée."); return; }
+    if (!navigator.geolocation) {
+      setGpsError("Géolocalisation non supportée.");
+      return;
+    }
     const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-    if (!window.isSecureContext && !isLocal) { setGpsError("HTTPS requis pour la géolocalisation."); return; }
+    if (!window.isSecureContext && !isLocal) {
+      setGpsError("HTTPS requis pour la géolocalisation.");
+      return;
+    }
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -217,9 +263,12 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
       },
       (err) => {
         setGpsLoading(false);
-        if (err.code === err.PERMISSION_DENIED) setGpsError("Permission refusée. Autorisez la localisation dans le navigateur.");
-        else if (err.code === err.POSITION_UNAVAILABLE) setGpsError("Position indisponible.");
-        else setGpsError("Impossible de récupérer la position.");
+        if (err.code === err.PERMISSION_DENIED)
+          setGpsError("Permission refusée. Autorisez la localisation dans le navigateur.");
+        else if (err.code === err.POSITION_UNAVAILABLE)
+          setGpsError("Position indisponible.");
+        else
+          setGpsError("Impossible de récupérer la position.");
       },
       { enableHighAccuracy: true, timeout: 10_000 },
     );
@@ -249,10 +298,19 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
           const isSaved = m === "saved";
           const disabled = isSaved && savedAddresses.length === 0 && !addrPending;
           return (
-            <button key={m} type="button" disabled={disabled} onClick={() => handleModeChange(m)}
-              className={["flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200",
-                mode === m ? "border-primary bg-primary/5 ring-2 ring-primary/15 shadow-sm" : "border-border/60 bg-[hsl(var(--input))] hover:border-primary/30",
-                disabled ? "cursor-not-allowed opacity-40" : ""].join(" ")}>
+            <button
+              key={m}
+              type="button"
+              disabled={disabled}
+              onClick={() => handleModeChange(m)}
+              className={[
+                "flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200",
+                mode === m
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/15 shadow-sm"
+                  : "border-border/60 bg-[hsl(var(--input))] hover:border-primary/30",
+                disabled ? "cursor-not-allowed opacity-40" : "",
+              ].join(" ")}
+            >
               <RadioDot checked={mode === m} />
               <div>
                 <div className="text-sm font-bold text-card-foreground">
@@ -260,7 +318,11 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {isSaved
-                    ? addrPending ? "Chargement…" : savedAddresses.length === 0 ? "Aucune adresse sauvegardée" : `${savedAddresses.length} adresse${savedAddresses.length > 1 ? "s" : ""}`
+                    ? addrPending
+                      ? "Chargement…"
+                      : savedAddresses.length === 0
+                        ? "Aucune adresse sauvegardée"
+                        : `${savedAddresses.length} adresse${savedAddresses.length > 1 ? "s" : ""}`
                     : "Pour cette commande uniquement"}
                 </div>
               </div>
@@ -273,30 +335,55 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
       {mode === "saved" && (
         <div className="space-y-2">
           {addrPending ? (
-            <p className="text-sm text-muted-foreground">Chargement…</p>
+            <div className="flex h-11 items-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-muted-foreground">
+              Chargement…
+            </div>
           ) : savedAddresses.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               Aucune adresse enregistrée.{" "}
-              <Link to="/profile/addresses" className="font-semibold text-primary hover:underline underline-offset-2">Ajouter une adresse</Link>
+              <Link
+                to="/profile/addresses"
+                className="font-semibold text-primary hover:underline underline-offset-2"
+              >
+                Ajouter une adresse
+              </Link>
             </div>
           ) : (
             <div className="grid gap-2">
               {savedAddresses.map((a) => {
                 const sel = a.id === selectedId;
                 return (
-                  <button key={a.id} type="button" onClick={() => applyAddress(a)}
-                    className={["flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all",
-                      sel ? "border-primary/60 bg-primary/5 ring-2 ring-primary/15 shadow-sm" : "border-border bg-card hover:border-primary/30 hover:bg-accent/30"].join(" ")}>
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => applyAddress(a)}
+                    className={[
+                      "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all",
+                      sel
+                        ? "border-primary/60 bg-primary/5 ring-2 ring-primary/15 shadow-sm"
+                        : "border-border bg-card hover:border-primary/30 hover:bg-accent/30",
+                    ].join(" ")}
+                  >
                     <RadioDot checked={sel} />
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-card-foreground">{a.label}</span>
-                        {a.isDefault && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">Par défaut</span>}
-                        {a.latitude && a.longitude && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">📍 GPS</span>}
+                        {a.isDefault && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                            Par défaut
+                          </span>
+                        )}
+                        {a.latitude && a.longitude && (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                            📍 GPS
+                          </span>
+                        )}
                       </div>
                       <p className="mt-1 text-sm text-card-foreground">{buildSavedLabel(a)}</p>
                       {(a.delegation || a.gouvernorat) && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">{[a.delegation, a.gouvernorat].filter(Boolean).join(" · ")}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[a.delegation, a.gouvernorat].filter(Boolean).join(" · ")}
+                        </p>
                       )}
                     </div>
                   </button>
@@ -306,7 +393,12 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
           )}
           {savedAddresses.length > 0 && (
             <div className="text-right pt-1">
-              <Link to="/profile/addresses" className="text-xs font-semibold text-primary hover:underline underline-offset-2">Gérer mes adresses →</Link>
+              <Link
+                to="/profile/addresses"
+                className="text-xs font-semibold text-primary hover:underline underline-offset-2"
+              >
+                Gérer mes adresses →
+              </Link>
             </div>
           )}
         </div>
@@ -321,8 +413,17 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
             <label className="text-sm font-semibold text-card-foreground">
               Gouvernorat <span className="text-rose-500">*</span>
             </label>
-            <select className={SELECT_CLASS} value={gouvernoratId}
-              onChange={(e) => { setGouvernoratId(Number(e.target.value)); setSyncStatus("idle"); setSyncMessage(""); }}>
+            <select
+              className={SELECT_CLASS}
+              value={gouvernoratId}
+              onChange={(e) => {
+                setGouvernoratId(Number(e.target.value));
+                setSyncStatus("idle");
+                setSyncMessage("");
+                // FIX : gouvernorat changé manuellement → coordonnées GPS invalides
+                clearGpsIfPresent();
+              }}
+            >
               {TUNISIA_GOUVERNORATS.map((name, idx) => (
                 <option key={idx} value={idx}>{name}</option>
               ))}
@@ -335,12 +436,25 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
               Délégation <span className="text-rose-500">*</span>
             </label>
             {delegQuery.isLoading ? (
-              <div className="flex h-11 items-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-muted-foreground">Chargement…</div>
+              <div className="flex h-11 items-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-muted-foreground">
+                Chargement…
+              </div>
             ) : (
-              <select className={SELECT_CLASS} value={delegation}
-                onChange={(e) => { setDelegation(e.target.value); setSyncStatus("idle"); setSyncMessage(""); }}>
+              <select
+                className={SELECT_CLASS}
+                value={delegation}
+                onChange={(e) => {
+                  setDelegation(e.target.value);
+                  setSyncStatus("idle");
+                  setSyncMessage("");
+                  // FIX : délégation changée manuellement → coordonnées GPS invalides
+                  clearGpsIfPresent();
+                }}
+              >
                 <option value="">— Choisir une délégation —</option>
-                {delegations.map((d) => <option key={d} value={d}>{d}</option>)}
+                {delegations.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
               </select>
             )}
           </div>
@@ -350,17 +464,21 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
             <label className="text-sm font-semibold text-card-foreground">
               Adresse <span className="text-rose-500">*</span>
             </label>
-            <Input value={adresseText}
+            <Input
+              value={adresseText}
               onChange={(e) => { setAdresseText(e.target.value); setAddress(e.target.value); onTouched("address"); }}
-              placeholder="Ex: 12 Rue Habib Bourguiba, Résidence A" />
+              placeholder="Ex: 12 Rue Habib Bourguiba, Résidence A"
+            />
           </div>
 
           {/* Code postal */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-card-foreground">Code postal</label>
-            <Input value={codePostalLocal}
+            <Input
+              value={codePostalLocal}
               onChange={(e) => { setCodePostalLocal(e.target.value); setPostalCode(e.target.value); onTouched("postalCode"); }}
-              placeholder="Ex: 1000" />
+              placeholder="Ex: 1000"
+            />
           </div>
 
           {/* ── GPS + Carte ─────────────────────────────────────────────────── */}
@@ -368,49 +486,99 @@ export function DeliveryAddressSelector({ address: _address, city: _city, postal
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-card-foreground">Localisation GPS</p>
-                <p className="text-xs text-muted-foreground">Optionnelle · améliore la précision de livraison</p>
+                <p className="text-xs text-muted-foreground">
+                  Optionnelle · améliore la précision de livraison
+                </p>
               </div>
 
               {hasGps && (
                 <div className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
                   <span>📍</span>
                   <span>{latitude!.toFixed(4)}, {longitude!.toFixed(4)}</span>
-                  <button type="button" title="Effacer les coordonnées"
-                    onClick={() => { setLatitude(null); setLongitude(null); setSyncStatus("idle"); setSyncMessage(""); onTouched("latitude"); onTouched("longitude"); }}
-                    className="ml-1 text-emerald-400 transition-colors hover:text-rose-500">✕</button>
+                  <button
+                    type="button"
+                    title="Effacer les coordonnées"
+                    onClick={() => {
+                      setLatitude(null);
+                      setLongitude(null);
+                      setSyncStatus("idle");
+                      setSyncMessage("");
+                      onTouched("latitude");
+                      onTouched("longitude");
+                    }}
+                    className="ml-1 text-emerald-400 transition-colors hover:text-rose-500"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={handleGps} disabled={gpsLoading || reverseMutation.isPending}>
-                {gpsLoading ? (<><span className="mr-1.5 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />Localisation…</>) : "📍 Ma position GPS"}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={handleGps}
+                disabled={gpsLoading || reverseMutation.isPending}
+              >
+                {gpsLoading ? (
+                  <>
+                    <span className="mr-1.5 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
+                    Localisation…
+                  </>
+                ) : (
+                  "📍 Ma position GPS"
+                )}
               </Button>
-              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => setMapOpen(true)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => setMapOpen(true)}
+              >
                 🗺 Choisir sur la carte
               </Button>
             </div>
 
             {/* Message de sync */}
             {syncStatus !== "idle" && syncMessage && (
-              <div className={["rounded-xl border px-3 py-2 text-xs font-medium",
-                syncStatus === "loading" ? "border-border/60 bg-muted/40 text-muted-foreground" :
-                syncStatus === "ok" ? "border-emerald-200 bg-emerald-50/80 text-emerald-700" :
-                syncStatus === "mismatch" ? "border-amber-200 bg-amber-50/80 text-amber-700" :
-                "border-rose-200 bg-rose-50/70 text-rose-700"].join(" ")}>
-                {syncStatus === "loading" && <span className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />}
+              <div
+                className={[
+                  "rounded-xl border px-3 py-2 text-xs font-medium",
+                  syncStatus === "loading"
+                    ? "border-border/60 bg-muted/40 text-muted-foreground"
+                    : syncStatus === "ok"
+                      ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                      : syncStatus === "mismatch"
+                        ? "border-amber-200 bg-amber-50/80 text-amber-700"
+                        : "border-rose-200 bg-rose-50/70 text-rose-700",
+                ].join(" ")}
+              >
+                {syncStatus === "loading" && (
+                  <span className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
+                )}
                 {syncMessage}
               </div>
             )}
 
             {gpsError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs text-rose-700">{gpsError}</div>
+              <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs text-rose-700">
+                {gpsError}
+              </div>
             )}
           </div>
 
           <p className="text-xs text-muted-foreground">
             Cette adresse ne sera pas sauvegardée dans votre profil.{" "}
-            <Link to="/profile/addresses" className="font-semibold text-primary hover:underline underline-offset-2">Enregistrer une adresse permanente</Link>
+            <Link
+              to="/profile/addresses"
+              className="font-semibold text-primary hover:underline underline-offset-2"
+            >
+              Enregistrer une adresse permanente
+            </Link>
           </p>
         </div>
       )}

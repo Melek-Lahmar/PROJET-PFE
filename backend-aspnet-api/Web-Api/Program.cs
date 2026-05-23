@@ -511,8 +511,8 @@ using (var scope2 = app.Services.CreateScope())
     Hangfire.RecurringJob.AddOrUpdate<Web_Api.Services.Livreur.DepotIncrementJob>(
         Web_Api.Services.Livreur.DepotIncrementJob.JobId,
         job => job.RunAsync(),
-        // 00:00 Africa/Tunis (UTC+1, sans DST en Tunisie)
-        "0 23 * * *", // 23:00 UTC ≈ 00:00 Tunis
+       
+        "0 23 * * *", 
         new Hangfire.RecurringJobOptions
         {
             TimeZone = TimeZoneInfo.Utc

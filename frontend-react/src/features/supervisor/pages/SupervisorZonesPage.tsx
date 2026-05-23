@@ -1,30 +1,31 @@
+// frontend-react/src/features/supervisor/pages/SupervisorZonesPage.tsx
+// Correction : livreur-transit → dépôt filtré par gouvernorat choisi (1 dépôt = 1 gouvernorat)
+
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../core/http/axiosClient";
-import { endpoints } from "../../../core/http/endpoints";
 import { Button } from "../../../shared/components/Button";
-import { Input } from "../../../shared/components/Input";
-import { PremiumHero } from "../../../shared/components/premium";
-import { getGouvernorats, getDelegations } from "../../geo/api/geoApi";
 import { getDepots } from "../../catalog/api/depotsApi";
+import type { DepotDto } from "../../catalog/api/depotsApi";
+import { getGouvernorats, getDelegations } from "../../geo/api/geoApi";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 
-type Zone = {
-  gouvernorat: string;
-  delegation: string;
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type LivreurZone = { gouvernorat: string; delegation: string };
 
 type Livreur = {
   id: string;
   email: string;
   fullName: string;
-  telephone?: string | null;
-  gouvernorat?: string | null;
-  gouvernoratId?: number | null;
-  delegation?: string | null;
+  telephone: string;
+  gouvernorat: string;
+  gouvernoratId: number;
+  delegation: string;
   isTransit: boolean;
-  depotRattacheNo?: number | null;
-  depotRattacheName?: string | null;
-  zones: Zone[];
+  depotRattacheNo: number | null;
+  depotRattacheName: string | null;
+  zones: LivreurZone[];
 };
 
 type LivreurForm = {
@@ -32,934 +33,582 @@ type LivreurForm = {
   password: string;
   fullName: string;
   telephone: string;
-  gouvernoratId: number;
+  gouvernoratId: number | "";
   delegation: string;
   isTransit: boolean;
   depotRattacheNo: number | "";
-  zones: Zone[];
+  zones: LivreurZone[];
 };
 
-type TypeFilter = "ALL" | "CLASSIQUE" | "TRANSIT";
+// ─── Constantes ───────────────────────────────────────────────────────────────
 
-const DEFAULT_GOUVERNORAT_ID = 22;
+const DEFAULT_GOV_ID = 22; // Tunis
 
 const emptyForm: LivreurForm = {
   email: "",
   password: "12345678",
   fullName: "",
   telephone: "+216",
-  gouvernoratId: DEFAULT_GOUVERNORAT_ID,
+  gouvernoratId: DEFAULT_GOV_ID,
   delegation: "",
   isTransit: false,
   depotRattacheNo: "",
   zones: [],
 };
 
-function normalizeText(value: unknown) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
+// ─── Helpers UI ───────────────────────────────────────────────────────────────
+
+const SELECT_CLASS =
+  "h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/10";
+
+const INPUT_CLASS =
+  "h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/10";
+
+function normalizeText(s?: string | null) {
+  return (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function cleanText(value: unknown) {
-  return String(value ?? "").trim();
+function getLivreurTypeBadge(l: Livreur) {
+  if (l.isTransit)
+    return <span className="rounded-full bg-indigo-100 px-3 py-0.5 text-xs font-black text-indigo-700">🚛 Transit</span>;
+  return <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-black text-emerald-700">🛵 Classique</span>;
 }
 
-function getLivreurTypeLabel(livreur: Livreur) {
-  return livreur.isTransit ? "Livreur-transit" : "Livreur classique";
+// ─── API calls ────────────────────────────────────────────────────────────────
+
+async function fetchLivreurs(): Promise<Livreur[]> {
+  const { data } = await axiosClient.get<Livreur[]>("/api/supervisor/livreurs");
+  return data;
 }
 
-function getLivreurTypeClass(livreur: Livreur) {
-  return livreur.isTransit
-    ? "bg-indigo/10 text-indigo"
-    : "bg-success/10 text-success";
+async function fetchDepotZones(): Promise<{ depotNo: number; gouvernorat: string }[]> {
+  const { data } = await axiosClient.get<{ depotNo: number; gouvernorat: string; delegation: string }[]>(
+    "/api/admin/depot-zones"
+  );
+  return data;
 }
+
+async function createLivreur(payload: object) {
+  const { data } = await axiosClient.post("/api/supervisor/livreurs", payload);
+  return data;
+}
+
+async function updateLivreur(id: string, payload: object) {
+  const { data } = await axiosClient.put(`/api/supervisor/livreurs/${id}`, payload);
+  return data;
+}
+
+async function deleteLivreur(id: string) {
+  await axiosClient.delete(`/api/supervisor/livreurs/${id}`);
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 
 export function SupervisorZonesPage() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
-  const [filterGouvernoratId, setFilterGouvernoratId] = useState<number | "">("");
-  const [filterDelegation, setFilterDelegation] = useState("");
+  // ── Données ──────────────────────────────────────────────────────────────
+  const livreursQuery = useQuery({ queryKey: ["supervisor-livreurs"], queryFn: fetchLivreurs });
+  const depotsQuery   = useQuery({ queryKey: ["depots"], queryFn: () => getDepots(false) });
+  const govQuery      = useQuery({ queryKey: ["gouvernorats"], queryFn: getGouvernorats });
+  const depotZonesQuery = useQuery({ queryKey: ["depot-zones-index"], queryFn: fetchDepotZones });
+
+  const livreurs   = livreursQuery.data ?? [];
+  const depots     = depotsQuery.data ?? [];
+  const gouvernorats = govQuery.data ?? [];
+  const depotZones = depotZonesQuery.data ?? [];
+
+  // ── Filtres liste ─────────────────────────────────────────────────────────
+  const [search, setSearch]             = useState("");
+  const [typeFilter, setTypeFilter]     = useState<"ALL" | "CLASSIQUE" | "TRANSIT">("ALL");
+  const [filterGovId, setFilterGovId]   = useState<number | "">("");
+  const [filterDeleg, setFilterDeleg]   = useState("");
   const [filterDepotNo, setFilterDepotNo] = useState<number | "">("");
 
-  const [modalMode, setModalMode] = useState<"closed" | "create" | "edit">("closed");
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [modalMode, setModalMode]       = useState<"create" | "edit">("create");
   const [selectedLivreur, setSelectedLivreur] = useState<Livreur | null>(null);
-  const [form, setForm] = useState<LivreurForm>(emptyForm);
+  const [form, setForm]                 = useState<LivreurForm>(emptyForm);
+  const [error, setError]               = useState<string | null>(null);
 
-  const [zoneGovId, setZoneGovId] = useState<number>(DEFAULT_GOUVERNORAT_ID);
-  const [zoneDelegation, setZoneDelegation] = useState("");
+  // ── Zone panel (livreur classique) ────────────────────────────────────────
+  const [zoneGovId, setZoneGovId]       = useState<number>(DEFAULT_GOV_ID);
+  const [zoneDeleg, setZoneDeleg]       = useState("");
 
-  const livreursQuery = useQuery({
-    queryKey: ["supervisor", "livreurs"],
-    queryFn: async () => {
-      const { data } = await axiosClient.get<Livreur[]>(endpoints.supervisorLivreurs);
-      return data;
-    },
-  });
-
-  const gouvernoratsQuery = useQuery({
-    queryKey: ["geo", "gouvernorats"],
-    queryFn: getGouvernorats,
-  });
-
-  const depotsQuery = useQuery({
-    queryKey: ["supervisor", "depots"],
-    queryFn: () => getDepots(false),
-  });
-
-  const filterDelegationsQuery = useQuery({
-    queryKey: ["geo", "delegations", "filter", filterGouvernoratId],
-    queryFn: () => getDelegations(Number(filterGouvernoratId)),
-    enabled: typeof filterGouvernoratId === "number",
-  });
-
-  const formDelegationsQuery = useQuery({
-    queryKey: ["geo", "delegations", "form", form.gouvernoratId],
-    queryFn: () => getDelegations(form.gouvernoratId),
-    enabled: Number.isFinite(form.gouvernoratId),
-  });
-
-  const zoneDelegationsQuery = useQuery({
-    queryKey: ["geo", "delegations", "zone", zoneGovId],
+  const zoneDelegQuery = useQuery({
+    queryKey: ["delegations", zoneGovId],
     queryFn: () => getDelegations(zoneGovId),
-    enabled: Number.isFinite(zoneGovId),
+    staleTime: 5 * 60_000,
   });
 
-  const livreurs = livreursQuery.data ?? [];
-  const gouvernorats = gouvernoratsQuery.data ?? [];
-  const depots = depotsQuery.data ?? [];
+  const formDelegQuery = useQuery({
+    queryKey: ["delegations", form.gouvernoratId],
+    queryFn: () => getDelegations(form.gouvernoratId as number),
+    enabled: typeof form.gouvernoratId === "number",
+    staleTime: 5 * 60_000,
+  });
 
-  const classiques = livreurs.filter((livreur) => !livreur.isTransit);
-  const transits = livreurs.filter((livreur) => livreur.isTransit);
+  // ── Dépôts filtrés par gouvernorat du livreur-transit ────────────────────
+  // Règle : 1 dépôt = 1 gouvernorat
+  // Quand le superviseur choisit gouvernorat X → afficher seulement les dépôts
+  // qui ont des zones dans gouvernorat X
+  const govName = useMemo(() => {
+    if (form.gouvernoratId === "") return "";
+    return gouvernorats.find((g) => g.id === form.gouvernoratId)?.name ?? "";
+  }, [form.gouvernoratId, gouvernorats]);
 
-  const getGovName = (id: number | "") => {
-    if (id === "") return "";
-    return gouvernorats.find((gov) => gov.id === id)?.name ?? String(id);
+  const depotsForGouvernorat = useMemo<DepotDto[]>(() => {
+    if (!govName) return depots;
+    // Trouver les depotNo qui couvrent ce gouvernorat
+    const depotNos = new Set(
+      depotZones
+        .filter((z) =>
+          normalizeText(z.gouvernorat) === normalizeText(govName)
+        )
+        .map((z) => z.depotNo)
+    );
+    if (depotNos.size === 0) return depots; // fallback : montrer tous si pas de zone configurée
+    return depots.filter((d) => depotNos.has(d.dE_No));
+  }, [govName, depots, depotZones]);
+
+  const depotLabel = (depotNo?: number | null) => {
+    if (!depotNo) return "Non affecté";
+    const d = depots.find((x) => x.dE_No === depotNo);
+    return d ? `${d.dE_Intitule ?? `Dépôt ${depotNo}`}${d.dE_Ville ? ` — ${d.dE_Ville}` : ""}` : `Dépôt ${depotNo}`;
   };
 
-  const selectedFilterGovName = getGovName(filterGouvernoratId);
-  const selectedZoneGovName = getGovName(zoneGovId);
-
-  const depotLabel = (depotNo?: number | null, fallback?: string | null) => {
-    if (fallback) return fallback;
-
-    const depot = depots.find((item) => item.dE_No === depotNo);
-    if (depot) {
-      return `${depot.dE_Intitule ?? `Dépôt ${depot.dE_No}`}${depot.dE_Ville ? ` — ${depot.dE_Ville}` : ""}`;
-    }
-
-    return depotNo ? `Dépôt ${depotNo}` : "Non affecté";
-  };
+  // ── Filtrage liste ────────────────────────────────────────────────────────
+  const filterGovName = useMemo(
+    () => gouvernorats.find((g) => g.id === filterGovId)?.name ?? "",
+    [filterGovId, gouvernorats]
+  );
 
   const filteredLivreurs = useMemo(() => {
-    const q = normalizeText(search);
-    const gov = normalizeText(selectedFilterGovName);
-    const delegation = normalizeText(filterDelegation);
+    const q    = normalizeText(search);
+    const gov  = normalizeText(filterGovName);
+    const deleg = normalizeText(filterDeleg);
 
-    return livreurs.filter((livreur) => {
-      const zones = livreur.zones ?? [];
+    return livreurs.filter((l) => {
+      const zones = l.zones ?? [];
 
-      const matchesSearch =
+      const matchSearch =
         !q ||
-        normalizeText(livreur.fullName).includes(q) ||
-        normalizeText(livreur.email).includes(q) ||
-        normalizeText(livreur.telephone).includes(q);
+        normalizeText(l.fullName).includes(q) ||
+        normalizeText(l.email).includes(q) ||
+        normalizeText(l.telephone).includes(q);
 
-      const matchesType =
+      const matchType =
         typeFilter === "ALL" ||
-        (typeFilter === "CLASSIQUE" && !livreur.isTransit) ||
-        (typeFilter === "TRANSIT" && livreur.isTransit);
+        (typeFilter === "CLASSIQUE" && !l.isTransit) ||
+        (typeFilter === "TRANSIT" && l.isTransit);
 
-      const matchesGov =
+      const matchGov =
         !gov ||
-        normalizeText(livreur.gouvernorat).includes(gov) ||
-        zones.some((zone) => normalizeText(zone.gouvernorat).includes(gov));
+        normalizeText(l.gouvernorat).includes(gov) ||
+        zones.some((z) => normalizeText(z.gouvernorat).includes(gov));
 
-      const matchesDelegation =
-        !delegation ||
-        normalizeText(livreur.delegation).includes(delegation) ||
-        zones.some((zone) => normalizeText(zone.delegation).includes(delegation));
+      const matchDeleg =
+        !deleg ||
+        normalizeText(l.delegation).includes(deleg) ||
+        zones.some((z) => normalizeText(z.delegation).includes(deleg));
 
-      const matchesDepot =
+      const matchDepot =
         filterDepotNo === "" ||
-        (livreur.isTransit && Number(livreur.depotRattacheNo) === Number(filterDepotNo));
+        (l.isTransit && Number(l.depotRattacheNo) === Number(filterDepotNo));
 
-      return matchesSearch && matchesType && matchesGov && matchesDelegation && matchesDepot;
+      return matchSearch && matchType && matchGov && matchDeleg && matchDepot;
     });
-  }, [livreurs, search, selectedFilterGovName, filterDelegation, typeFilter, filterDepotNo]);
+  }, [livreurs, search, filterGovName, filterDeleg, typeFilter, filterDepotNo]);
 
-  const openCreateModal = () => {
-    setSelectedLivreur(null);
-    setForm(emptyForm);
-    setZoneGovId(DEFAULT_GOUVERNORAT_ID);
-    setZoneDelegation("");
-    setModalMode("create");
-  };
-
-  const openDetailModal = (livreur: Livreur) => {
-    setSelectedLivreur(livreur);
-    setForm({
-      email: livreur.email ?? "",
-      password: "12345678",
-      fullName: livreur.fullName ?? "",
-      telephone: livreur.telephone ?? "+216",
-      gouvernoratId: livreur.gouvernoratId ?? DEFAULT_GOUVERNORAT_ID,
-      delegation: livreur.delegation ?? "",
-      isTransit: livreur.isTransit,
-      depotRattacheNo: livreur.depotRattacheNo ?? "",
-      zones: livreur.zones ?? [],
-    });
-    setZoneGovId(livreur.gouvernoratId ?? DEFAULT_GOUVERNORAT_ID);
-    setZoneDelegation("");
-    setModalMode("edit");
-  };
-
-  const closeModal = () => {
-    setModalMode("closed");
-    setSelectedLivreur(null);
-    setForm(emptyForm);
-    setZoneGovId(DEFAULT_GOUVERNORAT_ID);
-    setZoneDelegation("");
-  };
-
-  const addZone = () => {
-    const gouvernorat = cleanText(selectedZoneGovName);
-    const delegation = cleanText(zoneDelegation);
-
-    if (!gouvernorat || !delegation) return;
-
-    setForm((previous) => {
-      const exists = previous.zones.some(
-        (zone) =>
-          normalizeText(zone.gouvernorat) === normalizeText(gouvernorat) &&
-          normalizeText(zone.delegation) === normalizeText(delegation)
-      );
-
-      if (exists) return previous;
-
-      return {
-        ...previous,
-        zones: [...previous.zones, { gouvernorat, delegation }],
-      };
-    });
-
-    setZoneDelegation("");
-  };
-
-  const removeZone = (index: number) => {
-    setForm((previous) => ({
-      ...previous,
-      zones: previous.zones.filter((_, currentIndex) => currentIndex !== index),
-    }));
-  };
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        nomComplet: form.fullName.trim(),
-        telephone: form.telephone.trim(),
-        gouvernorat: form.gouvernoratId,
-        delegation: form.delegation.trim(),
-        isTransit: form.isTransit,
-        depotRattacheNo:
-          form.isTransit && form.depotRattacheNo !== ""
-            ? Number(form.depotRattacheNo)
-            : null,
-        zones: form.isTransit
-          ? []
-          : form.zones.map((zone) => ({
-              gouvernorat: zone.gouvernorat.trim(),
-              delegation: zone.delegation.trim(),
-            })),
-      };
-
-      if (modalMode === "edit" && selectedLivreur) {
-        await axiosClient.put(endpoints.supervisorLivreurById(selectedLivreur.id), payload);
-        return;
-      }
-
-      await axiosClient.post(endpoints.supervisorLivreurs, {
-        email: form.email.trim(),
-        password: form.password.trim(),
-        ...payload,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["supervisor", "livreurs"] });
-      closeModal();
-    },
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: (payload: object) => createLivreur(payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["supervisor-livreurs"] }); closeModal(); },
+    onError: (e) => setError(getApiErrorMessage(e)),
   });
 
-  const identityValid =
-    modalMode === "edit" ||
-    (form.email.trim().length > 3 && form.password.trim().length >= 6);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: object }) => updateLivreur(id, payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["supervisor-livreurs"] }); closeModal(); },
+    onError: (e) => setError(getApiErrorMessage(e)),
+  });
 
-  const baseInfoValid =
-    identityValid &&
-    form.fullName.trim().length > 0 &&
-    form.telephone.trim().length > 0 &&
-    form.gouvernoratId &&
-    form.delegation.trim().length > 0;
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteLivreur(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["supervisor-livreurs"] }),
+  });
 
-  const canSave = form.isTransit
-    ? Boolean(baseInfoValid && form.depotRattacheNo !== "")
-    : Boolean(baseInfoValid && form.zones.length > 0);
+  // ── Modal helpers ─────────────────────────────────────────────────────────
+  function openCreate() {
+    setSelectedLivreur(null);
+    setForm(emptyForm);
+    setZoneGovId(DEFAULT_GOV_ID);
+    setZoneDeleg("");
+    setError(null);
+    setModalMode("create");
+    setModalOpen(true);
+  }
 
+  function openEdit(l: Livreur) {
+    setSelectedLivreur(l);
+    setForm({
+      email: l.email ?? "",
+      password: "12345678",
+      fullName: l.fullName ?? "",
+      telephone: l.telephone ?? "+216",
+      gouvernoratId: l.gouvernoratId ?? DEFAULT_GOV_ID,
+      delegation: l.delegation ?? "",
+      isTransit: l.isTransit,
+      depotRattacheNo: l.depotRattacheNo ?? "",
+      zones: l.zones ?? [],
+    });
+    setZoneGovId(l.gouvernoratId ?? DEFAULT_GOV_ID);
+    setZoneDeleg("");
+    setError(null);
+    setModalMode("edit");
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setSelectedLivreur(null);
+    setError(null);
+  }
+
+  function addZone() {
+    if (!zoneGovId || !zoneDeleg) return;
+    const govNameForZone = gouvernorats.find((g) => g.id === zoneGovId)?.name ?? String(zoneGovId);
+    const already = form.zones.some(
+      (z) => normalizeText(z.gouvernorat) === normalizeText(govNameForZone) &&
+             normalizeText(z.delegation)  === normalizeText(zoneDeleg)
+    );
+    if (already) return;
+    setForm((prev) => ({ ...prev, zones: [...prev.zones, { gouvernorat: govNameForZone, delegation: zoneDeleg }] }));
+    setZoneDeleg("");
+  }
+
+  function removeZone(i: number) {
+    setForm((prev) => ({ ...prev, zones: prev.zones.filter((_, idx) => idx !== i) }));
+  }
+
+  function buildPayload() {
+    const govName = gouvernorats.find((g) => g.id === form.gouvernoratId)?.name ?? "";
+    return {
+      email: form.email,
+      password: form.password,
+      fullName: form.fullName,
+      telephone: form.telephone,
+      gouvernorat: govName,
+      delegation: form.delegation,
+      isTransit: form.isTransit,
+      depotRattacheNo: form.isTransit && form.depotRattacheNo !== "" ? Number(form.depotRattacheNo) : null,
+      zones: form.isTransit ? [] : form.zones,
+    };
+  }
+
+  function handleSubmit() {
+    setError(null);
+    const payload = buildPayload();
+    if (modalMode === "create") {
+      createMutation.mutate(payload);
+    } else if (selectedLivreur) {
+      updateMutation.mutate({ id: selectedLivreur.id, payload });
+    }
+  }
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  // ─── Rendu ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen space-y-6 bg-background pb-10">
-      <PremiumHero
-        kicker="Espace superviseur"
-        title="Gestion des livreurs"
-        description="Affiche la liste des livreurs. Cliquez sur un livreur pour modifier ses zones ou son dépôt de transit."
-        actions={
-          <Button type="button" variant="primary" onClick={openCreateModal}>+ Ajouter un livreur</Button>
-        }
-      />
+    <div className="w-full space-y-6 pb-10">
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <p className="text-sm font-semibold text-muted-foreground">Livreurs totaux</p>
-          <p className="mt-2 text-3xl font-black">{livreurs.length}</p>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <p className="text-sm font-semibold text-muted-foreground">Livreurs classiques</p>
-          <p className="mt-2 text-3xl font-black">{classiques.length}</p>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <p className="text-sm font-semibold text-muted-foreground">Livreurs-transit</p>
-          <p className="mt-2 text-3xl font-black">{transits.length}</p>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="mb-4 flex flex-col gap-1">
-          <h2 className="text-lg font-black">Recherche et filtres</h2>
-          <p className="text-sm text-muted-foreground">
-            Filtrez les livreurs par nom, type, gouvernorat, délégation ou dépôt rattaché.
-          </p>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <div className="xl:col-span-2">
-            <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-              Recherche
-            </label>
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Nom, email ou téléphone"
-            />
-          </div>
-
+      {/* En-tête */}
+      <section className="app-surface px-6 py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-              Type
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
-              className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-            >
-              <option value="ALL">Tous</option>
-              <option value="CLASSIQUE">Livreurs classiques</option>
-              <option value="TRANSIT">Livreurs-transit</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-              Gouvernorat
-            </label>
-            <select
-              value={filterGouvernoratId}
-              onChange={(event) => {
-                const value = event.target.value;
-                setFilterGouvernoratId(value ? Number(value) : "");
-                setFilterDelegation("");
-              }}
-              className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-            >
-              <option value="">Tous</option>
-              {gouvernorats.map((gov) => (
-                <option key={gov.id} value={gov.id}>
-                  {gov.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-              Délégation
-            </label>
-            <select
-              value={filterDelegation}
-              onChange={(event) => setFilterDelegation(event.target.value)}
-              disabled={filterGouvernoratId === ""}
-              className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground disabled:opacity-50"
-            >
-              <option value="">Toutes</option>
-              {(filterDelegationsQuery.data ?? []).map((delegation) => (
-                <option key={delegation} value={delegation}>
-                  {delegation}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <div>
-            <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-              Dépôt transit
-            </label>
-            <select
-              value={filterDepotNo}
-              onChange={(event) => {
-                const value = event.target.value;
-                setFilterDepotNo(value ? Number(value) : "");
-              }}
-              className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-            >
-              <option value="">Tous</option>
-              {depots.map((depot) => (
-                <option key={depot.dE_No} value={depot.dE_No}>
-                  {depot.dE_Intitule ?? `Dépôt ${depot.dE_No}`}
-                  {depot.dE_Ville ? ` — ${depot.dE_Ville}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full rounded-2xl"
-              onClick={() => {
-                setSearch("");
-                setTypeFilter("ALL");
-                setFilterGouvernoratId("");
-                setFilterDelegation("");
-                setFilterDepotNo("");
-              }}
-            >
-              Réinitialiser les filtres
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-black">Liste des livreurs</h2>
-            <p className="text-sm text-muted-foreground">
-              {filteredLivreurs.length} livreur(s) affiché(s) sur {livreurs.length}.
+            <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Superviseur</div>
+            <h1 className="mt-1 text-2xl font-extrabold text-card-foreground">Gestion des livreurs</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {livreurs.filter((l) => l.isTransit).length} livreur(s) transit ·{" "}
+              {livreurs.filter((l) => !l.isTransit).length} livreur(s) classique(s)
             </p>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-2xl"
-            onClick={() => livreursQuery.refetch()}
-            isLoading={livreursQuery.isFetching}
-          >
-            Recharger
+          <Button type="button" variant="primary" className="h-11 rounded-2xl px-5" onClick={openCreate}>
+            + Ajouter un livreur
           </Button>
         </div>
+      </section>
 
-        {livreursQuery.isLoading && (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm font-semibold text-muted-foreground">
-            Chargement des livreurs...
-          </div>
-        )}
+      {/* Filtres */}
+      <section className="app-surface px-6 py-5 space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input className={INPUT_CLASS} placeholder="🔍 Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} />
 
-        {livreursQuery.isError && (
-          <div className="ds-alert ds-alert-danger">
-            Erreur lors du chargement des livreurs.
-          </div>
-        )}
+          <select className={SELECT_CLASS} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}>
+            <option value="ALL">Tous les types</option>
+            <option value="CLASSIQUE">Livreurs classiques</option>
+            <option value="TRANSIT">Livreurs transit</option>
+          </select>
 
-        {!livreursQuery.isLoading && filteredLivreurs.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-            <p className="text-lg font-black">Aucun livreur trouvé</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Changez les filtres ou ajoutez un nouveau livreur.
-            </p>
-          </div>
-        )}
+          <select className={SELECT_CLASS} value={filterGovId} onChange={(e) => setFilterGovId(e.target.value ? Number(e.target.value) : "")}>
+            <option value="">Tous les gouvernorats</option>
+            {gouvernorats.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
 
-        <div className="grid gap-4">
-          {filteredLivreurs.map((livreur) => (
-            <article
-              key={livreur.id}
-              className="rounded-2xl border border-border bg-background p-5 shadow-sm transition hover:border-primary/30 hover:shadow-md"
-            >
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-black">{livreur.fullName}</h3>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-black ${getLivreurTypeClass(
-                        livreur
-                      )}`}
-                    >
-                      {getLivreurTypeLabel(livreur)}
-                    </span>
-                  </div>
+          <select className={SELECT_CLASS} value={filterDepotNo} onChange={(e) => setFilterDepotNo(e.target.value ? Number(e.target.value) : "")}>
+            <option value="">Tous les dépôts</option>
+            {depots.map((d) => (
+              <option key={d.dE_No} value={d.dE_No}>
+                {d.dE_Intitule ?? `Dépôt ${d.dE_No}`}{d.dE_Ville ? ` — ${d.dE_Ville}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                  <div className="mt-2 grid gap-1 text-sm text-muted-foreground md:grid-cols-3">
-                    <p>
-                      <span className="font-bold text-foreground">Email : </span>
-                      {livreur.email}
-                    </p>
-                    <p>
-                      <span className="font-bold text-foreground">Téléphone : </span>
-                      {livreur.telephone || "Non renseigné"}
-                    </p>
-                    <p>
-                      <span className="font-bold text-foreground">Zone principale : </span>
-                      {livreur.gouvernorat || "—"} / {livreur.delegation || "—"}
-                    </p>
-                  </div>
+        <div className="flex justify-end">
+          <Button type="button" variant="ghost" size="sm" className="rounded-xl" onClick={() => {
+            setSearch(""); setTypeFilter("ALL"); setFilterGovId(""); setFilterDeleg(""); setFilterDepotNo("");
+          }}>
+            Réinitialiser
+          </Button>
+        </div>
+      </section>
 
-                  {livreur.isTransit ? (
-                    <div className="mt-4 rounded-2xl bg-indigo/5 p-3 text-sm text-indigo">
-                      <span className="font-black">Dépôt rattaché : </span>
-                      {depotLabel(livreur.depotRattacheNo, livreur.depotRattacheName)}
-                      <p className="mt-1 text-xs">
-                        Ce livreur ne livre pas les clients. Il déplace les articles entre dépôts.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-4">
-                      <p className="mb-2 text-xs font-black uppercase tracking-wide text-muted-foreground">
-                        Zones exactes affectées
-                      </p>
+      {/* Liste */}
+      <section className="app-surface px-6 py-5">
+        <p className="mb-4 text-sm text-muted-foreground">
+          {filteredLivreurs.length} / {livreurs.length} livreur(s)
+        </p>
 
-                      <div className="flex flex-wrap gap-2">
-                        {livreur.zones?.length ? (
-                          livreur.zones.map((zone, index) => (
-                            <span
-                              key={`${livreur.id}-${zone.gouvernorat}-${zone.delegation}-${index}`}
-                              className="rounded-full bg-muted px-3 py-1 text-sm font-bold text-foreground"
-                            >
-                              {zone.gouvernorat} / {zone.delegation}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="rounded-full bg-warning/10 px-3 py-1 text-sm font-black text-warning">
-                            Aucune zone : aucun BL ne doit s’afficher
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+        {livreursQuery.isLoading && <div className="py-10 text-center text-sm text-muted-foreground">Chargement…</div>}
+
+        <div className="grid gap-3">
+          {filteredLivreurs.map((l) => (
+            <article key={l.id} className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-base font-extrabold text-card-foreground">{l.fullName}</span>
+                  {getLivreurTypeBadge(l)}
+                </div>
+                <div className="grid gap-1 text-sm text-muted-foreground sm:grid-cols-3">
+                  <span><b className="text-foreground">Email : </b>{l.email}</span>
+                  <span><b className="text-foreground">Tél : </b>{l.telephone || "—"}</span>
+                  <span><b className="text-foreground">Zone : </b>{l.gouvernorat || "—"} / {l.delegation || "—"}</span>
                 </div>
 
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-2xl"
-                    onClick={() => openDetailModal(livreur)}
-                  >
-                    Détail / gérer
-                  </Button>
-                </div>
+                {l.isTransit ? (
+                  <div className="rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-800">
+                    <b>Dépôt rattaché : </b>{depotLabel(l.depotRattacheNo)}
+                    <span className="ml-2 text-xs text-indigo-500">(déplace articles entre dépôts)</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {l.zones?.map((z, i) => (
+                      <span key={i} className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        {z.gouvernorat} · {z.delegation}
+                      </span>
+                    ))}
+                    {!l.zones?.length && <span className="text-xs text-muted-foreground">Aucune zone affectée</span>}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex shrink-0 gap-2">
+                <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => openEdit(l)}>Modifier</Button>
+                <Button type="button" variant="ghost" size="sm" className="rounded-xl text-rose-500 hover:bg-rose-50"
+                  onClick={() => { if (confirm(`Supprimer ${l.fullName} ?`)) deleteMutation.mutate(l.id); }}
+                  disabled={deleteMutation.isPending}>
+                  Supprimer
+                </Button>
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      {modalMode !== "closed" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
-          <section className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl">
-            <header className="sticky top-0 z-10 flex items-start justify-between border-b border-border bg-card/95 p-5 backdrop-blur">
+      {/* ── MODAL ──────────────────────────────────────────────────────────── */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-card shadow-2xl">
+            <header className="flex items-start justify-between border-b border-border px-6 py-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  {modalMode === "create" ? "Nouveau livreur" : "Fiche livreur"}
-                </p>
-                <h2 className="text-xl font-black">
-                  {modalMode === "create"
-                    ? "Ajouter un livreur"
-                    : selectedLivreur?.fullName || "Détail livreur"}
+                <div className="text-xs font-bold uppercase text-muted-foreground">
+                  {modalMode === "create" ? "Nouveau livreur" : "Modifier livreur"}
+                </div>
+                <h2 className="text-xl font-extrabold text-card-foreground">
+                  {modalMode === "create" ? "Ajouter un livreur" : selectedLivreur?.fullName}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Modifiez les coordonnées, les zones exactes ou le dépôt rattaché.
-                </p>
               </div>
-
-              <Button type="button" variant="ghost" size="icon" onClick={closeModal}>
-                ×
-              </Button>
+              <button onClick={closeModal} className="text-muted-foreground hover:text-card-foreground text-xl">×</button>
             </header>
 
-            <div className="grid gap-5 p-5 xl:grid-cols-[0.85fr_1.15fr]">
-              <aside className="space-y-4">
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <p className="text-sm font-black">Résumé</p>
+            <div className="space-y-5 p-6">
 
-                  <div className="mt-3 space-y-2 text-sm">
-                    <p>
-                      <span className="font-bold">Type : </span>
-                      {form.isTransit ? "Livreur-transit" : "Livreur classique"}
+              {/* Identité */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {modalMode === "create" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Email *</label>
+                    <input className={INPUT_CLASS} value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="livreur@example.com" />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Nom complet *</label>
+                  <input className={INPUT_CLASS} value={form.fullName} onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))} placeholder="Prénom Nom" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Téléphone</label>
+                  <input className={INPUT_CLASS} value={form.telephone} onChange={(e) => setForm((p) => ({ ...p, telephone: e.target.value }))} />
+                </div>
+                {modalMode === "create" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Mot de passe</label>
+                    <input className={INPUT_CLASS} type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} />
+                  </div>
+                )}
+              </div>
+
+              {/* Type */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(["CLASSIQUE", "TRANSIT"] as const).map((t) => {
+                  const isTransit = t === "TRANSIT";
+                  const selected  = form.isTransit === isTransit;
+                  return (
+                    <button key={t} type="button"
+                      onClick={() => setForm((p) => ({ ...p, isTransit: isTransit, depotRattacheNo: "" }))}
+                      className={["flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all",
+                        selected ? "border-primary bg-primary/5 ring-2 ring-primary/15" : "border-border hover:border-primary/30"].join(" ")}>
+                      <span className="text-xl">{isTransit ? "🚛" : "🛵"}</span>
+                      <div>
+                        <div className="font-bold text-card-foreground">{isTransit ? "Livreur-transit" : "Livreur classique"}</div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {isTransit ? "Déplace articles entre dépôts" : "Livre directement au client"}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Zone principale */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Gouvernorat *</label>
+                  <select className={SELECT_CLASS} value={form.gouvernoratId}
+                    onChange={(e) => setForm((p) => ({
+                      ...p,
+                      gouvernoratId: Number(e.target.value),
+                      delegation: "",
+                      depotRattacheNo: "" // reset dépôt quand gouvernorat change
+                    }))}>
+                    {gouvernorats.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Délégation *</label>
+                  <select className={SELECT_CLASS} value={form.delegation} onChange={(e) => setForm((p) => ({ ...p, delegation: e.target.value }))}>
+                    <option value="">— Choisir —</option>
+                    {(formDelegQuery.data ?? []).map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* ── Section transit : dépôt filtré par gouvernorat ─────────── */}
+              {form.isTransit && (
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 space-y-3">
+                  <div>
+                    <h3 className="font-extrabold text-indigo-800">Affectation dépôt transit</h3>
+                    <p className="mt-1 text-xs text-indigo-600">
+                      Seuls les dépôts couvrant le gouvernorat <b>{govName || "sélectionné"}</b> sont affichés.
+                      Règle : 1 dépôt = 1 gouvernorat.
                     </p>
+                  </div>
 
-                    <p>
-                      <span className="font-bold">Email : </span>
-                      {modalMode === "create" ? form.email || "À saisir" : selectedLivreur?.email}
-                    </p>
-
-                    <p>
-                      <span className="font-bold">Téléphone : </span>
-                      {form.telephone || "Non renseigné"}
-                    </p>
-
-                    <p>
-                      <span className="font-bold">Zone principale : </span>
-                      {getGovName(form.gouvernoratId)} / {form.delegation || "—"}
-                    </p>
-
-                    {form.isTransit ? (
-                      <p>
-                        <span className="font-bold">Dépôt : </span>
-                        {form.depotRattacheNo !== ""
-                          ? depotLabel(Number(form.depotRattacheNo), null)
-                          : "Non affecté"}
-                      </p>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wide text-indigo-700">Dépôt rattaché *</label>
+                    {depotsForGouvernorat.length === 0 ? (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                        ⚠️ Aucun dépôt configuré pour le gouvernorat <b>{govName}</b>.
+                        Configurez une zone dans l'admin avant d'affecter ce livreur-transit.
+                      </div>
                     ) : (
-                      <p>
-                        <span className="font-bold">Nombre de zones : </span>
-                        {form.zones.length}
-                      </p>
+                      <select className={SELECT_CLASS} value={form.depotRattacheNo}
+                        onChange={(e) => setForm((p) => ({ ...p, depotRattacheNo: e.target.value ? Number(e.target.value) : "" }))}>
+                        <option value="">— Choisir un dépôt —</option>
+                        {depotsForGouvernorat.map((d) => (
+                          <option key={d.dE_No} value={d.dE_No}>
+                            {d.dE_Intitule ?? `Dépôt ${d.dE_No}`}
+                            {d.dE_Ville ? ` — ${d.dE_Ville}` : ""}
+                            {d.dE_Principal === 1 ? " ★" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {form.depotRattacheNo !== "" && (
+                    <div className="rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-800">
+                      ✅ Ce livreur-transit sera rattaché à <b>{depotLabel(Number(form.depotRattacheNo))}</b>.
+                      Il interviendra entre ce dépôt et les dépôts de destination.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Section classique : zones exactes ──────────────────────── */}
+              {!form.isTransit && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                  <div>
+                    <h3 className="font-extrabold text-emerald-800">Zones de livraison</h3>
+                    <p className="mt-1 text-xs text-emerald-600">
+                      Ce livreur ne verra que les BL dont le gouvernorat + délégation correspondent exactement à ses zones.
+                    </p>
+                  </div>
+
+                  {/* Ajouter une zone */}
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <select className={SELECT_CLASS} value={zoneGovId} onChange={(e) => { setZoneGovId(Number(e.target.value)); setZoneDeleg(""); }}>
+                      {gouvernorats.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                    </select>
+                    <select className={SELECT_CLASS} value={zoneDeleg} onChange={(e) => setZoneDeleg(e.target.value)}>
+                      <option value="">— Délégation —</option>
+                      {(zoneDelegQuery.data ?? []).map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <Button type="button" variant="outline" size="sm" className="rounded-xl h-11" onClick={addZone} disabled={!zoneGovId || !zoneDeleg}>
+                      + Ajouter zone
+                    </Button>
+                  </div>
+
+                  {/* Liste zones */}
+                  <div className="flex flex-wrap gap-2">
+                    {form.zones.map((z, i) => (
+                      <span key={i} className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-white px-3 py-1 text-xs font-semibold text-emerald-800">
+                        {z.gouvernorat} · {z.delegation}
+                        <button type="button" onClick={() => removeZone(i)} className="text-rose-400 hover:text-rose-600">×</button>
+                      </span>
+                    ))}
+                    {form.zones.length === 0 && (
+                      <p className="text-xs text-muted-foreground">Aucune zone ajoutée. La zone principale sera utilisée par défaut.</p>
                     )}
                   </div>
                 </div>
+              )}
 
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <p className="text-sm font-black">Règle métier</p>
+              {/* Erreur */}
+              {error && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+              )}
 
-                  {form.isTransit ? (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Un livreur-transit est un utilisateur avec rôle LIVREUR et
-                      IsTransit = true. Il est rattaché à un dépôt et sert uniquement à
-                      déplacer les produits entre les dépôts.
-                    </p>
-                  ) : (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Un livreur classique voit uniquement les BL dont le gouvernorat et
-                      la délégation correspondent exactement à l’une de ses zones.
-                    </p>
-                  )}
-                </div>
-              </aside>
-
-              <div className="space-y-5">
-                {modalMode === "create" && (
-                  <div className="rounded-2xl border border-border bg-background p-4">
-                    <h3 className="mb-3 text-base font-black">Compte utilisateur</h3>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div>
-                        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                          Email
-                        </label>
-                        <Input
-                          value={form.email}
-                          onChange={(event) =>
-                            setForm((previous) => ({ ...previous, email: event.target.value }))
-                          }
-                          placeholder="livreur@pfe.tn"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                          Mot de passe
-                        </label>
-                        <Input
-                          type="password"
-                          value={form.password}
-                          onChange={(event) =>
-                            setForm((previous) => ({ ...previous, password: event.target.value }))
-                          }
-                          placeholder="12345678"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <h3 className="mb-3 text-base font-black">Coordonnées du livreur</h3>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                        Nom complet
-                      </label>
-                      <Input
-                        value={form.fullName}
-                        onChange={(event) =>
-                          setForm((previous) => ({ ...previous, fullName: event.target.value }))
-                        }
-                        placeholder="Nom et prénom"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                        Téléphone
-                      </label>
-                      <Input
-                        value={form.telephone}
-                        onChange={(event) =>
-                          setForm((previous) => ({ ...previous, telephone: event.target.value }))
-                        }
-                        placeholder="+21622123456"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <h3 className="mb-3 text-base font-black">Type du livreur</h3>
-
-                  <div className="grid gap-2 md:grid-cols-2">
-                    <Button
-                      type="button"
-                      variant={!form.isTransit ? "primary" : "outline"}
-                      onClick={() =>
-                        setForm((previous) => ({
-                          ...previous,
-                          isTransit: false,
-                          depotRattacheNo: "",
-                        }))
-                      }
-                    >
-                      Livreur classique
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant={form.isTransit ? "primary" : "outline"}
-                      onClick={() =>
-                        setForm((previous) => ({
-                          ...previous,
-                          isTransit: true,
-                          zones: [],
-                        }))
-                      }
-                    >
-                      Livreur-transit
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <h3 className="mb-3 text-base font-black">Zone principale du profil</h3>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                        Gouvernorat
-                      </label>
-                      <select
-                        value={form.gouvernoratId}
-                        onChange={(event) =>
-                          setForm((previous) => ({
-                            ...previous,
-                            gouvernoratId: Number(event.target.value),
-                            delegation: "",
-                          }))
-                        }
-                        className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-                      >
-                        {gouvernorats.map((gov) => (
-                          <option key={gov.id} value={gov.id}>
-                            {gov.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                        Délégation
-                      </label>
-                      <select
-                        value={form.delegation}
-                        onChange={(event) =>
-                          setForm((previous) => ({
-                            ...previous,
-                            delegation: event.target.value,
-                          }))
-                        }
-                        className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-                      >
-                        <option value="">Choisir une délégation</option>
-                        {(formDelegationsQuery.data ?? []).map((delegation) => (
-                          <option key={delegation} value={delegation}>
-                            {delegation}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {form.isTransit ? (
-                  <div className="rounded-2xl border border-indigo/20 bg-indigo/5 p-4">
-                    <h3 className="mb-3 text-base font-black">Affectation dépôt transit</h3>
-
-                    <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                      Dépôt rattaché
-                    </label>
-
-                    <select
-                      value={form.depotRattacheNo}
-                      onChange={(event) =>
-                        setForm((previous) => ({
-                          ...previous,
-                          depotRattacheNo: event.target.value ? Number(event.target.value) : "",
-                        }))
-                      }
-                      className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-                    >
-                      <option value="">Choisir un dépôt</option>
-                      {depots.map((depot) => (
-                        <option key={depot.dE_No} value={depot.dE_No}>
-                          {depot.dE_Intitule ?? `Dépôt ${depot.dE_No}`}
-                          {depot.dE_Ville ? ` — ${depot.dE_Ville}` : ""}
-                        </option>
-                      ))}
-                    </select>
-
-                    <p className="mt-2 text-sm text-indigo">
-                      Pour la logique PFE actuelle, chaque dépôt peut avoir son propre livreur-transit.
-                      Ce livreur déplace les articles entre le dépôt source et le dépôt destinataire.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-success/20 bg-success/10 p-4">
-                    <h3 className="text-base font-black">Zones exactes de livraison</h3>
-                    <p className="mt-1 text-sm text-success">
-                      Ces zones déterminent les BL visibles par le livreur. Le BL doit avoir le même
-                      gouvernorat et la même délégation.
-                    </p>
-
-                    <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-                      <div>
-                        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                          Gouvernorat
-                        </label>
-                        <select
-                          value={zoneGovId}
-                          onChange={(event) => {
-                            setZoneGovId(Number(event.target.value));
-                            setZoneDelegation("");
-                          }}
-                          className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-                        >
-                          {gouvernorats.map((gov) => (
-                            <option key={gov.id} value={gov.id}>
-                              {gov.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-muted-foreground">
-                          Délégation
-                        </label>
-                        <select
-                          value={zoneDelegation}
-                          onChange={(event) => setZoneDelegation(event.target.value)}
-                          className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm font-semibold text-foreground"
-                        >
-                          <option value="">Choisir une délégation</option>
-                          {(zoneDelegationsQuery.data ?? []).map((delegation) => (
-                            <option key={delegation} value={delegation}>
-                              {delegation}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex items-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full rounded-2xl"
-                          onClick={addZone}
-                          disabled={!zoneDelegation}
-                        >
-                          Ajouter
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 rounded-2xl bg-card p-3">
-                      <p className="mb-2 text-sm font-black">Zones affectées</p>
-
-                      {form.zones.length === 0 ? (
-                        <p className="rounded-2xl bg-warning/10 p-3 text-sm font-bold text-warning">
-                          Aucune zone affectée. Ce livreur ne doit voir aucun BL.
-                        </p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {form.zones.map((zone, index) => (
-                            <button
-                              key={`${zone.gouvernorat}-${zone.delegation}-${index}`}
-                              type="button"
-                              onClick={() => removeZone(index)}
-                              className="rounded-full bg-muted px-3 py-1 text-sm font-bold text-foreground transition hover:bg-danger/10 hover:text-danger"
-                              title="Cliquer pour supprimer cette zone"
-                            >
-                              {zone.gouvernorat} / {zone.delegation} ×
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {saveMutation.isError && (
-                  <div className="ds-alert ds-alert-danger">
-                    Erreur lors de l’enregistrement. Vérifiez les champs obligatoires et réessayez.
-                  </div>
-                )}
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="ghost" className="rounded-2xl" onClick={closeModal}>Annuler</Button>
+                <Button type="button" variant="primary" className="h-11 rounded-2xl px-6" onClick={handleSubmit} disabled={isSaving}>
+                  {isSaving ? "Enregistrement…" : modalMode === "create" ? "Créer le livreur" : "Enregistrer"}
+                </Button>
               </div>
             </div>
-
-            <footer className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-card/95 p-5 backdrop-blur md:flex-row md:items-center md:justify-end">
-              <Button type="button" variant="outline" onClick={closeModal}>
-                Annuler
-              </Button>
-
-              <Button
-                type="button"
-                variant="primary"
-                disabled={!canSave || saveMutation.isPending}
-                isLoading={saveMutation.isPending}
-                onClick={() => saveMutation.mutate()}
-              >
-                Enregistrer
-              </Button>
-            </footer>
-          </section>
+          </div>
         </div>
       )}
     </div>
