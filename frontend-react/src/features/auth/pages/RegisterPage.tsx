@@ -5,12 +5,12 @@ import { IconPin } from "@tabler/icons-react";
 // ============================================================
 // IMPORTS - Geo & Map
 // ============================================================
-import { AddressMapModal } from "../../features/auth/components/AddressMapModal";
-import { reverseGeocodeNominatim } from "../../features/geo/api/nominatimApi";
+import { AddressMapModal } from "../components/AddressMapModal";
+import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
-} from "../../features/geo/utils/tunisiaLocationSync";
+} from "../../geo/utils/tunisiaLocationSync";
 
 // ============================================================
 // Types
@@ -119,17 +119,17 @@ export function RegisterPage() {
         // Résoudre le gouvernorat
         const govId = resolveGouvernoratIdFromReverse(result);
         if (govId !== null) {
-          setGouvernorat(govId);
+          setGouvernorat(String(govId));
         }
 
         // Résoudre la délégation
         const delegList = govId !== null
           ? await (async () => {
-              const { getDelegations } = await import("../../features/geo/api/geoApi");
+              const { getDelegations } = await import("../../geo/api/geoApi");
               return getDelegations(govId).catch(() => []);
             })()
           : [];
-        const resolvedDeleg = resolveDelegationFromReverse(result, delegList);
+        const resolvedDeleg = resolveDelegationFromReverse(result, delegList as string[]);
         if (resolvedDeleg) setDelegation(resolvedDeleg);
 
         const govs = govQuery.data ?? [];

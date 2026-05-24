@@ -1,7 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
 
 // ============================================================
 // IMPORTS - Map & Geo Components
@@ -11,16 +9,15 @@ import {
   type AddressMapChangeReason,
 } from "../../auth/components/AddressMapField";
 import { AddressMapModal } from "../../auth/components/AddressMapModal";
-import { reverseGeocodeNominatim } from "../../features/geo/api/nominatimApi";
+import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
-  getGovernoratCandidates,
+  TUNISIA_GOUVERNORATS,
   buildAddressFromReverse,
   extractPostalCode,
-} from "../../features/geo/utils/tunisiaLocationSync";
-import { getDelegations } from "../../features/geo/api/geoApi";
-import { TUNISIA_GOUVERNORATS } from "../../features/geo/constants/governorates";
+} from "../../geo/utils/tunisiaLocationSync";
+import { getDelegations } from "../../geo/api/geoApi";
 
 // ============================================================
 // Types & Constants
@@ -82,16 +79,6 @@ export function GuestCheckoutLocationSection({
   const resolvedLongitude = longitude ?? DEFAULT_TUNISIA_LNG;
 
   // ────────────────────────────────────────────────────────
-  // Mutations
-  // ────────────────────────────────────────────────────────
-  const reverseMutation = useMutation({
-    mutationFn: async () => {
-      if (latitude === null || longitude === null) return null;
-      return reverseGeocodeNominatim(latitude, longitude);
-    },
-  });
-
-  // ────────────────────────────────────────────────────────
   // Functions - GPS Geolocation
   // ────────────────────────────────────────────────────────
   const handleUseCurrentLocation = useCallback(async () => {
@@ -128,20 +115,22 @@ export function GuestCheckoutLocationSection({
     try {
       const result = await reverseGeocodeNominatim(latRounded, lngRounded);
 
-      const govCandidates = getGovernoratCandidates(result);
-      const govId = resolveGouvernoratIdFromReverse(result, gouvernorats);
+      const govId = resolveGouvernoratIdFromReverse(result);
       if (govId !== null) {
-        setGouvernorat(govId);
+        setGouvernorat(String(govId));
       }
 
-      let delegPool = delegations;
-      if (govId !== null && govId !== gouvernorat) {
-        delegPool = await getDelegations(govId).catch(() => delegations);
+      let delegPool: string[];
+      if (govId !== null && String(govId) !== gouvernorat) {
+        delegPool = await getDelegations(govId).catch(() => delegations.map((d) => d.name));
+      } else {
+        delegPool = delegations.map((d) => d.name);
       }
 
       const delegResolved = resolveDelegationFromReverse(result, delegPool);
       if (delegResolved) {
-        setDelegation(delegResolved);
+        const matched = delegations.find((d) => d.name === delegResolved);
+        if (matched) setDelegation(matched.id);
       }
 
       const addr = buildAddressFromReverse(result);
@@ -151,7 +140,7 @@ export function GuestCheckoutLocationSection({
       if (cp) setPostalCode(cp);
 
       setMapSyncMsg(
-        `✅ Position épinglée · ${TUNISIA_GOUVERNORATS[govId ?? gouvernorat] ?? ""}`
+        `✅ Position épinglée · ${govId !== null ? (TUNISIA_GOUVERNORATS[govId] ?? "") : ""}`
       );
     } catch (error) {
       setMapSyncMsg("Position enregistrée. Vérifiez le gouvernorat.");
@@ -287,10 +276,10 @@ export function GuestCheckoutLocationSection({
               <button
                 type="button"
                 onClick={handleUseCurrentLocation}
-                disabled={locatingGps || reverseMutation.isPending}
+                disabled={locatingGps}
                 className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-border/70 bg-background hover:bg-muted text-foreground transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {locatingGps || reverseMutation.isPending ? (
+                {locatingGps ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     <span className="text-xs font-medium">Localisation…</span>
