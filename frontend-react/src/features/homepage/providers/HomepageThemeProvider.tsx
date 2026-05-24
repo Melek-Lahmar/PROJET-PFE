@@ -74,6 +74,10 @@ export function useHomepageTheme(): HomepageThemeContextType {
   return context;
 }
 
+export function useOptionalHomepageTheme(): HomepageThemeContextType | undefined {
+  return useContext(HomepageThemeContext);
+}
+
 export function useThemeColor(colorKey: keyof HomepageThemeConfig["colors"]): string {
   const { activeTheme } = useHomepageTheme();
   return activeTheme.colors[colorKey];

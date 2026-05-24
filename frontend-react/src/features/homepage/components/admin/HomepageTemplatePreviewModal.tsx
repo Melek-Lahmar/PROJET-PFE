@@ -60,7 +60,7 @@ export function HomepageTemplatePreviewModal({ template, view, onClose, onApply 
             className="rounded-[26px] border p-4"
             style={{ ...themeCSS, backgroundColor: theme.colors.background, borderColor: theme.colors.border }}
           >
-            <HomepageRenderer view={view} preview />
+            <HomepageRenderer view={view} preview themeId={template.themeId} />
           </div>
         </div>
       </div>

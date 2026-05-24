@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getTheme, type HomepageThemeId } from '../themes/HomepageThemes';
+import { useOptionalHomepageTheme } from '../providers/HomepageThemeProvider';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../shared/components/Button';
 import { Card } from '../../../shared/components/Card';
@@ -27,6 +29,29 @@ import type {
   HomepageView,
 } from '../types/homepage';
 import { getImagePreviewUrl } from '../types/homepage';
+
+function hexToHsl(hex: string): string {
+  const clean = hex.replace(/^#/, '').trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return '0 0% 50%';
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      default: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
 
 function hrefIsInternal(href?: string | null) {
   return !!href && href.startsWith('/');
@@ -960,13 +985,39 @@ function renderSection(section: HomepageSection, preview: boolean) {
   }
 }
 
-export function HomepageRenderer({ view, preview = false }: { view: HomepageView; preview?: boolean }) {
+export function HomepageRenderer({ view, preview = false, themeId: themeIdProp }: { view: HomepageView; preview?: boolean; themeId?: HomepageThemeId }) {
+  const themeContext = useOptionalHomepageTheme();
+  const theme = useMemo(
+    () => themeIdProp ? getTheme(themeIdProp) : (themeContext?.activeTheme ?? getTheme('minimaliste')),
+    [themeIdProp, themeContext?.activeTheme],
+  );
+
+  const bg = theme.colors.background;
+  const themeVars: React.CSSProperties = useMemo(() => {
+    const v: Record<string, string> = {
+      '--background': hexToHsl(theme.colors.background),
+      '--foreground': hexToHsl(theme.colors.text),
+      '--primary': hexToHsl(theme.colors.primary),
+      '--primary-foreground': hexToHsl(theme.buttons.primary.text),
+      '--card': hexToHsl(theme.colors.surface),
+      '--card-foreground': hexToHsl(theme.colors.text),
+      '--muted': hexToHsl(theme.colors.surface),
+      '--muted-foreground': hexToHsl(theme.colors.textLight),
+      '--border': hexToHsl(theme.colors.border),
+      '--accent': hexToHsl(theme.colors.accent),
+      '--accent-foreground': hexToHsl(theme.colors.text),
+      '--info': hexToHsl(theme.colors.secondary),
+      'backgroundColor': bg,
+    };
+    return v as React.CSSProperties;
+  }, [theme, bg]);
+
   const sections = [...(view.content.sections ?? [])].sort((a, b) => a.displayOrder - b.displayOrder);
   const visibleSections = sections.filter((section) => isSectionVisible(section, preview));
 
   if (visibleSections.length === 0) {
     return (
-      <div className="app-surface p-8 text-center">
+      <div style={themeVars} className="app-surface p-8 text-center">
         <div className="app-kicker">Page d’accueil</div>
         <h1 className="mt-2 text-2xl font-black text-card-foreground">
           La page d’accueil sera bientôt disponible
@@ -982,5 +1033,11 @@ export function HomepageRenderer({ view, preview = false }: { view: HomepageView
     );
   }
 
-  return <div className="space-y-10 md:space-y-14">{visibleSections.map((section) => renderSection(section, preview))}</div>;
+  return (
+    <div style={themeVars}>
+      <div className="space-y-10 md:space-y-14">
+        {visibleSections.map((section) => renderSection(section, preview))}
+      </div>
+    </div>
+  );
 }
