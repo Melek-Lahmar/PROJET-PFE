@@ -1,33 +1,42 @@
 import { useState, useCallback, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 
-// ============================================================
-// IMPORTS - Map & Geo Components
-// ============================================================
-import {
-  createMapPin,
-  type AddressMapChangeReason,
-} from "../../auth/components/AddressMapField";
+import type { GouvernoratItem } from "../../geo/types/geo";
 import { AddressMapModal } from "../../auth/components/AddressMapModal";
-import { reverseGeocodeNominatim } from "../../features/geo/api/nominatimApi";
+import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
   getGovernoratCandidates,
   buildAddressFromReverse,
   extractPostalCode,
-} from "../../features/geo/utils/tunisiaLocationSync";
-import { getDelegations } from "../../features/geo/api/geoApi";
-import { TUNISIA_GOUVERNORATS } from "../../features/geo/constants/governorates";
+} from "../../geo/utils/tunisiaLocationSync";
+import { getDelegations, getGouvernorats } from "../../geo/api/geoApi";
+import { TUNISIA_GOUVERNORATS } from "../../geo/constants/tunisiaGouvernorats";
+
+// ============================================================
+// IMPORTS - Map & Geo Components
+// ============================================================
+export type AddressMapChangeReason = "gps" | "map_click" | "map_drag" | "map_move";
+
+export function createMapPin(reason: AddressMapChangeReason) {
+  const color = reason === "gps" ? "#2563eb" : reason === "map_click" ? "#7c3aed" : "#ef4444";
+  return L.divIcon({
+    className: "custom-map-pin",
+    html: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="${color}"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+  });
+}
 
 // ============================================================
 // Types & Constants
 // ============================================================
 interface GuestCheckoutLocationSectionProps {
-  gouvernorat: string | null;
-  setGouvernorat: (value: string | null) => void;
+  gouvernorat: number | null;
+  setGouvernorat: (value: number | null) => void;
   delegation: string | null;
   setDelegation: (value: string | null) => void;
   address: string;
@@ -38,8 +47,8 @@ interface GuestCheckoutLocationSectionProps {
   setLatitude: (value: number | null) => void;
   longitude: number | null;
   setLongitude: (value: number | null) => void;
-  gouvernorats: Array<{ id: string; name: string }>;
-  delegations: Array<{ id: string; name: string }>;
+  gouvernorats: GouvernoratItem[];
+  delegations: string[];
 }
 
 const roundCoordinate = (coord: number): number => {
@@ -80,6 +89,14 @@ export function GuestCheckoutLocationSection({
   // Safe values with type narrowing
   const resolvedLatitude = latitude ?? DEFAULT_TUNISIA_LAT;
   const resolvedLongitude = longitude ?? DEFAULT_TUNISIA_LNG;
+
+  // ────────────────────────────────────────────────────────
+  // Queries - Récupérer gouvernorats depuis API
+  // ────────────────────────────────────────────────────────
+  const govQuery = useQuery({
+    queryKey: ["gouvernorats"],
+    queryFn: getGouvernorats,
+  });
 
   // ────────────────────────────────────────────────────────
   // Mutations
@@ -128,8 +145,14 @@ export function GuestCheckoutLocationSection({
     try {
       const result = await reverseGeocodeNominatim(latRounded, lngRounded);
 
-      const govCandidates = getGovernoratCandidates(result);
-      const govId = resolveGouvernoratIdFromReverse(result, gouvernorats);
+      // ✅ CORRECTION: Récupérer les gouvernorats depuis la query ou le prop
+      const govs = govQuery.data ?? gouvernorats ?? [];
+      
+      // ✅ Passer les gouvernorats correctement à la fonction
+      const govId = govs && govs.length > 0
+        ? resolveGouvernoratIdFromReverse(result, govs)
+        : null;
+
       if (govId !== null) {
         setGouvernorat(govId);
       }
@@ -150,8 +173,11 @@ export function GuestCheckoutLocationSection({
       const cp = extractPostalCode(result);
       if (cp) setPostalCode(cp);
 
+      // Utiliser la constante pour afficher le nom
+      const govName = govId !== null ? TUNISIA_GOUVERNORATS[govId] ?? "" : "";
+
       setMapSyncMsg(
-        `✅ Position épinglée · ${TUNISIA_GOUVERNORATS[govId ?? gouvernorat] ?? ""}`
+        `✅ Position épinglée · ${govName}`
       );
     } catch (error) {
       setMapSyncMsg("Position enregistrée. Vérifiez le gouvernorat.");
@@ -163,8 +189,9 @@ export function GuestCheckoutLocationSection({
   // Functions - Form Handling
   // ────────────────────────────────────────────────────────
   const handleGouvernoratChange = (value: string | null) => {
-    setGouvernorat(value);
-    if (value === null) {
+    const nextGouvernorat = value === null ? null : Number(value);
+    setGouvernorat(nextGouvernorat);
+    if (nextGouvernorat === null) {
       setDelegation(null);
     }
   };
@@ -179,20 +206,15 @@ export function GuestCheckoutLocationSection({
   // ────────────────────────────────────────────────────────
   // Computed Values
   // ────────────────────────────────────────────────────────
-  const filteredDelegations = useMemo(() => {
-    if (!gouvernorat || !delegations) return [];
-    return delegations.filter((d) => d.gouvernorat_id === gouvernorat);
-  }, [gouvernorat, delegations]);
-
   const gouvernoratName = useMemo(() => {
-    return gouvernorat ? gouvernorats.find((g) => g.id === gouvernorat)?.name : "";
+    return gouvernorat !== null
+      ? gouvernorats.find((g) => g.id === gouvernorat)?.name ?? ""
+      : "";
   }, [gouvernorat, gouvernorats]);
 
   const delegationName = useMemo(() => {
-    return delegation
-      ? delegations.find((d) => d.id === delegation)?.name
-      : "";
-  }, [delegation, delegations]);
+    return delegation ?? "";
+  }, [delegation]);
 
   // ────────────────────────────────────────────────────────
   // Render
@@ -208,12 +230,15 @@ export function GuestCheckoutLocationSection({
             Gouvernorat
           </label>
           <select
-            value={gouvernorat || ""}
+            value={gouvernorat === null ? "" : gouvernorat}
             onChange={(e) => handleGouvernoratChange(e.target.value || null)}
-            className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+            disabled={govQuery.isPending}
+            className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="">Sélectionner un gouvernorat</option>
-            {gouvernorats.map((gov) => (
+            <option value="">
+              {govQuery.isPending ? "Chargement..." : "Sélectionner un gouvernorat"}
+            </option>
+            {govQuery.data?.map((gov) => (
               <option key={gov.id} value={gov.id}>
                 {gov.name}
               </option>
@@ -228,13 +253,13 @@ export function GuestCheckoutLocationSection({
           <select
             value={delegation || ""}
             onChange={(e) => setDelegation(e.target.value || null)}
-            disabled={!gouvernorat}
+            disabled={gouvernorat === null}
             className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">Sélectionner une délégation</option>
-            {filteredDelegations.map((deleg) => (
-              <option key={deleg.id} value={deleg.id}>
-                {deleg.name}
+            {delegations.map((deleg) => (
+              <option key={deleg} value={deleg}>
+                {deleg}
               </option>
             ))}
           </select>

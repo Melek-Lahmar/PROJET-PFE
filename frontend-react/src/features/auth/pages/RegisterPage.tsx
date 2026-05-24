@@ -1,16 +1,18 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { IconPin } from "@tabler/icons-react";
 
 // ============================================================
 // IMPORTS - Geo & Map
 // ============================================================
-import { AddressMapModal } from "../../features/auth/components/AddressMapModal";
-import { reverseGeocodeNominatim } from "../../features/geo/api/nominatimApi";
+import { IconPin } from "../../assets/icons/IconPin";
+import { AddressMapModal } from "../../auth/components/AddressMapModal";
+import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
-} from "../../features/geo/utils/tunisiaLocationSync";
+} from "../../geo/utils/tunisiaLocationSync";
+import { getDelegations, getGouvernorats } from "../../geo/api/geoApi";
+import { TUNISIA_GOUVERNORATS } from "../../geo/constants/tunisiaGouvernorats";
 
 // ============================================================
 // Types
@@ -62,16 +64,16 @@ export function RegisterPage() {
   const safeLongitude = longitude !== null ? longitude : null;
 
   // ────────────────────────────────────────────────────────
-  // Queries & Mutations
+  // Queries - Récupérer gouvernorats depuis API
   // ────────────────────────────────────────────────────────
   const govQuery = useQuery({
     queryKey: ["gouvernorats"],
-    queryFn: async () => {
-      // À adapter selon votre API
-      return [];
-    },
+    queryFn: getGouvernorats,
   });
 
+  // ────────────────────────────────────────────────────────
+  // Mutations
+  // ────────────────────────────────────────────────────────
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterFormData) => {
       // À adapter selon votre API
@@ -116,26 +118,31 @@ export function RegisterPage() {
       try {
         const result = await reverseGeocodeNominatim(lat, lng);
 
-        // Résoudre le gouvernorat
-        const govId = resolveGouvernoratIdFromReverse(result);
+        // Récupérer les gouvernorats depuis la query
+        const govs = govQuery.data ?? [];
+        
+        // ✅ CORRECTION: Passer les gouvernorats correctement à la fonction
+        // La fonction attend un array de gouvernorats avec { id, name }
+        const govId = govs && govs.length > 0
+          ? resolveGouvernoratIdFromReverse(result, govs)
+          : null;
+
         if (govId !== null) {
-          setGouvernorat(govId);
+          setGouvernorat(String(govId));
         }
 
         // Résoudre la délégation
         const delegList = govId !== null
           ? await (async () => {
-              const { getDelegations } = await import("../../features/geo/api/geoApi");
               return getDelegations(govId).catch(() => []);
             })()
           : [];
         const resolvedDeleg = resolveDelegationFromReverse(result, delegList);
         if (resolvedDeleg) setDelegation(resolvedDeleg);
 
-        const govs = govQuery.data ?? [];
-        const govName = govId !== null
-          ? govs.find((g: any) => g.id === govId)?.name ?? ""
-          : "";
+        // Utiliser la constante pour afficher le nom du gouvernorat
+        const govName = govId !== null ? TUNISIA_GOUVERNORATS[govId] ?? "" : "";
+
         setMapSyncMsg(
           `✅ Position épinglée · ${govName}${resolvedDeleg ? ` · ${resolvedDeleg}` : ""}`
         );
@@ -278,10 +285,17 @@ export function RegisterPage() {
                 <select
                   value={gouvernorat || ""}
                   onChange={(e) => setGouvernorat(e.target.value || null)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
+                  disabled={govQuery.isPending}
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">Sélectionner...</option>
-                  {/* À remplir avec les gouvernorats */}
+                  <option value="">
+                    {govQuery.isPending ? "Chargement..." : "Sélectionner..."}
+                  </option>
+                  {govQuery.data?.map((gov) => (
+                    <option key={gov.id} value={gov.id}>
+                      {gov.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

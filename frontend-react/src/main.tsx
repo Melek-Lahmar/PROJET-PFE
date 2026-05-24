@@ -4,7 +4,7 @@ import "./styles/globals.css";
 
 import "leaflet/dist/leaflet.css";
 import "./shared/leaflet/leafletIconFix";
-import "@/features/homepage/styles/homepage-themes.css";
+import "./features/homepage/styles/homepage-themes.css";
 
 // Module 9 — bootstrap i18n FR/EN/AR + RTL
 import "./i18n";
