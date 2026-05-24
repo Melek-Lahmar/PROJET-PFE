@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import L from "leaflet";
 
 import { Button } from "../../../shared/components/Button";
 import { getCenterForTunisia } from "../../geo/data/tunisiaCenters";
@@ -7,6 +8,17 @@ import { fetchCenterByGovDelegation } from "../../geo/api/nominatimGeo";
 import { getGouvernoratLabelById, roundCoordinate } from "../../geo/utils/tunisiaLocationSync";
 
 export type AddressMapChangeReason = "gps" | "map_drag" | "map_click";
+
+export function createMapPin(source: AddressMapChangeReason | null): L.DivIcon {
+  const color = source === "gps" ? "#3b82f6" : "#7c3aed";
+  return L.divIcon({
+    html: `<svg width="28" height="40" viewBox="0 0 28 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 26 14 26S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}"/><circle cx="14" cy="14" r="6" fill="white"/></svg>`,
+    className: "",
+    iconSize: [28, 40],
+    iconAnchor: [14, 40],
+    popupAnchor: [0, -40],
+  });
+}
 
 type Props = {
   gouvernoratId: number | null;

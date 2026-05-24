@@ -23,10 +23,10 @@ import { getDelegations } from "../../geo/api/geoApi";
 // Types & Constants
 // ============================================================
 interface GuestCheckoutLocationSectionProps {
-  gouvernorat: string | null;
-  setGouvernorat: (value: string | null) => void;
-  delegation: string | null;
-  setDelegation: (value: string | null) => void;
+  gouvernorat: number;
+  setGouvernorat: (value: number) => void;
+  delegation: string;
+  setDelegation: (value: string) => void;
   address: string;
   setAddress: (value: string) => void;
   postalCode: string;
@@ -35,8 +35,9 @@ interface GuestCheckoutLocationSectionProps {
   setLatitude: (value: number | null) => void;
   longitude: number | null;
   setLongitude: (value: number | null) => void;
-  gouvernorats: Array<{ id: string; name: string }>;
-  delegations: Array<{ id: string; name: string }>;
+  gouvernorats: Array<{ id: number; name: string }>;
+  delegations: string[];
+  delegationsLoading?: boolean;
 }
 
 const roundCoordinate = (coord: number): number => {
@@ -65,6 +66,7 @@ export function GuestCheckoutLocationSection({
   setLongitude,
   gouvernorats,
   delegations,
+  delegationsLoading: _delegationsLoading,
 }: GuestCheckoutLocationSectionProps) {
   // ────────────────────────────────────────────────────────
   // État - Map & Geolocation
@@ -117,20 +119,19 @@ export function GuestCheckoutLocationSection({
 
       const govId = resolveGouvernoratIdFromReverse(result);
       if (govId !== null) {
-        setGouvernorat(String(govId));
+        setGouvernorat(govId);
       }
 
       let delegPool: string[];
-      if (govId !== null && String(govId) !== gouvernorat) {
-        delegPool = await getDelegations(govId).catch(() => delegations.map((d) => d.name));
+      if (govId !== null && govId !== gouvernorat) {
+        delegPool = await getDelegations(govId).catch(() => delegations);
       } else {
-        delegPool = delegations.map((d) => d.name);
+        delegPool = delegations;
       }
 
       const delegResolved = resolveDelegationFromReverse(result, delegPool);
       if (delegResolved) {
-        const matched = delegations.find((d) => d.name === delegResolved);
-        if (matched) setDelegation(matched.id);
+        setDelegation(delegResolved);
       }
 
       const addr = buildAddressFromReverse(result);
@@ -151,11 +152,9 @@ export function GuestCheckoutLocationSection({
   // ────────────────────────────────────────────────────────
   // Functions - Form Handling
   // ────────────────────────────────────────────────────────
-  const handleGouvernoratChange = (value: string | null) => {
-    setGouvernorat(value);
-    if (value === null) {
-      setDelegation(null);
-    }
+  const handleGouvernoratChange = (value: string) => {
+    if (value) setGouvernorat(Number(value));
+    setDelegation("");
   };
 
   const handleClearLocation = () => {
@@ -168,20 +167,13 @@ export function GuestCheckoutLocationSection({
   // ────────────────────────────────────────────────────────
   // Computed Values
   // ────────────────────────────────────────────────────────
-  const filteredDelegations = useMemo(() => {
-    if (!gouvernorat || !delegations) return [];
-    return delegations.filter((d) => d.gouvernorat_id === gouvernorat);
-  }, [gouvernorat, delegations]);
+  const filteredDelegations = useMemo(() => delegations, [delegations]);
 
   const gouvernoratName = useMemo(() => {
-    return gouvernorat ? gouvernorats.find((g) => g.id === gouvernorat)?.name : "";
+    return gouvernorats.find((g) => g.id === gouvernorat)?.name ?? "";
   }, [gouvernorat, gouvernorats]);
 
-  const delegationName = useMemo(() => {
-    return delegation
-      ? delegations.find((d) => d.id === delegation)?.name
-      : "";
-  }, [delegation, delegations]);
+  const delegationName = useMemo(() => delegation, [delegation]);
 
   // ────────────────────────────────────────────────────────
   // Render
@@ -197,8 +189,8 @@ export function GuestCheckoutLocationSection({
             Gouvernorat
           </label>
           <select
-            value={gouvernorat || ""}
-            onChange={(e) => handleGouvernoratChange(e.target.value || null)}
+            value={gouvernorat}
+            onChange={(e) => handleGouvernoratChange(e.target.value)}
             className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
           >
             <option value="">Sélectionner un gouvernorat</option>
@@ -215,15 +207,15 @@ export function GuestCheckoutLocationSection({
             Délégation
           </label>
           <select
-            value={delegation || ""}
-            onChange={(e) => setDelegation(e.target.value || null)}
-            disabled={!gouvernorat}
+            value={delegation}
+            onChange={(e) => setDelegation(e.target.value)}
+            disabled={filteredDelegations.length === 0}
             className="w-full px-3 py-2.5 rounded-lg border border-border/70 bg-background text-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">Sélectionner une délégation</option>
             {filteredDelegations.map((deleg) => (
-              <option key={deleg.id} value={deleg.id}>
-                {deleg.name}
+              <option key={deleg} value={deleg}>
+                {deleg}
               </option>
             ))}
           </select>

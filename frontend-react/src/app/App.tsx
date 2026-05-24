@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { QueryProvider } from "./providers/QueryProvider";
 import { RouterProvider } from "./providers/RouterProvider";
+import { HomepageThemeProvider } from "../features/homepage/providers/HomepageThemeProvider";
 import { useAuthBootstrap } from "../features/auth/hooks/useAuthBootstrap";
 import { useLayoutStore } from "../shared/store/layoutStore";
 import { CursorEffect, ToastProvider } from "../shared/components/premium";

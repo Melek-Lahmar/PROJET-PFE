@@ -5,7 +5,7 @@
 // Description: Composant admin pour sélectionner et prévisualiser les thèmes
 // ============================================================
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { HOMEPAGE_THEMES, getAllThemes, type HomepageThemeId, type HomepageThemeConfig } from "../themes/HomepageThemes";
 import { Button } from "../../../shared/components/Button";
 

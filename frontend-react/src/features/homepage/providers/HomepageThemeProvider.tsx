@@ -5,7 +5,8 @@
 // Description: Provider et hooks pour gérer les thèmes homepage
 // ============================================================
 
-import React, { createContext, useContext, useMemo, ReactNode } from "react";
+import React, { createContext, useContext, useMemo } from "react";
+import type { ReactNode } from "react";
 import { 
   HOMEPAGE_THEMES, 
   getTheme, 
