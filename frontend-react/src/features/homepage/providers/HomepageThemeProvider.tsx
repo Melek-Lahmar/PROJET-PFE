@@ -29,11 +29,22 @@ interface HomepageThemeProviderProps {
   children: ReactNode;
 }
 
-export function HomepageThemeProvider({ 
-  initialThemeId = "minimaliste", 
-  children 
+export function HomepageThemeProvider({
+  initialThemeId = "minimaliste",
+  children
 }: HomepageThemeProviderProps) {
-  const [activeThemeId, setActiveThemeId] = React.useState<HomepageThemeId>(initialThemeId);
+  const [activeThemeId, setActiveThemeId] = React.useState<HomepageThemeId>(() => {
+    try {
+      const saved = localStorage.getItem("homepage-theme-id");
+      if (saved && saved in HOMEPAGE_THEMES) return saved as HomepageThemeId;
+    } catch {}
+    return initialThemeId;
+  });
+
+  const handleSetTheme = (themeId: HomepageThemeId) => {
+    try { localStorage.setItem("homepage-theme-id", themeId); } catch {}
+    setActiveThemeId(themeId);
+  };
 
   const activeTheme = useMemo(() => getTheme(activeThemeId), [activeThemeId]);
 
@@ -42,7 +53,7 @@ export function HomepageThemeProvider({
   const value: HomepageThemeContextType = {
     activeThemeId,
     activeTheme,
-    setTheme: setActiveThemeId,
+    setTheme: handleSetTheme,
     themes: HOMEPAGE_THEMES,
   };
 
