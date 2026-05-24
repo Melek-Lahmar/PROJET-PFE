@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { GouvernoratItem } from "../../geo/types/geo";
+import { getDelegations } from "../../geo/api/geoApi";
 
 // ============================================================
 // IMPORTS - Geo & Map
@@ -123,10 +124,7 @@ export function RegisterPage() {
 
         // Résoudre la délégation
         const delegList = govId !== null
-          ? await (async () => {
-              const { getDelegations } = await import("../../geo/api/geoApi");
-              return getDelegations(govId).catch(() => []);
-            })()
+          ? await getDelegations(govId).catch(() => [])
           : [];
         const resolvedDeleg = resolveDelegationFromReverse(result, delegList);
         if (resolvedDeleg) setDelegation(resolvedDeleg);
