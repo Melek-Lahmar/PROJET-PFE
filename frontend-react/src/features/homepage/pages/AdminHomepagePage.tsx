@@ -674,23 +674,27 @@ export function AdminHomepagePage() {
     [draft, sortedSections, availableArticles, availableCatalogues, availableDepots],
   );
 
-  const templatePreviewDocument = useMemo(
-    () => templateToPreview?.createDocument(templateContext) ?? null,
-    [templateContext, templateToPreview],
-  );
+  const templatePreviewDocument = useMemo(() => {
+    try {
+      return templateToPreview?.createDocument(templateContext) ?? null;
+    } catch {
+      return null;
+    }
+  }, [templateContext, templateToPreview]);
 
-  const templatePreviewView = useMemo(
-    () =>
-      templatePreviewDocument
-        ? buildLocalPreview(
-            templatePreviewDocument,
-            availableArticles,
-            availableCatalogues,
-            availableDepots,
-          )
-        : null,
-    [templatePreviewDocument, availableArticles, availableCatalogues, availableDepots],
-  );
+  const templatePreviewView = useMemo(() => {
+    if (!templatePreviewDocument) return null;
+    try {
+      return buildLocalPreview(
+        templatePreviewDocument,
+        availableArticles,
+        availableCatalogues,
+        availableDepots,
+      );
+    } catch {
+      return null;
+    }
+  }, [templatePreviewDocument, availableArticles, availableCatalogues, availableDepots]);
 
   const applyTemplateToDraft = (template: HomepageTemplateDefinition) => {
     const nextDraft = template.createDocument(templateContext);
@@ -1224,10 +1228,10 @@ export function AdminHomepagePage() {
         ) : null}
       </section>
 
-      {templateToPreview && templatePreviewView ? (
+      {templateToPreview ? (
         <HomepageTemplatePreviewModal
           template={templateToPreview}
-          view={templatePreviewView}
+          view={templatePreviewView ?? { isPublished: false, publishedAt: null, content: templatePreviewDocument ?? { sections: [] } }}
           onClose={() => setTemplateToPreview(null)}
           onApply={(template) => {
             setTemplateToPreview(null);
