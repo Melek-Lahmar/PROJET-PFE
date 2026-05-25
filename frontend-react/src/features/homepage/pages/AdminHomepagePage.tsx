@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
@@ -244,7 +244,7 @@ export function AdminHomepagePage() {
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [templateToPreview, setTemplateToPreview] = useState<HomepageTemplateDefinition | null>(null);
   const [templateToApply, setTemplateToApply] = useState<HomepageTemplateDefinition | null>(null);
-  const pendingPublish = { current: false };
+  const pendingPublish = useRef(false);
 
   const adminQuery = useQuery({
     queryKey: ["homepage", "admin"],

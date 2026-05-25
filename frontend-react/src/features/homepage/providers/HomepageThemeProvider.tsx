@@ -2,15 +2,15 @@
 // FICHIER: HomepageThemeProvider.tsx
 // CHEMIN: frontend-react/src/features/homepage/providers/HomepageThemeProvider.tsx
 //
-// Description: Provider et hooks pour gérer les thèmes homepage
+// Description: Provider et hooks pour gerer les themes homepage
 // ============================================================
 
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { 
   HOMEPAGE_THEMES, 
   getTheme, 
-  getThemeCSS, 
+  hexToHsl,
   type HomepageThemeId,
   type HomepageThemeConfig 
 } from "../themes/HomepageThemes";
@@ -48,7 +48,23 @@ export function HomepageThemeProvider({
 
   const activeTheme = useMemo(() => getTheme(activeThemeId), [activeThemeId]);
 
-  const themeCSS = useMemo(() => getThemeCSS(activeTheme), [activeTheme]);
+  // Inject Tailwind-compatible CSS vars into :root so every component using
+  // classes like bg-primary, text-card-foreground etc. picks up the theme.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--primary", hexToHsl(activeTheme.colors.primary));
+    root.style.setProperty("--primary-foreground", hexToHsl(activeTheme.buttons.primary.text));
+    root.style.setProperty("--background", hexToHsl(activeTheme.colors.background));
+    root.style.setProperty("--foreground", hexToHsl(activeTheme.colors.text));
+    root.style.setProperty("--card", hexToHsl(activeTheme.colors.surface));
+    root.style.setProperty("--card-foreground", hexToHsl(activeTheme.colors.text));
+    root.style.setProperty("--muted", hexToHsl(activeTheme.colors.surface));
+    root.style.setProperty("--muted-foreground", hexToHsl(activeTheme.colors.textLight));
+    root.style.setProperty("--border", hexToHsl(activeTheme.colors.border));
+    root.style.setProperty("--accent", hexToHsl(activeTheme.colors.accent));
+    root.style.setProperty("--accent-foreground", hexToHsl(activeTheme.colors.text));
+    root.style.setProperty("--info", hexToHsl(activeTheme.colors.secondary));
+  }, [activeTheme]);
 
   const value: HomepageThemeContextType = {
     activeThemeId,
@@ -59,9 +75,7 @@ export function HomepageThemeProvider({
 
   return (
     <HomepageThemeContext.Provider value={value}>
-      <div style={themeCSS as React.CSSProperties}>
-        {children}
-      </div>
+      {children}
     </HomepageThemeContext.Provider>
   );
 }
