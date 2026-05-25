@@ -118,6 +118,37 @@ function buildLocalPreview(
   return view;
 }
 
+function TemplateMiniPreview({ theme }: { theme: ReturnType<typeof getTheme> }) {
+  return (
+    <div className="relative h-36 w-full overflow-hidden" style={{ backgroundColor: theme.colors.background }}>
+      {/* Hero block */}
+      <div className="absolute left-0 right-0 top-0 h-14 flex items-center px-3 gap-2" style={{ backgroundColor: theme.colors.primary }}>
+        <div className="flex-1 space-y-1">
+          <div className="h-2 w-16 rounded" style={{ backgroundColor: theme.buttons.primary.text, opacity: 0.9 }} />
+          <div className="h-1.5 w-24 rounded" style={{ backgroundColor: theme.buttons.primary.text, opacity: 0.5 }} />
+        </div>
+        <div className="h-6 w-12 rounded-lg flex items-center justify-center text-[8px] font-black" style={{ backgroundColor: theme.colors.accent, color: theme.colors.text }}>
+          CTA
+        </div>
+      </div>
+      {/* Cards row */}
+      <div className="absolute left-0 right-0 top-16 flex gap-1.5 px-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex-1 rounded-md p-1.5 space-y-1" style={{ backgroundColor: theme.colors.surface, border: `1px solid ${theme.colors.border}` }}>
+            <div className="h-5 rounded-sm" style={{ backgroundColor: theme.colors.accent, opacity: 0.6 }} />
+            <div className="h-1.5 w-full rounded" style={{ backgroundColor: theme.colors.textLight, opacity: 0.4 }} />
+            <div className="h-1.5 w-3/4 rounded" style={{ backgroundColor: theme.colors.textLight, opacity: 0.3 }} />
+          </div>
+        ))}
+      </div>
+      {/* Bottom bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-5 flex items-center justify-center" style={{ backgroundColor: theme.colors.secondary }}>
+        <div className="h-1.5 w-20 rounded" style={{ backgroundColor: theme.buttons.primary.text, opacity: 0.6 }} />
+      </div>
+    </div>
+  );
+}
+
 function TemplateCard({
   template,
   isActive,
@@ -140,29 +171,20 @@ function TemplateCard({
       }`}
       style={{ backgroundColor: theme.colors.background }}
     >
-      {/* Color preview strip */}
-      <div className="h-20 w-full relative overflow-hidden" style={{ backgroundColor: theme.colors.surface }}>
-        <div className="absolute inset-0 flex">
-          <div className="flex-1" style={{ backgroundColor: theme.colors.primary }} />
-          <div className="flex-1" style={{ backgroundColor: theme.colors.secondary }} />
-          <div className="flex-1" style={{ backgroundColor: theme.colors.accent }} />
-        </div>
-        <div className="absolute inset-0 flex items-end px-4 pb-3">
-          <div className="flex gap-1.5">
-            {[theme.colors.primary, theme.colors.secondary, theme.colors.accent, theme.colors.tertiary].map((color, i) => (
-              <span
-                key={i}
-                className="inline-block h-4 w-4 rounded-full border-2 border-white/80 shadow"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Mini visual preview */}
+      <div className="relative overflow-hidden">
+        <TemplateMiniPreview theme={theme} />
         {isActive ? (
-          <div className="absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-primary shadow">
+          <div className="absolute right-2 top-2 rounded-full px-2.5 py-1 text-[11px] font-black shadow-md" style={{ backgroundColor: theme.colors.primary, color: theme.buttons.primary.text }}>
             Actif
           </div>
         ) : null}
+        {/* Color dots */}
+        <div className="absolute bottom-2 left-2 flex gap-1">
+          {[theme.colors.primary, theme.colors.secondary, theme.colors.accent, theme.colors.tertiary].map((color, i) => (
+            <span key={i} className="inline-block h-3 w-3 rounded-full border border-white/60 shadow-sm" style={{ backgroundColor: color }} />
+          ))}
+        </div>
       </div>
 
       {/* Content */}
@@ -203,8 +225,8 @@ function TemplateCard({
           <button
             type="button"
             onClick={() => onApply(template)}
-            className="rounded-xl py-2 text-xs font-black text-white transition hover:opacity-90"
-            style={{ backgroundColor: theme.colors.primary }}
+            className="rounded-xl py-2 text-xs font-black transition hover:opacity-90"
+            style={{ backgroundColor: theme.colors.primary, color: theme.buttons.primary.text }}
           >
             Appliquer
           </button>
