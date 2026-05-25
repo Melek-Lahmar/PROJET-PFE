@@ -253,7 +253,7 @@ export function AdminHomepagePage() {
   const saveMutation = useMutation({
     mutationFn: saveHomepageDraft,
     onSuccess: async () => {
-      setMessage({ text: "Brouillon enregistré avec succès.", type: "success" });
+      setMessage({ text: "Brouillon enregistré. Cliquez sur \"Publier en ligne\" pour le mettre en ligne.", type: "success" });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
         queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
@@ -300,11 +300,12 @@ export function AdminHomepagePage() {
 
   const applyTemplateToDraft = (template: HomepageTemplateDefinition) => {
     const nextDraft = template.createDocument(templateContext);
-    setDraft({ ...nextDraft, sections: sortHomepageSections(nextDraft.sections) });
+    const sortedDraft = { ...nextDraft, sections: sortHomepageSections(nextDraft.sections) };
+    setDraft(sortedDraft);
     setTheme(template.themeId);
     setTemplateToApply(null);
     setTemplateToPreview(null);
-    setMessage({ text: `Modèle « ${template.name} » appliqué. Enregistrez puis publiez pour le mettre en ligne.`, type: "success" });
+    saveMutation.mutate({ content: sortedDraft });
   };
 
   if (adminQuery.isLoading || articlesQuery.isLoading || cataloguesQuery.isLoading || depotsQuery.isLoading) {
