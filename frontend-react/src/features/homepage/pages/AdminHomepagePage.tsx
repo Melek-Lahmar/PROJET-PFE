@@ -222,6 +222,7 @@ export function AdminHomepagePage() {
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [templateToPreview, setTemplateToPreview] = useState<HomepageTemplateDefinition | null>(null);
   const [templateToApply, setTemplateToApply] = useState<HomepageTemplateDefinition | null>(null);
+  const pendingPublish = { current: false };
 
   const adminQuery = useQuery({
     queryKey: ["homepage", "admin"],
@@ -250,24 +251,10 @@ export function AdminHomepagePage() {
     }
   }, [adminQuery.data?.draft, adminQuery.data?.updatedAt]);
 
-  const saveMutation = useMutation({
-    mutationFn: saveHomepageDraft,
-    onSuccess: async () => {
-      setMessage({ text: "Brouillon enregistré. Cliquez sur \"Publier en ligne\" pour le mettre en ligne.", type: "success" });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
-        queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
-      ]);
-    },
-    onError: (error: unknown) => {
-      setMessage({ text: getApiErrorMessage(error) || "Erreur lors de l'enregistrement.", type: "error" });
-    },
-  });
-
   const publishMutation = useMutation({
     mutationFn: publishHomepage,
     onSuccess: async () => {
-      setMessage({ text: "Page d'accueil publiée et visible par vos visiteurs.", type: "success" });
+      setMessage({ text: "✓ Page publiée ! Visible par vos visiteurs sur localhost:5173/", type: "success" });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
         queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
@@ -275,6 +262,26 @@ export function AdminHomepagePage() {
     },
     onError: (error: unknown) => {
       setMessage({ text: getApiErrorMessage(error) || "Erreur lors de la publication.", type: "error" });
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: saveHomepageDraft,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
+        queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
+      ]);
+      if (pendingPublish.current) {
+        pendingPublish.current = false;
+        publishMutation.mutate();
+      } else {
+        setMessage({ text: "Brouillon enregistré.", type: "success" });
+      }
+    },
+    onError: (error: unknown) => {
+      pendingPublish.current = false;
+      setMessage({ text: getApiErrorMessage(error) || "Erreur lors de l'enregistrement.", type: "error" });
     },
   });
 
@@ -305,6 +312,8 @@ export function AdminHomepagePage() {
     setTheme(template.themeId);
     setTemplateToApply(null);
     setTemplateToPreview(null);
+    setMessage({ text: "Application en cours...", type: "success" });
+    pendingPublish.current = true;
     saveMutation.mutate({ content: sortedDraft });
   };
 
@@ -349,16 +358,19 @@ export function AdminHomepagePage() {
           <Button
             type="button"
             variant="secondary"
-            isLoading={saveMutation.isPending}
+            isLoading={saveMutation.isPending && !pendingPublish.current}
             onClick={() => saveMutation.mutate({ content: draft })}
           >
-            Enregistrer
+            Enregistrer brouillon
           </Button>
           <Button
             type="button"
             variant="primary"
-            isLoading={publishMutation.isPending}
-            onClick={() => publishMutation.mutate()}
+            isLoading={publishMutation.isPending || (saveMutation.isPending && pendingPublish.current)}
+            onClick={() => {
+              pendingPublish.current = true;
+              saveMutation.mutate({ content: draft });
+            }}
             className="shadow-md"
           >
             Publier en ligne
