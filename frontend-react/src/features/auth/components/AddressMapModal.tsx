@@ -1,11 +1,10 @@
 // src/features/auth/components/AddressMapModal.tsx
 //
-// AMELIORATIONS :
-//  - Pin SVG personnalisé partagé avec AddressMapField (createMapPin)
-//  - Badge source (GPS / Carte / Drag) avec même logique
-//  - Même feedback sync que le bouton GPS du parent
-//  - Hint flottant sur la carte "Cliquez ou glissez"
-//  - Affichage coordonnées clair + bouton effacer
+// UX AMELIOREE :
+//  - Toutes les interactions (clic, drag, GPS) mettent a jour l'etat interne uniquement
+//  - onChange n'est appele QUE quand l'utilisateur confirme ("Choisir cet emplacement")
+//  - Bouton flottant prominent "Choisir cet emplacement" sur la carte
+//  - Annuler ferme sans appeler onChange
 
 import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
@@ -17,13 +16,12 @@ import { getCenterForTunisia } from "../../geo/data/tunisiaCenters";
 import { createMapPin, type AddressMapChangeReason } from "./AddressMapField";
 import { roundCoordinate } from "../../geo/utils/tunisiaLocationSync";
 
-// ── Badge source (même que AddressMapField) ────────────────────────────────────
 function SourceBadge({ source }: { source: AddressMapChangeReason | null }) {
   if (!source) return null;
   const cfg = {
-    gps:       { label: "GPS",    bg: "bg-blue-50   border-blue-200   text-blue-700"   },
-    map_click: { label: "Carte",  bg: "bg-violet-50  border-violet-200  text-violet-700" },
-    map_drag:  { label: "Déplacé",bg: "bg-violet-50  border-violet-200  text-violet-700" },
+    gps:       { label: "GPS",     bg: "bg-blue-50   border-blue-200   text-blue-700"   },
+    map_click: { label: "Carte",   bg: "bg-violet-50  border-violet-200  text-violet-700" },
+    map_drag:  { label: "Deplace", bg: "bg-violet-50  border-violet-200  text-violet-700" },
   }[source];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${cfg.bg}`}>
@@ -78,14 +76,17 @@ export function AddressMapModal({
   const [source, setSource] = useState<AddressMapChangeReason | null>(
     typeof latitude === "number" ? "gps" : null
   );
+  // true si l'utilisateur a place le pin mais pas encore confirme
+  const [pendingConfirm, setPendingConfirm] = useState(false);
 
-  // Reset à chaque ouverture
+  // Reset a chaque ouverture
   useEffect(() => {
     if (!open) return;
     setPos({ lat: initial.lat, lng: initial.lng });
     setZoom(initial.zoom);
     setGeoError(null);
     setSource(typeof latitude === "number" ? "gps" : null);
+    setPendingConfirm(false);
   }, [open, initial.lat, initial.lng, initial.zoom, latitude]);
 
   const icon = useMemo(() => createMapPin(source), [source]);
@@ -93,11 +94,21 @@ export function AddressMapModal({
 
   const canBePrecise = Boolean(typeof gouvernorat === "number" && delegation?.trim());
 
-  // Bouton GPS dans la modal
+  // Met a jour la position interne sans appeler onChange
+  const handlePick = (lat: number, lng: number, reason: AddressMapChangeReason) => {
+    const nextLat = roundCoordinate(lat);
+    const nextLng = roundCoordinate(lng);
+    setPos({ lat: nextLat, lng: nextLng });
+    setZoom(16);
+    setSource(reason);
+    setPendingConfirm(true);
+  };
+
+  // GPS : met a jour la position interne sans appeler onChange
   const handleUseMyLocation = () => {
     setGeoError(null);
     if (!navigator.geolocation) {
-      setGeoError("La géolocalisation n'est pas supportée par ce navigateur.");
+      setGeoError("La geolocalisation n'est pas supportee par ce navigateur.");
       return;
     }
     setLocating(true);
@@ -109,36 +120,34 @@ export function AddressMapModal({
         setPos({ lat, lng });
         setZoom(16);
         setSource("gps");
-        onChange(lat, lng);
+        setPendingConfirm(true);
       },
       (err) => {
         setLocating(false);
         if (err.code === err.PERMISSION_DENIED)
-          setGeoError("Permission refusée. Autorisez la localisation dans le navigateur.");
+          setGeoError("Permission refusee. Autorisez la localisation dans le navigateur.");
         else
-          setGeoError("Impossible de récupérer la localisation.");
+          setGeoError("Impossible de recuperer la localisation.");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  const handlePick = (lat: number, lng: number, reason: AddressMapChangeReason) => {
-    const nextLat = roundCoordinate(lat);
-    const nextLng = roundCoordinate(lng);
-    setPos({ lat: nextLat, lng: nextLng });
-    setZoom(16);
-    setSource(reason);
-    onChange(nextLat, nextLng);
+  // Appelle onChange UNIQUEMENT ici et ferme
+  const handleConfirm = () => {
+    if (source) {
+      onChange(pos.lat, pos.lng);
+    }
+    onClose();
   };
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Épingler sur la carte"
+      title="Epingler sur la carte"
       footer={
         <div className="flex items-center justify-between gap-3">
-          {/* Coordonnées + badge */}
           <div className="flex items-center gap-2 text-xs">
             <SourceBadge source={source} />
             {source ? (
@@ -157,7 +166,7 @@ export function AddressMapModal({
               variant="primary"
               type="button"
               disabled={!source}
-              onClick={onClose}
+              onClick={handleConfirm}
             >
               Confirmer
             </Button>
@@ -166,21 +175,18 @@ export function AddressMapModal({
       }
     >
       <div className="space-y-4">
-        {/* Info précision */}
         {!canBePrecise && (
           <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm text-muted-foreground">
-            Pour un positionnement plus précis, choisissez d'abord le <b>Gouvernorat</b> et la <b>Délégation</b>.
+            Pour un positionnement plus precis, choisissez d'abord le <b>Gouvernorat</b> et la <b>Delegation</b>.
           </div>
         )}
 
-        {/* Erreur GPS */}
         {geoError && (
           <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.12)] px-3 py-2 text-sm text-[hsl(var(--danger))]">
             {geoError}
           </div>
         )}
 
-        {/* Barre boutons */}
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="secondary"
@@ -192,7 +198,7 @@ export function AddressMapModal({
             {locating ? (
               <>
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Localisation…
+                Localisation...
               </>
             ) : (
               <>
@@ -207,20 +213,37 @@ export function AddressMapModal({
             )}
           </Button>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <SourceBadge source={source} />
-            <span className="text-xs text-muted-foreground">
-              {source ? "Position épinglée" : "Cliquez ou glissez le pin"}
-            </span>
-          </div>
+          <span className="ml-auto text-xs text-muted-foreground">
+            Cliquez ou glissez le pin pour placer
+          </span>
         </div>
 
-        {/* Carte */}
+        {/* Carte avec bouton flottant "Choisir cet emplacement" */}
         <div className="relative overflow-hidden rounded-2xl border border-border shadow-sm">
-          {/* Hint flottant */}
-          <div className="pointer-events-none absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur-sm dark:bg-slate-900/90 dark:text-slate-300">
-            {source ? "Glissez le pin pour ajuster" : "Cliquez sur la carte pour épingler"}
-          </div>
+
+          {/* Bouton flottant qui apparait apres placement du pin */}
+          {pendingConfirm && (
+            <div className="absolute bottom-4 left-1/2 z-[1000] -translate-x-1/2">
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+                Choisir cet emplacement
+              </button>
+            </div>
+          )}
+
+          {/* Hint flottant en haut quand pas encore place */}
+          {!pendingConfirm && (
+            <div className="pointer-events-none absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur-sm">
+              {source ? "Glissez le pin pour ajuster" : "Cliquez sur la carte pour epingler"}
+            </div>
+          )}
 
           <MapContainer
             center={center}
@@ -250,6 +273,25 @@ export function AddressMapModal({
             />
           </MapContainer>
         </div>
+
+        {/* Affichage coordonnees sous la carte */}
+        {source && (
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
+            <div className="flex items-center gap-2">
+              <SourceBadge source={source} />
+              <span className="text-muted-foreground">
+                Lat <span className="font-semibold text-card-foreground">{pos.lat.toFixed(6)}</span>
+                {" "}&bull;{" "}
+                Lng <span className="font-semibold text-card-foreground">{pos.lng.toFixed(6)}</span>
+              </span>
+            </div>
+            {pendingConfirm && (
+              <span className="text-[10px] font-bold text-amber-600">
+                Cliquez "Choisir cet emplacement" pour confirmer
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   );
