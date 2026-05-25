@@ -9,7 +9,7 @@
 //  - onChange gouvernorat : efface lat/lng si GPS présent (coords devenues invalides)
 //  - onChange délégation  : idem
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
@@ -17,7 +17,7 @@ import { useAddresses } from "../../addresses/hooks/useAddresses";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
 import { AddressMapModal } from "../../auth/components/AddressMapModal";
-import { getDelegations } from "../../geo/api/geoApi";
+import { getDelegations, getDepotCoverage } from "../../geo/api/geoApi";
 import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   TUNISIA_GOUVERNORATS,
@@ -44,6 +44,7 @@ type Props = {
   setLatitude: (v: number | null) => void;
   setLongitude: (v: number | null) => void;
   onTouched: (f: "address" | "city" | "postalCode" | "latitude" | "longitude") => void;
+  onCoverageBlocked?: (blocked: boolean) => void;
 };
 
 type SyncStatus = "idle" | "loading" | "ok" | "mismatch" | "error";
@@ -84,6 +85,7 @@ export function DeliveryAddressSelector({
   setLatitude,
   setLongitude,
   onTouched,
+  onCoverageBlocked,
 }: Props) {
   const { data: savedAddresses = [], isPending: addrPending } = useAddresses();
 
@@ -112,6 +114,33 @@ export function DeliveryAddressSelector({
     staleTime: 5 * 60_000,
   });
   const delegations = delegQuery.data ?? [];
+
+  // For saved mode: resolve gouvernorat ID from the selected address gouvernorat string
+  const selectedAddress = useMemo(
+    () => savedAddresses.find((a) => a.id === selectedId),
+    [savedAddresses, selectedId]
+  );
+  const savedGouvernoratId = useMemo(() => {
+    if (!selectedAddress?.gouvernorat) return null;
+    const name = selectedAddress.gouvernorat.toLowerCase();
+    const idx = TUNISIA_GOUVERNORATS.findIndex((n) => n.toLowerCase() === name);
+    return idx >= 0 ? idx : null;
+  }, [selectedAddress]);
+
+  const coverageGouvernoratId = mode === "temp" ? gouvernoratId : savedGouvernoratId;
+
+  const coverageQuery = useQuery({
+    queryKey: ["depot-coverage", coverageGouvernoratId],
+    queryFn: () => getDepotCoverage(coverageGouvernoratId!),
+    enabled: coverageGouvernoratId !== null && coverageGouvernoratId >= 0,
+    staleTime: 5 * 60_000,
+  });
+  const coverage = coverageQuery.data;
+  const noCoverage = coverage && !coverage.hasCoverage;
+
+  useEffect(() => {
+    onCoverageBlocked?.(!!noCoverage);
+  }, [noCoverage, onCoverageBlocked]);
 
   // Reset délégation si le gouvernorat change
   useEffect(() => {
@@ -580,6 +609,23 @@ export function DeliveryAddressSelector({
               Enregistrer une adresse permanente
             </Link>
           </p>
+        </div>
+      )}
+
+      {/* Bannière pas de couverture dépôt */}
+      {noCoverage && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm">
+          <span className="mt-0.5 text-xl">⚠️</span>
+          <div>
+            <div className="font-bold text-amber-800">
+              Service non disponible dans {coverage.gouvernorat}
+            </div>
+            <div className="mt-0.5 text-amber-700">
+              Nous n&apos;avons pas encore de dépôt dans votre gouvernorat ({coverage.gouvernorat}).
+              Nous travaillons à étendre notre couverture prochainement.
+              Veuillez choisir un autre gouvernorat ou passer en retrait dépôt.
+            </div>
+          </div>
         </div>
       )}
 

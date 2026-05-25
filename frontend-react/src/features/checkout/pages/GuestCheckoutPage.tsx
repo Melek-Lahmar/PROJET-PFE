@@ -8,7 +8,7 @@ import { Input } from "../../../shared/components/Input";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 
 import { getDepots, type DepotDto } from "../../catalog/api/depotsApi";
-import { getGouvernorats, getDelegations } from "../../geo/api/geoApi";
+import { getGouvernorats, getDelegations, getDepotCoverage } from "../../geo/api/geoApi";
 import type { GouvernoratItem } from "../../geo/types/geo";
 
 import { createGuestOrder } from "../../orders/api/ordersApi";
@@ -48,7 +48,8 @@ export function GuestCheckoutPage() {
   const [telephone, setTelephone] = useState("");
   const [cin, setCin] = useState("");
 
-  const [gouvernorat, setGouvernorat] = useState<number>(22);
+  const [showErrors, setShowErrors] = useState(false);
+  const [gouvernorat, setGouvernorat] = useState<number>(0);
   const [delegation, setDelegation] = useState("");
 
   const [adresse, setAdresse] = useState("");
@@ -81,6 +82,15 @@ export function GuestCheckoutPage() {
     enabled: Number.isFinite(gouvernorat),
   });
 
+  const coverageQuery = useQuery({
+    queryKey: ["depot-coverage", gouvernorat],
+    queryFn: () => getDepotCoverage(gouvernorat),
+    enabled: gouvernorat > 0,
+    staleTime: 5 * 60_000,
+  });
+  const coverage = coverageQuery.data;
+  const noCoverage = coverage && !coverage.hasCoverage;
+
   const depotsQuery = useQuery<DepotDto[]>({
     queryKey: ["depots", "guest-checkout"],
     queryFn: () => getDepots(false),
@@ -100,6 +110,14 @@ export function GuestCheckoutPage() {
     if (delegations.length === 0) return "";
     return delegations.includes(delegation) ? delegation : "";
   }, [delegations, delegation]);
+
+  const fieldErrors = useMemo(() => ({
+    nomComplet: !nomComplet.trim() ? "Nom complet requis" : undefined,
+    telephone: !telephone.trim() ? "Numéro de téléphone requis" : undefined,
+    gouvernorat: gouvernorat <= 0 ? "Gouvernorat requis" : undefined,
+    delegation: !effectiveDelegation ? "Délégation requise" : undefined,
+    address: !adresse.trim() ? "Adresse requise" : undefined,
+  }), [nomComplet, telephone, gouvernorat, effectiveDelegation, adresse]);
 
   const effectiveShippingAddress =
     touchedShipping.address || shippingAddress.trim()
@@ -130,9 +148,8 @@ export function GuestCheckoutPage() {
 
   const canSubmit = useMemo(() => {
     if (items.length === 0) return false;
-    if (!nomComplet.trim() || !telephone.trim() || !effectiveDelegation.trim() || !adresse.trim() || !codePostal.trim()) {
-      return false;
-    }
+    if (Object.values(fieldErrors).some(Boolean)) return false;
+    if (noCoverage) return false;
 
     if (!isHome && effectiveDepotNo <= 0) return false;
 
@@ -148,17 +165,14 @@ export function GuestCheckoutPage() {
 
     return true;
   }, [
-    adresse,
-    codePostal,
-    effectiveDelegation,
+    fieldErrors,
+    noCoverage,
     effectiveDepotNo,
     effectiveShippingAddress,
     effectiveShippingCity,
     effectiveShippingPostalCode,
     isHome,
     items.length,
-    nomComplet,
-    telephone,
   ]);
 
   const mutation = useMutation({
@@ -246,7 +260,10 @@ export function GuestCheckoutPage() {
   const currentError = mutation.error ?? virtualMutation.error;
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      setShowErrors(true);
+      return;
+    }
 
     if (paymentMethod === "VIRTUAL") {
       virtualMutation.mutate();
@@ -316,13 +333,33 @@ export function GuestCheckoutPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold text-card-foreground">Nom complet</label>
-                <Input value={nomComplet} onChange={(e) => setNomComplet(e.target.value)} placeholder="Nom et prénom" />
+                <label className="text-sm font-semibold text-card-foreground">
+                  Nom complet <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={nomComplet}
+                  onChange={(e) => setNomComplet(e.target.value)}
+                  placeholder="Nom et prénom"
+                  className={showErrors && fieldErrors.nomComplet ? "border-red-400 bg-red-50 focus:border-red-500" : ""}
+                />
+                {showErrors && fieldErrors.nomComplet && (
+                  <p className="text-xs font-medium text-red-500">{fieldErrors.nomComplet}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-card-foreground">Téléphone</label>
-                <Input value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="Ex: 22123456" />
+                <label className="text-sm font-semibold text-card-foreground">
+                  Téléphone <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)}
+                  placeholder="Ex: 22123456"
+                  className={showErrors && fieldErrors.telephone ? "border-red-400 bg-red-50 focus:border-red-500" : ""}
+                />
+                {showErrors && fieldErrors.telephone && (
+                  <p className="text-xs font-medium text-red-500">{fieldErrors.telephone}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -357,6 +394,11 @@ export function GuestCheckoutPage() {
             setLatitude={setLatitude}
             longitude={longitude}
             setLongitude={setLongitude}
+            errors={showErrors ? {
+              gouvernorat: fieldErrors.gouvernorat,
+              delegation: fieldErrors.delegation,
+              address: fieldErrors.address,
+            } : undefined}
           />
 
           <div className="app-surface space-y-6 p-8">
@@ -482,7 +524,7 @@ export function GuestCheckoutPage() {
 
             <Button
               className="h-12 w-full rounded-2xl text-base font-bold"
-              disabled={!canSubmit || isSubmitting}
+              disabled={isSubmitting}
               onClick={handleSubmit}
             >
               {paymentMethod === "VIRTUAL"

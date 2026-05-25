@@ -17,3 +17,17 @@ export async function getDelegations(
   );
   return data;
 }
+
+export type DepotCoverageResult = {
+  hasCoverage: boolean;
+  gouvernorat: string;
+  gouvernoratId: number;
+  depotCount: number;
+};
+
+export async function getDepotCoverage(gouvernoratId: number): Promise<DepotCoverageResult> {
+  const { data } = await axiosClient.get<DepotCoverageResult>(
+    endpoints.geoDepotCoverage(gouvernoratId)
+  );
+  return data;
+}
