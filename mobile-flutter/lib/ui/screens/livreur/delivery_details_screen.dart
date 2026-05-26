@@ -18,6 +18,7 @@ import '../../widgets/premium/action_tile.dart';
 import '../../widgets/premium/premium_card.dart';
 import '../../widgets/premium/status_pill.dart';
 import '../order_history_screen.dart';
+import 'livreur_claims_history_screen.dart';
 
 /// Page détail d'une commande côté livreur.
 ///
@@ -35,7 +36,8 @@ class DeliveryDetailsScreen extends StatefulWidget {
   State<DeliveryDetailsScreen> createState() => _DeliveryDetailsScreenState();
 }
 
-class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
+class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen>
+    with WidgetsBindingObserver {
   OrderEscalationStatus _escalation = OrderEscalationStatus.empty;
   LivreurOrderDetails? _full;
   bool _fullLoading = true;
@@ -43,10 +45,26 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadEscalation();
       _loadFullDetails();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Recharge les détails quand l'app revient au premier plan (ex: correction appliquée)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadEscalation();
+      _loadFullDetails();
+    }
   }
 
   Future<void> _loadEscalation() async {
@@ -334,6 +352,13 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
       appBar: AppBar(
         title: Text(d.doPiece),
         actions: [
+          IconButton(
+            tooltip: 'Mes signalements',
+            icon: const Icon(Icons.assignment_late_outlined),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const LivreurClaimsHistoryScreen(),
+            )),
+          ),
           IconButton(
             tooltip: 'Rafraîchir',
             onPressed: () {

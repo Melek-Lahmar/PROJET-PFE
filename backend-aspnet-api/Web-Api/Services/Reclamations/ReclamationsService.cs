@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Web_Api.Auth.Constants;
 using Web_Api.Auth.Entities;
+using Web_Api.Constants;
 using Web_Api.Services.Confirmatrice;
 using Web_Api.data;
 using Web_Api.DTO.Reclamations;
@@ -483,6 +484,15 @@ namespace Web_Api.Services.Reclamations
             {
                 reclamation.ClosedAt = now;
                 reclamation.MotifRefus = (motifRefus ?? string.Empty).Trim();
+            }
+
+            // Auto-cancel order when confirmatrice closes an ANNULATION claim
+            if (normalized == ReclamationStatuses.CLOTUREE && reclamation.Motif == ClientMotifs.ANNULATION)
+            {
+                var orderToCancel = await _db.F_DOCENTETES
+                    .FirstOrDefaultAsync(o => o.DO_Piece == reclamation.DoPiece, ct);
+                if (orderToCancel != null && orderToCancel.DO_Valide != F_DOCENTETE.STATUS_REFUSE)
+                    orderToCancel.DO_Valide = F_DOCENTETE.STATUS_REFUSE;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -1084,6 +1094,7 @@ namespace Web_Api.Services.Reclamations
                 CorrectionProposee = e.CorrectionProposee,
                 CorrectionAppliquee = e.CorrectionAppliquee,
                 MotifRefus = e.MotifRefus,
+                EchangeDemandeText = e.EchangeDemandeText,
                 NoteInterne = includeInternalNote ? e.NoteInterne : null,
                 TentativesCount = e.TentativesCount,
                 FirstAttemptAt = e.FirstAttemptAt,
@@ -1523,9 +1534,9 @@ namespace Web_Api.Services.Reclamations
         private async Task<bool> IsDeliveredAsync(F_DOCENTETE order, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(order.DO_Piece)) return false;
-            // On considère la commande LIVRÉE si F_LIVRAISON.LI_DateLivree != null pour cette pièce.
             return await _db.F_LIVRAISONS.AsNoTracking()
-                .AnyAsync(l => l.DO_Piece == order.DO_Piece && l.LI_DateLivree != null, ct);
+                .AnyAsync(l => l.DO_Piece == order.DO_Piece
+                    && (l.LI_DateLivree != null || l.LI_Statut == DeliveryStatusCodes.Livre), ct);
         }
 
         public async Task<List<int>> GetMyDemandesIdsAsync(Guid clientUserId, CancellationToken ct = default)
@@ -2204,6 +2215,133 @@ namespace Web_Api.Services.Reclamations
 
             await _db.SaveChangesAsync(ct);
             return await MapDetailsAsync(reclamation, includeInternalNote: true, ct);
+        }
+
+        public async Task<List<ReclamationListItemDto>> GetLivreurHistoryAsync(Guid livreurUserId, CancellationToken ct = default)
+        {
+            var tentatives = await _db.F_RECLAMATION_TENTATIVES.AsNoTracking()
+                .Where(t => t.LivreurUserId == livreurUserId)
+                .OrderByDescending(t => t.DateJour)
+                .Take(50)
+                .ToListAsync(ct);
+
+            var pieces = tentatives.Select(t => t.CommandePiece).Distinct().ToList();
+
+            var escalated = await _db.F_RECLAMATIONS.AsNoTracking()
+                .Where(r => r.CreatedByUserId == livreurUserId || pieces.Contains(r.DoPiece))
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(50)
+                .ToListAsync(ct);
+
+            return escalated.Select(r => new ReclamationListItemDto
+            {
+                Id = r.Id,
+                CodeReclamation = r.CodeReclamation,
+                DoPiece = r.DoPiece,
+                Motif = r.Motif,
+                Statut = r.Statut,
+                Source = r.Source,
+                TypeCas = r.TypeCas,
+                VisibleClient = r.VisibleClient,
+                TentativesCount = r.TentativesCount,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                ClosedAt = r.ClosedAt
+            }).OrderByDescending(r => r.CreatedAt).ToList();
+        }
+
+        public async Task<List<ReclamationMessageDto>> GetMessagesAsync(int reclamationId, Guid requestingUserId, bool isStaff, CancellationToken ct = default)
+        {
+            var reclamation = await _db.F_RECLAMATIONS.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == reclamationId, ct)
+                ?? throw new InvalidOperationException("Réclamation introuvable.");
+
+            if (!isStaff && reclamation.ClientUserId != requestingUserId)
+                throw new UnauthorizedAccessException("Accès refusé.");
+
+            var query = _db.F_RECLAMATION_MESSAGES.AsNoTracking()
+                .Where(m => m.ReclamationId == reclamationId);
+
+            if (!isStaff)
+                query = query.Where(m => !m.IsInternal);
+
+            var messages = await query.OrderBy(m => m.CreatedAt).ToListAsync(ct);
+
+            var senderIds = messages.Select(m => m.SenderUserId).Distinct().ToList();
+            var senders = await _db.Users.AsNoTracking()
+                .Where(u => senderIds.Contains(u.Id)).ToListAsync(ct);
+            var senderProfiles = await _db.ProfilsUtilisateurs.AsNoTracking()
+                .Where(p => p.UtilisateurId.HasValue && senderIds.Contains(p.UtilisateurId.Value))
+                .ToListAsync(ct);
+
+            return messages.Select(m =>
+            {
+                var profile = senderProfiles.FirstOrDefault(p => p.UtilisateurId == m.SenderUserId);
+                var user = senders.FirstOrDefault(u => u.Id == m.SenderUserId);
+                return new ReclamationMessageDto
+                {
+                    Id = m.Id,
+                    ReclamationId = m.ReclamationId,
+                    SenderUserId = m.SenderUserId,
+                    SenderRole = m.SenderRole,
+                    SenderDisplay = profile?.NomComplet ?? user?.Email ?? "Inconnu",
+                    MessageText = m.MessageText,
+                    MessageType = m.MessageType,
+                    MediaUrl = m.MediaUrl,
+                    MediaFileName = m.MediaFileName,
+                    MediaContentType = m.MediaContentType,
+                    MediaSize = m.MediaSize,
+                    IsInternal = m.IsInternal,
+                    CreatedAt = m.CreatedAt,
+                    ReadAt = m.ReadAt
+                };
+            }).ToList();
+        }
+
+        public async Task<ReclamationMessageDto> SendMessageAsync(int reclamationId, Guid senderUserId, string senderRole, SendMessageRequestDto request, CancellationToken ct = default)
+        {
+            var reclamation = await _db.F_RECLAMATIONS.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == reclamationId, ct)
+                ?? throw new InvalidOperationException("Réclamation introuvable.");
+
+            if (ReclamationStatuses.IsClosed(reclamation.Statut))
+                throw new InvalidOperationException("Impossible d'envoyer un message sur un cas clos.");
+
+            var text = (request.MessageText ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(text))
+                throw new InvalidOperationException("Le message ne peut pas être vide.");
+
+            var senderProfile = await _db.ProfilsUtilisateurs.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.UtilisateurId == senderUserId, ct);
+
+            var message = new F_RECLAMATION_MESSAGE
+            {
+                ReclamationId = reclamationId,
+                SenderUserId = senderUserId,
+                SenderProfileId = senderProfile?.cbMarq,
+                SenderRole = senderRole,
+                MessageText = text,
+                MessageType = "TEXT",
+                IsInternal = request.IsInternal && senderRole != AppRoles.CLIENT,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.F_RECLAMATION_MESSAGES.Add(message);
+            await _db.SaveChangesAsync(ct);
+
+            var senderUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == senderUserId, ct);
+            return new ReclamationMessageDto
+            {
+                Id = message.Id,
+                ReclamationId = message.ReclamationId,
+                SenderUserId = message.SenderUserId,
+                SenderRole = message.SenderRole,
+                SenderDisplay = senderProfile?.NomComplet ?? senderUser?.Email ?? "Inconnu",
+                MessageText = message.MessageText,
+                MessageType = message.MessageType,
+                IsInternal = message.IsInternal,
+                CreatedAt = message.CreatedAt
+            };
         }
     }
 

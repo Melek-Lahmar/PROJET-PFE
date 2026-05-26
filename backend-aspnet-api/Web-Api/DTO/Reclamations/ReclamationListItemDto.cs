@@ -13,6 +13,7 @@ namespace Web_Api.DTO.Reclamations
         public string DescriptionPreview { get; set; } = string.Empty;
         public string Statut { get; set; } = string.Empty;
         public string Source { get; set; } = "CLIENT";
+        public string? TypeCas { get; set; }
         public string? TypeReclamation { get; set; }
         public string? Priorite { get; set; }
         public string? ClientDisplay { get; set; }
@@ -26,5 +27,6 @@ namespace Web_Api.DTO.Reclamations
         public bool HasPhoneChange { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public DateTime? ClosedAt { get; set; }
     }
 }

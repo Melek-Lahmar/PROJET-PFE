@@ -33,6 +33,7 @@ namespace Web_Api.data
         public DbSet<F_RECLAMATION> F_RECLAMATIONS { get; set; } = null!;
         public DbSet<F_RECLAMATION_TENTATIVE> F_RECLAMATION_TENTATIVES { get; set; } = null!;
         public DbSet<F_RECLAMATION_PHOTO> F_RECLAMATION_PHOTOS { get; set; } = null!;
+        public DbSet<F_RECLAMATION_MESSAGE> F_RECLAMATION_MESSAGES { get; set; } = null!;
         public DbSet<F_AVIS_COMMANDE> F_AVIS_COMMANDES { get; set; } = null!;
         public DbSet<F_AVIS_PROMPT_STATE> F_AVIS_PROMPT_STATES { get; set; } = null!;
         public DbSet<F_LIVREUR_ABANDON_LOG> F_LIVREUR_ABANDON_LOGS { get; set; } = null!;

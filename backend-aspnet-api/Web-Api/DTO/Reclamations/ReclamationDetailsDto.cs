@@ -18,6 +18,7 @@ namespace Web_Api.DTO.Reclamations
         public string? CorrectionProposee { get; set; }
         public bool CorrectionAppliquee { get; set; }
         public string? MotifRefus { get; set; }
+        public string? EchangeDemandeText { get; set; }
         public string? NoteInterne { get; set; }
 
         public int TentativesCount { get; set; }

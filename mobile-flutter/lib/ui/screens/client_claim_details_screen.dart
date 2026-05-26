@@ -7,6 +7,7 @@ import '../../data/reclamation_motifs.dart';
 import '../../models/client_claim.dart';
 import '../../state/client_claims_provider.dart';
 import '../widgets/claims/client_claim_status_badge.dart';
+import 'claim_chat_screen.dart';
 
 class ClientClaimDetailsScreen extends StatefulWidget {
   final int claimId;
@@ -160,6 +161,20 @@ class _ClientClaimDetailsScreenState extends State<ClientClaimDetailsScreen> {
       appBar: AppBar(
         title: Text(claim?.codeReclamation ?? 'Ma demande'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            tooltip: 'Messagerie',
+            onPressed: claim == null
+                ? null
+                : () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ClaimChatScreen(
+                        reclamationId: claim.id,
+                        codeReclamation: claim.codeReclamation,
+                        isStaff: false,
+                        isClosed: claim.isClosed,
+                      ),
+                    )),
+          ),
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),

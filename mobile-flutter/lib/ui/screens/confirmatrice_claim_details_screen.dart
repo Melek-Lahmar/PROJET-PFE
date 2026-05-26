@@ -14,6 +14,7 @@ import '../widgets/claims/client_claim_status_badge.dart';
 import '../widgets/confirmatrice/client_history_bottom_sheet.dart';
 import '../widgets/confirmatrice/depot_damaged_decision_panel.dart';
 import '../widgets/echange_dialog.dart';
+import 'claim_chat_screen.dart';
 
 class ConfirmatriceClaimDetailsScreen extends StatefulWidget {
   final int claimId;
@@ -339,7 +340,23 @@ class _ConfirmatriceClaimDetailsScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(c?.codeReclamation ?? 'Demande'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            tooltip: 'Messagerie',
+            onPressed: c == null
+                ? null
+                : () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ClaimChatScreen(
+                        reclamationId: c.id,
+                        codeReclamation: c.codeReclamation,
+                        isStaff: true,
+                        isClosed: c.isClosed,
+                      ),
+                    )),
+          ),
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       bottomNavigationBar: c == null
           ? null
