@@ -1252,90 +1252,122 @@ class _TransitItemRow extends StatelessWidget {
 
 List<_TimelineItem> _buildMilestones(CustomerOrder order) {
   final status = order.normalizedStatus;
-  final finalTitle = switch (status) {
-    'LIVRE' => 'Commande livrée',
-    'REPORTE' => 'Livraison reportée',
-    'RETOUR' => 'Commande retournée',
-    'DEPOT' => 'Retour au dépôt',
-    'REFUSE' => 'Commande refusée',
-    'TENTATIVE' => 'Tentative enregistrée',
-    _ => 'Livraison finale',
-  };
-
-  final finalSubtitle = switch (status) {
-    'LIVRE' => 'Le client a bien reçu le colis.',
-    'REPORTE' => 'Une nouvelle date de passage est attendue.',
-    'RETOUR' => 'Le colis repart vers le circuit retour.',
-    'DEPOT' => 'Le colis est revenu au dépôt.',
-    'REFUSE' => 'La commande a été rejetée.',
-    'TENTATIVE' => 'Le passage a été tenté.',
-    _ => 'En attente de l’étape finale.',
-  };
-
-  final bool hasAssignment = order.assignedAt != null ||
-      const {'EN_LIVRAISON', 'LIVRE', 'REPORTE', 'RETOUR', 'DEPOT'}
-          .contains(status);
-  final bool inTransitOrAfter =
-      const {'EN_LIVRAISON', 'LIVRE', 'REPORTE', 'RETOUR', 'DEPOT'}
-          .contains(status);
-  final bool finalState = const {
-    'LIVRE',
-    'REPORTE',
-    'RETOUR',
-    'DEPOT',
-    'REFUSE',
-    'TENTATIVE'
+  final isPickup = (order.deliveryType ?? ‘’).toUpperCase() == ‘PICKUP’;
+  final isTransitStatus = const {
+    ‘EN_ATTENTE_TRANSIT’, ‘EN_COURS_TRANSIT’, ‘TRANSIT_TERMINE’
   }.contains(status);
-  final bool failed =
-      const {'REPORTE', 'RETOUR', 'DEPOT', 'REFUSE', 'TENTATIVE'}
-          .contains(status);
 
-  return [
+  // Étapes communes
+  final items = <_TimelineItem>[
     _TimelineItem(
-      title: 'Commande créée',
-      subtitle: 'La commande a été enregistrée.',
+      title: ‘Commande créée’,
+      subtitle: ‘La commande a été enregistrée.’,
       icon: Icons.receipt_long_rounded,
-      state: status == 'EN_ATTENTE'
+      state: status == ‘EN_ATTENTE’
           ? _TimelineState.current
           : _TimelineState.done,
       dateLabel: _formatDate(order.date),
     ),
     _TimelineItem(
-      title: 'Commande confirmée',
-      subtitle: 'Validation commerciale terminée.',
+      title: ‘Commande confirmée’,
+      subtitle: status == ‘REFUSE’ ? ‘Commande refusée.’ : ‘Validation commerciale terminée.’,
       icon: Icons.verified_rounded,
       state: switch (status) {
-        'EN_ATTENTE' => _TimelineState.upcoming,
-        'CONFIRME' => _TimelineState.current,
-        'REFUSE' || 'TENTATIVE' => _TimelineState.current,
+        ‘EN_ATTENTE’ => _TimelineState.upcoming,
+        ‘CONFIRME’ || ‘TENTATIVE’ => _TimelineState.current,
+        ‘REFUSE’ => _TimelineState.failed,
         _ => _TimelineState.done,
       },
     ),
-    _TimelineItem(
-      title: 'Prise en charge livreur',
-      subtitle: hasAssignment
-          ? 'Le colis a été affecté au livreur.'
-          : 'En attente d’affectation.',
-      icon: Icons.inventory_2_outlined,
-      state: hasAssignment
-          ? (inTransitOrAfter
-              ? _TimelineState.done
-              : _TimelineState.current)
-          : _TimelineState.upcoming,
-      dateLabel: _formatDate(order.assignedAt),
-    ),
-    _TimelineItem(
-      title: 'En livraison',
-      subtitle: inTransitOrAfter
-          ? 'Le colis est en cours d’acheminement.'
-          : 'Le départ en livraison n’est pas encore commencé.',
-      icon: Icons.local_shipping_rounded,
+  ];
+
+  if (status == ‘REFUSE’) {
+    items.last = _TimelineItem(
+      title: ‘Commande refusée’, subtitle: ‘La commande a été rejetée.’,
+      icon: Icons.cancel_rounded, state: _TimelineState.failed, isLast: true,
+    );
+    return items;
+  }
+
+  // Étape transit (si actif selon le statut)
+  if (isTransitStatus) {
+    items.add(_TimelineItem(
+      title: ‘Transit inter-dépôts’,
+      subtitle: status == ‘TRANSIT_TERMINE’
+          ? ‘Tous les articles sont au dépôt destination.’
+          : ‘Articles en cours d\’acheminement entre dépôts.’,
+      icon: Icons.swap_horiz_rounded,
       state: switch (status) {
-        'EN_LIVRAISON' => _TimelineState.current,
-        'LIVRE' || 'REPORTE' || 'RETOUR' || 'DEPOT' => _TimelineState.done,
+        ‘EN_ATTENTE_TRANSIT’ => _TimelineState.current,
+        ‘EN_COURS_TRANSIT’ => _TimelineState.current,
+        ‘TRANSIT_TERMINE’ => _TimelineState.done,
         _ => _TimelineState.upcoming,
       },
-    ),
+    ));
+  }
+
+  if (isPickup) {
+    // PICKUP : retrait au dépôt
+    items.add(_TimelineItem(
+      title: ‘Disponible au retrait’,
+      subtitle: ‘Votre commande est prête au dépôt.’,
+      icon: Icons.store_rounded,
+      state: const {‘CONFIRME’, ‘TRANSIT_TERMINE’}.contains(status)
+          ? _TimelineState.current
+          : _TimelineState.upcoming,
+      isLast: true,
+    ));
+    return items;
+  }
+
+  // HOME : livreur + livraison
+  final hasAssignment = order.assignedAt != null ||
+      const {‘EN_LIVRAISON’, ‘LIVRE’, ‘REPORTE’, ‘RETOUR’, ‘DEPOT’}.contains(status);
+  final inDelivery =
+      const {‘EN_LIVRAISON’, ‘LIVRE’, ‘REPORTE’, ‘RETOUR’, ‘DEPOT’}.contains(status);
+
+  items.add(_TimelineItem(
+    title: ‘Prise en charge livreur’,
+    subtitle: hasAssignment ? ‘Le colis a été affecté.’ : ‘En attente d\’affectation.’,
+    icon: Icons.inventory_2_outlined,
+    state: hasAssignment
+        ? (inDelivery ? _TimelineState.done : _TimelineState.current)
+        : _TimelineState.upcoming,
+    dateLabel: _formatDate(order.assignedAt),
+  ));
+
+  items.add(_TimelineItem(
+    title: ‘En livraison’,
+    subtitle: inDelivery ? ‘Le colis est en cours d\’acheminement.’ : ‘Pas encore démarré.’,
+    icon: Icons.local_shipping_rounded,
+    state: switch (status) {
+      ‘EN_LIVRAISON’ => _TimelineState.current,
+      ‘LIVRE’ || ‘REPORTE’ || ‘RETOUR’ || ‘DEPOT’ => _TimelineState.done,
+      _ => _TimelineState.upcoming,
+    },
+  ));
+
+  final finalTitle = switch (status) {
+    ‘LIVRE’ => ‘Commande livrée’,
+    ‘REPORTE’ => ‘Livraison reportée’,
+    ‘RETOUR’ => ‘Colis retourné’,
+    ‘DEPOT’ => ‘Retour au dépôt’,
+    ‘TENTATIVE’ => ‘Tentative enregistrée’,
+    _ => ‘Livraison finale’,
+  };
+  final finalSubtitle = switch (status) {
+    ‘LIVRE’ => ‘Le client a bien reçu le colis.’,
+    ‘REPORTE’ => ‘Une nouvelle date de passage est attendue.’,
+    ‘RETOUR’ => ‘Le colis repart vers le circuit retour.’,
+    ‘DEPOT’ => ‘Le colis est revenu au dépôt.’,
+    ‘TENTATIVE’ => ‘Le passage a été tenté.’,
+    _ => ‘En attente de l\’étape finale.’,
+  };
+  final isFinalFailed =
+      const {‘REPORTE’, ‘RETOUR’, ‘DEPOT’, ‘TENTATIVE’}.contains(status);
+  final isFinalDone = status == ‘LIVRE’;
+
+  items.add(
     _TimelineItem(
       title: finalTitle,
       subtitle: finalSubtitle,
@@ -1344,17 +1376,19 @@ List<_TimelineItem> _buildMilestones(CustomerOrder order) {
         'REPORTE' => Icons.event_repeat_rounded,
         'RETOUR' => Icons.undo_rounded,
         'DEPOT' => Icons.warehouse_rounded,
-        'REFUSE' => Icons.cancel_rounded,
         'TENTATIVE' => Icons.error_outline_rounded,
         _ => Icons.flag_rounded,
       },
-      state: finalState
-          ? (failed ? _TimelineState.failed : _TimelineState.current)
-          : _TimelineState.upcoming,
+      state: isFinalDone
+          ? _TimelineState.done
+          : isFinalFailed
+              ? _TimelineState.failed
+              : _TimelineState.upcoming,
       dateLabel: _formatDate(order.deliveredAt ?? order.replannedAt),
       isLast: true,
     ),
-  ];
+  );
+  return items;
 }
 
 double _resolveProgress(String status) {

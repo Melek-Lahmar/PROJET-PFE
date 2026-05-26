@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MODELS_CREATEUR.MODELS_SAGE;
 using Web_Api.Auth.Constants;
+using Web_Api.Constants;
 using Web_Api.DTO.Orders;
 using Web_Api.data;
 using Web_Api.Model;
@@ -262,6 +263,7 @@ namespace Web_Api.Services.Orders
             var isRefused = order.DO_Valide == F_DOCENTETE.STATUS_REFUSE;
             var isConfirmed = order.DO_Valide == F_DOCENTETE.STATUS_CONFIRME || livraison != null;
             var isTentative = order.DO_Valide == F_DOCENTETE.STATUS_TENTATIVE;
+            var isPickup = string.Equals(order.DO_ModeLivraison, "PICKUP", StringComparison.OrdinalIgnoreCase);
             var receivedCount = transfers.Count(x => TransitStatuses.IsReceived(x.Status));
             var inTransit = transfers.Any(x => TransitStatuses.IsInTransit(x.Status));
             var allReceived = transfers.Count > 0 && receivedCount == transfers.Count;
@@ -279,6 +281,14 @@ namespace Web_Api.Services.Orders
                     state: isRefused ? "ERROR" : isConfirmed ? "DONE" : isTentative ? "ACTIVE" : "PENDING"),
             };
 
+            // Commande refusée : on s'arrête ici, pas d'étapes suivantes
+            if (isRefused)
+            {
+                events.Add(Ev("Commande refusée", "REFUSE", order.cbModification,
+                    "La commande ne sera pas traitée.", isDone: true, state: "ERROR"));
+                return events.OrderBy(x => x.Date ?? DateTime.MaxValue).ThenBy(x => x.Label).ToList();
+            }
+
             if (transfers.Count > 0)
             {
                 events.Add(Ev("Transit inter-dépôts requis", TransitStatuses.TransitRequis,
@@ -294,29 +304,48 @@ namespace Web_Api.Services.Orders
 
                 events.Add(Ev("Tous les articles reçus", TransitStatuses.RecuDepotDestine,
                     MaxDate(transfers.Select(x => x.DeliveredAt)),
-                    "La commande peut maintenant être livrée.",
+                    "La commande peut maintenant continuer.",
                     isDone: allReceived,
                     state: allReceived ? "DONE" : "PENDING"));
             }
 
-            var assignActive = transitComplete && isConfirmed && livraison == null;
-            events.Add(Ev("Prise en charge livreur", "ASSIGNED",
-                livraison?.LI_DateCreation,
-                livraison != null ? "Un livreur a été affecté au colis." : "En attente d'affectation.",
-                isDone: livraison != null,
-                state: livraison != null ? "DONE" : assignActive ? "ACTIVE" : "PENDING"));
+            if (isPickup)
+            {
+                // Mode PICKUP — pas de livreur, le client retire au dépôt
+                var pickupReady = transitComplete && isConfirmed;
+                events.Add(Ev("Disponible au retrait", "PICKUP_READY", null,
+                    "Votre commande est prête à être récupérée au dépôt.",
+                    isDone: pickupReady,
+                    state: pickupReady ? "ACTIVE" : "PENDING"));
+            }
+            else
+            {
+                // Mode HOME — livreur affecté puis livraison
+                var assignActive = transitComplete && isConfirmed && livraison == null;
+                events.Add(Ev("Prise en charge livreur", "ASSIGNED",
+                    livraison?.LI_DateCreation,
+                    livraison != null ? "Un livreur a été affecté au colis." : "En attente d'affectation.",
+                    isDone: livraison != null,
+                    state: livraison != null ? "DONE" : assignActive ? "ACTIVE" : "PENDING"));
 
-            if (livraison?.LI_DateReplanification != null)
-                events.Add(Ev("Livraison reportée", "REPORTE",
-                    livraison.LI_DateReplanification,
-                    livraison.LI_Commentaire ?? "La livraison a été reportée.",
-                    isDone: true, state: "ERROR"));
+                if (livraison?.LI_DateReplanification != null)
+                    events.Add(Ev("Livraison reportée", "REPORTE",
+                        livraison.LI_DateReplanification,
+                        livraison.LI_Commentaire ?? "La livraison a été reportée.",
+                        isDone: true, state: "ERROR"));
 
-            events.Add(Ev("Colis livré", "LIVRE",
-                livraison?.LI_DateLivree,
-                "Le colis a été remis au client.",
-                isDone: livraison?.LI_DateLivree != null,
-                state: livraison?.LI_DateLivree != null ? "DONE" : "PENDING"));
+                if (livraison?.LI_Statut == DeliveryStatusCodes.Retour)
+                    events.Add(Ev("Colis retourné au dépôt", "RETOUR",
+                        livraison.LI_DateCreation,
+                        livraison.LI_Commentaire ?? "Le colis est revenu au dépôt.",
+                        isDone: true, state: "ERROR"));
+
+                events.Add(Ev("Colis livré", "LIVRE",
+                    livraison?.LI_DateLivree,
+                    "Le colis a été remis au client.",
+                    isDone: livraison?.LI_DateLivree != null,
+                    state: livraison?.LI_DateLivree != null ? "DONE" : "PENDING"));
+            }
 
             foreach (var reclamation in reclamations)
             {
