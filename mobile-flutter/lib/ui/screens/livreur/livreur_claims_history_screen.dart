@@ -28,7 +28,7 @@ class _LivreurClaimsHistoryScreenState extends State<LivreurClaimsHistoryScreen>
       final api = context.read<ApiClient>();
       _items = await LivreurClaimsHistoryService(api).fetchMine();
     } catch (e) {
-      _error = e.toString();
+      if (mounted) setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }

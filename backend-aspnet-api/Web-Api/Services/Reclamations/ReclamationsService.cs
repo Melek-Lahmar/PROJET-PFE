@@ -841,8 +841,11 @@ namespace Web_Api.Services.Reclamations
             // Phase 5 — Événement 2 : StatutCasChange.
             var payload = new { id = r.Id, code = r.CodeReclamation, statut = r.Statut };
 
-            await _hub.Clients.User(r.ClientUserId.ToString())
-                .SendAsync(Hubs.ReclamationEvents.StatutCasChange, payload, ct);
+            if (r.ClientUserId != Guid.Empty)
+            {
+                await _hub.Clients.User(r.ClientUserId.ToString())
+                    .SendAsync(Hubs.ReclamationEvents.StatutCasChange, payload, ct);
+            }
 
             if (r.AssignedToUserId.HasValue)
             {
