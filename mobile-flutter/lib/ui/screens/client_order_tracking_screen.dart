@@ -11,6 +11,7 @@ import '../../state/client_claims_provider.dart';
 import '../../state/customer_orders_provider.dart';
 import '../widgets/claims/demande_color_indicator.dart';
 import '../widgets/customer_order_status_badge.dart';
+import '../widgets/tracking/customer_tracking_step_tile.dart';
 import 'client_claim_details_screen.dart';
 import 'client_create_claim_screen.dart';
 import '../widgets/client/tracking_state_card.dart';
@@ -225,7 +226,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
             _ColisCard(order: _order, tracking: tracking),
             const SizedBox(height: 16),
 
-            // Bloc 4 — Timeline
+            // Bloc 4 — Timeline (événements backend si disponibles, sinon milestones)
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -266,12 +267,26 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ...milestones.map((item) => _TimelineTile(item: item)),
+                    if ((tracking?.events ?? []).isNotEmpty)
+                      ...tracking!.events.asMap().entries.map((e) =>
+                        CustomerTrackingStepTile(
+                          event: e.value,
+                          isLast: e.key == tracking.events.length - 1,
+                        ))
+                    else
+                      ...milestones.map((item) => _TimelineTile(item: item)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 12),
+
+            // Transit inter-dépôts — détail par article
+            if ((tracking?.transitTotalCount ?? 0) > 0) ...[
+              _TransitItemsCard(tracking: tracking!),
+              const SizedBox(height: 12),
+            ],
+
             _ClientOpenHistoryButton(order: _order, tracking: tracking),
             const SizedBox(height: 16),
 
@@ -1062,6 +1077,177 @@ class _TimelineItem {
     this.dateLabel,
     this.isLast = false,
   });
+}
+
+// ============================================================================
+// Transit inter-dépôts — carte détail par article
+// ============================================================================
+
+class _TransitItemsCard extends StatelessWidget {
+  final ClientOrderTracking tracking;
+
+  const _TransitItemsCard({required this.tracking});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final total = tracking.transitTotalCount;
+    final received = tracking.transitReceivedCount;
+    final allDone = received == total && total > 0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.swap_horiz_rounded,
+                  color: allDone ? Colors.green.shade600 : scheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Articles en transit',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: allDone
+                        ? Colors.green.shade50
+                        : scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$received / $total reçus',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: allDone
+                          ? Colors.green.shade700
+                          : scheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ...tracking.transitItems.map((item) => _TransitItemRow(item: item)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TransitItemRow extends StatelessWidget {
+  final ClientOrderTrackingTransitItem item;
+
+  const _TransitItemRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final status = item.status.toUpperCase();
+
+    Color chipColor;
+    Color chipBg;
+    String statusLabel;
+    IconData statusIcon;
+
+    switch (status) {
+      case 'EN_COURS_TRANSIT':
+        chipColor = scheme.primary;
+        chipBg = scheme.primaryContainer;
+        statusLabel = 'En transit';
+        statusIcon = Icons.local_shipping_rounded;
+      case 'RECU_DEPOT_DESTINE':
+      case 'TRANSIT_TERMINE':
+        chipColor = Colors.green.shade700;
+        chipBg = Colors.green.shade50;
+        statusLabel = 'Arrivé';
+        statusIcon = Icons.check_circle_rounded;
+      default: // EN_ATTENTE_TRANSIT etc.
+        chipColor = scheme.onSurfaceVariant;
+        chipBg = scheme.surfaceContainerHighest;
+        statusLabel = 'En attente';
+        statusIcon = Icons.hourglass_top_rounded;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outline.withOpacity(0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.articleName,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: chipBg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(statusIcon, size: 12, color: chipColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: chipColor),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.currentMessage,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Qté ${item.quantity.toStringAsFixed(0)}  ·  '
+            '${item.sourceDepotName ?? "?"} → ${item.destinationDepotName ?? "?"}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurfaceVariant.withOpacity(0.75),
+                ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 List<_TimelineItem> _buildMilestones(CustomerOrder order) {

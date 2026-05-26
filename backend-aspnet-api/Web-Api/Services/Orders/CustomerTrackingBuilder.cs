@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MODELS_CREATEUR.MODELS_SAGE;
 using Web_Api.Auth.Constants;
 using Web_Api.DTO.Orders;
 using Web_Api.data;
@@ -45,7 +46,18 @@ namespace Web_Api.Services.Orders
                 .OrderBy(x => x.AffectedAt)
                 .ToListAsync(ct);
 
+            var depotNos = transfers
+                .SelectMany(x => new[] { x.SourceDepotNo, x.DestinationDepotNo })
+                .Distinct()
+                .ToArray();
+            var depots = depotNos.Length > 0
+                ? await _db.F_DEPOTS.AsNoTracking()
+                    .Where(x => depotNos.Contains(x.DE_No))
+                    .ToDictionaryAsync(x => x.DE_No, ct)
+                : new Dictionary<int, F_DEPOT>();
+
             var currentStatus = ResolveStatus(order, livraison, transfers);
+            var receivedCount = transfers.Count(x => TransitStatuses.IsReceived(x.Status));
 
             var dto = new CustomerOrderTrackingDto
             {
@@ -82,7 +94,12 @@ namespace Web_Api.Services.Orders
 
                 // Phase 8 — blocs 5 et 6 (Réclamation / Demande liées)
                 LinkedReclamation = BuildLinkedReclamation(reclamations),
-                LinkedDemande = BuildLinkedDemande(reclamations)
+                LinkedDemande = BuildLinkedDemande(reclamations),
+
+                // Transit par article
+                TransitTotalCount = transfers.Count,
+                TransitReceivedCount = receivedCount,
+                TransitItems = BuildTransitItems(lines, transfers, depots)
             };
 
             return dto;
@@ -193,109 +210,126 @@ namespace Web_Api.Services.Orders
             return "EN_ATTENTE";
         }
 
+        private static List<CustomerTrackingTransitItemDto> BuildTransitItems(
+            IReadOnlyList<F_DOCLIGNE> lines,
+            IReadOnlyList<F_TRANSFERT> transfers,
+            IReadOnlyDictionary<int, F_DEPOT> depots)
+        {
+            var result = new List<CustomerTrackingTransitItemDto>();
+            foreach (var line in lines)
+            {
+                var arRef = line.AR_Ref ?? string.Empty;
+                var matching = transfers
+                    .Where(x => string.Equals(x.ArRef, arRef, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var t in matching)
+                {
+                    depots.TryGetValue(t.SourceDepotNo, out var src);
+                    depots.TryGetValue(t.DestinationDepotNo, out var dst);
+                    var srcName = src?.DE_Intitule ?? src?.DE_Code ?? $"Dépôt {t.SourceDepotNo}";
+                    var dstName = dst?.DE_Intitule ?? dst?.DE_Code ?? $"Dépôt {t.DestinationDepotNo}";
+                    var timelineStatus = TransitStatuses.ToTimelineStatus(t.Status);
+                    var message = timelineStatus switch
+                    {
+                        var s when TransitStatuses.IsWaiting(s) => $"En attente de départ depuis {srcName}.",
+                        TransitStatuses.EnCoursTransit => $"En transit de {srcName} vers {dstName}.",
+                        var s when TransitStatuses.IsReceived(s) => $"Arrivé au dépôt {dstName}.",
+                        _ => $"Statut : {t.Status}"
+                    };
+                    result.Add(new CustomerTrackingTransitItemDto
+                    {
+                        ArticleRef = arRef,
+                        ArticleName = line.DL_Design ?? arRef,
+                        Quantity = t.Quantite,
+                        Status = timelineStatus,
+                        SourceDepotName = srcName,
+                        DestinationDepotName = dstName,
+                        CurrentMessage = message
+                    });
+                }
+            }
+            return result;
+        }
+
         private static List<CustomerTrackingEventDto> BuildEvents(
             F_DOCENTETE order,
-            MODELS_CREATEUR.MODELS_SAGE.F_LIVRAISON? livraison,
+            F_LIVRAISON? livraison,
             List<F_RECLAMATION> reclamations,
             IReadOnlyList<F_TRANSFERT> transfers,
             string currentStatus)
         {
+            var isRefused = order.DO_Valide == F_DOCENTETE.STATUS_REFUSE;
+            var isConfirmed = order.DO_Valide == F_DOCENTETE.STATUS_CONFIRME || livraison != null;
+            var isTentative = order.DO_Valide == F_DOCENTETE.STATUS_TENTATIVE;
+            var receivedCount = transfers.Count(x => TransitStatuses.IsReceived(x.Status));
+            var inTransit = transfers.Any(x => TransitStatuses.IsInTransit(x.Status));
+            var allReceived = transfers.Count > 0 && receivedCount == transfers.Count;
+            var transitComplete = transfers.Count == 0 || allReceived;
+
             var events = new List<CustomerTrackingEventDto>
             {
-                new()
-                {
-                    Label = "Commande créée",
-                    Status = "CREATED",
-                    Date = order.DO_Date,
-                    Description = "La commande a été enregistrée.",
-                    IsDone = order.DO_Date != null
-                },
-                new()
-                {
-                    Label = "Commande confirmée",
-                    Status = "CONFIRME",
-                    Date = order.DO_Valide == F_DOCENTETE.STATUS_CONFIRME ? (order.cbModification ?? order.DO_Date) : null,
-                    Description = "La commande a été validée.",
-                    IsDone = order.DO_Valide == F_DOCENTETE.STATUS_CONFIRME || livraison != null
-                },
+                Ev("Commande créée", "CREATED", order.DO_Date, "La commande a été enregistrée.",
+                    isDone: true, state: "DONE"),
+
+                Ev("Commande confirmée", "CONFIRME",
+                    isConfirmed ? (order.cbModification ?? order.DO_Date) : null,
+                    isRefused ? "La commande a été refusée." : "Validation commerciale terminée.",
+                    isDone: isConfirmed,
+                    state: isRefused ? "ERROR" : isConfirmed ? "DONE" : isTentative ? "ACTIVE" : "PENDING"),
             };
 
             if (transfers.Count > 0)
             {
-                var receivedCount = transfers.Count(x => TransitStatuses.IsReceived(x.Status));
-                events.Add(new CustomerTrackingEventDto
-                {
-                    Label = "Transit inter-dépôts requis",
-                    Status = TransitStatuses.TransitRequis,
-                    Date = transfers.Min(x => x.AffectedAt),
-                    Description = $"{transfers.Count} article(s) doivent rejoindre le dépôt destination.",
-                    IsDone = true
-                });
-                events.Add(new CustomerTrackingEventDto
-                {
-                    Label = "Transit en cours",
-                    Status = TransitStatuses.EnCoursTransit,
-                    Date = MinDate(transfers.Select(x => x.PickedUpAt)),
-                    Description = $"{receivedCount} / {transfers.Count} article(s) reçus au dépôt destination.",
-                    IsDone = receivedCount == transfers.Count
-                });
-                events.Add(new CustomerTrackingEventDto
-                {
-                    Label = "Articles reçus au dépôt destiné",
-                    Status = TransitStatuses.RecuDepotDestine,
-                    Date = MaxDate(transfers.Select(x => x.DeliveredAt)),
-                    Description = "La commande peut continuer vers la livraison ou le retrait.",
-                    IsDone = receivedCount == transfers.Count
-                });
+                events.Add(Ev("Transit inter-dépôts requis", TransitStatuses.TransitRequis,
+                    transfers.Min(x => x.AffectedAt),
+                    $"{transfers.Count} transfert(s) planifié(s) pour cette commande.",
+                    isDone: true, state: "DONE"));
+
+                events.Add(Ev("Transit en cours", TransitStatuses.EnCoursTransit,
+                    MinDate(transfers.Select(x => x.PickedUpAt)),
+                    $"{receivedCount} / {transfers.Count} article(s) arrivés au dépôt destination.",
+                    isDone: allReceived,
+                    state: allReceived ? "DONE" : inTransit ? "ACTIVE" : "PENDING"));
+
+                events.Add(Ev("Tous les articles reçus", TransitStatuses.RecuDepotDestine,
+                    MaxDate(transfers.Select(x => x.DeliveredAt)),
+                    "La commande peut maintenant être livrée.",
+                    isDone: allReceived,
+                    state: allReceived ? "DONE" : "PENDING"));
             }
 
-            events.Add(new CustomerTrackingEventDto
-            {
-                Label = "Prise en charge livraison",
-                Status = "ASSIGNED",
-                Date = livraison?.LI_DateCreation,
-                Description = "Un livreur a été affecté au colis.",
-                IsDone = livraison != null
-            });
-            events.Add(new CustomerTrackingEventDto
-            {
-                Label = "Livraison replanifiée",
-                Status = "REPORTE",
-                Date = livraison?.LI_DateReplanification,
-                Description = "La livraison a été reportée.",
-                IsDone = livraison?.LI_DateReplanification != null
-            });
-            events.Add(new CustomerTrackingEventDto
-            {
-                Label = "Colis livré",
-                Status = "LIVRE",
-                Date = livraison?.LI_DateLivree,
-                Description = "Le colis a été remis au client.",
-                IsDone = livraison?.LI_DateLivree != null
-            });
+            var assignActive = transitComplete && isConfirmed && livraison == null;
+            events.Add(Ev("Prise en charge livreur", "ASSIGNED",
+                livraison?.LI_DateCreation,
+                livraison != null ? "Un livreur a été affecté au colis." : "En attente d'affectation.",
+                isDone: livraison != null,
+                state: livraison != null ? "DONE" : assignActive ? "ACTIVE" : "PENDING"));
+
+            if (livraison?.LI_DateReplanification != null)
+                events.Add(Ev("Livraison reportée", "REPORTE",
+                    livraison.LI_DateReplanification,
+                    livraison.LI_Commentaire ?? "La livraison a été reportée.",
+                    isDone: true, state: "ERROR"));
+
+            events.Add(Ev("Colis livré", "LIVRE",
+                livraison?.LI_DateLivree,
+                "Le colis a été remis au client.",
+                isDone: livraison?.LI_DateLivree != null,
+                state: livraison?.LI_DateLivree != null ? "DONE" : "PENDING"));
 
             foreach (var reclamation in reclamations)
             {
-                events.Add(new CustomerTrackingEventDto
-                {
-                    Label = "Réclamation ouverte",
-                    Status = ReclamationStatuses.ENVOYEE,
-                    Date = reclamation.CreatedAt,
-                    Description = $"Réclamation {reclamation.CodeReclamation} - {reclamation.Motif}",
-                    IsDone = true
-                });
+                events.Add(Ev("Réclamation ouverte", ReclamationStatuses.ENVOYEE,
+                    reclamation.CreatedAt,
+                    $"{reclamation.CodeReclamation} — {reclamation.Motif}",
+                    isDone: true, state: "DONE"));
 
                 if (!string.IsNullOrWhiteSpace(reclamation.Statut) && reclamation.Statut != ReclamationStatuses.ENVOYEE)
-                {
-                    events.Add(new CustomerTrackingEventDto
-                    {
-                        Label = "Réclamation mise à jour",
-                        Status = reclamation.Statut,
-                        Date = reclamation.UpdatedAt,
-                        Description = $"Statut SAV : {reclamation.Statut}",
-                        IsDone = true
-                    });
-                }
+                    events.Add(Ev("Réclamation mise à jour", reclamation.Statut,
+                        reclamation.UpdatedAt,
+                        $"Statut SAV : {reclamation.Statut}",
+                        isDone: true, state: "DONE"));
             }
 
             return events
@@ -303,6 +337,18 @@ namespace Web_Api.Services.Orders
                 .ThenBy(x => x.Label)
                 .ToList();
         }
+
+        private static CustomerTrackingEventDto Ev(
+            string label, string status, DateTime? date, string? description,
+            bool isDone, string state) => new()
+        {
+            Label = label,
+            Status = status,
+            Date = date,
+            Description = description,
+            IsDone = isDone,
+            State = state,
+        };
 
         private static string ToClientLabel(string status)
         {

@@ -40,6 +40,23 @@ namespace Web_Api.DTO.Orders
         // Phase 8 — blocs 5 et 6 (réclamation / demande liées)
         public LinkedCaseDto? LinkedReclamation { get; set; }
         public LinkedCaseDto? LinkedDemande { get; set; }
+
+        // Transit inter-dépôts — par article
+        public int TransitTotalCount { get; set; }
+        public int TransitReceivedCount { get; set; }
+        public List<CustomerTrackingTransitItemDto> TransitItems { get; set; } = new();
+    }
+
+    public class CustomerTrackingTransitItemDto
+    {
+        public string ArticleRef { get; set; } = string.Empty;
+        public string ArticleName { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        /// <summary>EN_ATTENTE_TRANSIT | EN_COURS_TRANSIT | RECU_DEPOT_DESTINE | TRANSIT_TERMINE</summary>
+        public string Status { get; set; } = string.Empty;
+        public string? SourceDepotName { get; set; }
+        public string? DestinationDepotName { get; set; }
+        public string CurrentMessage { get; set; } = string.Empty;
     }
 
     public class CustomerTrackingItemDto
