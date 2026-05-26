@@ -310,34 +310,6 @@ namespace Web_Api.Controllers.Confirmateur
             }
         }
 
-        [HttpGet("{id:int}/messages")]
-        public async Task<IActionResult> GetMessages(int id, CancellationToken ct)
-        {
-            try
-            {
-                var userId = GetUserId();
-                var messages = await _service.GetMessagesAsync(id, userId, isStaff: true, ct);
-                return Ok(messages);
-            }
-            catch (UnauthorizedAccessException) { return Forbid(); }
-            catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
-            catch (Exception ex) { _logger.LogError(ex, "GetMessages failed"); return StatusCode(500, new { message = ex.Message }); }
-        }
-
-        [HttpPost("{id:int}/messages")]
-        public async Task<IActionResult> SendMessage(int id, [FromBody] SendMessageRequestDto request, CancellationToken ct)
-        {
-            try
-            {
-                var userId = GetUserId();
-                var msg = await _service.SendMessageAsync(id, userId, AppRoles.CONFIRMATEUR, request, ct);
-                return Ok(msg);
-            }
-            catch (UnauthorizedAccessException) { return Forbid(); }
-            catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
-            catch (Exception ex) { _logger.LogError(ex, "SendMessage failed"); return StatusCode(500, new { message = ex.Message }); }
-        }
-
         private Guid GetUserId()
         {
             var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
