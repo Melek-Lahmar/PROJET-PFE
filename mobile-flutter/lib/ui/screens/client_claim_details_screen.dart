@@ -534,7 +534,7 @@ class _PhotosCard extends StatelessWidget {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Image.network(
-                    ApiClient.defaultBaseUrl + p.url,
+                    context.read<ApiClient>().resolveMediaUrl(p.url),
                     width: 90,
                     height: 90,
                     fit: BoxFit.cover,

@@ -94,17 +94,21 @@ class ClientClaimsProvider extends ChangeNotifier {
         reprogrammationCreneau: reprogrammationCreneau,
       );
 
+      int photoFailures = 0;
       if (photos != null && photos.isNotEmpty) {
         for (final p in photos) {
           try {
             await service.uploadPhoto(created.id, p);
           } catch (_) {
-            // best effort, la demande est créée même si photo échoue
+            photoFailures++;
           }
         }
       }
 
       items = [created, ...items];
+      if (photoFailures > 0) {
+        error = "Réclamation créée, mais $photoFailures photo(s) n'ont pas pu être envoyées.";
+      }
       notifyListeners();
       return created;
     } catch (e) {

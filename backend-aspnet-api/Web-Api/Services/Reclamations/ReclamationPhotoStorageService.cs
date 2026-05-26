@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Web_Api.Services.Reclamations
 {
@@ -9,6 +10,23 @@ namespace Web_Api.Services.Reclamations
         {
             "image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif"
         };
+
+        private static readonly HashSet<string> AllowedExtensions =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"
+            };
+
+        private static readonly Dictionary<string, string> ExtToMime =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".jpg",  "image/jpeg" },
+                { ".jpeg", "image/jpeg" },
+                { ".png",  "image/png"  },
+                { ".webp", "image/webp" },
+                { ".heic", "image/heic" },
+                { ".heif", "image/heif" },
+            };
 
         private readonly IWebHostEnvironment _env;
         private const long MaxFileSize = 10 * 1024 * 1024;
@@ -35,6 +53,14 @@ namespace Web_Api.Services.Reclamations
                 throw new InvalidOperationException("Fichier trop volumineux (max 10 Mo).");
 
             var contentType = (file.ContentType ?? string.Empty).ToLowerInvariant();
+            // iOS image_picker peut envoyer application/octet-stream pour HEIC/HEIF.
+            // Dans ce cas, on accepte si l'extension du fichier est une image connue.
+            if (contentType == "application/octet-stream")
+            {
+                var ext2 = Path.GetExtension(file.FileName ?? string.Empty);
+                if (ExtToMime.TryGetValue(ext2, out var mapped))
+                    contentType = mapped;
+            }
             if (!AllowedContentTypes.Contains(contentType))
                 throw new InvalidOperationException("Format d'image non supporté.");
 

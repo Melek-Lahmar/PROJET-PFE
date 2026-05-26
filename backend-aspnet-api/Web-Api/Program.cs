@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
+using Microsoft.AspNetCore.StaticFiles;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.Facebook;
@@ -450,8 +451,14 @@ app.UseCors("AllowDev");
 // Mais pour index.html (et /), on force `no-cache` plus bas via MapFallbackToFile
 // — sinon le navigateur sert une vieille version qui référence un ancien bundle JS,
 // et les corrections de l'API ne sont jamais visibles.
+// Enregistrer les types MIME pour HEIC/HEIF (photos iOS) que le provider par défaut ignore.
+var mimeProvider = new FileExtensionContentTypeProvider();
+mimeProvider.Mappings[".heic"] = "image/heic";
+mimeProvider.Mappings[".heif"] = "image/heif";
+
 app.UseStaticFiles(new StaticFileOptions
 {
+    ContentTypeProvider = mimeProvider,
     OnPrepareResponse = ctx =>
     {
         var path = ctx.File.Name;

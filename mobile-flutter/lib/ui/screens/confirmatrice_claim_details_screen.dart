@@ -764,7 +764,7 @@ class _PhotosBlock extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: claim.photos.map((p) {
-            final url = ApiClient.defaultBaseUrl + p.url;
+            final url = context.read<ApiClient>().resolveMediaUrl(p.url);
             return InkWell(
               onTap: () => _openFullScreen(context, url),
               child: ClipRRect(
