@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/realtime_service.dart';
 import '../../data/reclamation_motifs.dart';
 import '../../models/client_claim.dart';
 import '../../state/confirmatrice_claims_provider.dart';
@@ -44,6 +45,7 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
   Timer? _debounce;
+  final List<StreamSubscription<dynamic>> _realtimeSubs = [];
 
   bool get _isLocked => widget.lockedTypeCas != null;
   String get _lockedType => widget.lockedTypeCas!.toUpperCase();
@@ -57,6 +59,10 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
 
   @override
   void dispose() {
+    for (final s in _realtimeSubs) {
+      s.cancel();
+    }
+    _realtimeSubs.clear();
     _tab.removeListener(_onTabChanged);
     _tab.dispose();
     _debounce?.cancel();
@@ -109,6 +115,19 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
       } else {
         provider.refresh();
       }
+
+      // Rafraîchir la liste automatiquement quand un nouveau cas arrive ou
+      // est réattribué via SignalR — sans attendre un pull-to-refresh manuel.
+      final realtime = context.read<RealtimeService>();
+      _realtimeSubs.add(realtime.nouveauCas.listen((_) {
+        if (mounted) _refresh();
+      }));
+      _realtimeSubs.add(realtime.casReattribue.listen((_) {
+        if (mounted) _refresh();
+      }));
+      _realtimeSubs.add(realtime.statutCasChange.listen((_) {
+        if (mounted) _refresh();
+      }));
     });
   }
 
