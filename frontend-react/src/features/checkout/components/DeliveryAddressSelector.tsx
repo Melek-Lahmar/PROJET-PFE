@@ -111,6 +111,7 @@ export function DeliveryAddressSelector({
   const delegQuery = useQuery({
     queryKey: ["delegations-temp", gouvernoratId],
     queryFn: () => getDelegations(gouvernoratId),
+    enabled: gouvernoratId > 0,
     staleTime: 5 * 60_000,
   });
   const delegations = delegQuery.data ?? [];

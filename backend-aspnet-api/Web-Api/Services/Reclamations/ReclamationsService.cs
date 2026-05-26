@@ -363,7 +363,7 @@ namespace Web_Api.Services.Reclamations
                 activeDemande.LastAttemptAt = now;
                 activeDemande.UpdatedAt = now;
                 activeDemande.TentativesCount = await _db.F_RECLAMATION_TENTATIVES
-                    .CountAsync(t => t.CommandePiece == piece && LivreurMotifs.Deferred.Contains(t.Motif), ct);
+                    .CountAsync(t => t.ReclamationId == activeDemande.Id && LivreurMotifs.Deferred.Contains(t.Motif), ct);
                 await _db.SaveChangesAsync(ct);
                 resultDemande = activeDemande;
             }
@@ -470,7 +470,7 @@ namespace Web_Api.Services.Reclamations
 
             var normalized = (newStatus ?? string.Empty).Trim().ToUpperInvariant();
             if (!ReclamationStatuses.IsStaffEditable(normalized))
-                throw new InvalidOperationException("Statut non autorisé. Utilisez EN_COURS, RESOLUE ou REFUSEE.");
+                throw new InvalidOperationException("Statut non autorisé. Utilisez EN_COURS_DE_TRAITEMENT, CLOTUREE ou REFUSEE.");
 
             if (normalized == ReclamationStatuses.REFUSEE && string.IsNullOrWhiteSpace(motifRefus))
                 throw new InvalidOperationException("Un motif de refus est obligatoire.");
@@ -482,6 +482,7 @@ namespace Web_Api.Services.Reclamations
             if (normalized == ReclamationStatuses.CLOTUREE) reclamation.ResolvedAt = now;
             if (normalized == ReclamationStatuses.REFUSEE)
             {
+                reclamation.ResolvedAt = now;
                 reclamation.ClosedAt = now;
                 reclamation.MotifRefus = (motifRefus ?? string.Empty).Trim();
             }

@@ -87,6 +87,7 @@ class _ClientClaimDetailsScreenState extends State<ClientClaimDetailsScreen> {
     if (!mounted) return;
     if (result != null) {
       await _load();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Demande d\'échange envoyée au support.')),
       );

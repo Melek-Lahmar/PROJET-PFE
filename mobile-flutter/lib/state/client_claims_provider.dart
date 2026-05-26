@@ -29,12 +29,17 @@ class ClientClaimsProvider extends ChangeNotifier {
   }
 
   Future<ClientClaim?> fetchDetails(int id) async {
+    loading = true;
+    error = null;
+    notifyListeners();
     try {
       return await service.fetchDetails(id);
     } catch (e) {
       error = e.toString();
-      notifyListeners();
       return null;
+    } finally {
+      loading = false;
+      notifyListeners();
     }
   }
 
