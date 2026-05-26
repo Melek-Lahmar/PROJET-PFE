@@ -228,8 +228,10 @@ namespace Web_Api.Services.Orders
                 {
                     depots.TryGetValue(t.SourceDepotNo, out var src);
                     depots.TryGetValue(t.DestinationDepotNo, out var dst);
-                    var srcName = src?.DE_Intitule ?? src?.DE_Code ?? $"Dépôt {t.SourceDepotNo}";
-                    var dstName = dst?.DE_Intitule ?? dst?.DE_Code ?? $"Dépôt {t.DestinationDepotNo}";
+                    var srcName = !string.IsNullOrEmpty(src?.DE_Intitule) ? src!.DE_Intitule
+                        : !string.IsNullOrEmpty(src?.DE_Code) ? src!.DE_Code : $"Dépôt {t.SourceDepotNo}";
+                    var dstName = !string.IsNullOrEmpty(dst?.DE_Intitule) ? dst!.DE_Intitule
+                        : !string.IsNullOrEmpty(dst?.DE_Code) ? dst!.DE_Code : $"Dépôt {t.DestinationDepotNo}";
                     var timelineStatus = TransitStatuses.ToTimelineStatus(t.Status);
                     var message = timelineStatus switch
                     {
@@ -272,7 +274,7 @@ namespace Web_Api.Services.Orders
             var events = new List<CustomerTrackingEventDto>
             {
                 Ev("Commande créée", "CREATED", order.DO_Date, "La commande a été enregistrée.",
-                    isDone: true, state: "DONE"),
+                    isDone: order.DO_Date != null, state: order.DO_Date != null ? "DONE" : "ACTIVE"),
 
                 Ev("Commande confirmée", "CONFIRME",
                     isConfirmed ? (order.cbModification ?? order.DO_Date) : null,
@@ -336,7 +338,7 @@ namespace Web_Api.Services.Orders
 
                 if (livraison?.LI_Statut == DeliveryStatusCodes.Retour)
                     events.Add(Ev("Colis retourné au dépôt", "RETOUR",
-                        livraison.LI_DateCreation,
+                        livraison.LI_DateReplanification ?? livraison.LI_DateLivree,
                         livraison.LI_Commentaire ?? "Le colis est revenu au dépôt.",
                         isDone: true, state: "ERROR"));
 

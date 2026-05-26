@@ -93,7 +93,7 @@ export function DeliveryAddressSelector({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Adresse temporaire — état local
-  const [gouvernoratId, setGouvernoratId] = useState<number>(22);
+  const [gouvernoratId, setGouvernoratId] = useState<number>(0);
   const [delegation, setDelegation] = useState<string>("");
   const [adresseText, setAdresseText] = useState<string>("");
   const [codePostalLocal, setCodePostalLocal] = useState<string>("");

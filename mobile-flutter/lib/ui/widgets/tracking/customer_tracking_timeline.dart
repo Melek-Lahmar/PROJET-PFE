@@ -15,9 +15,10 @@ class CustomerTrackingTimeline extends StatelessWidget {
     }
 
     return Column(
-      children: events
-          .map((event) => CustomerTrackingStepTile(event: event))
-          .toList(),
+      children: List.generate(events.length, (index) => CustomerTrackingStepTile(
+        event: events[index],
+        isLast: index == events.length - 1,
+      )),
     );
   }
 }

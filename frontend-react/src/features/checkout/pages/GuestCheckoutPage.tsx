@@ -79,7 +79,7 @@ export function GuestCheckoutPage() {
   const delQuery = useQuery<string[]>({
     queryKey: ["geo-delegations", gouvernorat],
     queryFn: () => getDelegations(gouvernorat),
-    enabled: Number.isFinite(gouvernorat),
+    enabled: gouvernorat > 0,
   });
 
   const coverageQuery = useQuery({
@@ -117,7 +117,8 @@ export function GuestCheckoutPage() {
     gouvernorat: gouvernorat <= 0 ? "Gouvernorat requis" : undefined,
     delegation: !effectiveDelegation ? "Délégation requise" : undefined,
     address: !adresse.trim() ? "Adresse requise" : undefined,
-  }), [nomComplet, telephone, gouvernorat, effectiveDelegation, adresse]);
+    codePostal: isHome && !codePostal.trim() ? "Code postal requis" : undefined,
+  }), [nomComplet, telephone, gouvernorat, effectiveDelegation, adresse, isHome, codePostal]);
 
   const effectiveShippingAddress =
     touchedShipping.address || shippingAddress.trim()

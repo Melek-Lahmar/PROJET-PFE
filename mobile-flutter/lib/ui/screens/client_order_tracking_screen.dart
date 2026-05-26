@@ -1282,10 +1282,10 @@ List<_TimelineItem> _buildMilestones(CustomerOrder order) {
   ];
 
   if (status == ‘REFUSE’) {
-    items.last = _TimelineItem(
+    items.add(_TimelineItem(
       title: ‘Commande refusée’, subtitle: ‘La commande a été rejetée.’,
       icon: Icons.cancel_rounded, state: _TimelineState.failed, isLast: true,
-    );
+    ));
     return items;
   }
 
