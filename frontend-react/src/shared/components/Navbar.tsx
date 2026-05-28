@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CatalogSidebar } from "./CatalogSidebar";
 import { CartIconButton } from "./CartIconButton";
@@ -8,6 +9,7 @@ import { Button } from "./Button";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "../../features/auth/store/authStore";
 import { useVendorCartStore } from "../../features/vendeur/store/vendorCartStore";
+import { getFavoritesCount } from "../../features/favorites/api/favoritesApi";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 function IconMenu(props: React.SVGProps<SVGSVGElement>) {
@@ -66,6 +68,14 @@ function IconOrders(props: React.SVGProps<SVGSVGElement>) {
       <path d="M3 12h18" />
       <path d="M3 17h18" />
       <path d="M7 7v14" />
+    </svg>
+  );
+}
+
+function IconHeart(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" />
     </svg>
   );
 }
@@ -161,6 +171,7 @@ export function Navbar() {
   const isAuth = useAuthStore((s) => s.isAuthenticated());
   const email = useAuthStore((s) => s.email);
   const roles = useAuthStore((s) => (Array.isArray(s.roles) ? s.roles : []));
+  const profile = useAuthStore((s) => s.profile);
   const clear = useAuthStore((s) => s.clear);
   const bootstrapped = useAuthStore((s) => s.bootstrapped);
   const vendorCartQty = useVendorCartStore((s) => s.totalQty());
@@ -175,7 +186,19 @@ export function Navbar() {
   const homeHref = isStaff ? staffHome(roles) : "/";
   const canUseCart = !isStaff;
   const canSeeClientOrders = isAuth && !isStaff;
+  const canSeeFavorites = isAuth && roles.includes("CLIENT") && !isStaff;
+  const canSeeB2BQuotes = canSeeClientOrders && roles.includes("CLIENT") && profile?.typeClient === 1;
   const canUseVendorSearch = isVendeur;
+
+  const favoritesCountQuery = useQuery({
+    queryKey: ["favorites-count"],
+    queryFn: getFavoritesCount,
+    enabled: canSeeFavorites,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const favoritesCount = favoritesCountQuery.data?.count ?? 0;
 
   const quickLinks = useMemo(() => {
     const links: Array<{ key: string; label: string; onClick: () => void; icon: React.ReactNode }> = [];
@@ -207,6 +230,12 @@ export function Navbar() {
           key: "vendeur-orders",
           label: t("header.vendeur.orders"),
           onClick: () => navigate("/vendeur/orders"),
+          icon: <IconOrders className="h-4 w-4" />,
+        },
+        {
+          key: "vendeur-quotes",
+          label: "Devis",
+          onClick: () => navigate("/vendeur/quotes"),
           icon: <IconOrders className="h-4 w-4" />,
         }
       );
@@ -246,6 +275,20 @@ export function Navbar() {
     }
 
     if (canSeeClientOrders) {
+      if (canSeeB2BQuotes) {
+        links.push({
+          key: "my-b2b-quotes",
+          label: "Mes devis",
+          onClick: () => navigate("/b2b/devis"),
+          icon: <IconOrders className="h-4 w-4" />,
+        });
+      }
+      links.push({
+        key: "favorites",
+        label: `${t("header.favorites")}${favoritesCount > 0 ? ` (${favoritesCount})` : ""}`,
+        onClick: () => navigate("/favorites"),
+        icon: <IconHeart className="h-4 w-4" />,
+      });
       links.push({
         key: "orders",
         label: t("header.orders"),
@@ -270,7 +313,7 @@ export function Navbar() {
     }
 
     return links;
-  }, [canSeeClientOrders, isAdmin, isConfirmateur, isLivreur, isStaff, isVendeur, navigate, vendorCartQty, t]);
+  }, [canSeeB2BQuotes, canSeeClientOrders, favoritesCount, isAdmin, isConfirmateur, isLivreur, isStaff, isVendeur, navigate, vendorCartQty, t]);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,6 +431,23 @@ export function Navbar() {
               <LanguageSwitcher />
 
               <ThemeToggle />
+
+              {canSeeFavorites ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/favorites")}
+                  className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-shell-border/80 bg-shell-elevated/90 text-shell-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300/50 hover:text-rose-500 hover:shadow-lg"
+                  aria-label={t("header.favorites")}
+                  title={t("header.favorites")}
+                >
+                  <IconHeart className="h-5 w-5" />
+                  {favoritesCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-white shadow">
+                      {favoritesCount > 99 ? "99+" : favoritesCount}
+                    </span>
+                  ) : null}
+                </button>
+              ) : null}
 
               {canUseCart ? <CartIconButton /> : null}
 
@@ -510,11 +570,52 @@ export function Navbar() {
                               <IconOrders className="h-4 w-4 text-muted-foreground" />
                               {t("header.vendeur.orders")}
                             </button>
+
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-accent"
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                navigate("/vendeur/quotes");
+                              }}
+                            >
+                              <IconOrders className="h-4 w-4 text-muted-foreground" />
+                              Devis
+                            </button>
                           </>
                         ) : null}
 
                         {canSeeClientOrders ? (
                           <>
+                            {canSeeB2BQuotes ? (
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-accent"
+                                onClick={() => {
+                                  setUserMenuOpen(false);
+                                  navigate("/b2b/devis");
+                                }}
+                              >
+                                <IconOrders className="h-4 w-4 text-muted-foreground" />
+                                Mes devis
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-accent"
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                navigate("/favorites");
+                              }}
+                            >
+                              <IconHeart className="h-4 w-4 text-muted-foreground" />
+                              <span className="flex-1">{t("header.favorites")}</span>
+                              {favoritesCount > 0 ? (
+                                <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-black text-white">
+                                  {favoritesCount}
+                                </span>
+                              ) : null}
+                            </button>
                             <button
                               type="button"
                               className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition hover:bg-accent"

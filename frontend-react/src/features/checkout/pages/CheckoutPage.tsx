@@ -187,6 +187,22 @@ export function CheckoutPage() {
 
   const depots = useMemo(() => depotsQuery.data ?? [], [depotsQuery.data]);
 
+  const b2bDiscount = useMemo(() => {
+    const profile = meQuery.data?.profile;
+    const isB2B = profile?.typeClient === 1;
+    const rawRate = profile?.discountPercent ?? profile?.remise ?? null;
+    const rate = typeof rawRate === "number" && Number.isFinite(rawRate) ? Math.min(Math.max(rawRate, 0), 100) : 0;
+    const amount = isB2B && rate > 0 ? Number((subtotal * rate / 100).toFixed(3)) : 0;
+    const totalAfterDiscount = Math.max(0, subtotal - amount);
+    return {
+      isApplied: isB2B && rate > 0 && amount > 0,
+      rate,
+      amount,
+      totalAfterDiscount,
+      finalTotal: totalAfterDiscount + shipping + stamp,
+    };
+  }, [meQuery.data?.profile, subtotal, shipping, stamp]);
+
   const [depotNo, setDepotNo] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("COD");
 
@@ -438,7 +454,7 @@ export function CheckoutPage() {
             <CheckoutPaymentMethodSelector
               value={paymentMethod}
               onChange={setPaymentMethod}
-              total={total}
+              total={b2bDiscount.finalTotal || total}
             />
 
             {paymentMethod === "VIRTUAL" ? (
@@ -478,6 +494,17 @@ export function CheckoutPage() {
                 <span className="text-muted-foreground">Sous-total</span>
                 <span className="font-medium">{subtotal.toFixed(3)} TND</span>
               </div>
+              {b2bDiscount.isApplied ? (
+                <>
+                  <div className="flex justify-between text-emerald-700 dark:text-emerald-300">
+                    <span>Remise B2B {b2bDiscount.rate.toFixed(2)} %</span>
+                    <span className="font-bold">-{b2bDiscount.amount.toFixed(3)} TND</span>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs font-semibold text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200">
+                    Remise professionnelle appliquée à votre compte B2B.
+                  </div>
+                </>
+              ) : null}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Livraison</span>
                 <span className="font-medium">{shipping.toFixed(3)} TND</span>
@@ -492,7 +519,7 @@ export function CheckoutPage() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-card-foreground">Total</span>
                 <span className="text-xl font-black tracking-tight text-primary">
-                  {total.toFixed(3)} TND
+                  {(b2bDiscount.finalTotal || total).toFixed(3)} TND
                 </span>
               </div>
             </div>

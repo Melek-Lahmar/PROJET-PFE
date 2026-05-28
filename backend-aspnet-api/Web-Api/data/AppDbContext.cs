@@ -18,6 +18,9 @@ namespace Web_Api.data
 
         public DbSet<F_DOCENTETE> F_DOCENTETES { get; set; } = null!;
         public DbSet<F_DOCLIGNE> F_DOCLIGNES { get; set; } = null!;
+        public DbSet<F_DEVIS_ENTETE> F_DEVIS_ENTETES { get; set; } = null!;
+        public DbSet<F_DEVIS_LIGNE> F_DEVIS_LIGNES { get; set; } = null!;
+        public DbSet<F_DEVIS_EVENT> F_DEVIS_EVENTS { get; set; } = null!;
 
         public DbSet<F_LIVRAISON> F_LIVRAISONS { get; set; } = null!;
         public DbSet<B_PAIEMENT> B_PAIEMENTS { get; set; } = null!;
@@ -40,6 +43,7 @@ namespace Web_Api.data
         public DbSet<F_LIVRAISON_HISTORIQUE> F_LIVRAISON_HISTORIQUES { get; set; } = null!;
         public DbSet<F_LIVREUR_POSITION_HISTORY> F_LIVREUR_POSITION_HISTORIES { get; set; } = null!;
         public DbSet<F_CLIENT_DEVICE_TOKEN> F_CLIENT_DEVICE_TOKENS { get; set; } = null!;
+        public DbSet<F_CLIENT_FAVORI> F_CLIENT_FAVORIS { get; set; } = null!;
 
         // Refonte PFE v3 — zones, superviseur, transit, photos incidents
         public DbSet<F_DEPOT_ZONE> F_DEPOT_ZONES { get; set; } = null!;
@@ -85,6 +89,9 @@ namespace Web_Api.data
 
             modelBuilder.Entity<F_DOCENTETE>().HasKey(x => x.cbMarq);
             modelBuilder.Entity<F_DOCLIGNE>().HasKey(x => x.cbMarq);
+            modelBuilder.Entity<F_DEVIS_ENTETE>().HasKey(x => x.Id);
+            modelBuilder.Entity<F_DEVIS_LIGNE>().HasKey(x => x.Id);
+            modelBuilder.Entity<F_DEVIS_EVENT>().HasKey(x => x.Id);
             modelBuilder.Entity<F_LIVRAISON>().HasKey(x => x.cbMarq);
             modelBuilder.Entity<B_PAIEMENT>().HasKey(x => x.cbMarq);
             modelBuilder.Entity<F_TAXE>().HasKey(x => x.cbMarq);
@@ -174,17 +181,79 @@ namespace Web_Api.data
                 entity.Property(x => x.EchangeArticleRetour).HasMaxLength(500);
                 entity.Property(x => x.EchangeArticleLivraison).HasMaxLength(500);
                 entity.Property(x => x.DO_TelephoneLivraison).HasMaxLength(20);
+                entity.Property(x => x.TotalBeforeDiscount).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.B2BDiscountRate).HasColumnType("decimal(5,2)");
+                entity.Property(x => x.B2BDiscountAmount).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.DiscountSource).HasMaxLength(30);
+                entity.Property(x => x.QuoteStatus).HasMaxLength(20);
+                entity.Property(x => x.QuoteConvertedToPiece).HasMaxLength(13);
+                entity.Property(x => x.QuoteClientNote).HasMaxLength(500);
+                entity.Property(x => x.QuoteInternalNote).HasMaxLength(500);
                 entity.Property(x => x.DeliveryMode).IsRequired().HasMaxLength(20).HasDefaultValue("HOME_DELIVERY");
                 entity.Property(x => x.GeoValidationStatus).HasMaxLength(20);
                 entity.Property(x => x.HasDeliveryIncident).HasDefaultValue(false);
                 entity.HasIndex(x => x.PickupDepotNo);
                 entity.HasIndex(x => x.AssignedLivreurId);
+                entity.HasIndex(x => new { x.DO_Type, x.QuoteStatus });
+                entity.HasIndex(x => x.QuoteCreatedByUserId);
+                entity.HasIndex(x => x.QuoteAssignedToUserId);
+                entity.HasIndex(x => x.QuoteConvertedToPiece);
             });
 
             modelBuilder.Entity<F_DOCLIGNE>(entity =>
             {
                 entity.Property(x => x.LigneType).HasMaxLength(20);
                 entity.HasIndex(x => x.LigneType);
+            });
+
+            modelBuilder.Entity<F_DEVIS_ENTETE>(entity =>
+            {
+                entity.HasIndex(x => x.DevisPiece).IsUnique();
+                entity.HasIndex(x => x.ClientUserId);
+                entity.HasIndex(x => x.StatusKey);
+                entity.HasIndex(x => x.AssignedConfirmateurId);
+                entity.HasIndex(x => x.BcPiece).HasFilter("[BcPiece] IS NOT NULL");
+                entity.Property(x => x.DevisPiece).IsRequired().HasMaxLength(20);
+                entity.Property(x => x.ClientCode).HasMaxLength(17);
+                entity.Property(x => x.ClientType).IsRequired().HasMaxLength(10);
+                entity.Property(x => x.StatusKey).IsRequired().HasMaxLength(30);
+                entity.Property(x => x.TotalHT).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.DiscountPercentSnapshot).HasColumnType("decimal(5,2)");
+                entity.Property(x => x.DiscountAmount).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.TotalHTNet).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.TotalTTC).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.NetAPayer).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.BcPiece).HasMaxLength(13);
+            });
+
+            modelBuilder.Entity<F_DEVIS_LIGNE>(entity =>
+            {
+                entity.HasIndex(x => new { x.DevisId, x.SortOrder });
+                entity.Property(x => x.ArticleRef).IsRequired().HasMaxLength(50);
+                entity.Property(x => x.Designation).HasMaxLength(200);
+                entity.Property(x => x.Qty).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.UnitPriceHT).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.DiscountLinePercent).HasColumnType("decimal(5,2)");
+                entity.Property(x => x.AmountHT).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.AmountTTC).HasColumnType("decimal(24,13)");
+                entity.HasOne(x => x.Devis)
+                    .WithMany(x => x.Lignes)
+                    .HasForeignKey(x => x.DevisId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<F_DEVIS_EVENT>(entity =>
+            {
+                entity.HasIndex(x => new { x.DevisId, x.CreatedAt });
+                entity.Property(x => x.AuthorRole).HasMaxLength(30);
+                entity.Property(x => x.EventType).IsRequired().HasMaxLength(30);
+                entity.Property(x => x.OldStatus).HasMaxLength(30);
+                entity.Property(x => x.NewStatus).HasMaxLength(30);
+                entity.Property(x => x.Message).HasMaxLength(2000);
+                entity.HasOne(x => x.Devis)
+                    .WithMany(x => x.Events)
+                    .HasForeignKey(x => x.DevisId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<F_LIVREUR_ABANDON_LOG>(entity =>
@@ -347,6 +416,17 @@ namespace Web_Api.data
                 entity.HasIndex(x => x.UserId);
                 entity.Property(x => x.Token).IsRequired().HasMaxLength(500);
                 entity.Property(x => x.Platform).IsRequired().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<F_CLIENT_FAVORI>(entity =>
+            {
+                entity.ToTable("F_CLIENT_FAVORIS");
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.ClientUserId);
+                entity.HasIndex(x => x.AR_Ref);
+                entity.HasIndex(x => new { x.ClientUserId, x.AR_Ref }).IsUnique();
+                entity.Property(x => x.AR_Ref).IsRequired().HasMaxLength(50);
+                entity.Property(x => x.CreatedAt).IsRequired();
             });
 
             modelBuilder.Entity<F_RECLAMATION_TENTATIVE>(entity =>

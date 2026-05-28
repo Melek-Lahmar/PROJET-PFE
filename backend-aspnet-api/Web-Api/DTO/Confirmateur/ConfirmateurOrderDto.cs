@@ -10,6 +10,12 @@ namespace Web_Api.DTO.Confirmateur
         [JsonPropertyName("dO_Tiers")]
         public string? DO_Tiers { get; set; }
 
+        [JsonPropertyName("dO_Ref")]
+        public string? DO_Ref { get; set; }
+
+        [JsonPropertyName("dE_No")]
+        public int? DE_No { get; set; }
+
         [JsonPropertyName("dO_Date")]
         public DateTime? DO_Date { get; set; }
 
@@ -21,6 +27,18 @@ namespace Web_Api.DTO.Confirmateur
 
         [JsonPropertyName("dO_NetAPayer")]
         public decimal? DO_NetAPayer { get; set; }
+
+        [JsonPropertyName("totalBeforeDiscount")]
+        public decimal? TotalBeforeDiscount { get; set; }
+
+        [JsonPropertyName("b2BDiscountRate")]
+        public decimal? B2BDiscountRate { get; set; }
+
+        [JsonPropertyName("b2BDiscountAmount")]
+        public decimal? B2BDiscountAmount { get; set; }
+
+        [JsonPropertyName("discountSource")]
+        public string? DiscountSource { get; set; }
 
         [JsonPropertyName("dO_Valide")]
         public short? DO_Valide { get; set; }

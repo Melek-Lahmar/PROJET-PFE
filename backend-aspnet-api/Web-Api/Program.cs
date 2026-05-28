@@ -28,6 +28,8 @@ using Web_Api.Services.Geo;
 using Web_Api.Services.Reclamations;
 using Web_Api.Services.Refonte;
 using Web_Api.Services.Dashboard;
+using Web_Api.Services.Favorites;
+using Web_Api.Services.B2B;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -160,6 +162,8 @@ builder.Services.AddScoped<Web_Api.Services.Confirmatrice.CommandeConfirmationLo
 builder.Services.AddHostedService<Web_Api.Services.Confirmatrice.StaleLockCleanupHostedService>();
 
 builder.Services.AddScoped<Web_Api.Services.Orders.CustomerTrackingBuilder>();
+builder.Services.AddScoped<ClientFavoritesService>();
+builder.Services.AddScoped<QuoteService>();
 
 // Phase 3C — scan toutes les 5 min : libération cas inactifs + reprise orphelins.
 builder.Services.AddHostedService<Web_Api.Services.Reclamations.ReclamationRedistributionHostedService>();

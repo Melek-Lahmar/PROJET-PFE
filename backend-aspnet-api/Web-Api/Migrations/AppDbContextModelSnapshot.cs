@@ -1262,6 +1262,40 @@ namespace Web_Api.Migrations
                     b.ToTable("F_CLIENT_DEVICE_TOKEN");
                 });
 
+            modelBuilder.Entity("Web_Api.Model.F_CLIENT_FAVORI", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AR_Ref")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("ClientUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AR_Ref");
+
+                    b.HasIndex("ClientUserId");
+
+                    b.HasIndex("ClientUserId", "AR_Ref")
+                        .IsUnique();
+
+                    b.ToTable("F_CLIENT_FAVORIS", (string)null);
+                });
+
             modelBuilder.Entity("Web_Api.Model.F_CONFIRMATRICE_SESSION", b =>
                 {
                     b.Property<long>("Id")
@@ -1446,6 +1480,12 @@ namespace Web_Api.Migrations
                     b.Property<Guid?>("AssignedLivreurId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("B2BDiscountAmount")
+                        .HasColumnType("decimal(24,13)");
+
+                    b.Property<decimal?>("B2BDiscountRate")
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<string>("CT_NumPayeur")
                         .HasMaxLength(17)
                         .HasColumnType("nvarchar(17)");
@@ -1608,6 +1648,10 @@ namespace Web_Api.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("HOME_DELIVERY");
 
+                    b.Property<string>("DiscountSource")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<string>("EchangeArticleLivraison")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1640,8 +1684,48 @@ namespace Web_Api.Migrations
                     b.Property<bool>("ProximityAlertSent")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("QuoteAcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("QuoteAssignedToUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QuoteClientNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("QuoteConvertedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("QuoteConvertedToPiece")
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<Guid?>("QuoteCreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QuoteInternalNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("QuoteRefusedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("QuoteSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("QuoteStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("QuoteValidUntil")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("ReclamationOrigineId")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("TotalBeforeDiscount")
+                        .HasColumnType("decimal(24,13)");
 
                     b.Property<string>("TypeCommande")
                         .IsRequired()
@@ -1659,6 +1743,14 @@ namespace Web_Api.Migrations
                     b.HasIndex("AssignedLivreurId");
 
                     b.HasIndex("PickupDepotNo");
+
+                    b.HasIndex("QuoteAssignedToUserId");
+
+                    b.HasIndex("QuoteConvertedToPiece");
+
+                    b.HasIndex("QuoteCreatedByUserId");
+
+                    b.HasIndex("DO_Type", "QuoteStatus");
 
                     b.HasIndex("IsActiveDelivery", "AssignedLivreurId")
                         .HasDatabaseName("IX_F_DOCENTETE_ActiveDelivery");

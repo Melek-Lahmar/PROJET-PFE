@@ -27,6 +27,7 @@
   "header.articles": "المنتجات",
   "header.cart": "السلة",
   "header.compare": "قارن",
+  "header.favorites": "مفضلتي",
   "header.profile": "ملفي",
   "header.orders": "طلباتي",
   "header.addresses": "عناويني",
@@ -54,6 +55,20 @@
   "language.en": "English",
   "language.ar": "العربية",
   "language.switch": "تغيير اللغة",
+
+  "favorites.title": "مفضلتي",
+  "favorites.subtitle": "اعثر على المنتجات التي تتابعها.",
+  "favorites.emptyTitle": "لا توجد مفضلات بعد",
+  "favorites.emptyDescription": "أضف منتجاتك المفضلة من الكتالوج.",
+  "favorites.discoverCatalog": "تصفح الكتالوج",
+  "favorites.add": "إضافة إلى المفضلة",
+  "favorites.remove": "إزالة من المفضلة",
+  "favorites.added": "تمت الإضافة إلى المفضلة",
+  "favorites.removed": "تمت الإزالة من المفضلة",
+  "favorites.loginRequired": "سجل الدخول لإضافة هذا المنتج إلى المفضلة.",
+  "favorites.loadError": "تعذر تحميل المفضلة.",
+  "favorites.retry": "إعادة المحاولة",
+  "favorites.count": "{{count}} مفضل",
 
   "currency.tnd": "د.ت"
 }

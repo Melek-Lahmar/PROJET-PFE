@@ -6,6 +6,7 @@ import { RouteErrorPage } from "../shared/pages/RouteErrorPage";
 import { ArticlesPage } from "../features/catalog/pages/ArticlesPage";
 import { ArticleDetailsPage } from "../features/catalog/pages/ArticleDetailsPage";
 import { ComparePage } from "../features/compare/pages/ComparePage";
+import { FavoritesPage } from "../features/favorites/pages/FavoritesPage";
 import { HomepagePage } from "../features/homepage/pages/HomepagePage";
 
 import { CartPage } from "../features/cart/pages/CartPage";
@@ -18,6 +19,9 @@ import { VirtualPaymentPage } from "../features/payments/pages/VirtualPaymentPag
 import { VirtualPaymentReturnPage } from "../features/payments/pages/VirtualPaymentReturnPage";
 import { OrdersPage } from "../features/orders/pages/OrdersPage";
 import { OrderDetailsPage } from "../features/orders/pages/OrderDetailsPage";
+import { B2BQuotesAdminPage } from "../features/b2bQuotes/pages/B2BQuotesAdminPage";
+import { B2BQuoteDetailsPage } from "../features/b2bQuotes/pages/B2BQuoteDetailsPage";
+import { MyB2BQuotesPage } from "../features/b2bQuotes/pages/MyB2BQuotesPage";
 
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
@@ -58,6 +62,9 @@ import { ConfirmateurOrdersPage } from "../features/confirmateur/pages/Confirmat
 import { ConfirmateurOrderDetailsPage } from "../features/confirmateur/pages/ConfirmateurOrderDetailsPage";
 import { ConfirmateurBlPage } from "../features/confirmateur/pages/ConfirmateurBlPage";
 import { ConfirmateurBlDetailsPage } from "../features/confirmateur/pages/ConfirmateurBlDetailsPage";
+import { ConfirmateurWorkspace } from "../features/confirmateur/components/ConfirmateurWorkspace";
+import { ConfirmateurDevisPage } from "../features/confirmateur/pages/ConfirmateurDevisPage";
+import { ConfirmateurDevisDetailsPage } from "../features/confirmateur/pages/ConfirmateurDevisDetailsPage";
 import { LivreurBlListPage, LivreurBlDetailsPage } from "../features/bl/pages/LivreurBlPages";
 
 import { AdminOverviewDashboardPage } from "../features/dashboard/pages/AdminOverviewDashboardPage";
@@ -140,6 +147,17 @@ export const router = createBrowserRouter([
           { path: "profile/addresses", element: <ProfileAddressesPage /> },
 
           {
+            element: <RoleRoute roles={["CLIENT"]} />,
+            children: [
+              { path: "favorites", element: <FavoritesPage /> },
+              { path: "account/quotes", element: <MyB2BQuotesPage /> },
+              { path: "account/quotes/:piece", element: <B2BQuoteDetailsPage /> },
+              { path: "b2b/devis", element: <MyB2BQuotesPage /> },
+              { path: "b2b/devis/:piece", element: <B2BQuoteDetailsPage /> },
+            ],
+          },
+
+          {
             element: <RoleRoute roles={["VENDEUR"]} />,
             children: [
               { path: "vendeur", element: <VendeurArticlesPage /> },
@@ -149,6 +167,8 @@ export const router = createBrowserRouter([
               { path: "vendeur/checkout", element: <VendeurCheckoutPage /> },
               { path: "vendeur/orders", element: <VendeurOrdersPage /> },
               { path: "vendeur/orders/:piece", element: <VendeurOrderDetailsPage /> },
+              { path: "vendeur/quotes", element: <B2BQuotesAdminPage /> },
+              { path: "vendeur/quotes/:piece", element: <B2BQuoteDetailsPage /> },
             ],
           },
 
@@ -197,6 +217,8 @@ export const router = createBrowserRouter([
                   { path: "admin/articles/:arRef/images", element: <AdminArticleImagesPage /> },
                   { path: "admin/homepage", element: <AdminHomepagePage /> },
                   { path: "admin/clients/b2b", element: <AdminB2BClientsPage /> },
+                  { path: "admin/b2b/quotes", element: <B2BQuotesAdminPage /> },
+                  { path: "admin/b2b/quotes/:piece", element: <B2BQuoteDetailsPage /> },
                   { path: "admin/settings", element: <AdminSettingsPage /> },
                   { path: "admin/chatbot", element: <ChatbotOverviewPage /> },
                   { path: "admin/chatbot/sandbox", element: <ChatbotSandboxPage /> },
@@ -210,11 +232,18 @@ export const router = createBrowserRouter([
           {
             element: <RoleRoute roles={["CONFIRMATEUR"]} />,
             children: [
-              { path: "confirmateur/dashboard", element: <ConfirmateurDashboardPage /> },
-              { path: "confirmateur/commandes", element: <ConfirmateurOrdersPage /> },
-              { path: "confirmateur/commandes/:piece", element: <ConfirmateurOrderDetailsPage /> },
-              { path: "confirmateur/bl", element: <ConfirmateurBlPage /> },
-              { path: "confirmateur/bl/:piece", element: <ConfirmateurBlDetailsPage /> },
+              {
+                element: <ConfirmateurWorkspace />,
+                children: [
+                  { path: "confirmateur/dashboard", element: <ConfirmateurDashboardPage /> },
+                  { path: "confirmateur/commandes", element: <ConfirmateurOrdersPage /> },
+                  { path: "confirmateur/commandes/:piece", element: <ConfirmateurOrderDetailsPage /> },
+                  { path: "confirmateur/devis", element: <ConfirmateurDevisPage /> },
+                  { path: "confirmateur/devis/:piece", element: <ConfirmateurDevisDetailsPage /> },
+                  { path: "confirmateur/bl", element: <ConfirmateurBlPage /> },
+                  { path: "confirmateur/bl/:piece", element: <ConfirmateurBlDetailsPage /> },
+                ],
+              },
             ],
           },
 

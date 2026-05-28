@@ -22,6 +22,10 @@ namespace Web_Api.DTO.Orders
         public decimal TotalTTC { get; set; }
         public decimal FraisLivraison { get; set; }
         public decimal TimbreFiscal { get; set; }
+        public decimal TotalBeforeDiscount { get; set; }
+        public decimal? B2BDiscountRate { get; set; }
+        public decimal B2BDiscountAmount { get; set; }
+        public string? DiscountSource { get; set; }
         public decimal NetAPayer { get; set; }
 
         public string? DeliveryType { get; set; }

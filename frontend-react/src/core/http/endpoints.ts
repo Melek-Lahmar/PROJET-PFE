@@ -5,6 +5,11 @@ export const endpoints = {
   orders: "/api/orders",
   orderTimeline: (piece: string) => `/api/orders/${encodeURIComponent(piece)}/timeline`,
   orderTransitSummary: (piece: string) => `/api/orders/${encodeURIComponent(piece)}/transit-summary`,
+  favorites: "/api/client/favorites",
+  favoritesCount: "/api/client/favorites/count",
+  favoriteExists: (arRef: string) => `/api/client/favorites/${encodeURIComponent(arRef)}/exists`,
+  favoriteByRef: (arRef: string) => `/api/client/favorites/${encodeURIComponent(arRef)}`,
+  favoriteToggle: (arRef: string) => `/api/client/favorites/${encodeURIComponent(arRef)}/toggle`,
 
   homepage: "/api/homepage",
   adminHomepage: "/api/admin/homepage",
@@ -137,6 +142,15 @@ export const endpoints = {
   // Module 4 — Remise B2B
   adminClientDiscount: (clientId: string) => `/api/admin/clients/${clientId}/discount`,
   adminClientDiscountHistory: (clientId: string) => `/api/admin/clients/${clientId}/discount-history`,
+
+  b2bQuotes: "/api/b2b/devis",
+  b2bQuoteByPiece: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}`,
+  b2bMyQuotes: "/api/b2b/devis/my",
+  b2bQuoteAccept: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}/accept`,
+  b2bQuoteRefuse: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}/reject`,
+  b2bQuoteCancel: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}/cancel`,
+  b2bQuoteComment: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}/comments`,
+  b2bQuoteConvert: (piece: string) => `/api/b2b/devis/${encodeURIComponent(piece)}/convert-to-order`,
 
   // Module 10 — App settings
   adminSettings: "/api/admin/settings",

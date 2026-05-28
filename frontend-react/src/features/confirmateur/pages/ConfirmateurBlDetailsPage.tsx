@@ -27,7 +27,7 @@ export function ConfirmateurBlDetailsPage() {
   const { piece } = useParams<{ piece: string }>();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["confirmateur-bl", piece],
+    queryKey: ["confirmateur", "bl", piece],
     queryFn: () => getConfirmateurBlByPiece(piece as string),
     enabled: !!piece,
   });

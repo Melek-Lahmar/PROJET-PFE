@@ -68,6 +68,9 @@ function MetricCard({
 export function AdminOrderDetailPanel({ order }: Props) {
   const client = order.client;
   const isB2B = (order.clientType ?? client?.typeClient ?? "").toUpperCase() === "B2B";
+  const discountRate = order.b2bDiscountRate ?? order.b2BDiscountRate ?? null;
+  const discountAmount = order.b2bDiscountAmount ?? order.b2BDiscountAmount ?? 0;
+  const hasB2BDiscount = Number(discountAmount) > 0;
 
   return (
     <div className="space-y-5">
@@ -255,7 +258,15 @@ export function AdminOrderDetailPanel({ order }: Props) {
             <InfoRow label="Mode de livraison" value={order.deliveryType} />
             <div className="my-2 h-px bg-border/70" />
             <InfoRow label="Total HT" value={money(order.totalHT)} />
-            <InfoRow label="Total TTC" value={money(order.totalTTC)} />
+            {hasB2BDiscount ? (
+              <>
+                <InfoRow label="Sous-total avant remise" value={money(order.totalBeforeDiscount ?? order.totalTTC)} />
+                <InfoRow label={`Remise B2B ${Number(discountRate ?? 0).toFixed(2)}%`} value={`-${money(discountAmount)}`} />
+                <InfoRow label="Source remise" value={order.discountSource ?? "-"} />
+              </>
+            ) : (
+              <InfoRow label="Total TTC" value={money(order.totalTTC)} />
+            )}
             <InfoRow label="Frais livraison" value={money(order.fraisLivraison)} />
             <InfoRow label="Timbre fiscal" value={money(order.timbreFiscal)} />
 

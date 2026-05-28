@@ -15,6 +15,7 @@ namespace Web_Api.Services
         private readonly AppDbContext _db;
         private readonly SageService? _sage;
         private readonly ITransitOrchestrationService? _transit;
+        private readonly OrderCalculatorService _calculator;
 
         private const decimal FRAIS_LIVRAISON_HOME = 8m;
         private const decimal TIMBRE_FISCAL = 1m;
@@ -47,9 +48,14 @@ namespace Web_Api.Services
                 new() { Code = PaymentSurPlacePassCadeau, Label = "Paiement en magasin - Pass cadeau" }
             };
 
-        public BonCommandeService(AppDbContext db, SageService? sage = null, ITransitOrchestrationService? transit = null)
+        public BonCommandeService(
+            AppDbContext db,
+            OrderCalculatorService calculator,
+            SageService? sage = null,
+            ITransitOrchestrationService? transit = null)
         {
             _db = db;
+            _calculator = calculator;
             _sage = sage;
             _transit = transit;
         }
@@ -74,6 +80,7 @@ namespace Web_Api.Services
                 VendeurUserId = null,
                 CustomerMode = CustomerModeExisting,
                 PassengerSnapshot = profile == null ? null : OrderCustomerSnapshot.FromProfile(profile),
+                DiscountProfile = profile,
                 DepotNo = req.DepotNo,
                 DeliveryType = req.DeliveryType,
                 PaymentMethod = req.PaymentMethod,
@@ -154,6 +161,7 @@ namespace Web_Api.Services
                     VendeurUserId = vendeurUserId,
                     CustomerMode = CustomerModeExisting,
                     PassengerSnapshot = resolved.Profile == null ? null : OrderCustomerSnapshot.FromProfile(resolved.Profile),
+                    DiscountProfile = resolved.Profile,
                     DepotNo = vendeurContext.Depot.DepotNo,
                     DeliveryType = DeliveryTypePickup,
                     PaymentMethod = canonicalPaymentMethod,
@@ -306,6 +314,10 @@ namespace Web_Api.Services
                 TotalTTC = entete.DO_TotalTTC ?? 0m,
                 FraisLivraison = entete.DO_FraisLivraison ?? 0m,
                 TimbreFiscal = entete.DO_TimbreFiscal ?? 0m,
+                TotalBeforeDiscount = entete.TotalBeforeDiscount ?? entete.DO_TotalTTC ?? 0m,
+                B2BDiscountRate = entete.B2BDiscountRate,
+                B2BDiscountAmount = entete.B2BDiscountAmount ?? 0m,
+                DiscountSource = entete.DiscountSource,
                 NetAPayer = entete.DO_NetAPayer ?? 0m,
                 DeliveryType = entete.DO_ModeLivraison,
                 PaymentMethod = entete.DO_ModePaiement,
@@ -551,7 +563,8 @@ namespace Web_Api.Services
 
             var fraisLivraison = deliveryType == DeliveryTypeHome ? FRAIS_LIVRAISON_HOME : 0m;
             var timbre = TIMBRE_FISCAL;
-            var netAPayer = totalTTC + fraisLivraison + timbre;
+            var totals = _calculator.Compute(totalTTC, req.DiscountProfile);
+            var netAPayer = totals.Total + fraisLivraison + timbre;
             var piece = await GenerateUniquePieceAsync(ct);
             var shouldPersistAddressSnapshot = req.PersistAddressSnapshot || deliveryType == DeliveryTypeHome;
 
@@ -563,7 +576,7 @@ namespace Web_Api.Services
                 DO_Tiers = req.ClientCode,
                 DE_No = depotNoForDoc,
                 DO_TotalHT = totalHT,
-                DO_TotalHTNet = totalHT,
+                DO_TotalHTNet = totals.Total,
                 DO_TotalTTC = totalTTC,
                 DO_NetAPayer = netAPayer,
                 DO_Valide = 0,
@@ -572,6 +585,10 @@ namespace Web_Api.Services
                 DO_ModePaiement = paymentMethod,
                 DO_FraisLivraison = fraisLivraison,
                 DO_TimbreFiscal = timbre,
+                TotalBeforeDiscount = totals.Subtotal,
+                B2BDiscountRate = totals.DiscountRate,
+                B2BDiscountAmount = totals.DiscountAmount,
+                DiscountSource = totals.DiscountSource,
                 DO_AdresseLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedAddress, 150) : null,
                 DO_VilleLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedCity, 35) : null,
                 DO_CodePostalLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedPostalCode, 9) : null,
@@ -876,6 +893,7 @@ namespace Web_Api.Services
             public Guid? VendeurUserId { get; set; }
             public string CustomerMode { get; set; } = CustomerModeExisting;
             public OrderCustomerSnapshot? PassengerSnapshot { get; set; }
+            public ProfilUtilisateur? DiscountProfile { get; set; }
             public int? DepotNo { get; set; }
             public string? DeliveryType { get; set; }
             public string? PaymentMethod { get; set; }

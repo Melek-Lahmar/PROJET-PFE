@@ -20,6 +20,15 @@ export function MainLayout() {
     "/forgot-password",
     "/reset-password",
   ].some((p) => location.pathname.startsWith(p));
+  const isConfirmateurPage = location.pathname.startsWith("/confirmateur");
+
+  if (isConfirmateurPage) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Outlet />
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground">

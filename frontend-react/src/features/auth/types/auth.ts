@@ -22,6 +22,8 @@ export type ProfilUtilisateur = {
   matriculeFiscal?: string | null;
   registreCommerce?: string | null;
   numeroTVA?: string | null;
+  discountPercent?: number | null;
+  remise?: number | null;
 
   codeEmploye?: string | null;
   departement?: string | null;

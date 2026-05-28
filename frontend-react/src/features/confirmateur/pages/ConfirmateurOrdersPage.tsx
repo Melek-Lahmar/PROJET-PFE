@@ -145,16 +145,18 @@ export function ConfirmateurOrdersPage() {
   const [dateFilter, setDateFilter] = useState<DateRangeFilter>("ALL");
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ["confirmateur-orders", tab],
-    queryFn: () => getConfirmateurOrders(tab),
+    queryKey: ["confirmateur", "commandes"],
+    queryFn: () => getConfirmateurOrders(),
   });
 
-  const orders = data ?? [];
+  const orders = useMemo(() => data ?? [], [data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
     return orders.filter((order) => {
+      if (tab !== undefined && order.dO_Valide !== tab) return false;
+
       const matchesPeriod = matchesDateRange(order.dO_Date, dateFilter);
       if (!matchesPeriod) return false;
 
@@ -162,17 +164,19 @@ export function ConfirmateurOrdersPage() {
 
       const piece = (order.dO_Piece ?? "").toLowerCase();
       const tiers = (order.dO_Tiers ?? "").toLowerCase();
+      const reference = (order.dO_Ref ?? "").toLowerCase();
       const client = clientDisplayFromOrder(order).toLowerCase();
       const status = (order.statusLabel ?? "").toLowerCase();
 
       return (
         piece.includes(q) ||
         tiers.includes(q) ||
+        reference.includes(q) ||
         client.includes(q) ||
         status.includes(q)
       );
     });
-  }, [orders, search, dateFilter]);
+  }, [orders, search, dateFilter, tab]);
 
   const metrics = useMemo(() => {
     let pending = 0;
@@ -201,9 +205,9 @@ export function ConfirmateurOrdersPage() {
     <div className="w-full space-y-6 pb-10">
       <PremiumHero
         kicker="Confirmateur"
-        title="Pilotage des bons de commande"
+        title="Bons de commande (BC)"
         gradientTitle
-        description="Vue métier confirmateur pour analyser les BC, qualifier leur statut, puis déclencher la transformation vers le BL sans casser le flux existant."
+        description="Liste des bons de commande à contrôler et confirmer."
         actions={
           <>
             <Link to="/confirmateur/bl">
@@ -263,7 +267,7 @@ export function ConfirmateurOrdersPage() {
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Filtre période</div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  Sélectionnez une période d’analyse confirmateur. Le filtre par défaut est <span className="font-semibold text-card-foreground">All</span>.
+                Sélectionnez une période d’analyse confirmateur. Le filtre par défaut affiche toutes les périodes.
                 </div>
               </div>
 
@@ -299,12 +303,14 @@ export function ConfirmateurOrdersPage() {
       {!isLoading && !isError ? (
         <section className="overflow-hidden rounded-[30px] border border-border bg-card shadow-sm">
           <div className="grid min-w-[1100px] grid-cols-12 gap-3 border-b border-border bg-muted/35 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            <div className="col-span-3">Commande / statut</div>
+            <div className="col-span-2">Référence BC</div>
             <div className="col-span-2">Client</div>
-            <div className="col-span-2">Tiers</div>
-            <div className="col-span-2">Date</div>
-            <div className="col-span-2">Montants</div>
-            <div className="col-span-1 text-right">Action</div>
+            <div className="col-span-2">Commercial</div>
+            <div className="col-span-1">Entrepôt</div>
+            <div className="col-span-2">Date création</div>
+            <div className="col-span-1 text-right">Montant TTC</div>
+            <div className="col-span-1">Statut</div>
+            <div className="col-span-1 text-right">Actions</div>
           </div>
 
           <div className="overflow-x-auto">
@@ -325,7 +331,7 @@ export function ConfirmateurOrdersPage() {
 
                   return (
                     <div key={`${order.dO_Piece ?? piece}`} className="grid grid-cols-12 gap-3 px-5 py-4 transition hover:bg-muted/25">
-                      <div className="col-span-3 min-w-0">
+                      <div className="col-span-2 min-w-0">
                         <div className="flex items-start gap-3">
                           <span
                             className={`mt-1 h-12 w-1 rounded-full ${
@@ -340,32 +346,37 @@ export function ConfirmateurOrdersPage() {
                           />
                           <div className="min-w-0 space-y-2">
                             <div className="truncate text-base font-black text-card-foreground">{piece}</div>
-                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${statusMeta.badgeClass}`}>
-                              {statusMeta.label}
-                            </span>
-                            <div className="text-xs text-muted-foreground">{statusMeta.description}</div>
+                            <div className="text-xs text-muted-foreground">Réf. {safe(order.dO_Ref)}</div>
                           </div>
                         </div>
                       </div>
 
                       <div className="col-span-2 min-w-0">
                         <div className="truncate font-semibold text-card-foreground">{client}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">{order.clientType || "Type non précisé"}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">{safe(order.dO_Tiers)}</div>
                       </div>
 
                       <div className="col-span-2 min-w-0">
-                        <div className="truncate font-mono text-sm text-card-foreground">{safe(order.dO_Tiers)}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">Code tiers Sage</div>
+                        <div className="truncate font-semibold text-card-foreground">-</div>
+                        <div className="mt-1 text-xs text-muted-foreground">Non disponible</div>
+                      </div>
+
+                      <div className="col-span-1 min-w-0">
+                        <div className="truncate font-semibold text-card-foreground">{order.dE_No ? `Dépôt ${order.dE_No}` : "-"}</div>
                       </div>
 
                       <div className="col-span-2">
                         <div className="font-semibold text-card-foreground">{formatDateTime(order.dO_Date)}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">Dernière date métier visible</div>
                       </div>
 
-                      <div className="col-span-2">
+                      <div className="col-span-1 text-right">
                         <div className="font-black text-card-foreground">{money(order.dO_TotalTTC)}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">Net : {money(order.dO_NetAPayer)}</div>
+                      </div>
+
+                      <div className="col-span-1">
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${statusMeta.badgeClass}`}>
+                          {statusMeta.label}
+                        </span>
                       </div>
 
                       <div className="col-span-1 flex items-center justify-end">

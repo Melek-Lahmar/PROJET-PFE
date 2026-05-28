@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
@@ -17,6 +17,7 @@ import { resolveImageUrl } from "../../../shared/utils/image";
 import { SmartImage } from "../../../shared/components/SmartImage";
 import { StockBadge } from "../components/StockBadge";
 import { CompareToggleButton } from "../../compare/components/CompareToggleButton";
+import { FavoriteToggleButton } from "../../favorites/components/FavoriteToggleButton";
 import { canAddToCart } from "../utils/stock";
 import { ArticleCard } from "../components/ArticleCard";
 import {
@@ -229,16 +230,6 @@ export function ArticleDetailsPage() {
     }
     return unique;
   }, [prefetchedImage, apiImages, article?.aR_Image]);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [normalizedArRef]);
-
-  useEffect(() => {
-    if (activeIndex > images.length - 1) {
-      setActiveIndex(0);
-    }
-  }, [activeIndex, images.length]);
 
   const safeIndex = Math.min(activeIndex, Math.max(0, images.length - 1));
   const currentImage = images.length > 0 ? images[safeIndex] : "";
@@ -504,6 +495,14 @@ export function ArticleDetailsPage() {
             ) : null}
 
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {!isVendorRoute ? (
+                <FavoriteToggleButton
+                  arRef={article.aR_Ref}
+                  designation={article.aR_Design}
+                  mode="details"
+                  className="sm:col-span-2"
+                />
+              ) : null}
               <CompareToggleButton
                 article={article}
                 image={currentImage || article.aR_Image || undefined}

@@ -1,5 +1,6 @@
 import { axiosClient } from "../../../core/http/axiosClient";
 import type { ConfirmateurClient, ConfirmateurOrder, ConfirmateurOrderLine } from "../types/confirmateur";
+import type { AddQuoteCommentPayload, ConvertQuoteToOrderResult, QuoteDetailDto, QuoteListItemDto, UpdateQuoteLinesPayload } from "../../b2bQuotes/types/b2bQuotes";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -58,6 +59,7 @@ function normalizeOrderLine(raw: unknown): ConfirmateurOrderLine {
     dL_Design: asString(pick(source, ["dL_Design", "DL_Design"])),
     dL_Qte: asNumber(pick(source, ["dL_Qte", "DL_Qte"])),
     dL_PrixUnitaire: asNumber(pick(source, ["dL_PrixUnitaire", "DL_PrixUnitaire"])),
+    dL_MontantHT: asNumber(pick(source, ["dL_MontantHT", "DL_MontantHT"])),
     dL_MontantTTC: asNumber(pick(source, ["dL_MontantTTC", "DL_MontantTTC"])),
   };
 }
@@ -69,10 +71,16 @@ function normalizeOrder(raw: unknown): ConfirmateurOrder {
   return {
     dO_Piece: asString(pick(source, ["dO_Piece", "DO_Piece"])),
     dO_Tiers: asString(pick(source, ["dO_Tiers", "DO_Tiers"])),
+    dO_Ref: asString(pick(source, ["dO_Ref", "DO_Ref"])),
+    dE_No: asNumber(pick(source, ["dE_No", "DE_No"])),
     dO_Date: asString(pick(source, ["dO_Date", "DO_Date"])),
     dO_TotalHT: asNumber(pick(source, ["dO_TotalHT", "DO_TotalHT"])),
     dO_TotalTTC: asNumber(pick(source, ["dO_TotalTTC", "DO_TotalTTC"])),
     dO_NetAPayer: asNumber(pick(source, ["dO_NetAPayer", "DO_NetAPayer"])),
+    totalBeforeDiscount: asNumber(pick(source, ["totalBeforeDiscount", "TotalBeforeDiscount"])),
+    b2BDiscountRate: asNumber(pick(source, ["b2BDiscountRate", "B2BDiscountRate"])),
+    b2BDiscountAmount: asNumber(pick(source, ["b2BDiscountAmount", "B2BDiscountAmount"])),
+    discountSource: asString(pick(source, ["discountSource", "DiscountSource"])),
     dO_Valide: asNumber(pick(source, ["dO_Valide", "DO_Valide"])),
     statusLabel: asString(pick(source, ["statusLabel", "StatusLabel"])),
     clientType: asString(pick(source, ["clientType", "ClientType"])),
@@ -115,4 +123,54 @@ export async function getConfirmateurBlList(status?: number) {
 export async function getConfirmateurBlByPiece(piece: string) {
   const { data } = await axiosClient.get<unknown>(`/api/confirmateur/bl/${encodeURIComponent(piece.trim())}`);
   return normalizeOrder(data);
+}
+
+export async function getConfirmateurDevis(status?: string | null) {
+  const { data } = await axiosClient.get<QuoteListItemDto[]>("/api/confirmateur/devis", {
+    params: status ? { status } : undefined,
+  });
+  return data;
+}
+
+export async function getConfirmateurDevisByPiece(piece: string) {
+  const { data } = await axiosClient.get<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}`);
+  return data;
+}
+
+export async function updateConfirmateurDevisStatus(piece: string, status: string, reason?: string | null) {
+  const { data } = await axiosClient.put<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/status`, {
+    status,
+    message: reason,
+  });
+  return data;
+}
+
+export async function takeConfirmateurDevis(piece: string) {
+  const { data } = await axiosClient.post<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/take`, {});
+  return data;
+}
+
+export async function addConfirmateurDevisComment(piece: string, payload: AddQuoteCommentPayload) {
+  const { data } = await axiosClient.post<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/comments`, payload);
+  return data;
+}
+
+export async function updateConfirmateurDevisLines(piece: string, payload: UpdateQuoteLinesPayload) {
+  const { data } = await axiosClient.put<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/lines`, payload);
+  return data;
+}
+
+export async function sendConfirmateurDevisToClient(piece: string, message?: string | null) {
+  const { data } = await axiosClient.post<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/send-to-client`, { message });
+  return data;
+}
+
+export async function cancelConfirmateurDevis(piece: string, message: string) {
+  const { data } = await axiosClient.post<QuoteDetailDto>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/cancel`, { message });
+  return data;
+}
+
+export async function transformConfirmateurDevisToBc(piece: string) {
+  const { data } = await axiosClient.post<ConvertQuoteToOrderResult>(`/api/confirmateur/devis/${encodeURIComponent(piece.trim())}/transform-to-bc`, {});
+  return data;
 }

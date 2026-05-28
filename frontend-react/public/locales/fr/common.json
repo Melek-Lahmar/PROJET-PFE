@@ -27,6 +27,7 @@
   "header.articles": "Articles",
   "header.cart": "Panier",
   "header.compare": "Comparer",
+  "header.favorites": "Mes favoris",
   "header.profile": "Mon profil",
   "header.orders": "Mes commandes",
   "header.addresses": "Mes adresses",
@@ -54,6 +55,20 @@
   "language.en": "English",
   "language.ar": "العربية",
   "language.switch": "Changer de langue",
+
+  "favorites.title": "Mes favoris",
+  "favorites.subtitle": "Retrouvez les articles que vous suivez.",
+  "favorites.emptyTitle": "Aucun favori pour le moment",
+  "favorites.emptyDescription": "Ajoutez vos articles préférés depuis le catalogue.",
+  "favorites.discoverCatalog": "Découvrir le catalogue",
+  "favorites.add": "Ajouter aux favoris",
+  "favorites.remove": "Retirer des favoris",
+  "favorites.added": "Ajouté aux favoris",
+  "favorites.removed": "Retiré des favoris",
+  "favorites.loginRequired": "Connectez-vous pour ajouter cet article aux favoris.",
+  "favorites.loadError": "Impossible de charger vos favoris.",
+  "favorites.retry": "Réessayer",
+  "favorites.count": "{{count}} favori",
 
   "currency.tnd": "TND"
 }

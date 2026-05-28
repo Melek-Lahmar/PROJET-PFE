@@ -6,6 +6,7 @@ import { getArticleFilterMetadata, getArticles } from "../api/articlesApi";
 import { getMainImagesMap } from "../api/articleImagesApi";
 import { getDepots } from "../api/depotsApi";
 import type { ArticleSortBy, SortDirection } from "../types/article";
+import { Card } from "../../../shared/components/Card";
 import { Pagination } from "../../../shared/components/Pagination";
 import { env } from "../../../core/config/env";
 import { resolveImageUrl } from "../../../shared/utils/image";
@@ -13,14 +14,9 @@ import { ArticleCard } from "../components/ArticleCard";
 import { ArticlesFilterPanel } from "../components/ArticlesFilterPanel";
 import { useCatalogueTree } from "../hooks/useCatalogueTree";
 import { Button } from "../../../shared/components/Button";
-import {
-  EmptyView,
-  PremiumHero,
-  Skeleton,
-  StaggeredColumn,
-} from "../../../shared/components/premium";
+import { EmptyView, Skeleton } from "../../../shared/components/premium";
 
-const DEFAULT_TAKE = 24;
+const DEFAULT_TAKE = 20;
 
 type FormFilters = {
   search: string;
@@ -68,9 +64,58 @@ function formatTnd(value: number | null | undefined) {
   return Number(value ?? 0).toFixed(3);
 }
 
+function IconGrid(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function IconList(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M8 6h13" />
+      <path d="M8 12h13" />
+      <path d="M8 18h13" />
+      <path d="M3 6h.01" />
+      <path d="M3 12h.01" />
+      <path d="M3 18h.01" />
+    </svg>
+  );
+}
+
+function IconFilter(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M22 3H2l8 9.5V20l4 2v-9.5L22 3Z" />
+    </svg>
+  );
+}
+
+function HeroIllustration() {
+  return (
+    <div className="catalog-pro-hero-art" aria-hidden="true">
+      <div className="catalog-pro-cube catalog-pro-cube-a" />
+      <div className="catalog-pro-cube catalog-pro-cube-b" />
+      <div className="catalog-pro-cart">
+        <div className="catalog-pro-cart-basket" />
+        <div className="catalog-pro-cart-handle" />
+        <div className="catalog-pro-cart-wheel catalog-pro-cart-wheel-a" />
+        <div className="catalog-pro-cart-wheel catalog-pro-cart-wheel-b" />
+      </div>
+    </div>
+  );
+}
+
 export function ArticlesPage() {
   const [params, setParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "compact">("grid");
+
   const pageParam = Math.max(1, Number(params.get("page") ?? "1") || 1);
   const filtersFromParams = useMemo(() => getFiltersFromParams(params), [params]);
   const [filters, setFilters] = useState<FormFilters>(filtersFromParams);
@@ -214,6 +259,17 @@ export function ArticlesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const updateSort = (sortBy: ArticleSortBy) => {
+    const nextFilters = { ...filters, sortBy };
+    setFilters(nextFilters);
+
+    const next = new URLSearchParams(params);
+    if (sortBy !== "designation") next.set("sortBy", sortBy);
+    else next.delete("sortBy");
+    next.set("page", "1");
+    setParams(next);
+  };
+
   const activeFilterCount = [
     filtersFromParams.search,
     filtersFromParams.stockStatus,
@@ -255,15 +311,15 @@ export function ArticlesPage() {
 
     if (filtersFromParams.stockStatus) {
       const stockLabels: Record<string, string> = {
-        IN_STOCK: "Disponibilité: En stock",
-        LOW_STOCK: "Disponibilité: Stock faible",
-        OUT_OF_STOCK: "Disponibilité: Rupture",
-        NOT_TRACKED: "Disponibilité: Non suivi",
+        IN_STOCK: "En stock",
+        LOW_STOCK: "Stock faible",
+        OUT_OF_STOCK: "Rupture",
+        NOT_TRACKED: "Non suivi",
       };
 
       chips.push({
         key: "stock",
-        label: stockLabels[filtersFromParams.stockStatus] ?? `Disponibilité: ${filtersFromParams.stockStatus}`,
+        label: stockLabels[filtersFromParams.stockStatus] ?? filtersFromParams.stockStatus,
         onRemove: () => {
           const next = new URLSearchParams(params);
           next.delete("stockStatus");
@@ -278,7 +334,7 @@ export function ArticlesPage() {
 
       chips.push({
         key: "catalogue",
-        label: `Famille: ${catalogueLabel}`,
+        label: catalogueLabel,
         onRemove: () => {
           const next = new URLSearchParams(params);
           next.delete("catalogueNo");
@@ -294,7 +350,7 @@ export function ArticlesPage() {
 
       chips.push({
         key: `depot-${depotNo}`,
-        label: `Dépôt: ${depotLabel}`,
+        label: depotLabel,
         onRemove: () => {
           const next = new URLSearchParams();
           params.forEach((value, key) => {
@@ -311,31 +367,41 @@ export function ArticlesPage() {
     return chips;
   }, [cataloguesById, depotsById, filtersFromParams, params, setParams]);
 
-  return (
-    <div className="space-y-6 pb-10">
-      <PremiumHero
-        kicker={isFetching ? "Catalogue · synchronisation…" : "Catalogue"}
-        title="Produits"gradientTitle
-        description="Parcourez le catalogue avec un panneau latéral premium, un filtre prix par plage, un tri fiable côté API et une pagination intacte."
-        actions={
-          <>
-            <Button type="button" variant="outline" onClick={() => refetch()} className="px-5">
-              Actualiser
-            </Button>
-            {activeFilterCount > 0 ? (
-              <span className="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-sm font-semibold text-white shadow-sm">
-                {activeFilterCount} filtre{activeFilterCount > 1 ? "s" : ""} actif{activeFilterCount > 1 ? "s" : ""}
-              </span>
-            ) : null}
-          </>
-        }
-      />
+  const startItem = total === 0 ? 0 : skip + 1;
+  const endItem = Math.min(skip + items.length, total);
 
-      <div className="flex items-center justify-between gap-3 xl:hidden">
-        <Button type="button" variant="outline" onClick={() => setMobileFiltersOpen(true)} className="px-5">
+  return (
+    <div className="catalog-pro-page">
+      <section className="catalog-pro-hero">
+        <div className="relative z-10 max-w-xl">
+          <div className="catalog-pro-breadcrumb">
+            <span>Accueil</span>
+            <span>›</span>
+            <span>Catalogue</span>
+          </div>
+
+          <div className="catalog-pro-kicker">Produits</div>
+          <h1 className="catalog-pro-title">Catalogue produits</h1>
+          <p className="catalog-pro-description">
+            Parcourez notre catalogue et ajoutez les articles nécessaires à votre panier.
+          </p>
+
+          <div className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-blue-200/70 bg-blue-50 px-4 py-2 text-sm font-black text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200">
+            <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-300" />
+            {total} produits disponibles
+          </div>
+        </div>
+
+        <HeroIllustration />
+      </section>
+
+      <div className="mt-6 flex items-center justify-between gap-3 xl:hidden">
+        <Button type="button" variant="outline" onClick={() => setMobileFiltersOpen(true)} className="h-11 rounded-2xl px-5">
+          <IconFilter className="mr-2 h-4 w-4" />
           Filtres {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => refetch()} className="px-5">
+
+        <Button type="button" variant="ghost" onClick={() => refetch()} className="h-11 rounded-2xl px-5">
           Actualiser
         </Button>
       </div>
@@ -348,6 +414,7 @@ export function ArticlesPage() {
             className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
             onClick={() => setMobileFiltersOpen(false)}
           />
+
           <div className="absolute inset-y-0 left-0 w-full max-w-[420px] p-3 sm:p-4">
             <ArticlesFilterPanel
               filters={filters}
@@ -365,8 +432,8 @@ export function ArticlesPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="hidden xl:block">
+      <div className="catalog-pro-layout">
+        <div className="hidden xl:block">
           <div className="sticky top-24">
             <ArticlesFilterPanel
               filters={filters}
@@ -380,52 +447,71 @@ export function ArticlesPage() {
               onReset={resetFilters}
             />
           </div>
-        </aside>
+        </div>
 
-        <div className="space-y-5">
-          <section className="app-surface px-5 py-4 md:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <div className="text-lg font-extrabold text-card-foreground">Catalogue disponible</div>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  <span className="font-semibold text-card-foreground">{total}</span> résultat{total > 1 ? "s" : ""} • page{" "}
-                  <span className="font-semibold text-card-foreground">{Math.min(pageParam, totalPages)}</span> / {totalPages}
+        <main className="min-w-0 space-y-5">
+          <section className="catalog-pro-toolbar">
+            <div>
+              <div className="text-sm font-black text-slate-950 dark:text-white">
+                {total} résultat{total > 1 ? "s" : ""}
+              </div>
+              <div className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                {startItem} - {endItem} sur {total} produits
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {filterChips.length > 0 ? (
+                <div className="hidden max-w-[520px] flex-wrap items-center gap-2 lg:flex">
+                  {filterChips.slice(0, 3).map((chip) => (
+                    <button key={chip.key} type="button" onClick={chip.onRemove} className="catalog-pro-chip" title="Retirer ce filtre">
+                      <span>{chip.label}</span>
+                      <span>×</span>
+                    </button>
+                  ))}
                 </div>
+              ) : null}
+
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                <span className="hidden sm:inline">Trier par</span>
+                <select
+                  value={filtersFromParams.sortBy}
+                  onChange={(e) => updateSort(e.target.value as ArticleSortBy)}
+                  className="catalog-pro-sort-select"
+                >
+                  <option value="designation">Meilleures ventes</option>
+                  <option value="price">Prix</option>
+                  <option value="ref">Référence</option>
+                  <option value="stock">Stock</option>
+                </select>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                {filterChips.length > 0 ? (
-                  filterChips.map((chip) => (
-                    <button
-                      key={chip.key}
-                      type="button"
-                      onClick={chip.onRemove}
-                      className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/35 px-3 py-1.5 text-sm font-semibold text-card-foreground transition hover:border-primary/20 hover:bg-accent/55"
-                      title="Retirer ce filtre"
-                    >
-                      <span>{chip.label}</span>
-                      <span className="text-muted-foreground">×</span>
-                    </button>
-                  ))
-                ) : (
-                  <span className="text-sm text-muted-foreground">Aucun filtre actif.</span>
-                )}
+              <div className="catalog-pro-view-toggle">
+                <button type="button" onClick={() => setViewMode("grid")} className={viewMode === "grid" ? "active" : ""} aria-label="Vue grille">
+                  <IconGrid className="h-4 w-4" />
+                </button>
+                <button type="button" onClick={() => setViewMode("compact")} className={viewMode === "compact" ? "active" : ""} aria-label="Vue compacte">
+                  <IconList className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </section>
 
           {showInlineError ? (
-            <div className="ds-alert ds-alert-warning">
-              {(error as Error)?.message ?? "Le changement de page a échoué. Les derniers articles chargés restent affichés."}
-            </div>
+            <Card className="border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10">
+              <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">Navigation temporairement indisponible</div>
+              <div className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                {(error as Error)?.message ?? "Le changement de page a échoué. Les derniers articles chargés restent affichés."}
+              </div>
+            </Card>
           ) : null}
 
           {isPending ? (
-            <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="app-surface overflow-hidden p-0">
+            <div className="catalog-pro-grid">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="catalog-pro-card overflow-hidden p-4">
                   <Skeleton className="aspect-[4/3] w-full" rounded="sm" />
-                  <div className="space-y-3 p-5">
+                  <div className="space-y-3 pt-4">
                     <Skeleton width={96} height={12} rounded="full" />
                     <Skeleton width="75%" height={16} rounded="full" />
                     <Skeleton height={40} rounded="lg" />
@@ -434,9 +520,12 @@ export function ArticlesPage() {
               ))}
             </div>
           ) : showBlockingError ? (
-            <div className="ds-alert ds-alert-danger">
-              {(error as Error)?.message ?? "Impossible de charger les articles."}
-            </div>
+            <Card className="p-6">
+              <div className="text-sm font-semibold text-rose-700 dark:text-rose-300">Erreur</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {(error as Error)?.message ?? "Impossible de charger les articles."}
+              </div>
+            </Card>
           ) : items.length === 0 ? (
             <EmptyView
               title="Aucun article"
@@ -450,7 +539,7 @@ export function ArticlesPage() {
             />
           ) : (
             <>
-              <StaggeredColumn className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-3" step={45}>
+              <div className={viewMode === "grid" ? "catalog-pro-grid" : "catalog-pro-grid catalog-pro-grid-compact"}>
                 {items.map((article) => {
                   const raw = mainImagesMap?.[article.aR_Ref] ?? article.aR_Image ?? null;
                   const imgSrc = resolveImageUrl(raw, env.apiBaseUrl);
@@ -466,13 +555,20 @@ export function ArticlesPage() {
                     />
                   );
                 })}
-              </StaggeredColumn>
+              </div>
 
-              <section className="app-surface px-5 py-4 md:px-6">
+              <section className="catalog-pro-pagination-shell">
                 <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
-                  <div className="text-sm text-muted-foreground">
-                    Page <span className="font-semibold text-card-foreground">{Math.min(pageParam, totalPages)}</span> / {totalPages} •{" "}
-                    <span className="font-semibold text-card-foreground">{total}</span> articles
+                  <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                    <span>Afficher</span>
+                    <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-black text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
+                      {DEFAULT_TAKE}
+                    </span>
+                    <span>par page</span>
+                  </div>
+
+                  <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {startItem} - {endItem} sur {total} produits
                   </div>
 
                   <Pagination
@@ -485,7 +581,7 @@ export function ArticlesPage() {
               </section>
             </>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
