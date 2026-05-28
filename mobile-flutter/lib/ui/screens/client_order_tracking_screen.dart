@@ -1,21 +1,21 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
 
-import '../../core/realtime_service.dart';
-import '../../models/client_claim.dart';
-import '../../models/client_order_tracking.dart';
-import '../../models/customer_order.dart';
-import '../../state/client_claims_provider.dart';
-import '../../state/customer_orders_provider.dart';
-import '../widgets/claims/demande_color_indicator.dart';
-import '../widgets/customer_order_status_badge.dart';
-import '../widgets/tracking/customer_tracking_step_tile.dart';
-import 'client_claim_details_screen.dart';
-import 'client_create_claim_screen.dart';
-import '../widgets/client/tracking_state_card.dart';
-import 'order_history_screen.dart';
+import "../../core/realtime_service.dart";
+import "../../models/client_claim.dart";
+import "../../models/client_order_tracking.dart";
+import "../../models/customer_order.dart";
+import "../../state/client_claims_provider.dart";
+import "../../state/customer_orders_provider.dart";
+import "../widgets/claims/demande_color_indicator.dart";
+import "../widgets/customer_order_status_badge.dart";
+import "../widgets/tracking/customer_tracking_step_tile.dart";
+import "client_claim_details_screen.dart";
+import "client_create_claim_screen.dart";
+import "../widgets/client/tracking_state_card.dart";
+import "order_history_screen.dart";
 
 class ClientOrderTrackingScreen extends StatefulWidget {
   final CustomerOrder initialOrder;
@@ -191,10 +191,10 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Suivi ${_order.piece}'),
+        title: Text("Suivi ${_order.piece}"),
         actions: [
           IconButton(
-            tooltip: 'Actualiser',
+            tooltip: "Actualiser",
             onPressed: () => _load(force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -215,8 +215,8 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
             // mon livreur sur la carte" qui ouvre la map live.
             TrackingStateCard(
               piece: _order.piece,
-              destinationLat: double.tryParse(_order.latitude ?? ''),
-              destinationLng: double.tryParse(_order.longitude ?? ''),
+              destinationLat: double.tryParse(_order.latitude ?? ""),
+              destinationLng: double.tryParse(_order.longitude ?? ""),
             ),
             const SizedBox(height: 8),
 
@@ -239,7 +239,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Progression',
+                            "Progression",
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -295,7 +295,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
             // Bloc 5 — Réclamation liée (si présente)
             if (tracking?.linkedReclamation != null) ...[
               _LinkedCaseCard(
-                title: 'Réclamation liée',
+                title: "Réclamation liée",
                 linked: tracking!.linkedReclamation!,
                 onOpen: () => _openLinkedCase(tracking.linkedReclamation!),
               ),
@@ -305,7 +305,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
             // Bloc 6 — Demande liée (avec indicateur rouge/vert/gris)
             if (tracking?.linkedDemande != null) ...[
               _LinkedCaseCard(
-                title: 'Demande liée',
+                title: "Demande liée",
                 linked: tracking!.linkedDemande!,
                 onOpen: () => _openLinkedCase(tracking.linkedDemande!),
                 showColorIndicator: true,
@@ -321,7 +321,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Actions',
+                      "Actions",
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -333,7 +333,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       child: FilledButton.icon(
                         onPressed: _openCreateClaim,
                         icon: const Icon(Icons.support_agent_rounded),
-                        label: const Text('Créer une réclamation'),
+                        label: const Text("Créer une réclamation"),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -341,10 +341,10 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: () => _openCreateClaim(
-                          initialMotifCode: 'REPROGRAMMATION',
+                          initialMotifCode: "REPROGRAMMATION",
                         ),
                         icon: const Icon(Icons.event_repeat_rounded),
-                        label: const Text('Reprogrammer'),
+                        label: const Text("Reprogrammer"),
                       ),
                     ),
                   ],
@@ -401,26 +401,26 @@ class _DestinataireCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Destinataire',
+              "Destinataire",
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 14),
-            _InfoRow(label: 'Adresse', value: order.addressLabel),
-            if ((phone ?? '').isNotEmpty)
-              _InfoRow(label: 'Téléphone', value: phone),
-            if ((repere ?? '').isNotEmpty)
-              _InfoRow(label: 'Repère', value: repere),
-            if ((instructions ?? '').isNotEmpty)
-              _InfoRow(label: 'Instructions livreur', value: instructions),
+            _InfoRow(label: "Adresse", value: order.addressLabel),
+            if ((phone ?? "").isNotEmpty)
+              _InfoRow(label: "Téléphone", value: phone),
+            if ((repere ?? "").isNotEmpty)
+              _InfoRow(label: "Repère", value: repere),
+            if ((instructions ?? "").isNotEmpty)
+              _InfoRow(label: "Instructions livreur", value: instructions),
             _InfoRow(
-              label: 'Mode de livraison',
+              label: "Mode de livraison",
               value: order.deliveryTypeLabel,
             ),
             _InfoRow(
-              label: 'Mode de paiement',
+              label: "Mode de paiement",
               value: order.paymentMethodLabel,
             ),
             const SizedBox(height: 14),
@@ -473,7 +473,7 @@ class _FactureBreakdown extends StatelessWidget {
                   size: 18, color: Color(0xFF4F46E5)),
               SizedBox(width: 6),
               Text(
-                'Détail facture',
+                "Détail facture",
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 14.5,
@@ -483,18 +483,18 @@ class _FactureBreakdown extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _factureRow('Sous-total HT', '${f(order.totalHT)} TND'),
-          _factureRow('TVA', '${f(tva)} TND'),
+          _factureRow("Sous-total HT", "${f(order.totalHT)} TND"),
+          _factureRow("TVA", "${f(tva)} TND"),
           if (order.timbreFiscal > 0)
-            _factureRow('Timbre fiscal', '${f(order.timbreFiscal)} TND'),
+            _factureRow("Timbre fiscal", "${f(order.timbreFiscal)} TND"),
           if (order.fraisLivraison > 0)
-            _factureRow('Frais de livraison',
-                '${f(order.fraisLivraison)} TND'),
+            _factureRow("Frais de livraison",
+                "${f(order.fraisLivraison)} TND"),
           const Divider(height: 18),
           Row(
             children: [
               const Text(
-                'Total à payer',
+                "Total à payer",
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
@@ -503,7 +503,7 @@ class _FactureBreakdown extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${f(order.netAPayer)} TND',
+                "${f(order.netAPayer)} TND",
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 18,
@@ -564,19 +564,19 @@ class _ColisCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Contenu du colis',
+              "Contenu du colis",
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 12),
-            if (empty) const Text('Aucun article détaillé disponible.'),
+            if (empty) const Text("Aucun article détaillé disponible."),
             if (useTracking)
               ...tracking!.items.map(
                 (item) => _ColisLine(
-                  title: (item.designation ?? item.arRef ?? '--'),
-                  ref: item.arRef ?? '',
+                  title: (item.designation ?? item.arRef ?? "--"),
+                  ref: item.arRef ?? "",
                   qty: item.quantite,
                   unitPrice: item.prixUnitaire,
                 ),
@@ -637,13 +637,13 @@ class _ColisLine extends StatelessWidget {
             ),
             if (ref.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('Réf: $ref'),
+              Text("Réf: $ref"),
             ],
             const SizedBox(height: 6),
             Text(
               unitPrice != null
-                  ? 'Qté: ${qty.toStringAsFixed(2)}   •   PU: ${unitPrice!.toStringAsFixed(3)} TND'
-                  : 'Qté: ${qty.toStringAsFixed(2)}',
+                  ? "Qté: ${qty.toStringAsFixed(2)}   •   PU: ${unitPrice!.toStringAsFixed(3)} TND"
+                  : "Qté: ${qty.toStringAsFixed(2)}",
             ),
           ],
         ),
@@ -727,13 +727,13 @@ class _LinkedCaseCard extends StatelessWidget {
   }
 
   static String _prettifyMotif(String raw) {
-    if (raw.isEmpty) return '';
+    if (raw.isEmpty) return "";
     return raw
-        .replaceAll('_', ' ')
+        .replaceAll("_", " ")
         .toLowerCase()
-        .split(' ')
-        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
-        .join(' ');
+        .split(" ")
+        .map((w) => w.isEmpty ? w : "${w[0].toUpperCase()}${w.substring(1)}")
+        .join(" ");
   }
 }
 
@@ -752,28 +752,28 @@ class _StatutChip extends StatelessWidget {
     String label;
     IconData icon;
     switch (normalized) {
-      case 'ENVOYEE':
+      case "ENVOYEE":
         bg = scheme.primaryContainer;
         fg = scheme.onPrimaryContainer;
-        label = 'Envoyée';
+        label = "Envoyée";
         icon = Icons.mark_email_read_outlined;
         break;
-      case 'EN_COURS_DE_TRAITEMENT':
+      case "EN_COURS_DE_TRAITEMENT":
         bg = Colors.amber.shade100;
         fg = Colors.amber.shade900;
-        label = 'En cours de traitement';
+        label = "En cours de traitement";
         icon = Icons.hourglass_top_rounded;
         break;
-      case 'CLOTUREE':
+      case "CLOTUREE":
         bg = Colors.green.shade100;
         fg = Colors.green.shade800;
-        label = 'Clôturée';
+        label = "Clôturée";
         icon = Icons.check_circle_outline_rounded;
         break;
-      case 'REFUSEE':
+      case "REFUSEE":
         bg = scheme.errorContainer;
         fg = scheme.onErrorContainer;
-        label = 'Refusée';
+        label = "Refusée";
         icon = Icons.block_rounded;
         break;
       default:
@@ -859,7 +859,7 @@ class _HeroCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Commande ${order.piece}',
+                      "Commande ${order.piece}",
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -887,11 +887,11 @@ class _HeroCard extends StatelessWidget {
               ),
               _Chip(
                 icon: Icons.location_on_outlined,
-                label: order.city ?? '--',
+                label: order.city ?? "--",
               ),
               _Chip(
                 icon: Icons.payments_outlined,
-                label: '${order.netAPayer.toStringAsFixed(3)} TND',
+                label: "${order.netAPayer.toStringAsFixed(3)} TND",
               ),
             ],
           ),
@@ -937,7 +937,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayValue =
-        (value == null || value!.trim().isEmpty) ? '--' : value!;
+        (value == null || value!.trim().isEmpty) ? "--" : value!;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -1041,7 +1041,7 @@ class _TimelineTile extends StatelessWidget {
                               .onSurfaceVariant,
                         ),
                   ),
-                  if ((item.dateLabel ?? '').isNotEmpty) ...[
+                  if ((item.dateLabel ?? "").isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       item.dateLabel!,
@@ -1113,7 +1113,7 @@ class _TransitItemsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Articles en transit',
+                    "Articles en transit",
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -1129,7 +1129,7 @@ class _TransitItemsCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '$received / $total reçus',
+                    "$received / $total reçus",
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -1166,21 +1166,21 @@ class _TransitItemRow extends StatelessWidget {
     IconData statusIcon;
 
     switch (status) {
-      case 'EN_COURS_TRANSIT':
+      case "EN_COURS_TRANSIT":
         chipColor = scheme.primary;
         chipBg = scheme.primaryContainer;
-        statusLabel = 'En transit';
+        statusLabel = "En transit";
         statusIcon = Icons.local_shipping_rounded;
-      case 'RECU_DEPOT_DESTINE':
-      case 'TRANSIT_TERMINE':
+      case "RECU_DEPOT_DESTINE":
+      case "TRANSIT_TERMINE":
         chipColor = Colors.green.shade700;
         chipBg = Colors.green.shade50;
-        statusLabel = 'Arrivé';
+        statusLabel = "Arrivé";
         statusIcon = Icons.check_circle_rounded;
       default: // EN_ATTENTE_TRANSIT etc.
         chipColor = scheme.onSurfaceVariant;
         chipBg = scheme.surfaceContainerHighest;
-        statusLabel = 'En attente';
+        statusLabel = "En attente";
         statusIcon = Icons.hourglass_top_rounded;
     }
 
@@ -1239,8 +1239,8 @@ class _TransitItemRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Qté ${item.quantity.toStringAsFixed(0)}  ·  '
-            '${item.sourceDepotName ?? "?"} → ${item.destinationDepotName ?? "?"}',
+            "Qté ${item.quantity.toStringAsFixed(0)}  ·  "
+            "${item.sourceDepotName ?? "?"} → ${item.destinationDepotName ?? "?"}",
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
@@ -1374,11 +1374,11 @@ List<_TimelineItem> _buildMilestones(CustomerOrder order) {
       title: finalTitle,
       subtitle: finalSubtitle,
       icon: switch (status) {
-        'LIVRE' => Icons.check_circle_rounded,
-        'REPORTE' => Icons.event_repeat_rounded,
-        'RETOUR' => Icons.undo_rounded,
-        'DEPOT' => Icons.warehouse_rounded,
-        'TENTATIVE' => Icons.error_outline_rounded,
+        "LIVRE" => Icons.check_circle_rounded,
+        "REPORTE" => Icons.event_repeat_rounded,
+        "RETOUR" => Icons.undo_rounded,
+        "DEPOT" => Icons.warehouse_rounded,
+        "TENTATIVE" => Icons.error_outline_rounded,
         _ => Icons.flag_rounded,
       },
       state: isFinalDone
@@ -1395,21 +1395,21 @@ List<_TimelineItem> _buildMilestones(CustomerOrder order) {
 
 double _resolveProgress(String status) {
   switch (status) {
-    case 'EN_ATTENTE':
+    case "EN_ATTENTE":
       return 0.12;
-    case 'CONFIRME':
+    case "CONFIRME":
       return 0.32;
-    case 'EN_LIVRAISON':
+    case "EN_LIVRAISON":
       return 0.68;
-    case 'LIVRE':
+    case "LIVRE":
       return 1.0;
-    case 'REPORTE':
+    case "REPORTE":
       return 0.74;
-    case 'RETOUR':
-    case 'DEPOT':
+    case "RETOUR":
+    case "DEPOT":
       return 0.86;
-    case 'REFUSE':
-    case 'TENTATIVE':
+    case "REFUSE":
+    case "TENTATIVE":
       return 0.42;
     default:
       return 0.12;
@@ -1417,10 +1417,10 @@ double _resolveProgress(String status) {
 }
 
 String _formatDate(DateTime? date) {
-  if (date == null) return '';
+  if (date == null) return "";
   final d = date.toLocal();
-  String two(int v) => v.toString().padLeft(2, '0');
-  return '${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}';
+  String two(int v) => v.toString().padLeft(2, "0");
+  return "${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}";
 }
 
 // ============================================================================
@@ -1438,28 +1438,28 @@ class _ClientOpenHistoryButton extends StatelessWidget {
 
   static _ClientStatusVisual _visualFor(String status) {
     switch (status.toUpperCase()) {
-      case 'CONFIRME':
+      case "CONFIRME":
         return const _ClientStatusVisual(
             Color(0xFF6366F1), Icons.check_circle_outline_rounded);
-      case 'EN_LIVRAISON':
+      case "EN_LIVRAISON":
         return const _ClientStatusVisual(
             Color(0xFF0EA5E9), Icons.local_shipping_rounded);
-      case 'LIVRE':
+      case "LIVRE":
         return const _ClientStatusVisual(
             Color(0xFF22C55E), Icons.check_circle_rounded);
-      case 'REPORTE':
+      case "REPORTE":
         return const _ClientStatusVisual(
             Color(0xFFF97316), Icons.event_repeat_rounded);
-      case 'RETOUR':
+      case "RETOUR":
         return const _ClientStatusVisual(
             Color(0xFFEF4444), Icons.undo_rounded);
-      case 'DEPOT':
+      case "DEPOT":
         return const _ClientStatusVisual(
             Color(0xFFA855F7), Icons.warehouse_rounded);
-      case 'TENTATIVE':
+      case "TENTATIVE":
         return const _ClientStatusVisual(
             Color(0xFFF59E0B), Icons.access_time_rounded);
-      case 'REFUSE':
+      case "REFUSE":
         return const _ClientStatusVisual(
             Color(0xFF991B1B), Icons.cancel_rounded);
       default:
@@ -1492,7 +1492,7 @@ class _ClientOpenHistoryButton extends StatelessWidget {
     if (order.date != null) {
       events.add(OrderTimelineEvent(
         date: order.date!,
-        label: 'Commande créée',
+        label: "Commande créée",
         color: const Color(0xFF6B7280),
         icon: Icons.shopping_bag_rounded,
       ));
@@ -1500,7 +1500,7 @@ class _ClientOpenHistoryButton extends StatelessWidget {
     if (order.assignedAt != null) {
       events.add(OrderTimelineEvent(
         date: order.assignedAt!,
-        label: 'Prise en charge livreur',
+        label: "Prise en charge livreur",
         color: const Color(0xFF6366F1),
         icon: Icons.assignment_ind_rounded,
       ));
@@ -1508,7 +1508,7 @@ class _ClientOpenHistoryButton extends StatelessWidget {
     if (order.replannedAt != null) {
       events.add(OrderTimelineEvent(
         date: order.replannedAt!,
-        label: 'Reportée',
+        label: "Reportée",
         color: const Color(0xFFF97316),
         icon: Icons.event_repeat_rounded,
         description: order.driverNote,
@@ -1529,8 +1529,8 @@ class _ClientOpenHistoryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final lat = double.tryParse(order.latitude ?? '');
-    final lng = double.tryParse(order.longitude ?? '');
+    final lat = double.tryParse(order.latitude ?? "");
+    final lng = double.tryParse(order.longitude ?? "");
 
     return Material(
       color: Colors.transparent,
@@ -1588,7 +1588,7 @@ class _ClientOpenHistoryButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Voir l\'historique complet',
+                      "Voir l'historique complet",
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 14.5,
@@ -1596,7 +1596,7 @@ class _ClientOpenHistoryButton extends StatelessWidget {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Timeline détaillée · toutes les étapes',
+                      "Timeline détaillée · toutes les étapes",
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6B7280),
