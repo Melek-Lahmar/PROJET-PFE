@@ -17,12 +17,12 @@ class ClientClaimStatusBadge extends StatelessWidget {
     switch (normalized) {
       case 'ENVOYEE':
         fg = scheme.primary;
-        bg = scheme.primary.withOpacity(0.12);
+        bg = scheme.primary.withValues(alpha: 0.12);
         label = 'Envoyée';
         break;
       case 'EN_COURS_DE_TRAITEMENT':
         fg = scheme.tertiary;
-        bg = scheme.tertiary.withOpacity(0.14);
+        bg = scheme.tertiary.withValues(alpha: 0.14);
         label = 'En cours de traitement';
         break;
       case 'CLOTUREE':
@@ -32,7 +32,7 @@ class ClientClaimStatusBadge extends StatelessWidget {
         break;
       case 'REFUSEE':
         fg = scheme.error;
-        bg = scheme.error.withOpacity(0.12);
+        bg = scheme.error.withValues(alpha: 0.12);
         label = 'Refusée';
         break;
       default:

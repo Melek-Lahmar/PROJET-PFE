@@ -274,7 +274,7 @@ class _OrdersFiltersBottomSheetState extends State<OrdersFiltersBottomSheet> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: scheme.outline.withOpacity(0.28),
+                              color: scheme.outline.withValues(alpha: 0.28),
                             ),
                           ),
                           child: Row(
@@ -305,7 +305,7 @@ class _OrdersFiltersBottomSheetState extends State<OrdersFiltersBottomSheet> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: scheme.outline.withOpacity(0.28),
+                              color: scheme.outline.withValues(alpha: 0.28),
                             ),
                           ),
                           child: Row(

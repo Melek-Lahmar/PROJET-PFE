@@ -359,7 +359,7 @@ class _ParticlesPainter extends CustomPainter {
       final wobble = math.sin((phase + p.seed) * math.pi * 2) * 24;
       final x = (p.startX * size.width) + wobble;
 
-      paint.color = color.withOpacity(p.opacity);
+      paint.color = color.withValues(alpha: p.opacity);
       canvas.drawCircle(Offset(x, y), p.radius, paint);
     }
   }

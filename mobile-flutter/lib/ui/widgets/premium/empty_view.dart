@@ -35,7 +35,7 @@ class EmptyView extends StatelessWidget {
             width: 92,
             height: 92,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.10),
+              color: color.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 44, color: color),

@@ -205,7 +205,7 @@ class ClientProfileScreen extends StatelessWidget {
               style: TextStyle(color: scheme.error),
             ),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: scheme.error.withOpacity(0.4)),
+              side: BorderSide(color: scheme.error.withValues(alpha: 0.4)),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
@@ -240,17 +240,17 @@ class _HeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withOpacity(0.14),
-            scheme.surfaceContainerHighest.withOpacity(0.75),
+            scheme.primary.withValues(alpha: 0.14),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.75),
           ],
         ),
-        border: Border.all(color: scheme.outline.withOpacity(0.18)),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundColor: scheme.primary.withOpacity(0.18),
+            backgroundColor: scheme.primary.withValues(alpha: 0.18),
             child: Text(
               initial,
               style: TextStyle(
@@ -421,7 +421,7 @@ class _StatsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF22C55E).withOpacity(0.32),
+            color: const Color(0xFF22C55E).withValues(alpha: 0.32),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -444,7 +444,7 @@ class _StatsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text('${spent.toStringAsFixed(0)} TND dépensés',
@@ -507,7 +507,7 @@ class _MiniStat extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: Colors.white.withOpacity(0.92), size: 18),
+          Icon(icon, color: Colors.white.withValues(alpha: 0.92), size: 18),
           const SizedBox(height: 4),
           Text(value,
               style: const TextStyle(
@@ -518,7 +518,7 @@ class _MiniStat extends StatelessWidget {
               )),
           Text(label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w700,
                 fontSize: 10,
               )),
@@ -534,7 +534,7 @@ class _MiniStatDivider extends StatelessWidget {
     return Container(
       width: 1,
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-      color: Colors.white.withOpacity(0.20),
+      color: Colors.white.withValues(alpha: 0.20),
     );
   }
 }

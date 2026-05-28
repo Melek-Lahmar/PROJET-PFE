@@ -55,7 +55,7 @@ class AdminDeliveriesReturnsChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: scheme.outlineVariant.withOpacity(0.4),
+                    color: scheme.outlineVariant.withValues(alpha: 0.4),
                     strokeWidth: 1,
                   ),
                 ),
@@ -139,7 +139,7 @@ class AdminDeliveriesReturnsChart extends StatelessWidget {
       dotData: const FlDotData(show: false),
       belowBarData: BarAreaData(
         show: true,
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
       ),
     );
   }

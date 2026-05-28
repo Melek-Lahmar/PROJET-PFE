@@ -152,7 +152,7 @@ class _OrderLineTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.35),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

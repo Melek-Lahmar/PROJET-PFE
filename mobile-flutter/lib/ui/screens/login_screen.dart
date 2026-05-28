@@ -119,10 +119,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 96,
                         height: 96,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.35),
+                            color: Colors.white.withValues(alpha: 0.35),
                             width: 2,
                           ),
                         ),
@@ -242,12 +242,12 @@ class _LoginCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 30,
             offset: const Offset(0, 14),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -313,10 +313,10 @@ class _LoginCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: scheme.error.withOpacity(0.10),
+                  color: scheme.error.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                   border:
-                      Border.all(color: scheme.error.withOpacity(0.25)),
+                      Border.all(color: scheme.error.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

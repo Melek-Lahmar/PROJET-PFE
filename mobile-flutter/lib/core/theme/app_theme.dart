@@ -62,7 +62,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppRadii.md,
           side: BorderSide(
-            color: colorScheme.outline.withOpacity(isDark ? 0.42 : 0.58),
+            color: colorScheme.outline.withValues(alpha: isDark ? 0.42 : 0.58),
           ),
         ),
       ),
@@ -149,8 +149,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark
-            ? colorScheme.surfaceVariant.withOpacity(0.72)
-            : colorScheme.surfaceVariant.withOpacity(0.62),
+            ? colorScheme.surfaceVariant.withValues(alpha: 0.72)
+            : colorScheme.surfaceVariant.withValues(alpha: 0.62),
         hintStyle: TextStyle(
           color: colorScheme.onSurfaceVariant,
           fontSize: 14,
@@ -170,13 +170,13 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: AppRadii.md,
           borderSide: BorderSide(
-            color: colorScheme.outline.withOpacity(0.8),
+            color: colorScheme.outline.withValues(alpha: 0.8),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadii.md,
           borderSide: BorderSide(
-            color: colorScheme.outline.withOpacity(0.8),
+            color: colorScheme.outline.withValues(alpha: 0.8),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -214,12 +214,12 @@ class AppTheme {
       ),
       chipTheme: base.chipTheme.copyWith(
         shape: const StadiumBorder(),
-        selectedColor: colorScheme.primary.withOpacity(isDark ? 0.22 : 0.12),
+        selectedColor: colorScheme.primary.withValues(alpha: isDark ? 0.22 : 0.12),
         backgroundColor:
         isDark ? colorScheme.surfaceVariant : colorScheme.surface,
-        disabledColor: colorScheme.surfaceVariant.withOpacity(0.7),
+        disabledColor: colorScheme.surfaceVariant.withValues(alpha: 0.7),
         side: BorderSide(
-          color: colorScheme.outline.withOpacity(0.55),
+          color: colorScheme.outline.withValues(alpha: 0.55),
         ),
         labelStyle: TextStyle(
           color: colorScheme.onSurface,
@@ -232,7 +232,7 @@ class AppTheme {
         circularTrackColor: colorScheme.surfaceVariant,
       ),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outline.withOpacity(0.6),
+        color: colorScheme.outline.withValues(alpha: 0.6),
         thickness: 1,
         space: 1,
       ),
@@ -244,7 +244,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppRadii.md,
           side: BorderSide(
-            color: colorScheme.outline.withOpacity(0.35),
+            color: colorScheme.outline.withValues(alpha: 0.35),
           ),
         ),
       ),

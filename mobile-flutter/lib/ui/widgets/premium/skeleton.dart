@@ -81,7 +81,7 @@ class SkeletonOrderCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(PremiumTokens.rLg),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(isDark ? 0.3 : 0.5),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: isDark ? 0.3 : 0.5),
         ),
       ),
       child: Column(

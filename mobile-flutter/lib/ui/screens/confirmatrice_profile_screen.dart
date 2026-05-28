@@ -110,7 +110,7 @@ class _ConfirmatriceProfileScreenState
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.errorContainer
-                    .withOpacity(0.4),
+                    .withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
@@ -195,17 +195,17 @@ class _HeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withOpacity(0.12),
-            scheme.surfaceContainerHighest.withOpacity(0.75),
+            scheme.primary.withValues(alpha: 0.12),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.75),
           ],
         ),
-        border: Border.all(color: scheme.outline.withOpacity(0.18)),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: scheme.primary.withOpacity(0.18),
+            backgroundColor: scheme.primary.withValues(alpha: 0.18),
             child: Text(
               initial,
               style: TextStyle(
@@ -370,9 +370,9 @@ class _PauseVsCloseExplainer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withOpacity(0.35),
+        color: scheme.primaryContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.primary.withOpacity(0.25)),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +540,7 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.45),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(

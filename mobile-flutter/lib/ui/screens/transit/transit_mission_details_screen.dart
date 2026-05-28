@@ -492,7 +492,7 @@ class _TransitMissionDetailsScreenState
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
-              side: BorderSide(color: color.withOpacity(0.4)),
+              side: BorderSide(color: color.withValues(alpha: 0.4)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -503,7 +503,7 @@ class _TransitMissionDetailsScreenState
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: color.withOpacity(0.15),
+                        backgroundColor: color.withValues(alpha: 0.15),
                         child: Icon(_statusIcon(status), color: color, size: 22),
                       ),
                       const SizedBox(width: 14),

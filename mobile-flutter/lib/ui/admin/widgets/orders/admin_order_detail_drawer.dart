@@ -91,7 +91,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: scheme.outlineVariant.withOpacity(0.5)),
+          bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         ),
       ),
       child: Row(
@@ -100,7 +100,7 @@ class _Header extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
+              color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(Icons.receipt_long_rounded, color: scheme.primary),
@@ -410,7 +410,7 @@ class _LineTile extends StatelessWidget {
       locale: 'fr_FR', symbol: 'TND', decimalDigits: 3,
     );
 
-    Color tagBg = scheme.surfaceContainerHighest.withOpacity(0.6);
+    Color tagBg = scheme.surfaceContainerHighest.withValues(alpha: 0.6);
     Color tagFg = scheme.onSurfaceVariant;
     if (line.lineType == 'RETOUR') {
       tagBg = const Color(0x1FEF4444);
@@ -424,7 +424,7 @@ class _LineTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -505,7 +505,7 @@ class _ReclamationLinkTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(

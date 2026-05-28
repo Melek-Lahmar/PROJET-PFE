@@ -24,12 +24,12 @@ class AdminFilterBar extends StatelessWidget {
           end: Alignment.centerRight,
           colors: [
             theme.cardColor,
-            scheme.primary.withOpacity(0.04),
+            scheme.primary.withValues(alpha: 0.04),
           ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: scheme.outlineVariant.withOpacity(0.5),
+            color: scheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -91,7 +91,7 @@ class _GovernorateChip extends StatelessWidget {
     return Material(
       color: selected
           ? scheme.primaryContainer
-          : scheme.surfaceContainerHighest.withOpacity(0.6),
+          : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -214,7 +214,7 @@ class _GovernorateSheetState extends State<_GovernorateSheet> {
                   prefixIcon: const Icon(Icons.search_rounded),
                   hintText: 'Rechercher…',
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withOpacity(0.4),
+                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,

@@ -622,7 +622,7 @@ class _ColisLine extends StatelessWidget {
           color: Theme.of(context)
               .colorScheme
               .surfaceContainerHighest
-              .withOpacity(0.35),
+              .withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
@@ -788,7 +788,7 @@ class _StatutChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: fg.withOpacity(0.25)),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -829,11 +829,11 @@ class _HeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withOpacity(0.12),
-            scheme.surfaceContainerHighest.withOpacity(0.75),
+            scheme.primary.withValues(alpha: 0.12),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.75),
           ],
         ),
-        border: Border.all(color: scheme.outline.withOpacity(0.16)),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,7 +844,7 @@ class _HeroCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.12),
+                  color: scheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -913,7 +913,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surface.withOpacity(0.9),
+        color: scheme.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -984,11 +984,11 @@ class _TimelineTile extends StatelessWidget {
     };
 
     final bg = switch (item.state) {
-      _TimelineState.done => scheme.primary.withOpacity(0.12),
-      _TimelineState.current => scheme.primary.withOpacity(0.16),
-      _TimelineState.failed => scheme.error.withOpacity(0.12),
+      _TimelineState.done => scheme.primary.withValues(alpha: 0.12),
+      _TimelineState.current => scheme.primary.withValues(alpha: 0.16),
+      _TimelineState.failed => scheme.error.withValues(alpha: 0.12),
       _TimelineState.upcoming =>
-          scheme.surfaceContainerHighest.withOpacity(0.5),
+          scheme.surfaceContainerHighest.withValues(alpha: 0.5),
     };
 
     return Padding(
@@ -1004,7 +1004,7 @@ class _TimelineTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: bg,
                   shape: BoxShape.circle,
-                  border: Border.all(color: color.withOpacity(0.35)),
+                  border: Border.all(color: color.withValues(alpha: 0.35)),
                 ),
                 child: Icon(item.icon, size: 18, color: color),
               ),
@@ -1013,8 +1013,8 @@ class _TimelineTile extends StatelessWidget {
                   width: 2,
                   height: 34,
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  color: color.withOpacity(
-                    item.state == _TimelineState.upcoming ? 0.25 : 0.45,
+                  color: color.withValues(
+                    alpha: item.state == _TimelineState.upcoming ? 0.25 : 0.45,
                   ),
                 ),
             ],
@@ -1188,9 +1188,9 @@ class _TransitItemRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.35),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outline.withOpacity(0.15)),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1243,7 +1243,7 @@ class _TransitItemRow extends StatelessWidget {
             '${item.sourceDepotName ?? "?"} → ${item.destinationDepotName ?? "?"}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: scheme.onSurfaceVariant.withOpacity(0.75),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
                 ),
           ),
         ],
@@ -1559,10 +1559,10 @@ class _ClientOpenHistoryButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.outline.withOpacity(0.18)),
+            border: Border.all(color: scheme.outline.withValues(alpha: 0.18)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.08),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.08),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),

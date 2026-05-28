@@ -76,7 +76,7 @@ class _ClaimsTabBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          bottom: BorderSide(color: scheme.outlineVariant.withOpacity(0.4)),
+          bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: TabBar(
@@ -325,7 +325,7 @@ class _CategoryBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.30),
+            color: accent.withValues(alpha: 0.30),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -336,7 +336,7 @@ class _CategoryBanner extends StatelessWidget {
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -365,7 +365,7 @@ class _CategoryBanner extends StatelessWidget {
                       ? 'Suivi qualité service à la clientèle'
                       : 'Incidents terrain remontés depuis l’app livreur',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
               ],
@@ -374,7 +374,7 @@ class _CategoryBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.20),
+              color: Colors.white.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text('$total ouverts',
@@ -561,7 +561,7 @@ class _UnhandledRow extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [accent, accent.withOpacity(0.4)],
+                colors: [accent, accent.withValues(alpha: 0.4)],
               ),
               borderRadius: BorderRadius.circular(4),
             ),
@@ -595,8 +595,8 @@ class _UnhandledRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: row.hoursOpen >= 24
-                  ? const Color(0xFFEF4444).withOpacity(0.12)
-                  : const Color(0xFFF59E0B).withOpacity(0.12),
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                  : const Color(0xFFF59E0B).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text('${row.hoursOpen}h',

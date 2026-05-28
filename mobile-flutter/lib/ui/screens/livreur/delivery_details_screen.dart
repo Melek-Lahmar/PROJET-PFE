@@ -612,10 +612,10 @@ class _HeroCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
                 child: Row(
@@ -650,9 +650,9 @@ class _HeroCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -754,9 +754,9 @@ class _EscalationBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.error.withOpacity(0.10),
+        color: scheme.error.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(PremiumTokens.rMd),
-        border: Border.all(color: scheme.error.withOpacity(0.4)),
+        border: Border.all(color: scheme.error.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -882,14 +882,14 @@ class _StatusSheetState extends State<_StatusSheet> {
     return [
       PremiumCard(
         color: o.bg,
-        borderColor: o.color.withOpacity(0.4),
+        borderColor: o.color.withValues(alpha: 0.4),
         child: Row(
           children: [
             Container(
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: o.color.withOpacity(0.16),
+                color: o.color.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(o.icon, color: o.color),
@@ -1049,14 +1049,14 @@ class _OptionCard extends StatelessWidget {
       onTap: onTap,
       padding: const EdgeInsets.all(12),
       color: option.bg,
-      borderColor: option.color.withOpacity(0.35),
+      borderColor: option.color.withValues(alpha: 0.35),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: option.color.withOpacity(0.16),
+              color: option.color.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(option.icon, color: option.color),
@@ -1144,7 +1144,7 @@ class _CartCard extends StatelessWidget {
             _CartLine(line: full.lignes[i]),
             if (i < full.lignes.length - 1)
               Divider(
-                color: scheme.outlineVariant.withOpacity(0.4),
+                color: scheme.outlineVariant.withValues(alpha: 0.4),
                 height: 16,
               ),
           ],
@@ -1152,7 +1152,7 @@ class _CartCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withOpacity(0.6),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1164,7 +1164,7 @@ class _CartCard extends StatelessWidget {
                       _fmt(full.fraisLivraison)),
                 if (full.timbreFiscal > 0)
                   _totalLine(context, 'Timbre fiscal', _fmt(full.timbreFiscal)),
-                Divider(color: scheme.outlineVariant.withOpacity(0.6)),
+                Divider(color: scheme.outlineVariant.withValues(alpha: 0.6)),
                 Row(
                   children: [
                     const Text(
@@ -1205,7 +1205,7 @@ class _CartCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: scheme.tertiaryContainer.withOpacity(0.35),
+                  color: scheme.tertiaryContainer.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -1251,7 +1251,7 @@ class _CartCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withOpacity(0.5),
+        color: scheme.primaryContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -1326,7 +1326,7 @@ class _CartLine extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: scheme.secondaryContainer.withOpacity(0.5),
+                      color: scheme.secondaryContainer.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

@@ -85,13 +85,13 @@ class MapboxStaticPreview extends StatelessWidget {
       return Container(
         height: height,
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withOpacity(0.4),
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
           borderRadius: borderRadius,
         ),
         child: Center(
           child: Icon(
             Icons.location_off_outlined,
-            color: scheme.onSurfaceVariant.withOpacity(0.6),
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
             size: 32,
           ),
         ),
@@ -105,7 +105,7 @@ class MapboxStaticPreview extends StatelessWidget {
         children: [
           Container(
             height: height,
-            color: scheme.surfaceContainerHighest.withOpacity(0.4),
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
           ),
           Image.network(
             url,
@@ -118,11 +118,11 @@ class MapboxStaticPreview extends StatelessWidget {
             },
             errorBuilder: (ctx, error, stack) => Container(
               height: height,
-              color: scheme.surfaceContainerHighest.withOpacity(0.4),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
               child: Center(
                 child: Icon(
                   Icons.map_outlined,
-                  color: scheme.onSurfaceVariant.withOpacity(0.5),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
                   size: 28,
                 ),
               ),
@@ -138,7 +138,7 @@ class MapboxStaticPreview extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.10),
+                      Colors.black.withValues(alpha: 0.10),
                     ],
                   ),
                 ),
@@ -191,9 +191,9 @@ class _MapShimmerState extends State<_MapShimmer>
               begin: Alignment(-1 + 2 * _c.value, 0),
               end: Alignment(1 + 2 * _c.value, 0),
               colors: [
-                Colors.black.withOpacity(0.04),
-                Colors.black.withOpacity(0.10),
-                Colors.black.withOpacity(0.04),
+                Colors.black.withValues(alpha: 0.04),
+                Colors.black.withValues(alpha: 0.10),
+                Colors.black.withValues(alpha: 0.04),
               ],
             ),
           ),

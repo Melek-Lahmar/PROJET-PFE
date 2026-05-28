@@ -90,10 +90,10 @@ class _SplashScreenState extends State<SplashScreen>
                             width: 116,
                             height: 116,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.14),
+                              color: Colors.white.withValues(alpha: 0.14),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.35),
+                                color: Colors.white.withValues(alpha: 0.35),
                                 width: 2,
                               ),
                             ),
@@ -126,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
                           widget.subtitle,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             height: 1.5,
                           ),
                         ),

@@ -46,7 +46,7 @@ class OrdersHeader extends StatelessWidget {
                     vertical: AppSpacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.10),
+                    color: scheme.primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(

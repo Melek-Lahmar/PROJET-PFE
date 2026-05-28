@@ -122,7 +122,7 @@ class _HeroBlock extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E40AF).withOpacity(0.32),
+            color: const Color(0xFF1E40AF).withValues(alpha: 0.32),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -226,9 +226,9 @@ class _HeroPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.16),
+          color: Colors.white.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.22)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
         ),
         child: Column(
           children: [
@@ -240,7 +240,7 @@ class _HeroPill extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.6),
+                    color: color.withValues(alpha: 0.6),
                     blurRadius: 4,
                   ),
                 ],
@@ -307,7 +307,7 @@ class _CashboxBlock extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: gradientColors.first.withOpacity(0.30),
+            color: gradientColors.first.withValues(alpha: 0.30),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -322,7 +322,7 @@ class _CashboxBlock extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.account_balance_wallet_rounded,
@@ -344,7 +344,7 @@ class _CashboxBlock extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -405,9 +405,9 @@ class _CashboxBlock extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: Row(children: [
                 const Icon(Icons.check_circle_rounded, color: Colors.white),
@@ -468,7 +468,7 @@ class _CashboxBlock extends StatelessWidget {
               child: Text(
                 'Aucun encaissement pour cette période.',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontWeight: FontWeight.w600,
                   fontSize: 12.5,
                 ),

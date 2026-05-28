@@ -18,13 +18,13 @@ class GpsStatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: active
-            ? scheme.primary.withOpacity(0.12)
-            : scheme.error.withOpacity(0.10),
+            ? scheme.primary.withValues(alpha: 0.12)
+            : scheme.error.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: active
-              ? scheme.primary.withOpacity(0.25)
-              : scheme.error.withOpacity(0.25),
+              ? scheme.primary.withValues(alpha: 0.25)
+              : scheme.error.withValues(alpha: 0.25),
         ),
       ),
       child: Row(

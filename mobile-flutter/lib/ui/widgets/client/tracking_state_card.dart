@@ -279,7 +279,7 @@ class _HeadingToYou extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1976D2).withOpacity(0.32),
+                        color: const Color(0xFF1976D2).withValues(alpha: 0.32),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

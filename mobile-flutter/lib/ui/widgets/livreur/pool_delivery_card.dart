@@ -35,11 +35,11 @@ class PoolDeliveryCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: isEch ? scheme.errorContainer.withOpacity(0.25) : null,
+      color: isEch ? scheme.errorContainer.withValues(alpha: 0.25) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isEch ? scheme.error : scheme.outline.withOpacity(0.15),
+          color: isEch ? scheme.error : scheme.outline.withValues(alpha: 0.15),
           width: isEch ? 1.5 : 1,
         ),
       ),
@@ -122,7 +122,7 @@ class PoolDeliveryCard extends StatelessWidget {
                   label: Text(actionLabel),
                   style: actionDestructive
                       ? FilledButton.styleFrom(
-                          backgroundColor: Colors.orange.withOpacity(0.15),
+                          backgroundColor: Colors.orange.withValues(alpha: 0.15),
                           foregroundColor: Colors.orange.shade900,
                         )
                       : null,
@@ -145,7 +145,7 @@ class _EchangeBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.04),
+        color: Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -337,7 +337,7 @@ class _PoolDeliveryDetailSheetState extends State<PoolDeliveryDetailSheet> {
           const SizedBox(height: 8),
           ...d.lignesRetour.map((l) => _LigneTile(
                 ligne: l,
-                color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.4),
               )),
         ],
         if (d.lignesLivraison.isNotEmpty) ...[
@@ -352,7 +352,7 @@ class _PoolDeliveryDetailSheetState extends State<PoolDeliveryDetailSheet> {
           const SizedBox(height: 8),
           ...d.lignesLivraison.map((l) => _LigneTile(
                 ligne: l,
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
               )),
         ],
         const SizedBox(height: 20),
@@ -400,7 +400,7 @@ class _LigneTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color ?? Colors.black.withOpacity(0.04),
+        color: color ?? Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

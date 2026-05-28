@@ -28,7 +28,7 @@ class CustomerTrackingStepTile extends StatelessWidget {
         circleChild = const Icon(Icons.check_rounded, size: 11, color: Colors.white);
       case 'ACTIVE':
         circleColor = scheme.primary;
-        lineColor = scheme.primary.withOpacity(0.4);
+        lineColor = scheme.primary.withValues(alpha: 0.4);
         circleChild = Container(
           width: 6,
           height: 6,
@@ -39,11 +39,11 @@ class CustomerTrackingStepTile extends StatelessWidget {
         );
       case 'ERROR':
         circleColor = scheme.error;
-        lineColor = scheme.error.withOpacity(0.3);
+        lineColor = scheme.error.withValues(alpha: 0.3);
         circleChild = const Icon(Icons.close_rounded, size: 11, color: Colors.white);
       default: // PENDING
         circleColor = scheme.outlineVariant;
-        lineColor = scheme.outlineVariant.withOpacity(0.5);
+        lineColor = scheme.outlineVariant.withValues(alpha: 0.5);
         circleChild = const SizedBox();
     }
 
@@ -107,7 +107,7 @@ class CustomerTrackingStepTile extends StatelessWidget {
                             ? Colors.green.shade700
                             : state == 'ACTIVE'
                                 ? scheme.primary
-                                : scheme.onSurfaceVariant.withOpacity(0.6),
+                                : scheme.onSurfaceVariant.withValues(alpha: 0.6),
                       ),
                 ),
               ],

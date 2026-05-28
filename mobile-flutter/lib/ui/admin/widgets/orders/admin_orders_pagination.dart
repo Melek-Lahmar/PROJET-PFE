@@ -32,7 +32,7 @@ class AdminOrdersPagination extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          top: BorderSide(color: scheme.outlineVariant.withOpacity(0.4)),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: Row(
@@ -56,7 +56,7 @@ class AdminOrdersPagination extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.1),
+              color: scheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

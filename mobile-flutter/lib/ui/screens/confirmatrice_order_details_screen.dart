@@ -472,7 +472,7 @@ class _ConfirmatriceOrderDetailsScreenState
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: _gradientStart.withOpacity(0.35),
+            color: _gradientStart.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -546,9 +546,9 @@ class _ConfirmatriceOrderDetailsScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white.withOpacity(0.25)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: Column(
               children: [
@@ -579,7 +579,7 @@ class _ConfirmatriceOrderDetailsScreenState
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white.withOpacity(0.85), size: 16),
+          Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 16),
           const SizedBox(width: 8),
           Text(
             '$label  ',
@@ -640,7 +640,7 @@ class _ConfirmatriceOrderDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _gradientStart.withOpacity(0.10),
+                  color: _gradientStart.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -1083,7 +1083,7 @@ class _StatusDropdownRow extends StatelessWidget {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: o.color.withOpacity(0.12),
+                          color: o.color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(o.icon, color: o.color, size: 20),
@@ -1119,12 +1119,12 @@ class _StatusDropdownRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: disabled
               ? Colors.grey.shade100
-              : accentColor.withOpacity(0.08),
+              : accentColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: disabled
                 ? Colors.grey.shade300
-                : accentColor.withOpacity(0.35),
+                : accentColor.withValues(alpha: 0.35),
           ),
         ),
         child: Row(
@@ -1132,7 +1132,7 @@ class _StatusDropdownRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(disabled ? 0.10 : 0.16),
+                color: color.withValues(alpha: disabled ? 0.10 : 0.16),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 20),

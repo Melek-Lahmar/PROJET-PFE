@@ -88,7 +88,7 @@ class AdminKpiDetailSheet extends StatelessWidget {
                 Container(
                   width: 44, height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.16),
+                    color: accent.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: accent),
@@ -124,9 +124,9 @@ class AdminKpiDetailSheet extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.05),
+                color: accent.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: accent.withOpacity(0.18)),
+                border: Border.all(color: accent.withValues(alpha: 0.18)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,12 +221,12 @@ class _DeltaBadge extends StatelessWidget {
       icon = Icons.remove_rounded;
       text = '—';
     } else if (kpi.deltaDirection == 'up') {
-      bg = const Color(0xFF22C55E).withOpacity(0.15);
+      bg = const Color(0xFF22C55E).withValues(alpha: 0.15);
       fg = const Color(0xFF15803D);
       icon = Icons.arrow_upward_rounded;
       text = '+${delta.abs().toStringAsFixed(1)} %';
     } else if (kpi.deltaDirection == 'down') {
-      bg = const Color(0xFFEF4444).withOpacity(0.15);
+      bg = const Color(0xFFEF4444).withValues(alpha: 0.15);
       fg = const Color(0xFFB91C1C);
       icon = Icons.arrow_downward_rounded;
       text = '-${delta.abs().toStringAsFixed(1)} %';
@@ -271,9 +271,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.5),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.18)),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

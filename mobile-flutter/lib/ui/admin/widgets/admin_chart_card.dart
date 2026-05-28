@@ -36,7 +36,7 @@ class AdminChartCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
+                  color: accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: accent, size: 20),

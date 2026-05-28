@@ -84,7 +84,7 @@ class _PremiumHistoryHeroState extends State<PremiumHistoryHero>
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.accent.withOpacity(0.32),
+            color: widget.accent.withValues(alpha: 0.32),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -100,7 +100,7 @@ class _PremiumHistoryHeroState extends State<PremiumHistoryHero>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 22),
@@ -137,7 +137,7 @@ class _PremiumHistoryHeroState extends State<PremiumHistoryHero>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -223,9 +223,9 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.22)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

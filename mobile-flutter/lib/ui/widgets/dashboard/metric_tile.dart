@@ -24,10 +24,10 @@ class MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: scheme.surfaceVariant.withOpacity(0.55),
+        color: scheme.surfaceVariant.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: scheme.outline.withOpacity(0.35),
+          color: scheme.outline.withValues(alpha: 0.35),
         ),
       ),
       child: Row(

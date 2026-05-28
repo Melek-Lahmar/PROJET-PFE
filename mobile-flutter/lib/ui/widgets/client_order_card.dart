@@ -46,14 +46,14 @@ class _ClientOrderCardState extends State<ClientOrderCard> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _hover
-                  ? accent.withOpacity(0.45)
-                  : scheme.outlineVariant.withOpacity(0.5),
+                  ? accent.withValues(alpha: 0.45)
+                  : scheme.outlineVariant.withValues(alpha: 0.5),
             ),
             boxShadow: [
               BoxShadow(
                 color: _hover
-                    ? accent.withOpacity(0.18)
-                    : Colors.black.withOpacity(0.04),
+                    ? accent.withValues(alpha: 0.18)
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: _hover ? 18 : 8,
                 offset: Offset(0, _hover ? 8 : 3),
               ),
@@ -136,21 +136,21 @@ class _ClientOrderCardState extends State<ClientOrderCard> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  accent.withOpacity(0.10),
-                                  accent.withOpacity(0.02),
+                                  accent.withValues(alpha: 0.10),
+                                  accent.withValues(alpha: 0.02),
                                 ],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                               ),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: accent.withOpacity(0.18)),
+                              border: Border.all(color: accent.withValues(alpha: 0.18)),
                             ),
                             child: Row(
                               children: [
                                 Container(
                                   width: 32, height: 32,
                                   decoration: BoxDecoration(
-                                    color: accent.withOpacity(0.16),
+                                    color: accent.withValues(alpha: 0.16),
                                     borderRadius: BorderRadius.circular(9),
                                   ),
                                   child: Icon(Icons.payments_rounded,
@@ -189,7 +189,7 @@ class _ClientOrderCardState extends State<ClientOrderCard> {
                                       borderRadius: BorderRadius.circular(8),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: accent.withOpacity(0.34),
+                                          color: accent.withValues(alpha: 0.34),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         ),

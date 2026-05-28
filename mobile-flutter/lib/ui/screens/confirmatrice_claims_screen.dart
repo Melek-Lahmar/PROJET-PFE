@@ -649,7 +649,7 @@ class _ClientChangeBadge extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: s.gradient.colors.first.withOpacity(0.30),
+                      color: s.gradient.colors.first.withValues(alpha: 0.30),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -703,7 +703,7 @@ class _ClientPendingBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF97316).withOpacity(0.30),
+            color: const Color(0xFFF97316).withValues(alpha: 0.30),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -760,7 +760,7 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: effectiveTextColor.withOpacity(0.7)),
+          Icon(icon, size: 13, color: effectiveTextColor.withValues(alpha: 0.7)),
           const SizedBox(width: 5),
           Flexible(
             child: Text(

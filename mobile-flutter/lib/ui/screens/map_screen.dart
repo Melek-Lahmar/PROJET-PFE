@@ -662,7 +662,7 @@ class _MapScreenState extends State<MapScreen> {
         polylineId: const PolylineId('halo'),
         points: base,
         width: 14,
-        color: scheme.primary.withOpacity(0.16),
+        color: scheme.primary.withValues(alpha: 0.16),
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         jointType: JointType.round,
@@ -705,7 +705,7 @@ class _MapScreenState extends State<MapScreen> {
         polylineId: const PolylineId('mapbox_halo'),
         points: route.points,
         width: 14,
-        color: scheme.primary.withOpacity(0.16),
+        color: scheme.primary.withValues(alpha: 0.16),
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         jointType: JointType.round,
@@ -779,12 +779,12 @@ class _MapScreenState extends State<MapScreen> {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: scheme.surface.withOpacity(0.96),
+            color: scheme.surface.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: scheme.outline.withOpacity(0.22)),
+            border: Border.all(color: scheme.outline.withValues(alpha: 0.22)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -817,12 +817,12 @@ class _MapScreenState extends State<MapScreen> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: scheme.surface.withOpacity(0.96),
+          color: scheme.surface.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: scheme.outline.withOpacity(0.22)),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.22)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -854,11 +854,11 @@ class _MapScreenState extends State<MapScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF16A34A).withOpacity(0.96),
+        color: const Color(0xFF16A34A).withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1199,7 +1199,7 @@ class _StoppedHereFabState extends State<_StoppedHereFab>
                 boxShadow: widget.enabled
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFEF4444).withOpacity(glow),
+                          color: const Color(0xFFEF4444).withValues(alpha: glow),
                           blurRadius: 18,
                           offset: const Offset(0, 6),
                         ),

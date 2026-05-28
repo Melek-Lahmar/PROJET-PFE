@@ -132,7 +132,7 @@ class _AvisPromptDialogState extends State<AvisPromptDialog> {
                 padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [mainColor, mainColor.withOpacity(0.78)],
+                    colors: [mainColor, mainColor.withValues(alpha: 0.78)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -145,9 +145,9 @@ class _AvisPromptDialogState extends State<AvisPromptDialog> {
                       child: Container(
                         width: 56, height: 56,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.20),
+                          color: Colors.white.withValues(alpha: 0.20),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.30)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
                         ),
                         child: const Icon(Icons.local_shipping_rounded,
                             color: Colors.white, size: 30),
@@ -164,7 +164,7 @@ class _AvisPromptDialogState extends State<AvisPromptDialog> {
                     Text('Commande ${widget.commandePiece}',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                         )),
                   ],
                 ),
@@ -248,7 +248,7 @@ class _AvisPromptDialogState extends State<AvisPromptDialog> {
                         decoration: InputDecoration(
                           hintText: 'Un mot pour le livreur ? (optionnel)',
                           filled: true,
-                          fillColor: scheme.surfaceContainerHighest.withOpacity(0.5),
+                          fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide.none,
@@ -333,7 +333,7 @@ class _EmojiButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
           color: selected
-              ? scheme.primary.withOpacity(0.10)
+              ? scheme.primary.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
@@ -383,10 +383,10 @@ class _TagChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? color : color.withOpacity(0.08),
+          color: selected ? color : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? color : color.withOpacity(0.30),
+            color: selected ? color : color.withValues(alpha: 0.30),
           ),
         ),
         child: Row(
@@ -444,7 +444,7 @@ class _GradientCtaState extends State<_GradientCta> {
           decoration: BoxDecoration(
             gradient: widget.enabled
                 ? LinearGradient(
-                    colors: [widget.color, widget.color.withOpacity(0.78)],
+                    colors: [widget.color, widget.color.withValues(alpha: 0.78)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
@@ -454,7 +454,7 @@ class _GradientCtaState extends State<_GradientCta> {
             boxShadow: widget.enabled
                 ? [
                     BoxShadow(
-                      color: widget.color.withOpacity(0.40),
+                      color: widget.color.withValues(alpha: 0.40),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),

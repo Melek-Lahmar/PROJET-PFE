@@ -213,13 +213,13 @@ class _ClientHeader extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [tab.color, tab.color.withOpacity(0.78)],
+          colors: [tab.color, tab.color.withValues(alpha: 0.78)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: tab.color.withOpacity(0.30),
+            color: tab.color.withValues(alpha: 0.30),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -256,7 +256,7 @@ class _ClientHeader extends StatelessWidget {
                             Text(
                               '$greeting,',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withOpacity(0.86),
+                                color: Colors.white.withValues(alpha: 0.86),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -292,9 +292,9 @@ class _ClientHeader extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.30)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
                       ),
                       child: Icon(tab.activeIcon, color: Colors.white, size: 22),
                     ),
@@ -313,7 +313,7 @@ class _ClientHeader extends StatelessWidget {
                           Text(
                             tab.subtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                             ),
                           ),
                         ],
@@ -358,7 +358,7 @@ class _AvatarCircle extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -401,7 +401,7 @@ class _ClientNavBar extends StatelessWidget {
           color: theme.scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, -4),
             ),
@@ -413,7 +413,7 @@ class _ClientNavBar extends StatelessWidget {
           height: 70,
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          indicatorColor: tabs[currentIndex].color.withOpacity(0.18),
+          indicatorColor: tabs[currentIndex].color.withValues(alpha: 0.18),
           elevation: 0,
           animationDuration: const Duration(milliseconds: 300),
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,

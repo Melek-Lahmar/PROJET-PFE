@@ -133,7 +133,7 @@ class _ItemCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -162,7 +162,7 @@ class _ItemCard extends StatelessWidget {
             Text(
               _fmt(item.createdAt),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant.withOpacity(0.7),
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
             ),
           ],

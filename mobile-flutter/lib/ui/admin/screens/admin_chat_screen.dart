@@ -149,9 +149,9 @@ class _AdminChatScreenState extends State<AdminChatScreen> {
           Container(
             width: 42, height: 42,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.20),
+              color: Colors.white.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.30)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
             ),
             child: const Icon(Icons.smart_toy_rounded, color: Colors.white),
           ),
@@ -272,7 +272,7 @@ class _Welcome extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF6366F1).withOpacity(0.40),
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.40),
                         blurRadius: 28,
                         offset: const Offset(0, 14),
                       ),
@@ -340,9 +340,9 @@ class _CategoryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: category.color.withOpacity(0.06),
+        color: category.color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: category.color.withOpacity(0.22)),
+        border: Border.all(color: category.color.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,11 +420,11 @@ class _QuestionChipState extends State<_QuestionChip> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: _down
-                ? widget.color.withOpacity(0.18)
-                : (_hover ? widget.color.withOpacity(0.10) : widget.surface),
+                ? widget.color.withValues(alpha: 0.18)
+                : (_hover ? widget.color.withValues(alpha: 0.10) : widget.surface),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.color.withOpacity(_hover ? 0.50 : 0.28),
+              color: widget.color.withValues(alpha: _hover ? 0.50 : 0.28),
             ),
           ),
           child: Row(
@@ -479,7 +479,7 @@ class _Bubble extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6366F1).withOpacity(0.30),
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.30),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -506,7 +506,7 @@ class _Bubble extends StatelessWidget {
                   color: isUser
                       ? null
                       : (message.isError
-                          ? const Color(0xFFEF4444).withOpacity(0.10)
+                          ? const Color(0xFFEF4444).withValues(alpha: 0.10)
                           : scheme.surfaceContainerHighest),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(16),
@@ -519,7 +519,7 @@ class _Bubble extends StatelessWidget {
                       color: (isUser
                               ? const Color(0xFF6366F1)
                               : Colors.black)
-                          .withOpacity(isUser ? 0.20 : 0.04),
+                          .withValues(alpha: isUser ? 0.20 : 0.04),
                       blurRadius: isUser ? 10 : 6,
                       offset: const Offset(0, 3),
                     ),
@@ -628,7 +628,7 @@ class _ChartView extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(short,
-                      style: TextStyle(fontSize: 9, color: color.withOpacity(0.85)),
+                      style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.85)),
                       overflow: TextOverflow.ellipsis),
                 );
               },
@@ -677,7 +677,7 @@ class _ChartView extends StatelessWidget {
               spots: upperSpots,
               isCurved: true,
               barWidth: 0,
-              color: color.withOpacity(0.20),
+              color: color.withValues(alpha: 0.20),
               belowBarData: BarAreaData(show: false),
             ),
           LineChartBarData(
@@ -698,8 +698,8 @@ class _ChartView extends StatelessWidget {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    color.withOpacity(0.30),
-                    color.withOpacity(0.02),
+                    color.withValues(alpha: 0.30),
+                    color.withValues(alpha: 0.02),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -710,7 +710,7 @@ class _ChartView extends StatelessWidget {
               spots: lowerSpots,
               isCurved: true,
               barWidth: 0,
-              color: color.withOpacity(0.20),
+              color: color.withValues(alpha: 0.20),
               belowBarData: BarAreaData(show: false),
             ),
         ],
@@ -734,7 +734,7 @@ class _ChartView extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(short,
-                      style: TextStyle(fontSize: 9, color: color.withOpacity(0.85))),
+                      style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.85))),
                 );
               },
             ),
@@ -764,7 +764,7 @@ class _RowList extends StatelessWidget {
                   width: 4, height: 4,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: fg.withOpacity(0.5),
+                    color: fg.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -773,7 +773,7 @@ class _RowList extends StatelessWidget {
                     r.subtitle != null ? '${r.label} — ${r.subtitle}' : r.label,
                     style: TextStyle(
                       fontSize: 12,
-                      color: fg.withOpacity(0.85),
+                      color: fg.withValues(alpha: 0.85),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -825,7 +825,7 @@ class _Composer extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          top: BorderSide(color: scheme.outlineVariant.withOpacity(0.5)),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         ),
       ),
       child: SafeArea(
@@ -836,10 +836,10 @@ class _Composer extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest.withOpacity(0.7),
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: scheme.outlineVariant.withOpacity(0.4),
+                    color: scheme.outlineVariant.withValues(alpha: 0.4),
                   ),
                 ),
                 child: TextField(
@@ -917,7 +917,7 @@ class _GradientSendButtonState extends State<_GradientSendButton> {
             boxShadow: widget.enabled
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.35),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.35),
                       blurRadius: 12,
                       offset: const Offset(0, 5),
                     ),
@@ -959,7 +959,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
-            color: widget.color.withOpacity(0.10),
+            color: widget.color.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
           child: AnimatedBuilder(

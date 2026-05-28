@@ -421,7 +421,7 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                             ),
                       filled: true,
                       fillColor:
-                          scheme.surfaceContainerHighest.withOpacity(0.45),
+                          scheme.surfaceContainerHighest.withValues(alpha: 0.45),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -654,21 +654,21 @@ class _DepotFilterChip extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: selected
                 ? LinearGradient(
-                    colors: [tone, tone.withOpacity(0.78)],
+                    colors: [tone, tone.withValues(alpha: 0.78)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : null,
-            color: selected ? null : tone.withOpacity(0.10),
+            color: selected ? null : tone.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: selected ? tone : tone.withOpacity(0.24),
+              color: selected ? tone : tone.withValues(alpha: 0.24),
               width: 1,
             ),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: tone.withOpacity(0.32),
+                      color: tone.withValues(alpha: 0.32),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -692,8 +692,8 @@ class _DepotFilterChip extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
                 decoration: BoxDecoration(
                   color: selected
-                      ? Colors.white.withOpacity(0.25)
-                      : tone.withOpacity(0.16),
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : tone.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -745,7 +745,7 @@ class _Header extends StatelessWidget {
                 Text(
                   'Astuce : appui long sur une commande au dépôt prête pour la sélection multiple.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant.withOpacity(0.78),
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
                         fontStyle: FontStyle.italic,
                       ),
                 ),
@@ -789,7 +789,7 @@ class _SelectionHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.32),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.32),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -801,9 +801,9 @@ class _SelectionHeader extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.30)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
                 ),
                 child: const Icon(Icons.checklist_rounded,
                     color: Colors.white, size: 20),
@@ -826,7 +826,7 @@ class _SelectionHeader extends StatelessWidget {
                           ? '$readyCount prêtes à partir'
                           : '$readyCount prêtes / ${count - readyCount} non éligibles',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.86),
+                        color: Colors.white.withValues(alpha: 0.86),
                         fontSize: 12,
                       ),
                     ),
@@ -888,13 +888,13 @@ class _MyOrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(PremiumTokens.rLg),
         border: Border.all(
-          color: selected ? const Color(0xFF6366F1) : tone.withOpacity(0.0),
+          color: selected ? const Color(0xFF6366F1) : tone.withValues(alpha: 0.0),
           width: selected ? 2 : 0,
         ),
         boxShadow: selected
             ? [
                 BoxShadow(
-                  color: const Color(0xFF6366F1).withOpacity(0.28),
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.28),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
@@ -980,7 +980,7 @@ class _MyOrderCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                      color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Row(
@@ -1084,9 +1084,9 @@ class _DepotBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.4), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
       child: Text(
         'Dépôt $n',
@@ -1125,7 +1125,7 @@ class _GoLivraisonFab extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0EA5E9).withOpacity(0.45),
+              color: const Color(0xFF0EA5E9).withValues(alpha: 0.45),
               blurRadius: 22,
               offset: const Offset(0, 10),
             ),

@@ -160,12 +160,12 @@ class _RangeChip extends StatelessWidget {
           border: Border.all(
             color: active
                 ? scheme.primary
-                : scheme.outline.withOpacity(0.35),
+                : scheme.outline.withValues(alpha: 0.35),
           ),
           boxShadow: active
               ? [
             BoxShadow(
-              color: scheme.primary.withOpacity(0.18),
+              color: scheme.primary.withValues(alpha: 0.18),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
@@ -549,14 +549,14 @@ class _LineTrendChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: 1,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: scheme.outline.withOpacity(0.20),
+              color: scheme.outline.withValues(alpha: 0.20),
               strokeWidth: 1,
             ),
           ),
           borderData: FlBorderData(
             show: true,
             border: Border.all(
-              color: scheme.outline.withOpacity(0.30),
+              color: scheme.outline.withValues(alpha: 0.30),
             ),
           ),
           titlesData: FlTitlesData(
@@ -602,7 +602,7 @@ class _LineTrendChart extends StatelessWidget {
               dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true,
-                color: scheme.primary.withOpacity(0.10),
+                color: scheme.primary.withValues(alpha: 0.10),
               ),
             ),
           ],
@@ -798,7 +798,7 @@ class _PremiumHeader extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             scheme.primary,
-            scheme.primary.withOpacity(0.82),
+            scheme.primary.withValues(alpha: 0.82),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -806,7 +806,7 @@ class _PremiumHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: scheme.primary.withOpacity(0.22),
+            color: scheme.primary.withValues(alpha: 0.22),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -830,7 +830,7 @@ class _PremiumHeader extends StatelessWidget {
                 Text(
                   'Performance du jour, statuts et ponctualité.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onPrimary.withOpacity(0.92),
+                    color: scheme.onPrimary.withValues(alpha: 0.92),
                     height: 1.35,
                   ),
                 ),
@@ -902,12 +902,12 @@ class _AchievementBadgeState extends State<_AchievementBadge>
         return Container(
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.16),
+            color: Colors.white.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.30)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withOpacity(0.30 + 0.20 * t),
+                color: widget.color.withValues(alpha: 0.30 + 0.20 * t),
                 blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
@@ -919,11 +919,11 @@ class _AchievementBadgeState extends State<_AchievementBadge>
               Container(
                 width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.92),
+                  color: widget.color.withValues(alpha: 0.92),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: widget.color.withOpacity(0.50 + 0.30 * t),
+                      color: widget.color.withValues(alpha: 0.50 + 0.30 * t),
                       blurRadius: 14,
                     ),
                   ],
@@ -964,10 +964,10 @@ class _HeaderChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.onPrimary.withOpacity(0.12),
+        color: scheme.onPrimary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: scheme.onPrimary.withOpacity(0.14),
+          color: scheme.onPrimary.withValues(alpha: 0.14),
         ),
       ),
       child: Row(
@@ -1028,14 +1028,14 @@ class _LateByDriverChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: scheme.outline.withOpacity(0.20),
+              color: scheme.outline.withValues(alpha: 0.20),
               strokeWidth: 1,
             ),
           ),
           borderData: FlBorderData(
             show: true,
             border: Border.all(
-              color: scheme.outline.withOpacity(0.30),
+              color: scheme.outline.withValues(alpha: 0.30),
             ),
           ),
           titlesData: FlTitlesData(

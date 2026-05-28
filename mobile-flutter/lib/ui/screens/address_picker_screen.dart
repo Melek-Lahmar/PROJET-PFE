@@ -145,7 +145,7 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.92),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: const [
                     BoxShadow(

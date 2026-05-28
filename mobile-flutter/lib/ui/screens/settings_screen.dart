@@ -123,13 +123,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: selected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-              : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.45),
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+              : Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.30)
-                : Theme.of(context).colorScheme.outline.withOpacity(0.25),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.30)
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
           ),
         ),
         child: Row(

@@ -146,13 +146,13 @@ class PremiumTokens {
   static List<BoxShadow> cardShadow(bool isDark) => [
         BoxShadow(
           color: (isDark ? Colors.black : const Color(0xFF0F172A))
-              .withOpacity(isDark ? 0.30 : 0.06),
+              .withValues(alpha: isDark ? 0.30 : 0.06),
           blurRadius: 22,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
           color: (isDark ? Colors.black : const Color(0xFF0F172A))
-              .withOpacity(isDark ? 0.18 : 0.03),
+              .withValues(alpha: isDark ? 0.18 : 0.03),
           blurRadius: 6,
           offset: const Offset(0, 2),
         ),
@@ -161,7 +161,7 @@ class PremiumTokens {
   static List<BoxShadow> subtleShadow(bool isDark) => [
         BoxShadow(
           color: (isDark ? Colors.black : const Color(0xFF0F172A))
-              .withOpacity(isDark ? 0.20 : 0.04),
+              .withValues(alpha: isDark ? 0.20 : 0.04),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -171,13 +171,13 @@ class PremiumTokens {
   static List<BoxShadow> cardShadowElevated(bool isDark) => [
         BoxShadow(
           color: (isDark ? Colors.black : const Color(0xFF0F172A))
-              .withOpacity(isDark ? 0.42 : 0.10),
+              .withValues(alpha: isDark ? 0.42 : 0.10),
           blurRadius: 28,
           offset: const Offset(0, 14),
         ),
         BoxShadow(
           color: (isDark ? Colors.black : const Color(0xFF0F172A))
-              .withOpacity(isDark ? 0.24 : 0.05),
+              .withValues(alpha: isDark ? 0.24 : 0.05),
           blurRadius: 8,
           offset: const Offset(0, 3),
         ),

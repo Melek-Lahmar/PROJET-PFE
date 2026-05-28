@@ -63,7 +63,7 @@ class DemandeColorIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: fg.withOpacity(0.25)),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
