@@ -106,7 +106,7 @@ class _TrackingStateCardState extends State<TrackingStateCard> {
     if (s == null) return const SizedBox.shrink();
 
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: switch (s.state) {

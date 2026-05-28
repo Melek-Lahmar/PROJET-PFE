@@ -101,14 +101,14 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
       });
     }
 
+    final ordersProvider = context.read<CustomerOrdersProvider>();
+    // Tracking 6 blocs + fiche commande en parallèle. Si l'un échoue, on
+    // garde les données précédentes et on n'affiche une erreur que si la
+    // fiche commande tombe (critique pour l'en-tête).
+    final trackingFuture = ordersProvider.service.fetchTracking(
+      widget.initialOrder.piece,
+    );
     try {
-      final ordersProvider = context.read<CustomerOrdersProvider>();
-      // Tracking 6 blocs + fiche commande en parallèle. Si l'un échoue, on
-      // garde les données précédentes et on n'affiche une erreur que si la
-      // fiche commande tombe (critique pour l'en-tête).
-      final trackingFuture = ordersProvider.service.fetchTracking(
-        widget.initialOrder.piece,
-      );
       final orderFuture = ordersProvider.fetchDetails(
         widget.initialOrder.piece,
         force: force,
@@ -129,6 +129,8 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
         _error = null;
       });
     } catch (e) {
+      // Silence the tracking future so it doesn't become an unhandled exception.
+      trackingFuture.ignore();
       if (!mounted) return;
       setState(() => _error = e.toString());
     } finally {
@@ -271,7 +273,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       ...tracking!.events.asMap().entries.map((e) =>
                         CustomerTrackingStepTile(
                           event: e.value,
-                          isLast: e.key == tracking.events.length - 1,
+                          isLast: e.key == tracking!.events.length - 1,
                         ))
                     else
                       ...milestones.map((item) => _TimelineTile(item: item)),
