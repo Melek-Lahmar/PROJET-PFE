@@ -91,7 +91,7 @@ export function ConfirmateurOrderDetailsPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["confirmateur-order", piece],
+    queryKey: ["confirmateur", "commandes", piece],
     queryFn: () => getConfirmateurOrderByPiece(piece as string),
     enabled: !!piece,
   });
@@ -99,16 +99,17 @@ export function ConfirmateurOrderDetailsPage() {
   const statusMutation = useMutation({
     mutationFn: ({ status }: { status: OrderStatusValue }) => updateConfirmateurOrderStatus(piece as string, status),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["confirmateur-order", piece] });
-      await queryClient.invalidateQueries({ queryKey: ["confirmateur-orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes", piece] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes"] });
     },
   });
 
   const confirmMutation = useMutation({
     mutationFn: () => transformBcToBl(piece as string),
     onSuccess: async (res) => {
-      await queryClient.invalidateQueries({ queryKey: ["confirmateur-orders"] });
-      await queryClient.invalidateQueries({ queryKey: ["confirmateur-order", piece] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes"] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes", piece] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "bl"] });
 
       const blPiece = res?.blPiece ?? "";
       if (blPiece) navigate(`/confirmateur/bl/${encodeURIComponent(blPiece)}`);
@@ -158,6 +159,7 @@ export function ConfirmateurOrderDetailsPage() {
   const currentStatus: OrderStatusValue = data.dO_Valide === 2 ? 2 : data.dO_Valide === 3 ? 3 : 0;
   const isTransformed = statusMeta.workflowState === "transformed";
   const steps = workflowSteps(statusMeta.workflowState);
+  const hasB2BDiscount = Number(data.b2BDiscountAmount ?? 0) > 0;
 
   return (
     <div className="w-full space-y-6 pb-10">
@@ -284,6 +286,23 @@ export function ConfirmateurOrderDetailsPage() {
               </table>
             </div>
           </section>
+
+          {hasB2BDiscount ? (
+            <section className="rounded-[30px] border border-border bg-card shadow-sm">
+              <div className="border-b border-border px-6 py-5">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Remise B2B</div>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-card-foreground">Snapshot commercial</h2>
+              </div>
+              <div className="space-y-3 px-6 py-6 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Total avant remise</span><span className="font-bold">{money(data.totalBeforeDiscount ?? data.dO_TotalTTC)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Taux</span><span className="font-bold">{Number(data.b2BDiscountRate ?? 0).toFixed(2)} %</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Montant</span><span className="font-bold text-emerald-700">-{money(data.b2BDiscountAmount ?? 0)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="font-bold">{safe(data.discountSource)}</span></div>
+                <div className="h-px bg-border/70" />
+                <div className="flex justify-between"><span className="text-muted-foreground">Net à payer</span><span className="font-black text-primary">{money(data.dO_NetAPayer)}</span></div>
+              </div>
+            </section>
+          ) : null}
         </div>
 
         <aside className="space-y-6">

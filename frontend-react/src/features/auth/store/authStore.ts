@@ -73,6 +73,8 @@ export const useAuthStore = create<AuthState>()(
           userId: userId ?? null,
           email: email ?? null,
           roles: normalizeRoles(roles),
+          profile: null,
+          bootstrapped: false,
         }),
 
       clear: () =>

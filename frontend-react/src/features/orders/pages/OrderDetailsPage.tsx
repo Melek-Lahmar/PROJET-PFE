@@ -219,6 +219,7 @@ export function OrderDetailsPage() {
 
   const linesCount = data.lines?.length ?? 0;
   const isPickup = (data.deliveryType ?? "").trim().toUpperCase() === "PICKUP";
+  const hasB2BDiscount = Number(data.b2bDiscountAmount ?? 0) > 0;
 
   const lat = data.latitude?.trim() ?? "";
   const lng = data.longitude?.trim() ?? "";
@@ -435,7 +436,14 @@ export function OrderDetailsPage() {
             <div className="space-y-4 px-6 py-6">
               <InfoRow label="Mode de paiement" value={getPaymentLabel(data.paymentMethod)} />
               <InfoRow label="Total HT" value={money(data.totalHT)} />
-              <InfoRow label="Total TTC" value={money(data.totalTTC)} />
+              {hasB2BDiscount ? (
+                <>
+                  <InfoRow label="Sous-total avant remise" value={money(data.totalBeforeDiscount ?? data.totalTTC)} />
+                  <InfoRow label={`Remise B2B ${Number(data.b2bDiscountRate ?? 0).toFixed(2)} %`} value={`-${money(data.b2bDiscountAmount ?? 0)}`} />
+                </>
+              ) : (
+                <InfoRow label="Total TTC" value={money(data.totalTTC)} />
+              )}
               <InfoRow label="Frais livraison" value={money(data.fraisLivraison)} />
               <InfoRow label="Timbre fiscal" value={money(data.timbreFiscal)} />
 

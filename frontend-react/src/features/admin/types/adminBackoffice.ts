@@ -114,6 +114,12 @@ export type AdminOrderDetail = {
   totalTTC: number;
   fraisLivraison: number;
   timbreFiscal: number;
+  totalBeforeDiscount?: number | null;
+  b2bDiscountRate?: number | null;
+  b2BDiscountRate?: number | null;
+  b2bDiscountAmount?: number | null;
+  b2BDiscountAmount?: number | null;
+  discountSource?: string | null;
   netAPayer: number;
   depotNo?: number | null;
   deliveryType?: string | null;

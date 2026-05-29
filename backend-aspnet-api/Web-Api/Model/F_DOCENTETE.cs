@@ -12,6 +12,18 @@ namespace Web_Api.Model
         public const short STATUS_TENTATIVE = 2;
         public const short STATUS_REFUSE = 3;
 
+        public const short DOC_TYPE_BC = 0;
+        public const short DOC_TYPE_BL = 1;
+        public const short DOC_TYPE_QUOTE = 2;
+
+        public const string QUOTE_STATUS_DRAFT = "DRAFT";
+        public const string QUOTE_STATUS_SENT = "SENT";
+        public const string QUOTE_STATUS_ACCEPTED = "ACCEPTED";
+        public const string QUOTE_STATUS_REFUSED = "REFUSED";
+        public const string QUOTE_STATUS_EXPIRED = "EXPIRED";
+        public const string QUOTE_STATUS_CONVERTED = "CONVERTED";
+        public const string QUOTE_STATUS_CANCELLED = "CANCELLED";
+
         [Key]
         public int cbMarq { get; set; }
 
@@ -64,6 +76,18 @@ namespace Web_Api.Model
 
         [Column(TypeName = "decimal(24,13)")]
         public decimal? DO_TimbreFiscal { get; set; }
+
+        [Column(TypeName = "decimal(24,13)")]
+        public decimal? TotalBeforeDiscount { get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? B2BDiscountRate { get; set; }
+
+        [Column(TypeName = "decimal(24,13)")]
+        public decimal? B2BDiscountAmount { get; set; }
+
+        [StringLength(30)]
+        public string? DiscountSource { get; set; }
 
         [StringLength(150)]
         public string? DO_AdresseLivraison { get; set; }
@@ -203,6 +227,33 @@ namespace Web_Api.Model
         /// false, le client voit "En cours de livraison" sans carte ni ETA précis.
         /// </summary>
         public bool IsActiveDelivery { get; set; } = false;
+
+        // Workflow devis B2B (DO_Type = 2)
+        [StringLength(20)]
+        public string? QuoteStatus { get; set; }
+
+        public DateTime? QuoteValidUntil { get; set; }
+
+        public Guid? QuoteCreatedByUserId { get; set; }
+
+        public Guid? QuoteAssignedToUserId { get; set; }
+
+        public DateTime? QuoteSentAt { get; set; }
+
+        public DateTime? QuoteAcceptedAt { get; set; }
+
+        public DateTime? QuoteRefusedAt { get; set; }
+
+        public DateTime? QuoteConvertedAt { get; set; }
+
+        [StringLength(13)]
+        public string? QuoteConvertedToPiece { get; set; }
+
+        [StringLength(500)]
+        public string? QuoteClientNote { get; set; }
+
+        [StringLength(500)]
+        public string? QuoteInternalNote { get; set; }
 
         public void SetWorkflowStatus(short status)
         {

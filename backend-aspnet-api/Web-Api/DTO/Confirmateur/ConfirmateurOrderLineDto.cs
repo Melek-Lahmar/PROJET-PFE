@@ -17,6 +17,9 @@ namespace Web_Api.DTO.Confirmateur
         [JsonPropertyName("dL_PrixUnitaire")]
         public decimal? DL_PrixUnitaire { get; set; }
 
+        [JsonPropertyName("dL_MontantHT")]
+        public decimal? DL_MontantHT { get; set; }
+
         [JsonPropertyName("dL_MontantTTC")]
         public decimal? DL_MontantTTC { get; set; }
 

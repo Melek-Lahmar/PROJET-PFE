@@ -27,6 +27,7 @@
   "header.articles": "Articles",
   "header.cart": "Cart",
   "header.compare": "Compare",
+  "header.favorites": "My favorites",
   "header.profile": "My profile",
   "header.orders": "My orders",
   "header.addresses": "My addresses",
@@ -54,6 +55,20 @@
   "language.en": "English",
   "language.ar": "العربية",
   "language.switch": "Change language",
+
+  "favorites.title": "My favorites",
+  "favorites.subtitle": "Find the items you are following.",
+  "favorites.emptyTitle": "No favorites yet",
+  "favorites.emptyDescription": "Add your preferred items from the catalog.",
+  "favorites.discoverCatalog": "Browse catalog",
+  "favorites.add": "Add to favorites",
+  "favorites.remove": "Remove from favorites",
+  "favorites.added": "Added to favorites",
+  "favorites.removed": "Removed from favorites",
+  "favorites.loginRequired": "Sign in to add this item to your favorites.",
+  "favorites.loadError": "Unable to load your favorites.",
+  "favorites.retry": "Retry",
+  "favorites.count": "{{count}} favorite",
 
   "currency.tnd": "TND"
 }

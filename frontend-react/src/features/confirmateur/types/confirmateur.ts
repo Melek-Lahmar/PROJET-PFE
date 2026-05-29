@@ -25,17 +25,24 @@ export type ConfirmateurOrderLine = {
   dL_Design?: string | null;
   dL_Qte?: number | null;
   dL_PrixUnitaire?: number | null;
+  dL_MontantHT?: number | null;
   dL_MontantTTC?: number | null;
 };
 
 export type ConfirmateurOrder = {
   dO_Piece?: string | null;
   dO_Tiers?: string | null;
+  dO_Ref?: string | null;
+  dE_No?: number | null;
   dO_Date?: string | null;
 
   dO_TotalHT?: number | null;
   dO_TotalTTC?: number | null;
   dO_NetAPayer?: number | null;
+  totalBeforeDiscount?: number | null;
+  b2BDiscountRate?: number | null;
+  b2BDiscountAmount?: number | null;
+  discountSource?: string | null;
 
   dO_Valide?: number | null;
   statusLabel?: string | null;

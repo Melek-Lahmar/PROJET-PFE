@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../../auth/store/authStore";
+import { me } from "../../auth/api/authApi";
 import { Button } from "../../../shared/components/Button";
 import { SmartImage } from "../../../shared/components/SmartImage";
 import { resolveImageUrl } from "../../../shared/utils/image";
 import { env } from "../../../core/config/env";
 import { getMainImagesMap, type MainImagesMap } from "../../catalog/api/articleImagesApi";
 import { CheckoutChoiceModal } from "../../checkout/components/CheckoutChoiceModal";
+import { createQuote } from "../../b2bQuotes/api/b2bQuotesApi";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
+import { useToast } from "../../../shared/components/premium/Toast";
 import {
   EmptyView,
   PremiumHero,
@@ -18,6 +22,7 @@ import {
 
 export function CartPage() {
   const navigate = useNavigate();
+  const toast = useToast();
 
   const items = useCartStore((s) => s.items);
   const deliveryMode = useCartStore((s) => s.deliveryMode);
@@ -33,7 +38,21 @@ export function CartPage() {
   const total = useCartStore((s) => s.total());
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
+  const userId = useAuthStore((s) => s.userId);
+  const profile = useAuthStore((s) => s.profile);
+  const roles = useAuthStore((s) => (Array.isArray(s.roles) ? s.roles : []));
   const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: () => me(),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+  const effectiveProfile = profile ?? meQuery.data?.profile ?? null;
+  const isClientB2B =
+    isAuthenticated &&
+    roles.map((role) => role.toUpperCase()).includes("CLIENT") &&
+    effectiveProfile?.typeClient === 1;
 
   const formatTnd = (v: number) => v.toFixed(3);
   const arRefs = items.map((x) => x.arRef).filter(Boolean);
@@ -55,6 +74,27 @@ export function CartPage() {
 
     setIsChoiceModalOpen(true);
   }
+
+  const quoteMutation = useMutation({
+    mutationFn: () =>
+      createQuote({
+        clientUserId: userId ?? "",
+        sendImmediately: true,
+        clientNote: "Demande créée depuis le panier client.",
+        lines: items.map((item) => ({
+          articleRef: item.arRef,
+          qty: item.qty,
+        })),
+      }),
+    onSuccess: (quote) => {
+      clear();
+      toast.success("Demande de devis créée", quote.piece);
+      navigate(`/b2b/devis/${encodeURIComponent(quote.piece)}`);
+    },
+    onError: (error) => {
+      toast.error("Devis indisponible", getApiErrorMessage(error));
+    },
+  });
 
   if (items.length === 0) {
     return (
@@ -305,6 +345,20 @@ export function CartPage() {
                 >
                   Terminer la commande
                 </Button>
+
+                {isClientB2B ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="h-12 w-full rounded-2xl text-base font-bold"
+                    isLoading={quoteMutation.isPending}
+                    disabled={quoteMutation.isPending || items.length === 0}
+                    onClick={() => quoteMutation.mutate()}
+                  >
+                    Demander un devis B2B
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>

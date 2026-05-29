@@ -12,27 +12,40 @@ namespace Web_Api.Services
         public OrderTotals Compute(decimal subtotal, ProfilUtilisateur? client)
         {
             decimal? rate = null;
+            string? source = null;
 
             if (client != null && client.TypeClient == TypeClient.B2B)
             {
                 if (client.DiscountPercent.HasValue && client.DiscountPercent.Value > 0)
+                {
                     rate = client.DiscountPercent.Value;
+                    source = "DiscountPercent";
+                }
                 else if (client.Remise.HasValue && client.Remise.Value > 0)
+                {
                     rate = client.Remise.Value;
+                    source = "LegacyRemise";
+                }
             }
 
             decimal discountAmount = 0m;
             if (rate.HasValue)
             {
+                rate = Math.Clamp(rate.Value, 0m, 100m);
                 discountAmount = decimal.Round(subtotal * (rate.Value / 100m), 3);
             }
+
+            var total = subtotal - discountAmount;
+            if (total < 0m)
+                total = 0m;
 
             return new OrderTotals
             {
                 Subtotal = subtotal,
-                DiscountRate = rate,
+                DiscountRate = rate is > 0m ? rate : null,
                 DiscountAmount = discountAmount,
-                Total = subtotal - discountAmount,
+                DiscountSource = rate is > 0m ? source : null,
+                Total = total,
             };
         }
 
@@ -41,6 +54,7 @@ namespace Web_Api.Services
             public decimal Subtotal { get; init; }
             public decimal? DiscountRate { get; init; }
             public decimal DiscountAmount { get; init; }
+            public string? DiscountSource { get; init; }
             public decimal Total { get; init; }
         }
     }

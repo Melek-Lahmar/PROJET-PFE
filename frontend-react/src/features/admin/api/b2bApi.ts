@@ -9,6 +9,21 @@ export type B2BClient = {
   discountPercent: number | null;
   legacyRemise: number | null;
   gouvernorat: string | null;
+  totalRevenue: number;
+  ordersCount: number;
+  averageOrderAmount: number;
+  lastOrderDate: string | null;
+  suggestedDiscountPercent: number;
+  discountLevelLabel: string;
+};
+
+export type B2BDiscountUpdateResult = {
+  clientUserId: string;
+  oldValue: number | null;
+  newValue: number | null;
+  reason: string | null;
+  changedAt: string;
+  discountPercent: number | null;
 };
 
 export type B2BDiscountHistoryRow = {
@@ -21,33 +36,62 @@ export type B2BDiscountHistoryRow = {
   reason: string | null;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function pick(source: Record<string, unknown>, camel: string, pascal: string) {
+  return source[camel] ?? source[pascal];
+}
+
+function asString(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value === null || value === undefined) return null;
+  return String(value);
+}
+
+function asNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 export async function listB2BClients(): Promise<B2BClient[]> {
-  const { data } = await axiosClient.get<any[]>("/api/admin/clients/b2b");
-  return Array.isArray(data) ? data.map((d) => ({
-    userId: d.userId ?? d.UserId ?? null,
-    nomComplet: d.nomComplet ?? d.NomComplet ?? null,
-    nomSociete: d.nomSociete ?? d.NomSociete ?? null,
-    telephone: d.telephone ?? d.Telephone ?? null,
-    discountPercent: d.discountPercent ?? d.DiscountPercent ?? null,
-    legacyRemise: d.legacyRemise ?? d.LegacyRemise ?? null,
-    gouvernorat: d.gouvernorat ?? d.Gouvernorat ?? null,
+  const { data } = await axiosClient.get<unknown>("/api/admin/clients/b2b");
+  return Array.isArray(data) ? data.filter(isRecord).map((d) => ({
+    userId: asString(pick(d, "userId", "UserId")),
+    nomComplet: asString(pick(d, "nomComplet", "NomComplet")),
+    nomSociete: asString(pick(d, "nomSociete", "NomSociete")),
+    telephone: asString(pick(d, "telephone", "Telephone")),
+    discountPercent: asNumber(pick(d, "discountPercent", "DiscountPercent")),
+    legacyRemise: asNumber(pick(d, "legacyRemise", "LegacyRemise")),
+    gouvernorat: asString(pick(d, "gouvernorat", "Gouvernorat")),
+    totalRevenue: asNumber(pick(d, "totalRevenue", "TotalRevenue")) ?? 0,
+    ordersCount: asNumber(pick(d, "ordersCount", "OrdersCount")) ?? 0,
+    averageOrderAmount: asNumber(pick(d, "averageOrderAmount", "AverageOrderAmount")) ?? 0,
+    lastOrderDate: asString(pick(d, "lastOrderDate", "LastOrderDate")),
+    suggestedDiscountPercent: asNumber(pick(d, "suggestedDiscountPercent", "SuggestedDiscountPercent")) ?? 0,
+    discountLevelLabel: asString(pick(d, "discountLevelLabel", "DiscountLevelLabel")) ?? "Standard",
   })) : [];
 }
 
-export async function setClientDiscount(clientId: string, value: number | null, reason?: string) {
+export async function setClientDiscount(clientId: string, value: number | null, reason?: string): Promise<B2BDiscountUpdateResult> {
   const { data } = await axiosClient.patch(endpoints.adminClientDiscount(clientId), { value, reason });
   return data;
 }
 
 export async function listClientDiscountHistory(clientId: string): Promise<B2BDiscountHistoryRow[]> {
-  const { data } = await axiosClient.get<any[]>(endpoints.adminClientDiscountHistory(clientId));
-  return Array.isArray(data) ? data.map((d) => ({
-    id: d.id ?? d.Id,
-    clientUserId: d.clientUserId ?? d.ClientUserId,
-    oldValue: d.oldValue ?? d.OldValue ?? null,
-    newValue: d.newValue ?? d.NewValue ?? null,
-    changedByAdminId: d.changedByAdminId ?? d.ChangedByAdminId,
-    changedAt: d.changedAt ?? d.ChangedAt,
-    reason: d.reason ?? d.Reason ?? null,
+  const { data } = await axiosClient.get<unknown>(endpoints.adminClientDiscountHistory(clientId));
+  return Array.isArray(data) ? data.filter(isRecord).map((d) => ({
+    id: asString(pick(d, "id", "Id")) ?? "",
+    clientUserId: asString(pick(d, "clientUserId", "ClientUserId")) ?? "",
+    oldValue: asNumber(pick(d, "oldValue", "OldValue")),
+    newValue: asNumber(pick(d, "newValue", "NewValue")),
+    changedByAdminId: asString(pick(d, "changedByAdminId", "ChangedByAdminId")) ?? "",
+    changedAt: asString(pick(d, "changedAt", "ChangedAt")) ?? "",
+    reason: asString(pick(d, "reason", "Reason")),
   })) : [];
 }

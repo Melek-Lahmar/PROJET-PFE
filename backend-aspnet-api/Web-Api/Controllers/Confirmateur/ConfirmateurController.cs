@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -8,29 +9,34 @@ using Web_Api.Auth.Entities;
 using Web_Api.Constants;
 using Web_Api.data;
 using Web_Api.DTO.Confirmateur;
+using Web_Api.DTO.Quotes;
 using Web_Api.Hubs;
 using Web_Api.Model;
 using Web_Api.Services;
+using Web_Api.Services.B2B;
 
 namespace Web_Api.Controllers.Confirmateur
 {
     [ApiController]
     [Route("api/confirmateur")]
-    [Authorize(Roles = AppRoles.CONFIRMATEUR)]
+    [Authorize(Roles = $"{AppRoles.CONFIRMATEUR},{AppRoles.ADMIN}")]
     public class ConfirmateurController : ControllerBase
     {
         private readonly AppDbContext _db;
         private readonly IHubContext<ReclamationHub> _hub;
         private readonly SageService _sage;
+        private readonly QuoteService _quotes;
 
         public ConfirmateurController(
             AppDbContext db,
             IHubContext<ReclamationHub> hub,
-            SageService sage)
+            SageService sage,
+            QuoteService quotes)
         {
             _db = db;
             _hub = hub;
             _sage = sage;
+            _quotes = quotes;
         }
 
         private static string? TypeClientToString(TypeClient? t)
@@ -130,10 +136,16 @@ namespace Web_Api.Controllers.Confirmateur
             {
                 DO_Piece = x.DO_Piece,
                 DO_Tiers = x.DO_Tiers,
+                DO_Ref = x.DO_Ref,
+                DE_No = x.DE_No,
                 DO_Date = x.DO_Date,
                 DO_TotalHT = x.DO_TotalHT,
                 DO_TotalTTC = x.DO_TotalTTC,
                 DO_NetAPayer = x.DO_NetAPayer,
+                TotalBeforeDiscount = x.TotalBeforeDiscount,
+                B2BDiscountRate = x.B2BDiscountRate,
+                B2BDiscountAmount = x.B2BDiscountAmount,
+                DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
                 StatusLabel = x.DocumentStatus,
                 Lignes = new List<ConfirmateurOrderLineDto>()
@@ -172,6 +184,7 @@ namespace Web_Api.Controllers.Confirmateur
                     DL_Design = l.DL_Design,
                     DL_Qte = l.DL_Qte,
                     DL_PrixUnitaire = l.DL_PrixUnitaire,
+                    DL_MontantHT = l.DL_MontantHT,
                     DL_MontantTTC = l.DL_MontantTTC
                 })
                 .ToListAsync(ct);
@@ -185,10 +198,16 @@ namespace Web_Api.Controllers.Confirmateur
             {
                 DO_Piece = entete.DO_Piece,
                 DO_Tiers = entete.DO_Tiers,
+                DO_Ref = entete.DO_Ref,
+                DE_No = entete.DE_No,
                 DO_Date = entete.DO_Date,
                 DO_TotalHT = entete.DO_TotalHT,
                 DO_TotalTTC = entete.DO_TotalTTC,
                 DO_NetAPayer = entete.DO_NetAPayer,
+                TotalBeforeDiscount = entete.TotalBeforeDiscount,
+                B2BDiscountRate = entete.B2BDiscountRate,
+                B2BDiscountAmount = entete.B2BDiscountAmount,
+                DiscountSource = entete.DiscountSource,
                 DO_Valide = entete.DO_Valide,
                 StatusLabel = entete.DocumentStatus,
 
@@ -203,6 +222,13 @@ namespace Web_Api.Controllers.Confirmateur
         }
 
         public class UpdateStatusRequest { public short Status { get; set; } }
+
+        public class UpdateQuoteStatusRequest
+        {
+            public string Status { get; set; } = string.Empty;
+            public string? Reason { get; set; }
+            public string? Message { get; set; }
+        }
 
         // ✅ EN_ATTENTE / TENTATIVE / REFUSE
         [HttpPut("commandes/{piece}/status")]
@@ -394,6 +420,10 @@ namespace Web_Api.Controllers.Confirmateur
                 DO_ModePaiement = bc.DO_ModePaiement,
                 DO_FraisLivraison = bc.DO_FraisLivraison,
                 DO_TimbreFiscal = bc.DO_TimbreFiscal,
+                TotalBeforeDiscount = bc.TotalBeforeDiscount,
+                B2BDiscountRate = bc.B2BDiscountRate,
+                B2BDiscountAmount = bc.B2BDiscountAmount,
+                DiscountSource = bc.DiscountSource,
 
                 DO_AdresseLivraison = bc.DO_AdresseLivraison,
                 DO_VilleLivraison = bc.DO_VilleLivraison,
@@ -544,10 +574,16 @@ namespace Web_Api.Controllers.Confirmateur
             {
                 DO_Piece = x.DO_Piece,
                 DO_Tiers = x.DO_Tiers,
+                DO_Ref = x.DO_Ref,
+                DE_No = x.DE_No,
                 DO_Date = x.DO_Date,
                 DO_TotalHT = x.DO_TotalHT,
                 DO_TotalTTC = x.DO_TotalTTC,
                 DO_NetAPayer = x.DO_NetAPayer,
+                TotalBeforeDiscount = x.TotalBeforeDiscount,
+                B2BDiscountRate = x.B2BDiscountRate,
+                B2BDiscountAmount = x.B2BDiscountAmount,
+                DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
                 StatusLabel = x.DocumentStatus,
                 Lignes = new List<ConfirmateurOrderLineDto>()
@@ -584,6 +620,7 @@ namespace Web_Api.Controllers.Confirmateur
                     DL_Design = l.DL_Design,
                     DL_Qte = l.DL_Qte,
                     DL_PrixUnitaire = l.DL_PrixUnitaire,
+                    DL_MontantHT = l.DL_MontantHT,
                     DL_MontantTTC = l.DL_MontantTTC
                 })
                 .ToListAsync(ct);
@@ -596,10 +633,16 @@ namespace Web_Api.Controllers.Confirmateur
             {
                 DO_Piece = entete.DO_Piece,
                 DO_Tiers = entete.DO_Tiers,
+                DO_Ref = entete.DO_Ref,
+                DE_No = entete.DE_No,
                 DO_Date = entete.DO_Date,
                 DO_TotalHT = entete.DO_TotalHT,
                 DO_TotalTTC = entete.DO_TotalTTC,
                 DO_NetAPayer = entete.DO_NetAPayer,
+                TotalBeforeDiscount = entete.TotalBeforeDiscount,
+                B2BDiscountRate = entete.B2BDiscountRate,
+                B2BDiscountAmount = entete.B2BDiscountAmount,
+                DiscountSource = entete.DiscountSource,
                 DO_Valide = entete.DO_Valide,
                 StatusLabel = entete.DocumentStatus,
 
@@ -609,6 +652,151 @@ namespace Web_Api.Controllers.Confirmateur
 
                 Lignes = lignes
             });
+        }
+
+        // ✅ LISTE DEVIS B2B — espace confirmateur dédié, sans mélange BC/BL.
+        [HttpGet("devis")]
+        public async Task<ActionResult<List<QuoteListItemDto>>> GetB2BQuotes([FromQuery] string? status, CancellationToken ct)
+        {
+            return Ok(await _quotes.GetConfirmateurQuotesAsync(status, ct));
+        }
+
+        // ✅ DÉTAIL DEVIS B2B — protégé CONFIRMATEUR et filtré B2B dans QuoteService.
+        [HttpGet("devis/{piece}")]
+        public async Task<ActionResult<QuoteDetailDto>> GetB2BQuoteByPiece(string piece, CancellationToken ct)
+        {
+            try
+            {
+                return Ok(await _quotes.GetConfirmateurQuoteDetailAsync(piece, ct));
+            }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        // ✅ Traitement métier devis : remettre en attente, valider/accepter, refuser.
+        [HttpPut("devis/{piece}/status")]
+        public async Task<ActionResult<QuoteDetailDto>> UpdateB2BQuoteStatus(string piece, [FromBody] UpdateQuoteStatusRequest req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.UpdateQuoteStatusByConfirmateurAsync(actor.Value, new[] { AppRoles.CONFIRMATEUR }, piece, req.Status, req.Message ?? req.Reason, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        [HttpPost("devis/{piece}/take")]
+        public async Task<ActionResult<QuoteDetailDto>> TakeB2BQuote(string piece, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.TakeQuoteAsync(actor.Value, piece, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        [HttpPost("devis/{piece}/comments")]
+        public async Task<ActionResult<QuoteDetailDto>> AddB2BQuoteComment(string piece, [FromBody] AddQuoteCommentRequestDto req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.AddCommentAsync(actor.Value, new[] { AppRoles.CONFIRMATEUR }, piece, req?.Message, req?.IsPublic ?? true, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        [HttpPut("devis/{piece}/lines")]
+        public async Task<ActionResult<QuoteDetailDto>> UpdateB2BQuoteLines(string piece, [FromBody] UpdateQuoteLinesRequestDto req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.UpdateLinesAsync(actor.Value, new[] { AppRoles.CONFIRMATEUR }, piece, req, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        [HttpPost("devis/{piece}/send-to-client")]
+        public async Task<ActionResult<QuoteDetailDto>> SendB2BQuoteToClient(string piece, [FromBody] AddQuoteCommentRequestDto? req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.SendToClientAsync(actor.Value, new[] { AppRoles.CONFIRMATEUR }, piece, req?.Message, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        [HttpPost("devis/{piece}/cancel")]
+        public async Task<ActionResult<QuoteDetailDto>> CancelB2BQuote(string piece, [FromBody] AddQuoteCommentRequestDto req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+                return Ok(await _quotes.CancelQuoteAsync(actor.Value, new[] { AppRoles.CONFIRMATEUR }, piece, req?.Message, ct));
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        public class TransformQuoteResultDto
+        {
+            public string Piece { get; set; } = string.Empty;
+            public string QuotePiece { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+        }
+
+        // ✅ Transformation Devis B2B validé → BC, réutilise la logique transactionnelle QuoteService.
+        [HttpPost("devis/{piece}/transform-to-bc")]
+        public async Task<ActionResult<TransformQuoteResultDto>> TransformB2BQuoteToBc(string piece, [FromBody] ConvertQuoteToOrderRequestDto? req, CancellationToken ct)
+        {
+            try
+            {
+                var actor = GetUserId();
+                if (actor == null) return Unauthorized();
+
+                var result = await _quotes.ConvertQuoteToOrderAsync(
+                    actor.Value,
+                    new[] { AppRoles.CONFIRMATEUR },
+                    piece,
+                    req ?? new ConvertQuoteToOrderRequestDto(),
+                    ct);
+
+                return Ok(new TransformQuoteResultDto
+                {
+                    Piece = result.BcPiece,
+                    QuotePiece = piece,
+                    Message = result.Message
+                });
+            }
+            catch (QuoteValidationException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (QuoteNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (QuoteForbiddenException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message }); }
+        }
+
+        private Guid? GetUserId()
+        {
+            var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(raw, out var id) ? id : null;
         }
 
         /// <summary>

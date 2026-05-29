@@ -276,7 +276,7 @@ namespace Web_Api.Tests.Payments
 
             db.SaveChanges();
 
-            var bonCommandeService = new BonCommandeService(db);
+            var bonCommandeService = new BonCommandeService(db, new OrderCalculatorService());
             var service = new VirtualPaymentService(db, bonCommandeService);
 
             return new TestFixture(db, service);
