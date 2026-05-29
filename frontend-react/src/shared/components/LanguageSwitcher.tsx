@@ -25,7 +25,7 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-3 text-sm font-bold shadow-sm hover:border-primary/30"
+        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/10"
         aria-label="Changer de langue"
       >
         <span>{active.native}</span>
@@ -42,7 +42,7 @@ export function LanguageSwitcher() {
             onClick={() => setOpen(false)}
             aria-label="Fermer"
           />
-          <div className="absolute right-0 z-50 mt-2 min-w-[160px] overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+          <div className="absolute right-0 z-50 mt-2 min-w-[160px] overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
             {LANGS.map((l) => (
               <button
                 key={l.code}

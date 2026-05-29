@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { me, updateMyProfile } from "../api/authApi";
@@ -24,14 +25,19 @@ import {
   roundCoordinate,
   TUNISIA_GOUVERNORATS,
 } from "../../geo/utils/tunisiaLocationSync";
-import {
-  EmptyView,
-  PremiumHero,
-} from "../../../shared/components/premium";
+import { EmptyView, PremiumHero } from "../../../shared/components/premium";
+
+function IconMenu(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" {...props}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
 
 function IconShield(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6z" />
       <path d="m9 12 2 2 4-4" />
     </svg>
@@ -40,7 +46,7 @@ function IconShield(props: React.SVGProps<SVGSVGElement>) {
 
 function IconPin(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M12 22s7-4.5 7-12a7 7 0 0 0-14 0c0 7.5 7 12 7 12z" />
       <circle cx="12" cy="10" r="2" />
     </svg>
@@ -49,7 +55,7 @@ function IconPin(props: React.SVGProps<SVGSVGElement>) {
 
 function IconUser(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <circle cx="12" cy="8" r="4" />
       <path d="M5 21a7 7 0 0 1 14 0" />
     </svg>
@@ -58,7 +64,7 @@ function IconUser(props: React.SVGProps<SVGSVGElement>) {
 
 function IconStore(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M3 10.5 5 4h14l2 6.5" />
       <path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
       <path d="M9 20v-6h6v6" />
@@ -69,9 +75,75 @@ function IconStore(props: React.SVGProps<SVGSVGElement>) {
 
 function IconSync(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M20 11a8 8 0 0 0-14.9-4M4 13a8 8 0 0 0 14.9 4" />
       <path d="M4 4v4h4M20 20v-4h-4" />
+    </svg>
+  );
+}
+
+function IconTruck(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 7h11v10H3z" />
+      <path d="M14 10h4l3 3v4h-7z" />
+      <circle cx="7" cy="19" r="2" />
+      <circle cx="18" cy="19" r="2" />
+    </svg>
+  );
+}
+
+function IconHeart(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" />
+    </svg>
+  );
+}
+
+function IconSettings(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </svg>
+  );
+}
+
+function IconLogout(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}
+
+function IconEdit(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function IconInfo(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+function IconLock(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="4" y="11" width="16" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
   );
 }
@@ -95,6 +167,14 @@ function initialsFromEmail(email: string) {
   return left.slice(0, 2).toUpperCase();
 }
 
+function displayNameFromProfile(meData: MeResponseDto) {
+  const profileName = meData.profile?.nomComplet?.trim();
+  if (profileName) return profileName;
+  const email = meData.email ?? "";
+  const local = email.split("@")[0]?.trim();
+  return local || "Client";
+}
+
 function formatCoordinate(value: number | null) {
   return typeof value === "number" ? value.toFixed(6) : "";
 }
@@ -104,12 +184,110 @@ function buildLocationErrorMessage(error: unknown) {
   return "Impossible de synchroniser la localisation.";
 }
 
-function InfoRow({ label, value }: { label: string; value?: string | null }) {
+const cardClass =
+  "rounded-[24px] border border-slate-200 bg-white text-slate-900 shadow-[0_22px_64px_-52px_rgba(15,23,42,0.5)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100";
+const inputClass =
+  "h-11 rounded-2xl border-slate-200 bg-white text-slate-900 shadow-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15";
+const labelClass = "mb-2 block text-xs font-bold uppercase text-slate-500 dark:text-slate-400";
+
+function SectionTitle({
+  icon,
+  title,
+  eyebrow,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  eyebrow?: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-[hsl(var(--input))] px-4 py-4 text-sm">
-      <span className="font-semibold text-muted-foreground">{label}</span>
-      <span className="max-w-[260px] text-right font-semibold text-card-foreground">{safeText(value)}</span>
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+      <div className="flex items-center gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          {icon}
+        </span>
+        <div>
+          {eyebrow ? <div className="text-xs font-semibold uppercase text-slate-400">{eyebrow}</div> : null}
+          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-50">{title}</h2>
+        </div>
+      </div>
+      {action}
+    </header>
+  );
+}
+
+function InfoTile({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/70">
+      <div className="text-xs font-bold uppercase text-slate-400">{label}</div>
+      <div className="mt-1 truncate text-sm font-extrabold text-slate-950 dark:text-slate-100">{safeText(value)}</div>
     </div>
+  );
+}
+
+function LockedCoordinateField({ label, value, placeholder }: { label: string; value: string; placeholder: string }) {
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <div className="relative">
+        <Input value={value} readOnly placeholder={placeholder} className={`${inputClass} pr-11 text-slate-500 dark:text-slate-300`} />
+        <IconLock className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      </div>
+    </div>
+  );
+}
+
+function AccountSidebar({ onLogout }: { onLogout: () => void }) {
+  const items = [
+    { label: "Mon compte", icon: <IconUser className="h-4 w-4" />, href: "/profile", active: true },
+    { label: "Mes commandes", icon: <IconTruck className="h-4 w-4" />, href: "/orders" },
+    { label: "Mes favoris", icon: <IconHeart className="h-4 w-4" />, href: "/favorites" },
+    { label: "Mes adresses", icon: <IconPin className="h-4 w-4" />, href: "/profile/addresses" },
+    { label: "Paramètres", icon: <IconSettings className="h-4 w-4" />, href: "/profile" },
+  ];
+
+  return (
+    <aside className="lg:sticky lg:top-28">
+      <div className="rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_22px_64px_-54px_rgba(15,23,42,0.55)] dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-3 flex items-center gap-3 px-3 py-3 lg:hidden">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-600 text-white">
+            <IconMenu className="h-4 w-4" />
+          </span>
+          <div>
+            <div className="text-sm font-extrabold text-slate-950 dark:text-slate-50">Navigation</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Compte client</div>
+          </div>
+        </div>
+
+        <nav className="grid gap-1">
+          {items.map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              className={[
+                "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition",
+                item.active
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white",
+              ].join(" ")}
+            >
+              {item.active ? <span className="absolute left-0 top-3 h-6 w-1 rounded-r-full bg-blue-600" /> : null}
+              <span className={item.active ? "text-blue-600 dark:text-blue-300" : "text-slate-400"}>{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+          >
+            <IconLogout className="h-4 w-4" />
+            Déconnexion
+          </button>
+        </nav>
+      </div>
+    </aside>
   );
 }
 
@@ -127,67 +305,39 @@ function VendeurProfilePanel({
 
   return (
     <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-      <div className="space-y-6 lg:col-span-7">
-        <div className="rounded-3xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-3 border-b border-border px-6 py-5">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--input))] text-card-foreground shadow-sm ring-1 ring-border/60">
-              <IconUser className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Informations</div>
-              <h2 className="text-lg font-extrabold text-card-foreground">Identité vendeur</h2>
-            </div>
-          </div>
-
-          <div className="grid gap-4 px-6 py-6 md:grid-cols-2">
-            <InfoRow label="Email" value={meData.email} />
-            <InfoRow label="Nom complet" value={profile?.nomComplet} />
-            <InfoRow label="Téléphone" value={profile?.telephone} />
-            <InfoRow label="CIN" value={profile?.cin} />
-            <InfoRow label="Code employé" value={profile?.codeEmploye} />
-            <InfoRow label="Poste" value={profile?.poste} />
-            <InfoRow label="Département" value={profile?.departement} />
-            <InfoRow label="Gouvernorat" value={gouvernoratLabel(profile?.gouvernorat)} />
-            <div className="md:col-span-2">
-              <InfoRow label="Délégation" value={profile?.delegation} />
-            </div>
+      <div className={`${cardClass} lg:col-span-7`}>
+        <SectionTitle icon={<IconUser className="h-5 w-5" />} eyebrow="Informations" title="Identité vendeur" />
+        <div className="grid gap-4 p-6 md:grid-cols-2">
+          <InfoTile label="Email" value={meData.email} />
+          <InfoTile label="Nom complet" value={profile?.nomComplet} />
+          <InfoTile label="Téléphone" value={profile?.telephone} />
+          <InfoTile label="CIN" value={profile?.cin} />
+          <InfoTile label="Code employé" value={profile?.codeEmploye} />
+          <InfoTile label="Poste" value={profile?.poste} />
+          <InfoTile label="Département" value={profile?.departement} />
+          <InfoTile label="Gouvernorat" value={gouvernoratLabel(profile?.gouvernorat)} />
+          <div className="md:col-span-2">
+            <InfoTile label="Délégation" value={profile?.delegation} />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6 lg:col-span-5">
-        <div className="rounded-3xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-3 border-b border-border px-6 py-5">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--input))] text-card-foreground shadow-sm ring-1 ring-border/60">
-              <IconStore className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Affectation</div>
-              <h2 className="text-lg font-extrabold text-card-foreground">Dépôt vendeur</h2>
+      <div className={`${cardClass} lg:col-span-5`}>
+        <SectionTitle icon={<IconStore className="h-5 w-5" />} eyebrow="Affectation" title="Dépôt vendeur" />
+        <div className="space-y-4 p-6">
+          {vendeurContextError ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
+              {getApiErrorMessage(vendeurContextError)}
             </div>
-          </div>
-
-          <div className="space-y-4 px-6 py-6">
-            {vendeurContextError ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-4 text-sm text-amber-800">
-                {getApiErrorMessage(vendeurContextError)}
-              </div>
-            ) : null}
-
-            <InfoRow label="Code dépôt profil" value={profile?.codeDepot} />
-            <InfoRow label="Intitulé dépôt" value={depot?.depotIntitule || profile?.codeDepot} />
-            <InfoRow label="Code dépôt" value={depot?.depotCode} />
-            <InfoRow label="Ville dépôt" value={depot?.city} />
-            <InfoRow label="Code postal dépôt" value={depot?.postalCode} />
-            <div className="rounded-2xl border border-border bg-[hsl(var(--input))] px-4 py-4 text-sm">
-              <div className="font-semibold text-muted-foreground">Adresse dépôt</div>
-              <div className="mt-2 font-semibold text-card-foreground">{safeText(depot?.address)}</div>
-            </div>
-
-            <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-4 text-sm text-card-foreground">
-              Les adresses de livraison client et la localisation GPS précise sont masquées pour le rôle vendeur.
-              Ce profil affiche uniquement les informations personnelles du vendeur et le dépôt auquel il est affecté.
-            </div>
+          ) : null}
+          <InfoTile label="Code dépôt profil" value={profile?.codeDepot} />
+          <InfoTile label="Intitulé dépôt" value={depot?.depotIntitule || profile?.codeDepot} />
+          <InfoTile label="Code dépôt" value={depot?.depotCode} />
+          <InfoTile label="Ville dépôt" value={depot?.city} />
+          <InfoTile label="Code postal dépôt" value={depot?.postalCode} />
+          <InfoTile label="Adresse dépôt" value={depot?.address} />
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm leading-6 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
+            Les adresses de livraison client et la localisation GPS précise sont masquées pour le rôle vendeur.
           </div>
         </div>
       </div>
@@ -196,7 +346,9 @@ function VendeurProfilePanel({
 }
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const setMe = useAuthStore((s) => s.setMe);
+  const clear = useAuthStore((s) => s.clear);
 
   const q = useQuery({
     queryKey: ["me"],
@@ -204,8 +356,6 @@ export function ProfilePage() {
   });
 
   const isVendeur = q.data?.roles?.includes("VENDEUR") ?? false;
-  // Module 6 (Master Prompt) — Aucune carte / GPS dans le profil confirmateur.
-  // L'utilisateur n'a besoin ni de visualiser ni d'éditer ses coordonnées GPS dans son profil.
   const isConfirmateur =
     (q.data?.roles?.includes("CONFIRMATEUR") ?? false) ||
     (q.data?.roles?.includes("CONFIRMATRICE") ?? false);
@@ -287,7 +437,7 @@ export function ProfilePage() {
         keepSelectedRegion?: boolean;
         status?: "gps" | "selection" | "reverse";
         zoom?: number;
-      }
+      },
     ) => {
       const requestId = ++syncRequestRef.current;
       const nextLat = roundCoordinate(lat);
@@ -334,7 +484,7 @@ export function ProfilePage() {
         }
       }
     },
-    [gouvernorat]
+    [gouvernorat],
   );
 
   const centerFromSelection = useCallback(
@@ -375,7 +525,7 @@ export function ProfilePage() {
         zoom: targetZoom,
       });
     },
-    [synchronizeFromCoordinates]
+    [synchronizeFromCoordinates],
   );
 
   const handleGouvernoratChange = (nextValue: number) => {
@@ -436,6 +586,8 @@ export function ProfilePage() {
     );
   }
 
+  const displayName = displayNameFromProfile(q.data);
+  const primaryRole = q.data.roles?.[0] ?? "CLIENT";
   const canSave = delegation.trim().length > 0 && adresse.trim().length > 0;
   const locationBusyLabel =
     locationStatus === "gps"
@@ -443,286 +595,268 @@ export function ProfilePage() {
       : locationStatus === "selection"
         ? "Synchronisation carte et formulaire..."
         : locationStatus === "reverse"
-          ? "Mise à jour de l’adresse et des coordonnées..."
+          ? "Mise à jour de l'adresse et des coordonnées..."
           : null;
 
+  const logout = () => {
+    clear();
+    navigate("/login", { replace: true });
+  };
+
   return (
-    <div className="w-full space-y-7">
-      <div className="rounded-3xl border border-border bg-card/80 p-7 shadow-sm backdrop-blur">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-primary text-sm font-black text-white shadow-sm">
-              <span className="relative z-10">{initials}</span>
-              <div className="absolute inset-0 opacity-35 [background-image:radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_60%)]" />
-            </div>
+    <div className="mx-auto w-full max-w-[1440px] pb-10">
+      <div className="grid items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <AccountSidebar onLogout={logout} />
 
-            <div className="min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Profil</div>
-              <h1 className="truncate text-2xl font-extrabold tracking-tight text-card-foreground">Mon compte</h1>
-              <div className="truncate text-sm font-semibold text-muted-foreground">{email}</div>
+        <main className="min-w-0 space-y-6">
+          <h1 className="text-3xl font-extrabold text-slate-950 dark:text-slate-50 md:text-4xl">Mon compte</h1>
 
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(q.data.roles ?? []).map((role) => (
-                  <span
-                    key={role}
-                    className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/35 px-3 py-1 text-xs font-bold text-card-foreground/90 shadow-sm"
-                  >
-                    <IconShield className="h-3.5 w-3.5 text-primary" />
-                    {role}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sécurité</div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-              {isConfirmateur
-                ? "Le profil confirmateur ne contient ni carte ni coordonnées GPS."
-                : isVendeur
-                  ? "Le profil vendeur masque l’adresse de livraison et la localisation exacte."
-                  : "Les coordonnées GPS restent visibles mais non modifiables manuellement."}
-            </div>
-
-            {!isConfirmateur && !isVendeur && (
-              <a
-                href="/profile/addresses"
-                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-primary/40 bg-primary/5 px-4 text-sm font-bold text-primary transition hover:bg-primary/10"
-              >
-                <IconPin className="h-4 w-4" />
-                Mes adresses (carnet)
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {isVendeur ? (
-        <VendeurProfilePanel
-          meData={q.data}
-          vendeurContext={vendeurContextQuery.data}
-          vendeurContextError={vendeurContextQuery.isError ? vendeurContextQuery.error : undefined}
-        />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-          <div className="space-y-6 lg:col-span-7">
-            <div className="rounded-3xl border border-border bg-card shadow-sm">
-              <div className="flex items-center justify-between border-b border-border px-6 py-5">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--input))] text-card-foreground shadow-sm ring-1 ring-border/60">
-                    <IconUser className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Informations</div>
-                    <h2 className="text-lg font-extrabold text-card-foreground">Général</h2>
+          <section className={`${cardClass} overflow-hidden`}>
+            <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center">
+              <div className="flex min-w-0 items-center gap-5">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-black text-white shadow-[0_18px_38px_-24px_rgba(37,99,235,0.95)]">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-2xl font-extrabold text-slate-950 dark:text-slate-50">{displayName}</h2>
+                  <div className="mt-1 truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{email}</div>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-extrabold text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200">
+                      {primaryRole}
+                    </span>
                   </div>
                 </div>
-
-                <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
-                  Editable
-                </span>
               </div>
 
-              <div className="grid gap-4 px-6 py-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Gouvernorat</label>
-                  <select
-                    value={gouvernorat}
-                    onChange={(event) => handleGouvernoratChange(Number(event.target.value))}
-                    className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm text-card-foreground shadow-sm focus:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/10"
-                  >
-                    {TUNISIA_GOUVERNORATS.map((item, index) => (
-                      <option key={item} value={index}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Délégation</label>
-                  <select
-                    value={delegation}
-                    onChange={(event) => handleDelegationChange(event.target.value)}
-                    className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm text-card-foreground shadow-sm focus:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/10"
-                  >
-                    <option value="">Choisir une délégation</option>
-                    {(delQuery.data ?? []).map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Téléphone</label>
-                  <Input
-                    value={telephone}
-                    onChange={(event) => setTelephone(event.target.value)}
-                    placeholder="Ex: 22123456"
-                    className="h-11 rounded-2xl border-border bg-card shadow-sm focus:ring-4 focus:ring-primary/10"
-                  />
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/70">
+                <div className="flex items-start gap-4">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-200 dark:ring-blue-400/20">
+                    <IconShield className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold text-slate-950 dark:text-slate-50">Sécurité</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                      {isConfirmateur
+                        ? "Le profil confirmateur ne contient ni carte ni coordonnées GPS."
+                        : isVendeur
+                          ? "Le profil vendeur masque l'adresse de livraison et la localisation exacte."
+                          : "Les coordonnées GPS restent visibles mais non modifiables manuellement."}
+                    </p>
+                    {!isConfirmateur && !isVendeur ? (
+                      <Link
+                        to="/profile/addresses"
+                        className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-4 text-sm font-extrabold text-blue-700 transition hover:bg-blue-50 dark:border-blue-500/30 dark:bg-slate-900 dark:text-blue-200 dark:hover:bg-blue-500/10"
+                      >
+                        <IconPin className="h-4 w-4" />
+                        Mes adresses (carnet)
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
+          </section>
 
-            {/* Module 6 (Master Prompt) — Section localisation/GPS/carte masquée pour le rôle CONFIRMATEUR. */}
-            {!isConfirmateur && (
-              <div className="rounded-3xl border border-border bg-card shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5">
+          {isVendeur ? (
+            <VendeurProfilePanel
+              meData={q.data}
+              vendeurContext={vendeurContextQuery.data}
+              vendeurContextError={vendeurContextQuery.isError ? vendeurContextQuery.error : undefined}
+            />
+          ) : (
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] xl:items-start">
+              <div className="space-y-6">
+                <section className={cardClass}>
+                  <SectionTitle
+                    icon={<IconUser className="h-5 w-5" />}
+                    title="Informations générales"
+                    action={
+                      <span className="inline-flex h-9 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <IconEdit className="h-3.5 w-3.5" />
+                        Modifier
+                      </span>
+                    }
+                  />
+                  <div className="grid gap-4 p-6 md:grid-cols-3">
+                    <div>
+                      <label className={labelClass}>Gouvernorat</label>
+                      <select
+                        value={gouvernorat}
+                        onChange={(event) => handleGouvernoratChange(Number(event.target.value))}
+                        className={`${inputClass} w-full px-4`}
+                      >
+                        {TUNISIA_GOUVERNORATS.map((item, index) => (
+                          <option key={item} value={index}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Délégation</label>
+                      <select
+                        value={delegation}
+                        onChange={(event) => handleDelegationChange(event.target.value)}
+                        className={`${inputClass} w-full px-4`}
+                      >
+                        <option value="">Choisir une délégation</option>
+                        {(delQuery.data ?? []).map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Téléphone</label>
+                      <Input
+                        value={telephone}
+                        onChange={(event) => setTelephone(event.target.value)}
+                        placeholder="Ex: 22123456"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {!isConfirmateur && (
+                  <section className={cardClass}>
+                    <SectionTitle
+                      icon={<IconPin className="h-5 w-5" />}
+                      title="Localisation (Carte, GPS et adresse)"
+                      action={
+                          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                          <IconSync className="h-3.5 w-3.5" />
+                          {locationBusyLabel ?? "Synchronisation active"}
+                        </span>
+                      }
+                    />
+
+                    <div className="space-y-5 p-6">
+                      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm leading-6 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
+                        <IconInfo className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" />
+                        <p>
+                          Les champs latitude et longitude sont visibles mais verrouillés. Ils se mettent à jour uniquement via l'utilisation de ma position.
+                        </p>
+                      </div>
+
+                      {locationError ? (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
+                          {locationError}
+                        </div>
+                      ) : null}
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <LockedCoordinateField label="Latitude" value={formatCoordinate(latitude)} placeholder="34.xxxxxx" />
+                        <LockedCoordinateField label="Longitude" value={formatCoordinate(longitude)} placeholder="10.xxxxxx" />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <label className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Carte synchronisée</label>
+                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            Gouvernorat : {safeText(getGouvernoratLabelById(gouvernorat))} {delegation ? `• Délégation : ${delegation}` : ""}
+                          </span>
+                        </div>
+
+                        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.6)] dark:border-slate-800 dark:bg-slate-900">
+                          <AddressMapField
+                            gouvernoratId={gouvernorat}
+                            delegation={delegation}
+                            latitude={latitude}
+                            longitude={longitude}
+                            viewZoom={mapZoom}
+                            onChange={handleMapChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </div>
+
+              <section className={`${cardClass} xl:sticky xl:top-28`}>
+                <header className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsl(var(--input))] text-card-foreground shadow-sm ring-1 ring-border/60">
-                      <IconPin className="h-5 w-5" />
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      <IconTruck className="h-5 w-5" />
                     </span>
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Localisation</div>
-                      <h2 className="text-lg font-extrabold text-card-foreground">Carte, GPS et adresse</h2>
+                      <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-50">Adresse de livraison</h2>
+                      <div className="mt-2 h-1 w-16 rounded-full bg-blue-600" />
                     </div>
                   </div>
+                </header>
 
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/35 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    <IconSync className="h-3.5 w-3.5" />
-                    {locationBusyLabel ?? "Synchronisation active entre formulaire et carte"}
-                  </div>
-                </div>
-
-                <div className="space-y-6 px-6 py-6">
-                  <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-4 text-sm text-card-foreground">
-                    Les champs latitude et longitude sont visibles mais verrouillés. Ils se mettent à jour uniquement via <b>Utiliser ma position</b>, un clic sur la carte, ou le déplacement du pin.
-                  </div>
-
-                  {locationError ? (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
-                      {locationError}
-                    </div>
-                  ) : null}
-
+                <div className="space-y-5 p-6">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Latitude</label>
+                    <div>
+                      <label className={labelClass}>Code postal</label>
                       <Input
-                        value={formatCoordinate(latitude)}
-                        readOnly
-                        placeholder="34.xxxxxx"
-                        className="h-11 rounded-2xl border-border bg-muted/35 shadow-sm"
+                        value={codePostal}
+                        onChange={(event) => setCodePostal(event.target.value)}
+                        placeholder="Ex: 3000"
+                        className={inputClass}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Longitude</label>
-                      <Input
-                        value={formatCoordinate(longitude)}
-                        readOnly
-                        placeholder="10.xxxxxx"
-                        className="h-11 rounded-2xl border-border bg-muted/35 shadow-sm"
-                      />
+
+                    <div>
+                      <label className={labelClass}>Pays</label>
+                      <div className="relative">
+                        <Input value={`🇹🇳  ${PAYS_FIXE}`} readOnly className={`${inputClass} cursor-default text-slate-700 dark:text-slate-200`} />
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">⌄</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Carte synchronisée</label>
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        Gouvernorat {safeText(getGouvernoratLabelById(gouvernorat))} {delegation ? `• ${delegation}` : ""}
-                      </span>
-                    </div>
-
-                    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-                      <AddressMapField
-                        gouvernoratId={gouvernorat}
-                        delegation={delegation}
-                        latitude={latitude}
-                        longitude={longitude}
-                        viewZoom={mapZoom}
-                        onChange={handleMapChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-6 lg:col-span-5">
-            <div className="sticky top-24 rounded-3xl border border-border bg-card shadow-sm">
-              <div className="border-b border-border px-6 py-5">
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Adresse</div>
-                <h2 className="mt-1 text-lg font-extrabold text-card-foreground">Livraison</h2>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  La carte, la géolocalisation, l’adresse et le code postal restent synchronisés dans les cas métier autorisés.
-                </div>
-              </div>
-
-              <div className="space-y-5 px-6 py-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Adresse</label>
-                  <textarea
-                    value={adresse}
-                    onChange={(event) => setAdresse(event.target.value)}
-                    rows={4}
-                    placeholder="L’adresse est recalculée après localisation ou déplacement du pin."
-                    className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-card-foreground shadow-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Code postal</label>
-                    <Input
-                      value={codePostal}
-                      onChange={(event) => setCodePostal(event.target.value)}
-                      placeholder="Ex: 3000"
-                      className="h-11 rounded-2xl border-border bg-card shadow-sm focus:ring-4 focus:ring-primary/10"
+                  <div>
+                    <label className={labelClass}>Adresse</label>
+                    <textarea
+                      value={adresse}
+                      onChange={(event) => setAdresse(event.target.value)}
+                      rows={4}
+                      placeholder="Route de Gremda, Markaz Kammoun"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pays</label>
-                    <Input value={PAYS_FIXE} readOnly className="h-11 rounded-2xl border-border bg-muted/35 shadow-sm" />
+                  <div>
+                    <label className={labelClass}>Complément d'adresse (optionnel)</label>
+                    <Input
+                      value={adresseComplementaire}
+                      onChange={(event) => setAdresseComplementaire(event.target.value)}
+                      placeholder="App, étage, repère..."
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-5 dark:border-blue-500/30 dark:bg-blue-500/10">
+                    <div className="text-sm font-extrabold text-slate-950 dark:text-slate-50">Synchronisation</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Gouvernorat et délégation recentrent la carte. GPS et pin mettent à jour automatiquement l'adresse, le code postal et la région quand c'est détectable.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => mut.mutate()}
+                      isLoading={mut.isPending}
+                      disabled={mut.isPending || !canSave}
+                      className="mt-5 h-12 w-full rounded-2xl bg-blue-600 text-base font-extrabold shadow-[0_20px_44px_-26px_rgba(37,99,235,0.95)] hover:bg-blue-700"
+                    >
+                      Enregistrer les modifications
+                    </Button>
+                  </div>
+
+                  <div className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    Champs requis : Délégation et adresse. Les coordonnées GPS sont calculées automatiquement et restent visibles en lecture seule.
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Complément d’adresse</label>
-                  <Input
-                    value={adresseComplementaire}
-                    onChange={(event) => setAdresseComplementaire(event.target.value)}
-                    placeholder="App, étage, repère..."
-                    className="h-11 rounded-2xl border-border bg-card shadow-sm focus:ring-4 focus:ring-primary/10"
-                  />
-                </div>
-
-                <div className="rounded-2xl border border-border bg-muted/35 px-5 py-4 text-sm text-card-foreground/90">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold text-muted-foreground">Synchronisation actuelle</span>
-                    <span className="font-extrabold text-card-foreground">
-                      {locationBusyLabel ?? "Formulaire et carte alignés"}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Gouvernorat et délégation recentrent la carte. GPS et pin mettent à jour automatiquement l’adresse, le code postal et la région quand c’est détectable.
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={() => mut.mutate()}
-                  isLoading={mut.isPending}
-                  disabled={mut.isPending || !canSave}
-                  className="h-12 w-full rounded-2xl text-base font-extrabold shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:shadow-xl"
-                >
-                  Enregistrer les modifications
-                </Button>
-
-                <div className="text-xs text-muted-foreground">
-                  Champs requis : Délégation et adresse. Les coordonnées GPS sont calculées automatiquement et restent visibles en lecture seule.
-                </div>
-              </div>
+              </section>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </main>
+      </div>
     </div>
   );
 }

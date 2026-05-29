@@ -39,7 +39,9 @@ function normalizeRoles(input: unknown): string[] {
 }
 
 function migrateAuthState(persistedState: unknown) {
-  if (!persistedState || typeof persistedState !== "object") return persistedState as any;
+  if (!persistedState || typeof persistedState !== "object") {
+    return persistedState as Partial<AuthState>;
+  }
 
   const state = persistedState as Partial<AuthState>;
 

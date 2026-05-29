@@ -1,5 +1,5 @@
 # KB Auto-générée
-Générée le : 2026-05-28 15:41 UTC
+Générée le : 2026-05-29 11:44 UTC
 
 ## Statuts livraison (LI_Statut)
 - 0 : Confirme — commande validée, en attente livreur

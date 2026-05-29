@@ -7,7 +7,8 @@ import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-lea
 import type { LatLngExpression } from "leaflet";
 
 import { getCenterForTunisia } from "../../geo/data/tunisiaCenters";
-import { createMapPin, type AddressMapChangeReason } from "./AddressMapField";
+import { type AddressMapChangeReason } from "./AddressMapField";
+import { createMapPin } from "./mapPinIcon";
 import { roundCoordinate } from "../../geo/utils/tunisiaLocationSync";
 
 function SourceBadge({ source }: { source: AddressMapChangeReason | null }) {

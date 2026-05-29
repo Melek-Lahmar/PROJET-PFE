@@ -1,4 +1,5 @@
 import type { NominatimReverseResponse } from "../types/nominatim";
+import type { GouvernoratItem } from "../types/geo";
 
 export const TUNISIA_GOUVERNORATS = [
   "Ariana",
@@ -66,14 +67,17 @@ function getReverseCandidates(reverse?: NominatimReverseResponse | null) {
   ]);
 }
 
-export function resolveGouvernoratIdFromReverse(reverse?: NominatimReverseResponse | null) {
+export function resolveGouvernoratIdFromReverse(
+  reverse?: NominatimReverseResponse | null,
+  gouvernorats: GouvernoratItem[] = TUNISIA_GOUVERNORATS.map((name, id) => ({ id, name }))
+) {
   const candidates = getReverseCandidates(reverse).map(normalizeLookup);
   if (candidates.length === 0) return null;
 
-  for (let index = 0; index < TUNISIA_GOUVERNORATS.length; index += 1) {
-    const normalizedGov = normalizeLookup(TUNISIA_GOUVERNORATS[index]);
+  for (const gouvernorat of gouvernorats) {
+    const normalizedGov = normalizeLookup(gouvernorat.name);
     if (candidates.some((candidate) => candidate === normalizedGov || candidate.includes(normalizedGov) || normalizedGov.includes(candidate))) {
-      return index;
+      return gouvernorat.id;
     }
   }
 

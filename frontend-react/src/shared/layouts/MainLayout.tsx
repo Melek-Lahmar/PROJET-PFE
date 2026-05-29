@@ -21,6 +21,7 @@ export function MainLayout() {
     "/reset-password",
   ].some((p) => location.pathname.startsWith(p));
   const isConfirmateurPage = location.pathname.startsWith("/confirmateur");
+  const isAccountPage = location.pathname.startsWith("/profile");
 
   if (isConfirmateurPage) {
     return (
@@ -32,28 +33,34 @@ export function MainLayout() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground">
-      {/* Gradient ambiant — couvre tout le viewport derrière le contenu. */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at top left, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(ellipse at top right, hsl(var(--primary) / 0.10), transparent 55%), linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)))",
-        }}
-      />
-      {/* Pattern grille subtile, donne du grain au fond. */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 opacity-[0.28]"
-        style={{
-          backgroundImage:
-            "radial-gradient(hsl(var(--shell-foreground) / 0.18) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-      />
+      {!isAccountPage ? (
+        <>
+          {/* Gradient ambiant — couvre tout le viewport derrière le contenu. */}
+          <div
+            className="pointer-events-none fixed inset-0 z-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at top left, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(ellipse at top right, hsl(var(--primary) / 0.10), transparent 55%), linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)))",
+            }}
+          />
+          {/* Pattern grille subtile, donne du grain au fond. */}
+          <div
+            className="pointer-events-none fixed inset-0 z-0 opacity-[0.28]"
+            style={{
+              backgroundImage:
+                "radial-gradient(hsl(var(--shell-foreground) / 0.18) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+            }}
+          />
+        </>
+      ) : null}
 
       <Navbar />
 
       <main
-        className={`container-app relative z-10 flex-1 py-8 md:py-10 lg:py-12 ${
+        className={`container-app relative z-10 flex-1 ${
+          isAccountPage ? "bg-slate-50 py-6 dark:bg-slate-950 md:py-8" : "py-8 md:py-10 lg:py-12"
+        } ${
           isAuthPage ? "flex items-center justify-center" : ""
         }`}
       >

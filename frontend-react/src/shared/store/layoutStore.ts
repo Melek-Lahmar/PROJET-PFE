@@ -17,7 +17,7 @@ export const useLayoutStore = create<LayoutState>()(
   persist(
     (set, get) => ({
       isCatalogSidebarOpen: false,
-      themeMode: "dark",
+      themeMode: "light",
       openCatalogSidebar: () => set({ isCatalogSidebarOpen: true }),
       closeCatalogSidebar: () => set({ isCatalogSidebarOpen: false }),
       toggleCatalogSidebar: () =>

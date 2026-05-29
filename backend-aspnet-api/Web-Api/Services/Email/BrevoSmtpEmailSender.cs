@@ -1,5 +1,6 @@
 ﻿using System.Net;
-using System.Net.Mail;
+using System.Net.Security;
+using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Web_Api.Options;
@@ -23,29 +24,150 @@ namespace Web_Api.Services.Email
         {
             ValidateOptions();
 
-            using var message = new MailMessage
-            {
-                From = new MailAddress(_options.FromEmail, _options.FromName, Encoding.UTF8),
-                Subject = "Réinitialisation de votre mot de passe",
-                SubjectEncoding = Encoding.UTF8,
-                BodyEncoding = Encoding.UTF8,
-                IsBodyHtml = true,
-                Body = BuildResetPasswordHtml(resetUrl)
-            };
-
-            message.To.Add(new MailAddress(toEmail));
-
-            using var smtp = new SmtpClient(_options.Host, _options.Port)
-            {
-                Credentials = new NetworkCredential(_options.Username, _options.Password),
-                EnableSsl = _options.EnableSsl,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Timeout = 30000
-            };
-
             _logger.LogInformation("Envoi email reset password vers {Email}", toEmail);
-            await smtp.SendMailAsync(message);
+            await SendSmtpMailAsync(
+                toEmail,
+                "Réinitialisation de votre mot de passe",
+                BuildResetPasswordHtml(resetUrl));
+        }
+
+        private async Task SendSmtpMailAsync(string toEmail, string subject, string htmlBody)
+        {
+            using var tcpClient = new TcpClient();
+            await tcpClient.ConnectAsync(_options.Host, _options.Port);
+
+            await using var networkStream = tcpClient.GetStream();
+
+            if (_options.EnableSsl)
+            {
+                using (var plainReader = CreateReader(networkStream))
+                using (var plainWriter = CreateWriter(networkStream))
+                {
+                    await ExpectResponseAsync(plainReader, "connexion SMTP", 220);
+                    await SendCommandAsync(plainWriter, plainReader, $"EHLO {Dns.GetHostName()}", "EHLO initial", 250);
+                    await SendCommandAsync(plainWriter, plainReader, "STARTTLS", "STARTTLS", 220);
+                }
+
+                await using var sslStream = new SslStream(networkStream, leaveInnerStreamOpen: false);
+                await sslStream.AuthenticateAsClientAsync(_options.Host);
+                await SendAuthenticatedMessageAsync(sslStream, toEmail, subject, htmlBody);
+                return;
+            }
+
+            await SendAuthenticatedMessageAsync(networkStream, toEmail, subject, htmlBody, readGreeting: true);
+        }
+
+        private async Task SendAuthenticatedMessageAsync(
+            Stream stream,
+            string toEmail,
+            string subject,
+            string htmlBody,
+            bool readGreeting = false)
+        {
+            using var reader = CreateReader(stream);
+            using var writer = CreateWriter(stream);
+
+            if (readGreeting)
+                await ExpectResponseAsync(reader, "connexion SMTP", 220);
+
+            await SendCommandAsync(writer, reader, $"EHLO {Dns.GetHostName()}", "EHLO sécurisé", 250);
+            await SendCommandAsync(writer, reader, "AUTH LOGIN", "AUTH LOGIN", 334);
+            await SendCommandAsync(writer, reader, ToBase64(_options.Username), "identifiant SMTP", 334);
+            await SendCommandAsync(writer, reader, ToBase64(_options.Password), "mot de passe SMTP", 235);
+            await SendCommandAsync(writer, reader, $"MAIL FROM:<{_options.FromEmail}>", "MAIL FROM", 250);
+            await SendCommandAsync(writer, reader, $"RCPT TO:<{toEmail}>", "RCPT TO", 250, 251);
+            await SendCommandAsync(writer, reader, "DATA", "DATA", 354);
+            await WriteMessageDataAsync(writer, reader, toEmail, subject, htmlBody);
+            await SendCommandAsync(writer, reader, "QUIT", "QUIT", 221);
+        }
+
+        private static StreamReader CreateReader(Stream stream)
+            => new(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+
+        private static StreamWriter CreateWriter(Stream stream)
+            => new(stream, Encoding.ASCII, leaveOpen: true)
+            {
+                AutoFlush = true,
+                NewLine = "\r\n"
+            };
+
+        private async Task WriteMessageDataAsync(
+            StreamWriter writer,
+            StreamReader reader,
+            string toEmail,
+            string subject,
+            string htmlBody)
+        {
+            await writer.WriteLineAsync($"Date: {DateTimeOffset.UtcNow:R}");
+            await writer.WriteLineAsync($"From: {EncodeHeader(_options.FromName)} <{_options.FromEmail}>");
+            await writer.WriteLineAsync($"To: <{toEmail}>");
+            await writer.WriteLineAsync($"Subject: {EncodeHeader(subject)}");
+            await writer.WriteLineAsync("MIME-Version: 1.0");
+            await writer.WriteLineAsync("Content-Type: text/html; charset=utf-8");
+            await writer.WriteLineAsync("Content-Transfer-Encoding: base64");
+            await writer.WriteLineAsync();
+
+            foreach (var line in WrapBase64(Convert.ToBase64String(Encoding.UTF8.GetBytes(htmlBody))))
+                await writer.WriteLineAsync(line);
+
+            await writer.WriteLineAsync(".");
+            await writer.FlushAsync();
+            await ExpectResponseAsync(reader, "envoi du contenu email", 250);
+        }
+
+        private static async Task SendCommandAsync(
+            StreamWriter writer,
+            StreamReader reader,
+            string command,
+            string step,
+            params int[] expectedStatuses)
+        {
+            await writer.WriteLineAsync(command);
+            await writer.FlushAsync();
+            await ExpectResponseAsync(reader, step, expectedStatuses);
+        }
+
+        private static async Task ExpectResponseAsync(
+            StreamReader reader,
+            string step,
+            params int[] expectedStatuses)
+        {
+            var status = 0;
+            var response = new StringBuilder();
+
+            while (true)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line is null)
+                    throw new InvalidOperationException($"Réponse SMTP vide pendant l'étape {step}.");
+
+                response.AppendLine(line);
+
+                if (line.Length < 4 || !int.TryParse(line[..3], out status))
+                    throw new InvalidOperationException($"Réponse SMTP invalide pendant l'étape {step}: {line}");
+
+                if (line[3] == ' ')
+                    break;
+            }
+
+            if (!expectedStatuses.Contains(status))
+            {
+                throw new InvalidOperationException(
+                    $"Erreur SMTP pendant l'étape {step}. Code reçu: {status}. Réponse: {response.ToString().Trim()}");
+            }
+        }
+
+        private static string ToBase64(string value)
+            => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+
+        private static string EncodeHeader(string value)
+            => $"=?UTF-8?B?{ToBase64(value)}?=";
+
+        private static IEnumerable<string> WrapBase64(string value)
+        {
+            const int lineLength = 76;
+            for (var index = 0; index < value.Length; index += lineLength)
+                yield return value.Substring(index, Math.Min(lineLength, value.Length - index));
         }
 
         private void ValidateOptions()
