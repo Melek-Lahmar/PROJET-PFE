@@ -215,7 +215,7 @@ class _LiveDeliveryMapSheetState extends State<LiveDeliveryMapSheet> {
         polylineId: const PolylineId('halo'),
         points: route.points,
         width: 14,
-        color: const Color(0xFF6366F1).withOpacity(0.18),
+        color: const Color(0xFF6366F1).withValues(alpha: 0.18),
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         jointType: JointType.round,
@@ -269,7 +269,7 @@ class _LiveDeliveryMapSheetState extends State<LiveDeliveryMapSheet> {
           LatLng(widget.destinationLat, widget.destinationLng),
         ],
         width: 5,
-        color: const Color(0xFF6366F1).withOpacity(0.6),
+        color: const Color(0xFF6366F1).withValues(alpha: 0.6),
         patterns: [PatternItem.dash(20), PatternItem.gap(10)],
       ));
     }
@@ -533,9 +533,9 @@ class _ChipInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.30)),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

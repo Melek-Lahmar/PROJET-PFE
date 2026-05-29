@@ -40,7 +40,7 @@ class AdminGovernorateBarChart extends StatelessWidget {
           drawVerticalLine: true,
           drawHorizontalLine: false,
           getDrawingVerticalLine: (_) => FlLine(
-            color: scheme.outlineVariant.withOpacity(0.4),
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
             strokeWidth: 1,
           ),
         ),
@@ -56,7 +56,7 @@ class AdminGovernorateBarChart extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     scheme.primary,
-                    scheme.primary.withOpacity(0.6),
+                    scheme.primary.withValues(alpha: 0.6),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,

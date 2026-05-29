@@ -31,14 +31,14 @@ class NavigationControls extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: scheme.surface.withOpacity(0.97),
+            color: scheme.surface.withValues(alpha: 0.97),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: scheme.outline.withOpacity(0.20),
+              color: scheme.outline.withValues(alpha: 0.20),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
@@ -133,10 +133,10 @@ class _MiniActionButton extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: scheme.surfaceVariant.withOpacity(0.75),
+            color: scheme.surfaceVariant.withValues(alpha: 0.75),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: scheme.outline.withOpacity(0.20),
+              color: scheme.outline.withValues(alpha: 0.20),
             ),
           ),
           child: Icon(

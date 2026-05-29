@@ -96,7 +96,7 @@ class _ClientHistoryBottomSheetState extends State<ClientHistoryBottomSheet> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: _accent.withOpacity(0.12),
+            backgroundColor: _accent.withValues(alpha: 0.12),
             child: const Icon(Icons.person_rounded, color: _accent),
           ),
           const SizedBox(width: 12),
@@ -211,7 +211,7 @@ class _ClientHistoryBottomSheetState extends State<ClientHistoryBottomSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

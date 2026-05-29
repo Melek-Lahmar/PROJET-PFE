@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Web_Api.Auth.Constants;
 using Web_Api.Auth.Entities;
+using Web_Api.Constants;
 using Web_Api.Services.Confirmatrice;
 using Web_Api.data;
 using Web_Api.DTO.Reclamations;
@@ -362,7 +363,7 @@ namespace Web_Api.Services.Reclamations
                 activeDemande.LastAttemptAt = now;
                 activeDemande.UpdatedAt = now;
                 activeDemande.TentativesCount = await _db.F_RECLAMATION_TENTATIVES
-                    .CountAsync(t => t.CommandePiece == piece && LivreurMotifs.Deferred.Contains(t.Motif), ct);
+                    .CountAsync(t => t.ReclamationId == activeDemande.Id && LivreurMotifs.Deferred.Contains(t.Motif), ct);
                 await _db.SaveChangesAsync(ct);
                 resultDemande = activeDemande;
             }
@@ -469,7 +470,7 @@ namespace Web_Api.Services.Reclamations
 
             var normalized = (newStatus ?? string.Empty).Trim().ToUpperInvariant();
             if (!ReclamationStatuses.IsStaffEditable(normalized))
-                throw new InvalidOperationException("Statut non autorisé. Utilisez EN_COURS, RESOLUE ou REFUSEE.");
+                throw new InvalidOperationException("Statut non autorisé. Utilisez EN_COURS_DE_TRAITEMENT, CLOTUREE ou REFUSEE.");
 
             if (normalized == ReclamationStatuses.REFUSEE && string.IsNullOrWhiteSpace(motifRefus))
                 throw new InvalidOperationException("Un motif de refus est obligatoire.");
@@ -481,8 +482,18 @@ namespace Web_Api.Services.Reclamations
             if (normalized == ReclamationStatuses.CLOTUREE) reclamation.ResolvedAt = now;
             if (normalized == ReclamationStatuses.REFUSEE)
             {
+                reclamation.ResolvedAt = now;
                 reclamation.ClosedAt = now;
                 reclamation.MotifRefus = (motifRefus ?? string.Empty).Trim();
+            }
+
+            // Auto-cancel order when confirmatrice closes an ANNULATION claim
+            if (normalized == ReclamationStatuses.CLOTUREE && reclamation.Motif == ClientMotifs.ANNULATION)
+            {
+                var orderToCancel = await _db.F_DOCENTETES
+                    .FirstOrDefaultAsync(o => o.DO_Piece == reclamation.DoPiece, ct);
+                if (orderToCancel != null && orderToCancel.DO_Valide != F_DOCENTETE.STATUS_REFUSE)
+                    orderToCancel.DO_Valide = F_DOCENTETE.STATUS_REFUSE;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -830,8 +841,11 @@ namespace Web_Api.Services.Reclamations
             // Phase 5 — Événement 2 : StatutCasChange.
             var payload = new { id = r.Id, code = r.CodeReclamation, statut = r.Statut };
 
-            await _hub.Clients.User(r.ClientUserId.ToString())
-                .SendAsync(Hubs.ReclamationEvents.StatutCasChange, payload, ct);
+            if (r.ClientUserId != Guid.Empty)
+            {
+                await _hub.Clients.User(r.ClientUserId.ToString())
+                    .SendAsync(Hubs.ReclamationEvents.StatutCasChange, payload, ct);
+            }
 
             if (r.AssignedToUserId.HasValue)
             {
@@ -1084,6 +1098,7 @@ namespace Web_Api.Services.Reclamations
                 CorrectionProposee = e.CorrectionProposee,
                 CorrectionAppliquee = e.CorrectionAppliquee,
                 MotifRefus = e.MotifRefus,
+                EchangeDemandeText = e.EchangeDemandeText,
                 NoteInterne = includeInternalNote ? e.NoteInterne : null,
                 TentativesCount = e.TentativesCount,
                 FirstAttemptAt = e.FirstAttemptAt,
@@ -1523,9 +1538,9 @@ namespace Web_Api.Services.Reclamations
         private async Task<bool> IsDeliveredAsync(F_DOCENTETE order, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(order.DO_Piece)) return false;
-            // On considère la commande LIVRÉE si F_LIVRAISON.LI_DateLivree != null pour cette pièce.
             return await _db.F_LIVRAISONS.AsNoTracking()
-                .AnyAsync(l => l.DO_Piece == order.DO_Piece && l.LI_DateLivree != null, ct);
+                .AnyAsync(l => l.DO_Piece == order.DO_Piece
+                    && (l.LI_DateLivree != null || l.LI_Statut == DeliveryStatusCodes.Livre), ct);
         }
 
         public async Task<List<int>> GetMyDemandesIdsAsync(Guid clientUserId, CancellationToken ct = default)
@@ -2204,6 +2219,39 @@ namespace Web_Api.Services.Reclamations
 
             await _db.SaveChangesAsync(ct);
             return await MapDetailsAsync(reclamation, includeInternalNote: true, ct);
+        }
+
+        public async Task<List<ReclamationListItemDto>> GetLivreurHistoryAsync(Guid livreurUserId, CancellationToken ct = default)
+        {
+            var tentatives = await _db.F_RECLAMATION_TENTATIVES.AsNoTracking()
+                .Where(t => t.LivreurUserId == livreurUserId)
+                .OrderByDescending(t => t.DateJour)
+                .Take(50)
+                .ToListAsync(ct);
+
+            var pieces = tentatives.Select(t => t.CommandePiece).Distinct().ToList();
+
+            var escalated = await _db.F_RECLAMATIONS.AsNoTracking()
+                .Where(r => r.CreatedByUserId == livreurUserId || pieces.Contains(r.DoPiece))
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(50)
+                .ToListAsync(ct);
+
+            return escalated.Select(r => new ReclamationListItemDto
+            {
+                Id = r.Id,
+                CodeReclamation = r.CodeReclamation,
+                DoPiece = r.DoPiece,
+                Motif = r.Motif,
+                Statut = r.Statut,
+                Source = r.Source,
+                TypeCas = r.TypeCas,
+                VisibleClient = r.VisibleClient,
+                TentativesCount = r.TentativesCount,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                ClosedAt = r.ClosedAt
+            }).OrderByDescending(r => r.CreatedAt).ToList();
         }
     }
 

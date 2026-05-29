@@ -49,9 +49,9 @@ class _PremiumCardState extends State<PremiumCard> {
 
     // Couleur de bordure : plus marquée au hover si interactif.
     final baseBorder = widget.borderColor ??
-        theme.colorScheme.outlineVariant.withOpacity(isDark ? 0.35 : 0.5);
+        theme.colorScheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.5);
     final border = (hasOnTap && _hover)
-        ? theme.colorScheme.primary.withOpacity(0.45)
+        ? theme.colorScheme.primary.withValues(alpha: 0.45)
         : baseBorder;
 
     // Ombre plus diffuse au hover pour un effet de léger lift.

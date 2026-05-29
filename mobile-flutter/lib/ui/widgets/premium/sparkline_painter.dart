@@ -55,7 +55,7 @@ class SparklinePainter extends CustomPainter {
         ..close();
       final paintFill = Paint()
         ..shader = LinearGradient(
-          colors: [color.withOpacity(0.35), color.withOpacity(0.02)],
+          colors: [color.withValues(alpha: 0.35), color.withValues(alpha: 0.02)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));

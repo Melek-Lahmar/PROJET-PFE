@@ -99,7 +99,7 @@ class ConfirmatriceClaimsService {
 
   Future<ClientClaim> updateNote(int id, String? note) async {
     final data = await api.putJson('/api/confirmateur/reclamations/$id/note', {
-      if (note != null) 'noteInterne': note,
+      'noteInterne': note,
     });
     return ClientClaim.fromDetails(data);
   }

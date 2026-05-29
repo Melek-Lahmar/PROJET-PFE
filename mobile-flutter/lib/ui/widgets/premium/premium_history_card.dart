@@ -83,7 +83,7 @@ class PremiumHistoryCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.11),
+            color: statusColor.withValues(alpha: 0.11),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -129,7 +129,7 @@ class PremiumHistoryCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.55),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -152,7 +152,7 @@ class PremiumHistoryCard extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.13),
+                        color: statusColor.withValues(alpha: 0.13),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: statusColor, size: 20),
@@ -198,13 +198,13 @@ class PremiumHistoryCard extends StatelessWidget {
                                 Icon(Icons.schedule_rounded,
                                     size: 12,
                                     color: scheme.onSurfaceVariant
-                                        .withOpacity(0.7)),
+                                        .withValues(alpha: 0.7)),
                                 const SizedBox(width: 4),
                                 Text(
                                   footer!,
                                   style: TextStyle(
                                     color:
-                                        scheme.onSurfaceVariant.withOpacity(0.8),
+                                        scheme.onSurfaceVariant.withValues(alpha: 0.8),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -231,7 +231,7 @@ class PremiumHistoryCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Icon(Icons.chevron_right_rounded,
                               color: scheme.onSurfaceVariant
-                                  .withOpacity(0.6)),
+                                  .withValues(alpha: 0.6)),
                         ],
                       ],
                     ),
@@ -262,14 +262,14 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: elevated ? color : color.withOpacity(0.13),
+        color: elevated ? color : color.withValues(alpha: 0.13),
         borderRadius: BorderRadius.circular(20),
         border:
-            elevated ? null : Border.all(color: color.withOpacity(0.35)),
+            elevated ? null : Border.all(color: color.withValues(alpha: 0.35)),
         boxShadow: elevated
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.35),
+                  color: color.withValues(alpha: 0.35),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),

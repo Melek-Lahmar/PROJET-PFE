@@ -499,7 +499,7 @@ class _HeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: gradStart.withOpacity(0.35),
+            color: gradStart.withValues(alpha: 0.35),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -514,7 +514,7 @@ class _HeaderCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.22),
+                  color: Colors.white.withValues(alpha: 0.22),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -587,9 +587,9 @@ class _HeaderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: Text(
                 claim.description,
@@ -734,7 +734,7 @@ class _CorrectionBlock extends StatelessWidget {
 
     return _SectionCard(
       title: 'Correction proposée',
-      color: scheme.primaryContainer.withOpacity(0.3),
+      color: scheme.primaryContainer.withValues(alpha: 0.3),
       trailing: claim.correctionAppliquee
           ? const Chip(label: Text('Appliquée'))
           : FilledButton.icon(
@@ -764,7 +764,7 @@ class _PhotosBlock extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: claim.photos.map((p) {
-            final url = ApiClient.defaultBaseUrl + p.url;
+            final url = context.read<ApiClient>().resolveMediaUrl(p.url);
             return InkWell(
               onTap: () => _openFullScreen(context, url),
               child: ClipRRect(
@@ -1050,7 +1050,7 @@ class _RefusBlock extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: 'Motif du refus',
-      color: scheme.errorContainer.withOpacity(0.3),
+      color: scheme.errorContainer.withValues(alpha: 0.3),
       children: [Text(claim.motifRefus ?? '—')],
     );
   }
@@ -1285,7 +1285,7 @@ class _ActionBtn extends StatelessWidget {
         style: color == null
             ? null
             : FilledButton.styleFrom(
-                backgroundColor: color!.withOpacity(0.15),
+                backgroundColor: color!.withValues(alpha: 0.15),
                 foregroundColor: color,
               ),
       ),
@@ -1414,9 +1414,9 @@ class _CommandeStatusSheet extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       child: Ink(
         decoration: BoxDecoration(
-          color: o.color.withOpacity(0.10),
+          color: o.color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: o.color.withOpacity(0.30)),
+          border: Border.all(color: o.color.withValues(alpha: 0.30)),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),

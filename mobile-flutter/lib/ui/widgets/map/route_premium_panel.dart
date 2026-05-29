@@ -49,8 +49,8 @@ class RoutePremiumPanel extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withOpacity(0.94),
-            scheme.primary.withOpacity(0.78),
+            scheme.primary.withValues(alpha: 0.94),
+            scheme.primary.withValues(alpha: 0.78),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -58,7 +58,7 @@ class RoutePremiumPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: scheme.primary.withOpacity(0.32),
+            color: scheme.primary.withValues(alpha: 0.32),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -75,11 +75,11 @@ class RoutePremiumPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: traffic.color.withOpacity(0.95),
+                  color: traffic.color.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
-                      color: traffic.color.withOpacity(0.45),
+                      color: traffic.color.withValues(alpha: 0.45),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -193,12 +193,12 @@ class _Metric extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: Colors.white.withOpacity(0.85), size: 14),
+            Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 14),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w700,
                 fontSize: 11,
                 letterSpacing: 0.2,
@@ -208,7 +208,7 @@ class _Metric extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Icon(Icons.tune_rounded,
-                    color: Colors.white.withOpacity(0.7), size: 12),
+                    color: Colors.white.withValues(alpha: 0.7), size: 12),
               ),
           ],
         ),
@@ -226,7 +226,7 @@ class _Metric extends StatelessWidget {
           Text(
             hint!,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 10,
             ),
           ),
@@ -263,7 +263,7 @@ class _Divider extends StatelessWidget {
     return Container(
       width: 1,
       height: 36,
-      color: Colors.white.withOpacity(0.20),
+      color: Colors.white.withValues(alpha: 0.20),
       margin: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
@@ -289,7 +289,7 @@ class _ActionButton extends StatelessWidget {
     final disabled = onPressed == null;
     final bg = primary
         ? Colors.white
-        : Colors.white.withOpacity(disabled ? 0.06 : 0.15);
+        : Colors.white.withValues(alpha: disabled ? 0.06 : 0.15);
     final fg = primary
         ? Theme.of(context).colorScheme.primary
         : Colors.white;
@@ -307,8 +307,8 @@ class _ActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: primary
-                  ? Colors.white.withOpacity(0.0)
-                  : Colors.white.withOpacity(disabled ? 0.10 : 0.30),
+                  ? Colors.white.withValues(alpha: 0.0)
+                  : Colors.white.withValues(alpha: disabled ? 0.10 : 0.30),
             ),
           ),
           child: Row(
@@ -332,7 +332,7 @@ class _ActionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: fg.withOpacity(disabled ? 0.5 : 1.0),
+                    color: fg.withValues(alpha: disabled ? 0.5 : 1.0),
                     fontWeight: FontWeight.w800,
                     fontSize: 12,
                   ),

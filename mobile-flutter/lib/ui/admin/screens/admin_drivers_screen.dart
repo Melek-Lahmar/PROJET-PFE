@@ -125,7 +125,7 @@ class _CreateDriverFab extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: _kDriverAccent.withOpacity(0.45),
+            color: _kDriverAccent.withValues(alpha: 0.45),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -383,7 +383,7 @@ class _DriverRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: scheme.primary.withOpacity(0.15),
+                backgroundColor: scheme.primary.withValues(alpha: 0.15),
                 child: Text(initials,
                     style: TextStyle(
                       color: scheme.primary,
@@ -454,7 +454,7 @@ class _DriverRow extends StatelessWidget {
           PopupMenuButton<String>(
             tooltip: 'Actions',
             icon: Icon(Icons.more_vert_rounded,
-                color: scheme.onSurfaceVariant.withOpacity(0.8)),
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
             onSelected: (v) {
               switch (v) {
                 case 'edit': onEdit(); break;
@@ -509,14 +509,14 @@ class _Stat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('$label ',
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.85))),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.85))),
           Text(value,
               style: TextStyle(
                 fontSize: 12,
@@ -582,7 +582,7 @@ class _DriverDetailDrawer extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: scheme.outlineVariant.withOpacity(0.5),
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -592,7 +592,7 @@ class _DriverDetailDrawer extends StatelessWidget {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: scheme.primary.withOpacity(0.12),
+                        color: scheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Icons.delivery_dining_rounded,
@@ -692,7 +692,7 @@ class _DetailContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.08),
+                  color: scheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -729,7 +729,7 @@ class _DetailContent extends StatelessWidget {
               margin: const EdgeInsets.symmetric(vertical: 4),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                border: Border.all(color: scheme.outlineVariant.withOpacity(0.5)),
+                border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -825,7 +825,7 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(text,

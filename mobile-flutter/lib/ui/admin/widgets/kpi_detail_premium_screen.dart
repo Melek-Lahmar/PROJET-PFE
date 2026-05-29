@@ -201,7 +201,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accent.withOpacity(0.95),
+            accent.withValues(alpha: 0.95),
             Color.lerp(accent, Colors.black, 0.18) ?? accent,
           ],
         ),
@@ -211,7 +211,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
         ),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.30),
+            color: accent.withValues(alpha: 0.30),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -230,7 +230,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 22),
@@ -275,9 +275,9 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: _loading
                   ? _ShimmerBox(height: double.infinity, accent: accent)
@@ -299,7 +299,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
       return Center(
         child: Text(
           'Aucune donnée pour cette période.',
-          style: TextStyle(color: Colors.white.withOpacity(0.85)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
         ),
       );
     }
@@ -352,7 +352,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
                           _load();
                         }
                       },
-                      selectedColor: widget.accent.withOpacity(0.18),
+                      selectedColor: widget.accent.withValues(alpha: 0.18),
                       labelStyle: TextStyle(
                         color: _period.key == p.key
                             ? widget.accent
@@ -384,12 +384,12 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                      color: Colors.black.withOpacity(0.06)),
+                      color: Colors.black.withValues(alpha: 0.06)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                      color: Colors.black.withOpacity(0.06)),
+                      color: Colors.black.withValues(alpha: 0.06)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -438,7 +438,7 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: widget.accent.withOpacity(0.12),
+                color: widget.accent.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -580,8 +580,8 @@ class _LineChart extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  accent.withOpacity(fillStrong ? 0.55 : 0.28),
-                  accent.withOpacity(0.02),
+                  accent.withValues(alpha: fillStrong ? 0.55 : 0.28),
+                  accent.withValues(alpha: 0.02),
                 ],
               ),
             ),
@@ -641,7 +641,7 @@ class _HorizontalBarChart extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           height: 14,
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: FractionallySizedBox(
@@ -687,10 +687,10 @@ class _DonutChart extends StatelessWidget {
     final total = series.fold<double>(0, (acc, p) => acc + p.value);
     final palette = [
       Colors.white,
-      Colors.white.withOpacity(0.85),
-      Colors.white.withOpacity(0.7),
-      Colors.white.withOpacity(0.55),
-      Colors.white.withOpacity(0.4),
+      Colors.white.withValues(alpha: 0.85),
+      Colors.white.withValues(alpha: 0.7),
+      Colors.white.withValues(alpha: 0.55),
+      Colors.white.withValues(alpha: 0.4),
     ];
 
     return Row(
@@ -891,9 +891,9 @@ class _SkeletonRowState extends State<_SkeletonRow>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.black.withOpacity(0.06),
-                Colors.black.withOpacity(0.12),
-                Colors.black.withOpacity(0.06),
+                Colors.black.withValues(alpha: 0.06),
+                Colors.black.withValues(alpha: 0.12),
+                Colors.black.withValues(alpha: 0.06),
               ],
               stops: [
                 math.max(0, t - 0.3),
@@ -949,9 +949,9 @@ class _ShimmerBoxState extends State<_ShimmerBox>
               begin: Alignment(-1 + 2 * _c.value, 0),
               end: Alignment(1 + 2 * _c.value, 0),
               colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.white.withOpacity(0.20),
-                Colors.white.withOpacity(0.08),
+                Colors.white.withValues(alpha: 0.08),
+                Colors.white.withValues(alpha: 0.20),
+                Colors.white.withValues(alpha: 0.08),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
@@ -1017,7 +1017,7 @@ class KpiPremiumRow extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: accent.withOpacity(0.10),
+                  color: accent.withValues(alpha: 0.10),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1101,9 +1101,9 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.13),
+        color: color.withValues(alpha: 0.13),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.30), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
       ),
       child: Text(
         label,

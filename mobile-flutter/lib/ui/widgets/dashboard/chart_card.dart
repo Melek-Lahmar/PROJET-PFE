@@ -32,7 +32,7 @@ class ChartCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.10),
+                  color: scheme.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(

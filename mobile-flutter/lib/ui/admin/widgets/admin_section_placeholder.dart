@@ -95,7 +95,7 @@ class _ScopeSummary extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
+              color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(Icons.tune_rounded, color: scheme.primary),

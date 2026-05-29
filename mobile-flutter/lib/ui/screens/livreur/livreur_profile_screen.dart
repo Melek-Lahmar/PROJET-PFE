@@ -145,7 +145,7 @@ class LivreurProfileScreen extends StatelessWidget {
             ),
             style: OutlinedButton.styleFrom(
               side: BorderSide(
-                color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.4),
               ),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
@@ -206,10 +206,10 @@ class _IdentityHero extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                   border:
-                      Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                      Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -272,7 +272,7 @@ class _IdentityHero extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: const Row(
@@ -380,7 +380,7 @@ class _StatTile extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
+                  color: color.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 18),
@@ -473,7 +473,7 @@ class _CoordonneesCard extends StatelessWidget {
 
   Widget _divider(ColorScheme s) => Divider(
         height: 18,
-        color: s.outlineVariant.withOpacity(0.4),
+        color: s.outlineVariant.withValues(alpha: 0.4),
       );
 
   Widget _row(
@@ -493,7 +493,7 @@ class _CoordonneesCard extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.10),
+            color: scheme.primary.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 16, color: scheme.primary),

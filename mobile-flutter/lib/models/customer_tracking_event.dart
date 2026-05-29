@@ -4,6 +4,8 @@ class CustomerTrackingEvent {
   final DateTime? date;
   final String? description;
   final bool isDone;
+  /// DONE | ACTIVE | PENDING | ERROR
+  final String state;
 
   const CustomerTrackingEvent({
     required this.label,
@@ -11,6 +13,7 @@ class CustomerTrackingEvent {
     this.date,
     this.description,
     required this.isDone,
+    this.state = 'PENDING',
   });
 
   factory CustomerTrackingEvent.fromMap(Map<String, dynamic> map) {
@@ -19,12 +22,18 @@ class CustomerTrackingEvent {
       return DateTime.tryParse(value.toString())?.toLocal();
     }
 
+    final isDone = (map['isDone'] ?? false) == true;
+    final raw = (map['state'] ?? '').toString().toUpperCase();
+    const valid = {'DONE', 'ACTIVE', 'PENDING', 'ERROR'};
+    final state = valid.contains(raw) ? raw : (isDone ? 'DONE' : 'PENDING');
+
     return CustomerTrackingEvent(
       label: (map['label'] ?? '').toString(),
       status: (map['status'] ?? '').toString(),
       date: parseDate(map['date']),
       description: map['description']?.toString(),
-      isDone: (map['isDone'] ?? false) == true,
+      isDone: isDone,
+      state: state,
     );
   }
 }

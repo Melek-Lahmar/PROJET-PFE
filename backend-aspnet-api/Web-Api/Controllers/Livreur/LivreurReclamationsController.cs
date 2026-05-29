@@ -125,6 +125,25 @@ namespace Web_Api.Controllers.Livreur
             }
         }
 
+        /// <summary>
+        /// Retourne l'historique des cas et tentatives du livreur connecté.
+        /// </summary>
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyHistory(CancellationToken ct)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var items = await _service.GetLivreurHistoryAsync(userId, ct);
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetMyHistory failed");
+                return StatusCode(500, new { message = "Erreur serveur : " + ex.Message });
+            }
+        }
+
         private Guid GetUserId()
         {
             var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);

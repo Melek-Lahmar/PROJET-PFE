@@ -309,7 +309,7 @@ class _LockedStateView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Card(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(

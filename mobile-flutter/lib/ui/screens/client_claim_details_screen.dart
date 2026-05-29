@@ -87,6 +87,7 @@ class _ClientClaimDetailsScreenState extends State<ClientClaimDetailsScreen> {
     if (!mounted) return;
     if (result != null) {
       await _load();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Demande d\'échange envoyée au support.')),
       );
@@ -302,12 +303,12 @@ class _StatusTimeline extends StatelessWidget {
                   final active = !isRefused && i <= currentIdx;
                   final isCurrent = !isRefused && i == currentIdx;
                   final baseColor = isRefused
-                      ? scheme.error.withOpacity(0.35)
+                      ? scheme.error.withValues(alpha: 0.35)
                       : (active
                           ? scheme.primary
-                          : scheme.outline.withOpacity(0.3));
+                          : scheme.outline.withValues(alpha: 0.3));
                   final nodeBg = isCurrent
-                      ? scheme.primary.withOpacity(0.15)
+                      ? scheme.primary.withValues(alpha: 0.15)
                       : Colors.transparent;
 
                   return Expanded(
@@ -363,7 +364,7 @@ class _StatusTimeline extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: scheme.errorContainer.withOpacity(0.4),
+                  color: scheme.errorContainer.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -434,7 +435,7 @@ class _CorrectionContentCard extends StatelessWidget {
     return Card(
       color: applied
           ? Colors.green.shade50
-          : scheme.secondaryContainer.withOpacity(0.35),
+          : scheme.secondaryContainer.withValues(alpha: 0.35),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -534,7 +535,7 @@ class _PhotosCard extends StatelessWidget {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Image.network(
-                    ApiClient.defaultBaseUrl + p.url,
+                    context.read<ApiClient>().resolveMediaUrl(p.url),
                     width: 90,
                     height: 90,
                     fit: BoxFit.cover,
@@ -609,7 +610,7 @@ class _RefusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Card(
-      color: scheme.errorContainer.withOpacity(0.4),
+      color: scheme.errorContainer.withValues(alpha: 0.4),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -663,7 +664,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color ?? scheme.surfaceContainerHighest.withOpacity(0.5),
+        color: color ?? scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -693,7 +694,7 @@ class _EndommageActions extends StatelessWidget {
 
     if (echangeAlreadyRequested) {
       return Card(
-        color: scheme.primaryContainer.withOpacity(0.4),
+        color: scheme.primaryContainer.withValues(alpha: 0.4),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(

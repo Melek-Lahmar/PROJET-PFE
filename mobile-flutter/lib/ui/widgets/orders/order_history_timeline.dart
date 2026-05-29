@@ -19,10 +19,10 @@ class OrderHistoryTimeline extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: scheme.surfaceVariant.withOpacity(0.45),
+          color: scheme.surfaceVariant.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: scheme.outline.withOpacity(0.20),
+            color: scheme.outline.withValues(alpha: 0.20),
           ),
         ),
         child: Text(
@@ -83,7 +83,7 @@ class _HistoryRow extends StatelessWidget {
                     child: Container(
                       width: 2,
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: scheme.outline.withOpacity(0.25),
+                      color: scheme.outline.withValues(alpha: 0.25),
                     ),
                   ),
               ],
@@ -98,7 +98,7 @@ class _HistoryRow extends StatelessWidget {
                 color: scheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: scheme.outline.withOpacity(0.18),
+                  color: scheme.outline.withValues(alpha: 0.18),
                 ),
               ),
               child: Column(
@@ -122,7 +122,7 @@ class _HistoryRow extends StatelessWidget {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.primary.withOpacity(0.10),
+                            color: scheme.primary.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(

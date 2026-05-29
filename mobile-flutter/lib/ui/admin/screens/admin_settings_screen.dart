@@ -300,7 +300,7 @@ class AdminSettingsScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: scheme.primary.withOpacity(0.15),
+                  backgroundColor: scheme.primary.withValues(alpha: 0.15),
                   child: Icon(
                     Icons.admin_panel_settings_rounded,
                     color: scheme.primary,

@@ -42,7 +42,7 @@ class _AdminOrdersFilterBarState extends State<AdminOrdersFilterBar> {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          bottom: BorderSide(color: scheme.outlineVariant.withOpacity(0.4)),
+          bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: Column(

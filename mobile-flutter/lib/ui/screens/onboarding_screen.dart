@@ -124,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: active
                           ? scheme.primary
-                          : scheme.outline.withOpacity(0.45),
+                          : scheme.outline.withValues(alpha: 0.45),
                       borderRadius: BorderRadius.circular(999),
                     ),
                   );
@@ -228,14 +228,14 @@ class _OnboardingPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       colors: [
-                        scheme.primary.withOpacity(0.18),
-                        scheme.primary.withOpacity(0.05),
+                        scheme.primary.withValues(alpha: 0.18),
+                        scheme.primary.withValues(alpha: 0.05),
                       ],
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: scheme.primary.withOpacity(0.18),
+                        color: scheme.primary.withValues(alpha: 0.18),
                         blurRadius: 28,
                         offset: const Offset(0, 12),
                       ),

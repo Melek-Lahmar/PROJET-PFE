@@ -280,7 +280,7 @@ class _AdminConfirmatricesWorkStatsScreenState
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: _accent.withOpacity(0.12),
+                backgroundColor: _accent.withValues(alpha: 0.12),
                 radius: 22,
                 child: const Icon(Icons.headset_mic_rounded,
                     color: _accent, size: 22),
@@ -305,7 +305,7 @@ class _AdminConfirmatricesWorkStatsScreenState
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -356,7 +356,7 @@ class _AdminConfirmatricesWorkStatsScreenState
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(

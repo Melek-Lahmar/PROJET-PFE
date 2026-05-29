@@ -44,7 +44,7 @@ class AdminVolumeTrendChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(
-            color: scheme.outlineVariant.withOpacity(0.4),
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
             strokeWidth: 1,
           ),
         ),
@@ -103,8 +103,8 @@ class AdminVolumeTrendChart extends StatelessWidget {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  scheme.primary.withOpacity(0.25),
-                  scheme.primary.withOpacity(0.0),
+                  scheme.primary.withValues(alpha: 0.25),
+                  scheme.primary.withValues(alpha: 0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

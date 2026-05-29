@@ -106,7 +106,7 @@ class _TrackingStateCardState extends State<TrackingStateCard> {
     if (s == null) return const SizedBox.shrink();
 
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: switch (s.state) {
@@ -279,7 +279,7 @@ class _HeadingToYou extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1976D2).withOpacity(0.32),
+                        color: const Color(0xFF1976D2).withValues(alpha: 0.32),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

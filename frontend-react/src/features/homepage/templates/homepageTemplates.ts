@@ -1,5 +1,6 @@
 import type { Article } from "../../catalog/types/article";
 import type { Catalogue } from "../../catalog/types/catalogue";
+import type { HomepageThemeId } from "../themes/HomepageThemes";
 import {
   createDefaultHomepageImage,
   createLocalId,
@@ -40,6 +41,7 @@ export type HomepageTemplateDefinition = {
   objective: string;
   visualStyle: string;
   includedSections: string[];
+  themeId: HomepageThemeId;
   createDocument: (context?: HomepageTemplateContext) => HomepageDocument;
 };
 
@@ -493,6 +495,7 @@ export const HOMEPAGE_TEMPLATES: HomepageTemplateDefinition[] = [
     objective: "Valoriser les produits, rassurer les clients et accélérer la commande en ligne.",
     visualStyle: "Blanc, bleu, indigo, touches commerciales sobres.",
     includedSections: ["Bannière principale", "Avantages", "Produits en vedette", "Catalogues", "Appel final"],
+    themeId: "minimaliste",
     createDocument: createBoutiqueModerneTemplate,
   },
   {
@@ -503,6 +506,7 @@ export const HOMEPAGE_TEMPLATES: HomepageTemplateDefinition[] = [
     objective: "Donner l’impression d’un catalogue large, vivant et facile à explorer.",
     visualStyle: "Bleu clair, surfaces blanches, cartes commerciales arrondies.",
     includedSections: ["Bannière principale", "Catalogues", "Offres", "Univers commerciaux", "Statistiques", "Appel final"],
+    themeId: "moderne-colore",
     createDocument: createMarketplaceCommercialeTemplate,
   },
   {
@@ -513,6 +517,7 @@ export const HOMEPAGE_TEMPLATES: HomepageTemplateDefinition[] = [
     objective: "Mettre en avant le catalogue professionnel, le suivi commercial et la relation B2B.",
     visualStyle: "Bleu nuit, vert émeraude, ton sérieux et professionnel.",
     includedSections: ["Bannière B2B", "Parcours clients", "Catalogues", "Articles recommandés", "Avantages", "Statistiques", "Appel commercial"],
+    themeId: "professionnel",
     createDocument: createDistributionB2BTemplate,
   },
   {
@@ -523,6 +528,7 @@ export const HOMEPAGE_TEMPLATES: HomepageTemplateDefinition[] = [
     objective: "Montrer que la plateforme couvre aussi le stock, les dépôts et la livraison.",
     visualStyle: "Bleu, cyan, touches orange légères pour la dimension stock.",
     includedSections: ["Bannière logistique", "Statistiques", "Avantages", "Articles disponibles", "Catalogues", "Suivi commandes", "Appel final"],
+    themeId: "startup",
     createDocument: createStockLivraisonTemplate,
   },
 ];

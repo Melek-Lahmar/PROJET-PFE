@@ -132,7 +132,7 @@ class _LivePulseDotState extends State<_LivePulseDot>
                   scale: 0.6 + 1.2 * t,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.55),
+                      color: widget.color.withValues(alpha: 0.55),
                       shape: BoxShape.circle,
                     ),
                   ),

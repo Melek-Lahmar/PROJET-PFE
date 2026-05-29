@@ -64,7 +64,7 @@ class DeliveryCard extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: scheme.primary.withOpacity(0.10),
+                      color: scheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
@@ -158,10 +158,10 @@ class DeliveryCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceVariant.withOpacity(0.55),
+                    color: scheme.surfaceVariant.withValues(alpha: 0.55),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: scheme.outline.withOpacity(0.22),
+                      color: scheme.outline.withValues(alpha: 0.22),
                     ),
                   ),
                   child: Text(
@@ -178,7 +178,7 @@ class DeliveryCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 Divider(
                   height: 1,
-                  color: scheme.outline.withOpacity(0.18),
+                  color: scheme.outline.withValues(alpha: 0.18),
                 ),
                 const SizedBox(height: 12),
                 if (footer != null)

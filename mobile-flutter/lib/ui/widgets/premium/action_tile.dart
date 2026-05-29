@@ -34,7 +34,7 @@ class ActionTile extends StatelessWidget {
     final effectiveIconColor = destructive
         ? scheme.error
         : (iconColor ?? scheme.primary);
-    final effectiveIconBg = iconBg ?? effectiveIconColor.withOpacity(0.12);
+    final effectiveIconBg = iconBg ?? effectiveIconColor.withValues(alpha: 0.12);
 
     return Material(
       color: Colors.transparent,

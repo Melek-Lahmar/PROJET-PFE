@@ -23,6 +23,11 @@ class ClientOrderTracking {
   // Bloc 4 — Timeline livraison.
   final List<CustomerTrackingEvent> events;
 
+  // Transit inter-dépôts.
+  final int transitTotalCount;
+  final int transitReceivedCount;
+  final List<ClientOrderTrackingTransitItem> transitItems;
+
   // Bloc 5 et 6 — Réclamation / Demande liées.
   final LinkedCase? linkedReclamation;
   final LinkedCase? linkedDemande;
@@ -49,6 +54,9 @@ class ClientOrderTracking {
     this.instructionsLivreur,
     this.items = const [],
     this.events = const [],
+    this.transitTotalCount = 0,
+    this.transitReceivedCount = 0,
+    this.transitItems = const [],
     this.linkedReclamation,
     this.linkedDemande,
     this.deliveryType,
@@ -90,6 +98,14 @@ class ClientOrderTracking {
       instructionsLivreur: _nullStr(map['instructionsLivreur']),
       items: items,
       events: events,
+      transitTotalCount: _int(map['transitTotalCount']),
+      transitReceivedCount: _int(map['transitReceivedCount']),
+      transitItems: (map['transitItems'] is List)
+          ? (map['transitItems'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map(ClientOrderTrackingTransitItem.fromMap)
+              .toList()
+          : const [],
       linkedReclamation: map['linkedReclamation'] is Map<String, dynamic>
           ? LinkedCase.fromMap(map['linkedReclamation'] as Map<String, dynamic>)
           : null,
@@ -129,6 +145,40 @@ class ClientOrderTrackingItem {
       quantite: _double(map['quantite']),
       prixUnitaire: _nullDouble(map['prixUnitaire']),
       montantTTC: _nullDouble(map['montantTTC']),
+    );
+  }
+}
+
+/// Article en transit inter-dépôts pour cette commande.
+class ClientOrderTrackingTransitItem {
+  final String articleRef;
+  final String articleName;
+  final double quantity;
+  /// EN_ATTENTE_TRANSIT | EN_COURS_TRANSIT | RECU_DEPOT_DESTINE | TRANSIT_TERMINE
+  final String status;
+  final String? sourceDepotName;
+  final String? destinationDepotName;
+  final String currentMessage;
+
+  const ClientOrderTrackingTransitItem({
+    required this.articleRef,
+    required this.articleName,
+    required this.quantity,
+    required this.status,
+    this.sourceDepotName,
+    this.destinationDepotName,
+    this.currentMessage = '',
+  });
+
+  factory ClientOrderTrackingTransitItem.fromMap(Map<String, dynamic> map) {
+    return ClientOrderTrackingTransitItem(
+      articleRef: (map['articleRef'] ?? '').toString(),
+      articleName: (map['articleName'] ?? '').toString(),
+      quantity: _double(map['quantity']),
+      status: (map['status'] ?? '').toString(),
+      sourceDepotName: _nullStr(map['sourceDepotName']),
+      destinationDepotName: _nullStr(map['destinationDepotName']),
+      currentMessage: (map['currentMessage'] ?? '').toString(),
     );
   }
 }

@@ -156,7 +156,7 @@ class _DepotDamagedDecisionPanelState extends State<DepotDamagedDecisionPanel> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEF4444).withOpacity(0.30),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.30),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -368,11 +368,11 @@ class _DepotDamagedDecisionPanelState extends State<DepotDamagedDecisionPanel> {
         decoration: BoxDecoration(
           color: enabled ? Colors.white : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: c.withOpacity(0.5), width: 1.2),
+          border: Border.all(color: c.withValues(alpha: 0.5), width: 1.2),
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -396,7 +396,7 @@ class _DepotDamagedDecisionPanelState extends State<DepotDamagedDecisionPanel> {
             Text(
               subtitle,
               style: TextStyle(
-                color: c.withOpacity(0.85),
+                color: c.withValues(alpha: 0.85),
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
               ),

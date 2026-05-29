@@ -37,10 +37,10 @@ class MapSummaryPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.4)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -65,7 +65,7 @@ class MapSummaryPanel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.78)],
+          colors: [color, color.withValues(alpha: 0.78)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -91,9 +91,9 @@ class MapSummaryPanel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.20),
+              color: Colors.white.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.30)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -131,14 +131,14 @@ class MapSummaryPanel extends StatelessWidget {
                   hint: routeLabel.contains('stop') ? 'restants' : null,
                   color: scheme.primary,
                 ),
-                _Divider(color: scheme.outlineVariant.withOpacity(0.5)),
+                _Divider(color: scheme.outlineVariant.withValues(alpha: 0.5)),
                 _StatColumn(
                   icon: Icons.schedule_rounded,
                   label: 'ETA total',
                   value: etaLabel,
                   color: const Color(0xFF6366F1),
                 ),
-                _Divider(color: scheme.outlineVariant.withOpacity(0.5)),
+                _Divider(color: scheme.outlineVariant.withValues(alpha: 0.5)),
                 _StatColumn(
                   icon: Icons.straighten_rounded,
                   label: 'Distance',
@@ -252,9 +252,9 @@ class _SecondaryPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.22)),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -311,7 +311,7 @@ class _PulseDotState extends State<_PulseDot>
                   scale: 0.6 + t * 1.2,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.55),
+                      color: widget.color.withValues(alpha: 0.55),
                       shape: BoxShape.circle,
                     ),
                   ),

@@ -177,9 +177,9 @@ class _PreviewBar extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.5),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.6)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
       ),
       child: Row(
         children: [
@@ -204,7 +204,7 @@ class _PreviewBar extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
-              color: plan.overallTraffic.color.withOpacity(0.15),
+              color: plan.overallTraffic.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
@@ -280,12 +280,12 @@ class _StopRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.4),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isPriority
-              ? const Color(0xFFEA580C).withOpacity(0.5)
-              : scheme.outlineVariant.withOpacity(0.6),
+              ? const Color(0xFFEA580C).withValues(alpha: 0.5)
+              : scheme.outlineVariant.withValues(alpha: 0.6),
         ),
       ),
       child: Row(
@@ -295,14 +295,14 @@ class _StopRow extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [tone, tone.withOpacity(0.78)],
+                colors: [tone, tone.withValues(alpha: 0.78)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: tone.withOpacity(0.36),
+                  color: tone.withValues(alpha: 0.36),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -362,7 +362,7 @@ class _StopRow extends StatelessWidget {
                       '· ${(stop!.durationFromPrevSecondsFactored / 60).round()} min '
                       '· ${stop!.fuelCostFromPrevTnd.toStringAsFixed(2)} TND',
                       style: TextStyle(
-                        color: scheme.onSurfaceVariant.withOpacity(0.78),
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),

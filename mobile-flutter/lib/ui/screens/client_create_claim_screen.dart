@@ -395,8 +395,8 @@ class _ClientCreateClaimScreenState extends State<ClientCreateClaimScreen> {
                     margin: const EdgeInsets.only(bottom: 14),
                     decoration: BoxDecoration(
                       color: _isOrderDelivered
-                          ? scheme.primaryContainer.withOpacity(0.4)
-                          : scheme.tertiaryContainer.withOpacity(0.4),
+                          ? scheme.primaryContainer.withValues(alpha: 0.4)
+                          : scheme.tertiaryContainer.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(children: [
@@ -515,7 +515,7 @@ class _ClientCreateClaimScreenState extends State<ClientCreateClaimScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: scheme.errorContainer.withOpacity(0.4),
+                        color: scheme.errorContainer.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -656,7 +656,7 @@ class _ClientCreateClaimScreenState extends State<ClientCreateClaimScreen> {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: scheme.surfaceContainerHighest.withOpacity(0.5),
+                                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(Icons.photo_camera_outlined),
@@ -669,7 +669,7 @@ class _ClientCreateClaimScreenState extends State<ClientCreateClaimScreen> {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: scheme.surfaceContainerHighest.withOpacity(0.5),
+                                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(Icons.photo_library_outlined),
@@ -798,7 +798,7 @@ class _ReprogrammationPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  border: Border.all(color: scheme.outline.withOpacity(0.5)),
+                  border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(

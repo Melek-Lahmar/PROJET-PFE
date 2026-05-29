@@ -217,7 +217,7 @@ class _Hero extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.32),
+            color: accent.withValues(alpha: 0.32),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -240,7 +240,7 @@ class _Hero extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(icon, color: Colors.white, size: 22),
@@ -299,10 +299,10 @@ class _Hero extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.14),
+                          color: Colors.white.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                              color: Colors.white.withOpacity(0.22)),
+                              color: Colors.white.withValues(alpha: 0.22)),
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -337,10 +337,10 @@ class _Hero extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.14),
+                            color: Colors.white.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.22)),
+                                color: Colors.white.withValues(alpha: 0.22)),
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -455,7 +455,7 @@ class OrderTimelineList extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.timeline_rounded,
-                        color: accentColor.withOpacity(0.30), size: 36),
+                        color: accentColor.withValues(alpha: 0.30), size: 36),
                     const SizedBox(height: 6),
                     Text(
                       'Aucun événement enregistré',
@@ -573,7 +573,7 @@ class _TimelineRowState extends State<_TimelineRow>
                   Container(
                     width: 2,
                     height: widget.isFirst ? 0 : 18,
-                    color: ev.color.withOpacity(0.30),
+                    color: ev.color.withValues(alpha: 0.30),
                   ),
                   Container(
                     width: 28,
@@ -583,7 +583,7 @@ class _TimelineRowState extends State<_TimelineRow>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: ev.color.withOpacity(0.45),
+                          color: ev.color.withValues(alpha: 0.45),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -597,7 +597,7 @@ class _TimelineRowState extends State<_TimelineRow>
                       width: 2,
                       color: widget.isLast
                           ? Colors.transparent
-                          : ev.color.withOpacity(0.30),
+                          : ev.color.withValues(alpha: 0.30),
                     ),
                   ),
                 ],
@@ -616,7 +616,7 @@ class _TimelineRowState extends State<_TimelineRow>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: ev.color.withOpacity(0.10),
+                        color: ev.color.withValues(alpha: 0.10),
                         blurRadius: 14,
                         offset: const Offset(0, 6),
                       ),
@@ -645,7 +645,7 @@ class _TimelineRowState extends State<_TimelineRow>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: ev.color.withOpacity(0.12),
+                              color: ev.color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -665,13 +665,13 @@ class _TimelineRowState extends State<_TimelineRow>
                           Icon(Icons.calendar_today_rounded,
                               size: 11,
                               color: scheme.onSurfaceVariant
-                                  .withOpacity(0.6)),
+                                  .withValues(alpha: 0.6)),
                           const SizedBox(width: 4),
                           Text(
                             _formatDate(ev.date),
                             style: TextStyle(
                               color: scheme.onSurfaceVariant
-                                  .withOpacity(0.85),
+                                  .withValues(alpha: 0.85),
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -681,14 +681,14 @@ class _TimelineRowState extends State<_TimelineRow>
                             Icon(Icons.person_outline,
                                 size: 11,
                                 color: scheme.onSurfaceVariant
-                                    .withOpacity(0.6)),
+                                    .withValues(alpha: 0.6)),
                             const SizedBox(width: 3),
                             Flexible(
                               child: Text(
                                 ev.actor!,
                                 style: TextStyle(
                                   color: scheme.onSurfaceVariant
-                                      .withOpacity(0.85),
+                                      .withValues(alpha: 0.85),
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -706,13 +706,13 @@ class _TimelineRowState extends State<_TimelineRow>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: ev.color.withOpacity(0.06),
+                            color: ev.color.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             ev.description!,
                             style: TextStyle(
-                              color: scheme.onSurface.withOpacity(0.85),
+                              color: scheme.onSurface.withValues(alpha: 0.85),
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,
                               height: 1.35,
@@ -747,7 +747,7 @@ class _EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.12),
+                color: accent.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.timeline_rounded, color: accent, size: 56),

@@ -59,7 +59,7 @@ class AdminOrderRow extends StatelessWidget {
                           horizontal: 6, vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withOpacity(0.12),
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Row(
@@ -156,7 +156,7 @@ class AdminOrderRow extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Icon(Icons.chevron_right_rounded,
-                  color: scheme.onSurfaceVariant.withOpacity(0.6)),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.6)),
             ],
           ),
         ],

@@ -231,7 +231,7 @@ class _ConfirmatriceOrdersScreenState extends State<ConfirmatriceOrdersScreen> {
                   color: Theme.of(context)
                       .colorScheme
                       .errorContainer
-                      .withOpacity(0.45),
+                      .withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
@@ -445,19 +445,19 @@ class _ConfFilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: selected
               ? LinearGradient(
-                  colors: [color, color.withOpacity(0.78)],
+                  colors: [color, color.withValues(alpha: 0.78)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: selected ? null : color.withOpacity(0.10),
+          color: selected ? null : color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-              color: selected ? Colors.transparent : color.withOpacity(0.25)),
+              color: selected ? Colors.transparent : color.withValues(alpha: 0.25)),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.32),
+                    color: color.withValues(alpha: 0.32),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -513,8 +513,8 @@ class _OrderTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: _lockedByMe
-                ? scheme.primary.withOpacity(0.5)
-                : scheme.outline.withOpacity(0.12),
+                ? scheme.primary.withValues(alpha: 0.5)
+                : scheme.outline.withValues(alpha: 0.12),
             width: _lockedByMe ? 1.4 : 1,
           ),
           boxShadow: const [
@@ -601,14 +601,14 @@ class _OrderTile extends StatelessWidget {
             if (_lockedByMe)
               _LockBanner(
                 color: scheme.primary,
-                bg: scheme.primary.withOpacity(0.10),
+                bg: scheme.primary.withValues(alpha: 0.10),
                 icon: Icons.lock_outline_rounded,
                 label: 'Tu traites cette commande. Appuie pour continuer.',
               )
             else if (_lockedByOther)
               _LockBanner(
                 color: scheme.error,
-                bg: scheme.error.withOpacity(0.08),
+                bg: scheme.error.withValues(alpha: 0.08),
                 icon: Icons.lock_person_outlined,
                 label: _otherOwnerLabel(lock!),
               )
@@ -618,7 +618,7 @@ class _OrderTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest.withOpacity(0.45),
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Row(
@@ -696,7 +696,7 @@ class _LockBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [

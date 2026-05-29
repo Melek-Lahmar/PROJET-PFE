@@ -206,7 +206,7 @@ class _DesktopShell extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           scheme.primary,
-                          scheme.primary.withOpacity(0.7),
+                          scheme.primary.withValues(alpha: 0.7),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -246,7 +246,7 @@ class _DesktopShell extends StatelessWidget {
                     vertical: 16,
                   ),
                   child: Material(
-                    color: const Color(0xFFEF4444).withOpacity(0.10),
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -286,7 +286,7 @@ class _DesktopShell extends StatelessWidget {
           VerticalDivider(
             width: 1,
             thickness: 1,
-            color: scheme.outlineVariant.withOpacity(0.5),
+            color: scheme.outlineVariant.withValues(alpha: 0.5),
           ),
           Expanded(
             child: Column(
@@ -358,7 +358,7 @@ class _SectionHeaderBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          bottom: BorderSide(color: scheme.outlineVariant.withOpacity(0.4)),
+          bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: AnimatedSwitcher(
@@ -383,8 +383,8 @@ class _SectionHeaderBar extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    scheme.primary.withOpacity(0.18),
-                    scheme.primary.withOpacity(0.08),
+                    scheme.primary.withValues(alpha: 0.18),
+                    scheme.primary.withValues(alpha: 0.08),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -414,7 +414,7 @@ class _SectionHeaderBar extends StatelessWidget {
               ),
               style: TextButton.styleFrom(
                 backgroundColor:
-                    const Color(0xFFEF4444).withOpacity(0.08),
+                    const Color(0xFFEF4444).withValues(alpha: 0.08),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 10,
                 ),
@@ -486,7 +486,7 @@ class _MobileShell extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             scheme.primary,
-                            scheme.primary.withOpacity(0.7),
+                            scheme.primary.withValues(alpha: 0.7),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(10),
@@ -529,7 +529,7 @@ class _MobileShell extends StatelessWidget {
                         ),
                       ),
                       selected: selected,
-                      selectedTileColor: scheme.primary.withOpacity(0.08),
+                      selectedTileColor: scheme.primary.withValues(alpha: 0.08),
                       onTap: () {
                         Navigator.of(ctx).pop();
                         onSelected(i);
@@ -542,7 +542,7 @@ class _MobileShell extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Material(
-                  color: const Color(0xFFEF4444).withOpacity(0.10),
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),

@@ -153,7 +153,7 @@ class _AppButtonState extends State<AppButton> {
           height: widget.height,
           padding: widget.padding,
           colors: widget.gradientColors ??
-              [scheme.primary, Color.alphaBlend(scheme.primary.withOpacity(0.75), scheme.tertiary)],
+              [scheme.primary, Color.alphaBlend(scheme.primary.withValues(alpha: 0.75), scheme.tertiary)],
           glow: widget.variant == AppButtonVariant.glow,
           enabled: !disabled,
           onPressed: widget.onPressed,
@@ -284,7 +284,7 @@ class _GradientButtonState extends State<_GradientButton>
                   boxShadow: widget.enabled
                       ? [
                           BoxShadow(
-                            color: widget.colors.first.withOpacity(pulse),
+                            color: widget.colors.first.withValues(alpha: pulse),
                             blurRadius: widget.glow ? 22 : 14,
                             offset: const Offset(0, 6),
                           ),

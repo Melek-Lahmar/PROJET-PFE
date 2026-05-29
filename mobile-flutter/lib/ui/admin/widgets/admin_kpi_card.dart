@@ -113,8 +113,8 @@ class _AdminKpiCardState extends State<AdminKpiCard>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      widget.accent.withOpacity(0.22),
-                      widget.accent.withOpacity(0.10),
+                      widget.accent.withValues(alpha: 0.22),
+                      widget.accent.withValues(alpha: 0.10),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -198,24 +198,24 @@ class _DeltaPill extends StatelessWidget {
     String text;
 
     if (delta == null) {
-      bg = scheme.surfaceContainerHighest.withOpacity(0.6);
+      bg = scheme.surfaceContainerHighest.withValues(alpha: 0.6);
       fg = scheme.onSurfaceVariant;
       icon = Icons.remove_rounded;
       text = '—';
     } else if (kpi.deltaDirection == 'up') {
       // "up" sur taux retour est mauvais — mais pour la V1 on garde green=up,
       // red=down de manière neutre. Étape 7 affinera le coloriage par sens.
-      bg = const Color(0xFF22C55E).withOpacity(0.12);
+      bg = const Color(0xFF22C55E).withValues(alpha: 0.12);
       fg = const Color(0xFF15803D);
       icon = Icons.arrow_upward_rounded;
       text = '+${delta.abs().toStringAsFixed(1)} %';
     } else if (kpi.deltaDirection == 'down') {
-      bg = const Color(0xFFEF4444).withOpacity(0.12);
+      bg = const Color(0xFFEF4444).withValues(alpha: 0.12);
       fg = const Color(0xFFB91C1C);
       icon = Icons.arrow_downward_rounded;
       text = '-${delta.abs().toStringAsFixed(1)} %';
     } else {
-      bg = scheme.surfaceContainerHighest.withOpacity(0.6);
+      bg = scheme.surfaceContainerHighest.withValues(alpha: 0.6);
       fg = scheme.onSurfaceVariant;
       icon = Icons.trending_flat_rounded;
       text = '0 %';

@@ -137,7 +137,7 @@ class _LivreurNewOrdersScreenState extends State<LivreurNewOrdersScreen> {
                           },
                         ),
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withOpacity(0.45),
+                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -227,7 +227,7 @@ class _Header extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.32),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.32),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -238,9 +238,9 @@ class _Header extends StatelessWidget {
               Container(
                 width: 44, height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.30)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
                 ),
                 child: const Icon(Icons.inbox_rounded,
                     color: Colors.white, size: 22),
@@ -261,7 +261,7 @@ class _Header extends StatelessWidget {
                           ? 'Aucune commande disponible'
                           : '$count à prendre maintenant',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.86),
+                        color: Colors.white.withValues(alpha: 0.86),
                         fontSize: 12,
                       ),
                     ),

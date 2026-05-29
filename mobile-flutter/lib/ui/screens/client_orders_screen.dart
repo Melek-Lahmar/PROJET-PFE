@@ -253,7 +253,7 @@ class _HeroStats extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.32),
+            color: const Color(0xFF6366F1).withValues(alpha: 0.32),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -276,7 +276,7 @@ class _HeroStats extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text('${stats.total} commande${stats.total > 1 ? 's' : ''}',
@@ -341,7 +341,7 @@ class _StatBlock extends StatelessWidget {
           Container(
             width: 32, height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.20),
+              color: Colors.white.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -356,7 +356,7 @@ class _StatBlock extends StatelessWidget {
               )),
           Text(label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w700,
                 fontSize: 10,
               )),
@@ -372,7 +372,7 @@ class _ThinDivider extends StatelessWidget {
     return Container(
       width: 1,
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-      color: Colors.white.withOpacity(0.20),
+      color: Colors.white.withValues(alpha: 0.20),
     );
   }
 }
@@ -396,9 +396,9 @@ class _SearchField extends StatelessWidget {
     final scheme = theme.colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.55),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.4)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: TextField(
         controller: controller,
@@ -442,20 +442,20 @@ class _FilterChipPremium extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: selected
               ? LinearGradient(
-                  colors: [spec.color, spec.color.withOpacity(0.78)],
+                  colors: [spec.color, spec.color.withValues(alpha: 0.78)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: selected ? null : spec.color.withOpacity(0.10),
+          color: selected ? null : spec.color.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? Colors.transparent : spec.color.withOpacity(0.25),
+            color: selected ? Colors.transparent : spec.color.withValues(alpha: 0.25),
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: spec.color.withOpacity(0.32),
+                    color: spec.color.withValues(alpha: 0.32),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -507,9 +507,9 @@ class _ErrorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: scheme.errorContainer.withOpacity(0.30),
+        color: scheme.errorContainer.withValues(alpha: 0.30),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.error.withOpacity(0.25)),
+        border: Border.all(color: scheme.error.withValues(alpha: 0.25)),
       ),
       child: Column(
         children: [
@@ -550,14 +550,14 @@ class _EmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withOpacity(0.06),
-            scheme.surfaceContainerHighest.withOpacity(0.4),
+            scheme.primary.withValues(alpha: 0.06),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.4),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.primary.withOpacity(0.16)),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.16)),
       ),
       child: Column(
         children: [
@@ -567,12 +567,12 @@ class _EmptyCard extends StatelessWidget {
               width: 80, height: 80,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [scheme.primary, scheme.primary.withOpacity(0.78)],
+                  colors: [scheme.primary, scheme.primary.withValues(alpha: 0.78)],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: scheme.primary.withOpacity(0.30),
+                    color: scheme.primary.withValues(alpha: 0.30),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
                   ),
@@ -613,9 +613,9 @@ class _NoResultsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.4),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [

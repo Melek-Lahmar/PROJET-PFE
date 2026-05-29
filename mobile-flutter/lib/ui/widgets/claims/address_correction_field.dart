@@ -160,12 +160,12 @@ class _AddressCorrectionFieldState extends State<AddressCorrectionField> {
           decoration: BoxDecoration(
             color: hasGps
                 ? Colors.green.shade50
-                : scheme.primaryContainer.withOpacity(0.25),
+                : scheme.primaryContainer.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: hasGps
                   ? Colors.green.shade300
-                  : scheme.primary.withOpacity(0.3),
+                  : scheme.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Column(

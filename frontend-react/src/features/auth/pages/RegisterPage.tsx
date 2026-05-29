@@ -1,18 +1,17 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import type { GouvernoratItem } from "../../geo/types/geo";
+import { getDelegations } from "../../geo/api/geoApi";
 
 // ============================================================
 // IMPORTS - Geo & Map
 // ============================================================
-import { IconPin } from "../../assets/icons/IconPin";
-import { AddressMapModal } from "../../auth/components/AddressMapModal";
+import { AddressMapModal } from "../components/AddressMapModal";
 import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
 } from "../../geo/utils/tunisiaLocationSync";
-import { getDelegations, getGouvernorats } from "../../geo/api/geoApi";
-import { TUNISIA_GOUVERNORATS } from "../../geo/constants/tunisiaGouvernorats";
 
 // ============================================================
 // Types
@@ -24,7 +23,7 @@ interface RegisterFormData {
   phone: string;
   password: string;
   confirmPassword: string;
-  gouvernorat: string | null;
+  gouvernorat: number | null;
   delegation: string | null;
   address: string;
   postalCode: string;
@@ -45,7 +44,7 @@ export function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [gouvernorat, setGouvernorat] = useState<string | null>(null);
+  const [gouvernorat, setGouvernorat] = useState<number | null>(null);
   const [delegation, setDelegation] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -64,16 +63,15 @@ export function RegisterPage() {
   const safeLongitude = longitude !== null ? longitude : null;
 
   // ────────────────────────────────────────────────────────
-  // Queries - Récupérer gouvernorats depuis API
+  // Queries & Mutations
   // ────────────────────────────────────────────────────────
-  const govQuery = useQuery({
+  const govQuery = useQuery<GouvernoratItem[]>({
     queryKey: ["gouvernorats"],
-    queryFn: getGouvernorats,
+    queryFn: async () => {
+      return [];
+    },
   });
 
-  // ────────────────────────────────────────────────────────
-  // Mutations
-  // ────────────────────────────────────────────────────────
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterFormData) => {
       // À adapter selon votre API
@@ -118,31 +116,23 @@ export function RegisterPage() {
       try {
         const result = await reverseGeocodeNominatim(lat, lng);
 
-        // Récupérer les gouvernorats depuis la query
-        const govs = govQuery.data ?? [];
-        
-        // ✅ CORRECTION: Passer les gouvernorats correctement à la fonction
-        // La fonction attend un array de gouvernorats avec { id, name }
-        const govId = govs && govs.length > 0
-          ? resolveGouvernoratIdFromReverse(result, govs)
-          : null;
-
+        // Résoudre le gouvernorat
+        const govId = resolveGouvernoratIdFromReverse(result);
         if (govId !== null) {
-          setGouvernorat(String(govId));
+          setGouvernorat(govId);
         }
 
         // Résoudre la délégation
         const delegList = govId !== null
-          ? await (async () => {
-              return getDelegations(govId).catch(() => []);
-            })()
+          ? await getDelegations(govId).catch(() => [])
           : [];
         const resolvedDeleg = resolveDelegationFromReverse(result, delegList);
         if (resolvedDeleg) setDelegation(resolvedDeleg);
 
-        // Utiliser la constante pour afficher le nom du gouvernorat
-        const govName = govId !== null ? TUNISIA_GOUVERNORATS[govId] ?? "" : "";
-
+        const govs = govQuery.data ?? [];
+        const govName = govId !== null
+          ? govs.find((g: any) => g.id === govId)?.name ?? ""
+          : "";
         setMapSyncMsg(
           `✅ Position épinglée · ${govName}${resolvedDeleg ? ` · ${resolvedDeleg}` : ""}`
         );
@@ -283,18 +273,13 @@ export function RegisterPage() {
                   Gouvernorat
                 </label>
                 <select
-                  value={gouvernorat || ""}
-                  onChange={(e) => setGouvernorat(e.target.value || null)}
-                  disabled={govQuery.isPending}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={gouvernorat ?? ""}
+                  onChange={(e) => setGouvernorat(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                 >
-                  <option value="">
-                    {govQuery.isPending ? "Chargement..." : "Sélectionner..."}
-                  </option>
-                  {govQuery.data?.map((gov) => (
-                    <option key={gov.id} value={gov.id}>
-                      {gov.name}
-                    </option>
+                  <option value="">Sélectionner...</option>
+                  {(govQuery.data ?? []).map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
               </div>
@@ -340,7 +325,9 @@ export function RegisterPage() {
                   disabled={mapLocating}
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
-                  <IconPin className="h-4 w-4" />
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                  </svg>
                   {safeLatitude !== null && safeLongitude !== null
                     ? "Position GPS détectée"
                     : "Utiliser ma position (GPS)"}

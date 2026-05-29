@@ -192,7 +192,7 @@ class _DemandeCard extends StatelessWidget {
     final isInProgress = statutUpper == 'EN_COURS_DE_TRAITEMENT';
 
     Color? accentBg;
-    Color accentBorder = scheme.outlineVariant.withOpacity(0.4);
+    Color accentBorder = scheme.outlineVariant.withValues(alpha: 0.4);
     if (isPending) {
       accentBg = Colors.red.shade50;
       accentBorder = Colors.red.shade200;

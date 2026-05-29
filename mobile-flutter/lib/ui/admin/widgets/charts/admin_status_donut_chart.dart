@@ -151,7 +151,7 @@ class _AdminStatusDonutChartState extends State<AdminStatusDonutChart> {
                           ),
                           decoration: BoxDecoration(
                             color: scheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

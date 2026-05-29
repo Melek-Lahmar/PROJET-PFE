@@ -221,6 +221,8 @@ export function CheckoutPage() {
     longitude: false,
   });
 
+  const [coverageBlocked, setCoverageBlocked] = useState(false);
+
   // ── NOUVEAU : callback transmis à DeliveryAddressSelector ─────────────────
   const handleTouched = (
     field: "address" | "city" | "postalCode" | "latitude" | "longitude"
@@ -268,12 +270,13 @@ export function CheckoutPage() {
 
   const canSubmit = useMemo(() => {
     if (items.length === 0) return false;
+    if (isHome && coverageBlocked) return false;
     if (!isHome && effectiveDepotNo <= 0) return false;
     if (isHome) {
       if (!address.trim() || !city.trim() || !postalCode.trim()) return false;
     }
     return true;
-  }, [items.length, isHome, effectiveDepotNo, address, city, postalCode]);
+  }, [items.length, isHome, coverageBlocked, effectiveDepotNo, address, city, postalCode]);
 
   const codMutation = useMutation({
     mutationFn: async () => {
@@ -420,6 +423,7 @@ export function CheckoutPage() {
                 setLatitude={setLatitude}
                 setLongitude={setLongitude}
                 onTouched={handleTouched}
+                onCoverageBlocked={setCoverageBlocked}
               />
             ) : null}
 

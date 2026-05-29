@@ -24,6 +24,7 @@ export const endpoints = {
   geoDelegations: (id: number) => `/api/geo/gouvernorats/${id}/delegations`,
   geoValidatePoint: "/api/geo/validate-point",
   geoPickupOptions: "/api/geo/pickup-options",
+  geoDepotCoverage: (gouvernoratId: number) => `/api/geo/depot-coverage/${gouvernoratId}`,
 
   adminDepotZones: "/api/admin/depot-zones",
   adminDepotZoneById: (id: string) => `/api/admin/depot-zones/${id}`,

@@ -39,7 +39,7 @@ class AppErrorState extends StatelessWidget {
                   width: compact ? 56 : 72,
                   height: compact ? 56 : 72,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.10),
+                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

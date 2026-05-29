@@ -1,9 +1,5 @@
 # KB Auto-générée
-<<<<<<< HEAD
-Générée le : 2026-05-23 22:00 UTC
-=======
-Générée le : 2026-05-26 09:43 UTC
->>>>>>> a31d776 (feat: integrate B2B quotes favorites and confirmateur improvements)
+Générée le : 2026-05-28 15:41 UTC
 
 ## Statuts livraison (LI_Statut)
 - 0 : Confirme — commande validée, en attente livreur

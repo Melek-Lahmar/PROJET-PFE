@@ -200,7 +200,7 @@ class _AdminUserFormSheetState extends State<AdminUserFormSheet> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: widget.accent.withOpacity(0.35),
+                            color: widget.accent.withValues(alpha: 0.35),
                             blurRadius: 18,
                             offset: const Offset(0, 6),
                           ),
@@ -211,7 +211,7 @@ class _AdminUserFormSheetState extends State<AdminUserFormSheet> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -242,7 +242,7 @@ class _AdminUserFormSheetState extends State<AdminUserFormSheet> {
                                       ? 'Mise à jour des informations'
                                       : 'Création d\'un compte ${widget.role}',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withOpacity(0.85),
+                                    color: Colors.white.withValues(alpha: 0.85),
                                   ),
                                 ),
                               ],
@@ -262,10 +262,10 @@ class _AdminUserFormSheetState extends State<AdminUserFormSheet> {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withOpacity(0.10),
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFEF4444).withOpacity(0.40),
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.40),
                           ),
                         ),
                         child: Row(

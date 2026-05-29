@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/realtime_service.dart';
 import '../../data/reclamation_motifs.dart';
 import '../../models/client_claim.dart';
 import '../../state/confirmatrice_claims_provider.dart';
@@ -44,6 +45,7 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
   Timer? _debounce;
+  final List<StreamSubscription<dynamic>> _realtimeSubs = [];
 
   bool get _isLocked => widget.lockedTypeCas != null;
   String get _lockedType => widget.lockedTypeCas!.toUpperCase();
@@ -57,6 +59,10 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
 
   @override
   void dispose() {
+    for (final s in _realtimeSubs) {
+      s.cancel();
+    }
+    _realtimeSubs.clear();
     _tab.removeListener(_onTabChanged);
     _tab.dispose();
     _debounce?.cancel();
@@ -109,6 +115,19 @@ class _ConfirmatriceClaimsScreenState extends State<ConfirmatriceClaimsScreen>
       } else {
         provider.refresh();
       }
+
+      // Rafraîchir la liste automatiquement quand un nouveau cas arrive ou
+      // est réattribué via SignalR — sans attendre un pull-to-refresh manuel.
+      final realtime = context.read<RealtimeService>();
+      _realtimeSubs.add(realtime.nouveauCas.listen((_) {
+        if (mounted) _refresh();
+      }));
+      _realtimeSubs.add(realtime.casReattribue.listen((_) {
+        if (mounted) _refresh();
+      }));
+      _realtimeSubs.add(realtime.statutCasChange.listen((_) {
+        if (mounted) _refresh();
+      }));
     });
   }
 
@@ -630,7 +649,7 @@ class _ClientChangeBadge extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: s.gradient.colors.first.withOpacity(0.30),
+                      color: s.gradient.colors.first.withValues(alpha: 0.30),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -684,7 +703,7 @@ class _ClientPendingBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF97316).withOpacity(0.30),
+            color: const Color(0xFFF97316).withValues(alpha: 0.30),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -741,7 +760,7 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: effectiveTextColor.withOpacity(0.7)),
+          Icon(icon, size: 13, color: effectiveTextColor.withValues(alpha: 0.7)),
           const SizedBox(width: 5),
           Flexible(
             child: Text(
