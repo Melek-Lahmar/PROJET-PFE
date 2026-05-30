@@ -349,138 +349,6 @@ function GlobalTab({
   );
 }
 
-// ─── Onglet "Par dépôt" ───────────────────────────────────────────────────────
-
-function ByDepotTab({
-  items,
-  depots,
-  onRetry,
-  retryingPiece,
-  onOpenDetails,
-}: {
-  items: Transfert[];
-  depots: Depot[];
-  onRetry: (piece: string) => void;
-  retryingPiece: string | null;
-  onOpenDetails: (t: Transfert) => void;
-}) {
-  const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
-
-  const allDepotNos = useMemo(
-    () => Array.from(new Set(items.flatMap((t) => [t.sourceDepotNo, t.destinationDepotNo]))),
-    [items]
-  );
-
-  const depotOptions = useMemo(() => {
-    return allDepotNos.map((no) => {
-      const meta = depots.find((d) => d.dE_No === no);
-      return { no, label: meta ? `${meta.dE_Intitule} (${meta.dE_Code})` : `Dépôt #${no}` };
-    });
-  }, [allDepotNos, depots]);
-
-  const filtered = useMemo(() => {
-    if (selectedDepot === null) return items;
-    return items.filter(
-      (t) => t.sourceDepotNo === selectedDepot || t.destinationDepotNo === selectedDepot
-    );
-  }, [items, selectedDepot]);
-
-  return (
-    <div className="space-y-4">
-      {/* Filtre dépôt */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-muted-foreground">Filtrer par dépôt :</span>
-        <button
-          type="button"
-          onClick={() => setSelectedDepot(null)}
-          className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-            selectedDepot === null
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "border border-border bg-card text-card-foreground hover:bg-muted"
-          }`}
-        >
-          Tous ({items.length})
-        </button>
-        {depotOptions.map(({ no, label }) => {
-          const count = items.filter(
-            (t) => t.sourceDepotNo === no || t.destinationDepotNo === no
-          ).length;
-          return (
-            <button
-              key={no}
-              type="button"
-              onClick={() => setSelectedDepot(no)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedDepot === no
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "border border-border bg-card text-card-foreground hover:bg-muted"
-              }`}
-            >
-              {label} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Liste filtrée */}
-      {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card py-8 text-center text-sm text-muted-foreground">
-          Aucun colis pour ce dépôt.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((t) => (
-            <div
-              key={t.id}
-              className="rounded-xl border border-border/70 bg-muted/15 p-4"
-            >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-card-foreground">{t.doPiece}</span>
-                    <StatusBadge status={t.status} />
-                  </div>
-                  <div className="mt-1.5 text-sm text-muted-foreground">
-                    {t.arRef} · {t.sourceDepotNo}→{t.destinationDepotNo} · qté{" "}
-                    {Number(t.quantite ?? 0).toLocaleString("fr-FR")}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    Livreur :{" "}
-                    <span className={t.transitLivreurUserId ? "font-semibold text-card-foreground" : "italic text-amber-600"}>
-                      {t.transitLivreurUserId ?? "non affecté"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onOpenDetails(t)}
-                  >
-                    Détails
-                  </Button>
-                  {!t.transitLivreurUserId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      isLoading={retryingPiece === t.doPiece}
-                      onClick={() => onRetry(t.doPiece)}
-                    >
-                      Relancer
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Onglet "Livreurs de transit" ─────────────────────────────────────────────
 
 interface ReassignModalState {
@@ -1131,7 +999,7 @@ function DepotsTab({
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-type Tab = "global" | "par-depot" | "livreurs" | "depots" | "problemes";
+type Tab = "global" | "depots" | "livreurs" | "problemes";
 
 export function SupervisorDashboardPage() {
   const qc = useQueryClient();
@@ -1214,12 +1082,11 @@ export function SupervisorDashboardPage() {
   });
   const openIssuesCount = (issuesCountQuery.data ?? []).filter((i) => !i.acknowledgedAt).length;
 
-  const TABS: { key: Tab; label: string; count?: number }[] = [
-    { key: "global", label: "Vue globale", count: items.length },
-    { key: "depots", label: "Dépôts & missions" },
-    { key: "par-depot", label: "Par dépôt" },
-    { key: "livreurs", label: "Livreurs de transit" },
-    { key: "problemes", label: "Problèmes", count: openIssuesCount },
+  const TABS: { key: Tab; label: string; hint: string; count?: number }[] = [
+    { key: "global",    label: "Vue globale",         hint: "Toutes les missions actives", count: items.length },
+    { key: "depots",    label: "Dépôts & missions",   hint: "Détail par dépôt source" },
+    { key: "livreurs",  label: "Livreurs de transit", hint: "Qui livre quoi" },
+    { key: "problemes", label: "Problèmes",           hint: "Incidents à résoudre", count: openIssuesCount },
   ];
 
   const statCards = [
@@ -1261,7 +1128,7 @@ export function SupervisorDashboardPage() {
       {/* Onglets */}
       <div className="rounded-2xl border border-border bg-card shadow-sm">
         {/* Tab bar */}
-        <div className="flex items-center gap-1 border-b border-border px-5 pt-4">
+        <div className="flex flex-wrap items-center gap-1 border-b border-border px-5 pt-4">
           {TABS.map(({ key, label, count }) => (
             <button
               key={key}
@@ -1281,6 +1148,11 @@ export function SupervisorDashboardPage() {
               )}
             </button>
           ))}
+        </div>
+
+        {/* Hint de l'onglet actif */}
+        <div className="border-b border-border/40 bg-muted/15 px-5 py-2 text-xs text-muted-foreground">
+          {TABS.find((t) => t.key === activeTab)?.hint}
         </div>
 
         {/* Tab content */}
@@ -1303,15 +1175,6 @@ export function SupervisorDashboardPage() {
                 <DepotsTab
                   depots={depots}
                   livreurs={livreurs}
-                  onOpenDetails={setDetailsTransfert}
-                />
-              )}
-              {activeTab === "par-depot" && (
-                <ByDepotTab
-                  items={items}
-                  depots={depots}
-                  onRetry={(p) => void handleRetry(p)}
-                  retryingPiece={retryingPiece}
                   onOpenDetails={setDetailsTransfert}
                 />
               )}
