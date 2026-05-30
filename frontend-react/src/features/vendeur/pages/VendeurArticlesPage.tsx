@@ -164,7 +164,7 @@ export function VendeurArticlesPage() {
             </p>
           </div>
         </section>
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-3xl border border-danger/25 bg-danger/10 p-5 text-sm text-danger shadow-sm">
           {getApiErrorMessage(vendeurContextQuery.error)}
         </div>
       </div>
@@ -284,7 +284,7 @@ export function VendeurArticlesPage() {
       {isPending ? <Loader label="Chargement du catalogue vendeur..." /> : null}
 
       {isError ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-3xl border border-danger/25 bg-danger/10 p-5 text-sm text-danger shadow-sm">
           {getApiErrorMessage(error)}
         </div>
       ) : null}

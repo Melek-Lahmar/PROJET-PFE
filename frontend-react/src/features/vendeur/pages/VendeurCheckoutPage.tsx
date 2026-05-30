@@ -29,7 +29,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-semibold text-card-foreground">
-        {label}{required && <span className="ml-0.5 text-rose-500">*</span>}
+        {label}{required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       {children}
     </div>
@@ -172,7 +172,7 @@ export function VendeurCheckoutPage() {
           <SectionTitle kicker="Espace vendeur" title="Checkout vendeur" />
           <p className="mt-2 text-sm text-muted-foreground">Profil vendeur non rattaché à un dépôt.</p>
         </div>
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-700">
+        <div className="rounded-3xl border border-danger/25 bg-danger/10 p-5 text-sm text-danger">
           {getApiErrorMessage(contextQuery.error)}
         </div>
       </div>
@@ -259,7 +259,7 @@ export function VendeurCheckoutPage() {
 
             {/* Erreurs */}
             {errors.length > 0 && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700 space-y-0.5">
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger space-y-0.5">
                 {errors.map((e) => <div key={e}>• {e}</div>)}
               </div>
             )}
@@ -293,7 +293,7 @@ export function VendeurCheckoutPage() {
 
             {/* Cohérence gouvernorat + délégation */}
             {gouvernoratId !== null && delegation && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs font-medium text-emerald-700">
+              <div className="rounded-xl border border-success/25 bg-success/10 px-3 py-2 text-xs font-medium text-success">
                 ✅ {TUNISIA_GOUVERNORATS[gouvernoratId]} · {delegation}
               </div>
             )}
@@ -382,7 +382,7 @@ export function VendeurCheckoutPage() {
             </div>
 
             {mutation.isError && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
                 {getApiErrorMessage(mutation.error)}
               </div>
             )}

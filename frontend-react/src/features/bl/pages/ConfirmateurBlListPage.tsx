@@ -18,10 +18,10 @@ function money(v?: number | null) {
 
 function statusTone(status?: string | null) {
   const s = (status ?? "").toUpperCase();
-  if (s.includes("LIVR")) return "bg-emerald-50 text-emerald-700 ring-emerald-200";
-  if (s.includes("ATTENTE")) return "bg-amber-50 text-amber-700 ring-amber-200";
-  if (s.includes("CONF")) return "bg-blue-50 text-blue-700 ring-blue-200";
-  if (s.includes("REF")) return "bg-rose-50 text-rose-700 ring-rose-200";
+  if (s.includes("LIVR")) return "bg-success/10 text-success ring-success/25";
+  if (s.includes("ATTENTE")) return "bg-warning/10 text-warning ring-warning/25";
+  if (s.includes("CONF")) return "bg-info/10 text-info ring-info/25";
+  if (s.includes("REF")) return "bg-danger/10 text-danger ring-danger/25";
   return "bg-muted/55 text-card-foreground/90 ring-border";
 }
 

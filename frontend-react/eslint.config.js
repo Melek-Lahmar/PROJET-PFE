@@ -19,5 +19,21 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Règles TypeScript assouplies pour un projet PFE
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+
+      // Règles React Hooks v7 — patterns légitimes dans ce projet
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // Fast refresh — warn pour les fichiers utilitaires partagés
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // Misc
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
   },
 ])

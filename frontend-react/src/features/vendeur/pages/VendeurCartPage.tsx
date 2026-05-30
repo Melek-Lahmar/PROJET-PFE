@@ -58,7 +58,7 @@ export function VendeurCartPage() {
 
           <div className="flex flex-wrap gap-3">
             <Link to="/vendeur/articles"><Button type="button" variant="outline">Continuer les produits</Button></Link>
-            <Button type="button" variant="ghost" className="text-rose-600" onClick={() => clear()}>
+            <Button type="button" variant="ghost" className="text-danger" onClick={() => clear()}>
               Tout vider
             </Button>
           </div>
@@ -66,7 +66,7 @@ export function VendeurCartPage() {
       </section>
 
       {contextQuery.isError ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-5 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-3xl border border-danger/25 bg-danger/10 p-5 text-sm text-danger shadow-sm">
           {getApiErrorMessage(contextQuery.error)}
         </div>
       ) : null}
@@ -100,7 +100,7 @@ export function VendeurCartPage() {
                     <div className="text-lg font-black text-card-foreground">{money(item.unitPrice * item.qty)}</div>
                   </div>
 
-                  <Button type="button" variant="ghost" className="text-rose-600" onClick={() => removeItem(item.arRef)}>
+                  <Button type="button" variant="ghost" className="text-danger" onClick={() => removeItem(item.arRef)}>
                     Supprimer
                   </Button>
                 </div>

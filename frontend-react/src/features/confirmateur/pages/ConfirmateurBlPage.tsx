@@ -189,7 +189,7 @@ export function ConfirmateurBlPage() {
       {isLoading ? <div className="text-sm text-muted-foreground">Chargement des bons de livraison...</div> : null}
 
       {isError ? (
-        <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700">
+        <div className="rounded-[24px] border border-danger/25 bg-danger/10 px-4 py-4 text-sm font-semibold text-danger">
           Erreur : {(error as Error)?.message ?? "Impossible de charger les BL."}
         </div>
       ) : null}

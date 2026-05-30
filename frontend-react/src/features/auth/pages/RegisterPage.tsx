@@ -1,43 +1,50 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, type SVGProps } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { GouvernoratItem } from "../../geo/types/geo";
-import { getDelegations } from "../../geo/api/geoApi";
 
-// ============================================================
-// IMPORTS - Geo & Map
-// ============================================================
+import type { GouvernoratItem } from "../../geo/types/geo";
+import { getGouvernorats, getDelegations } from "../../geo/api/geoApi";
+import { register } from "../api/authApi";
+import { resolveSafeReturnTo } from "../utils/postAuthRedirect";
 import { AddressMapModal } from "../components/AddressMapModal";
 import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
   resolveGouvernoratIdFromReverse,
   resolveDelegationFromReverse,
 } from "../../geo/utils/tunisiaLocationSync";
+import { AuthSplitShell, BrandMark } from "../components/AuthSplitShell";
+import { Input } from "../../../shared/components/Input";
+import { Button } from "../../../shared/components/Button";
+import { PasswordInput } from "../../../shared/components/PasswordInput";
 
-// ============================================================
-// Types
-// ============================================================
-interface RegisterFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  gouvernorat: number | null;
-  delegation: string | null;
-  address: string;
-  postalCode: string;
-  latitude: number | null;
-  longitude: number | null;
+function IconTarget(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </svg>
+  );
 }
 
-// ============================================================
-// RegisterPage Component
-// ============================================================
+function IconMap(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z" />
+      <line x1="9" y1="4" x2="9" y2="17" />
+      <line x1="15" y1="7" x2="15" y2="20" />
+    </svg>
+  );
+}
+
+const selectCls =
+  "h-11 w-full rounded-2xl border border-border bg-input px-3 text-sm text-card-foreground outline-none transition focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-50 disabled:cursor-not-allowed";
+
 export function RegisterPage() {
-  // ────────────────────────────────────────────────────────
-  // État - Form Fields
-  // ────────────────────────────────────────────────────────
+  const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = resolveSafeReturnTo(searchParams.get("returnTo"));
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,63 +58,45 @@ export function RegisterPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  // ────────────────────────────────────────────────────────
-  // État - Map Modal & GPS
-  // ────────────────────────────────────────────────────────
   const [mapOpen, setMapOpen] = useState(false);
-  const [mapSyncMsg, setMapSyncMsg] = useState<string>("");
+  const [mapSyncMsg, setMapSyncMsg] = useState("");
   const [mapLocating, setMapLocating] = useState(false);
+  const [pwError, setPwError] = useState("");
 
-  // Safe values (with type narrowing)
-  const safeLatitude = latitude !== null ? latitude : null;
-  const safeLongitude = longitude !== null ? longitude : null;
-
-  // ────────────────────────────────────────────────────────
-  // Queries & Mutations
-  // ────────────────────────────────────────────────────────
   const govQuery = useQuery<GouvernoratItem[]>({
     queryKey: ["gouvernorats"],
-    queryFn: async () => {
-      return [];
+    queryFn: getGouvernorats,
+  });
+
+  const delegQuery = useQuery<string[]>({
+    queryKey: ["delegations", gouvernorat],
+    queryFn: () => getDelegations(gouvernorat!),
+    enabled: gouvernorat !== null,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      register({
+        email,
+        password,
+        typeProfil: 1,
+        gouvernorat: gouvernorat!,
+        delegation: delegation!,
+        adresse: address,
+        codePostal: postalCode || null,
+        nomComplet: `${firstName} ${lastName}`.trim(),
+        telephone: phone || null,
+        latitude,
+        longitude,
+      }),
+    onSuccess: () => {
+      const dest = returnTo
+        ? `/login?returnTo=${encodeURIComponent(returnTo)}&registered=1`
+        : "/login?registered=1";
+      nav(dest, { replace: true });
     },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: RegisterFormData) => {
-      // À adapter selon votre API
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Registration failed");
-      return response.json();
-    },
-  });
-
-  // ────────────────────────────────────────────────────────
-  // Fonctions - GPS & Geolocation
-  // ────────────────────────────────────────────────────────
-  const getMyPosition = useCallback(async () => {
-    setMapLocating(true);
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-
-      const { latitude: lat, longitude: lng } = position.coords;
-      await handleMapPick(lat, lng);
-    } catch (error) {
-      setMapSyncMsg("Impossible d'accéder à votre position GPS.");
-      console.error("Geolocation error:", error);
-    } finally {
-      setMapLocating(false);
-    }
-  }, []);
-
-  // ────────────────────────────────────────────────────────
-  // Fonctions - Map Pick Handler
-  // ────────────────────────────────────────────────────────
   const handleMapPick = useCallback(
     async (lat: number, lng: number) => {
       setLatitude(Number(lat.toFixed(6)));
@@ -115,355 +104,303 @@ export function RegisterPage() {
       setMapSyncMsg("Analyse de la position…");
       try {
         const result = await reverseGeocodeNominatim(lat, lng);
-
-        // Résoudre le gouvernorat
         const govId = resolveGouvernoratIdFromReverse(result);
-        if (govId !== null) {
-          setGouvernorat(govId);
-        }
-
-        // Résoudre la délégation
-        const delegList = govId !== null
-          ? await getDelegations(govId).catch(() => [])
-          : [];
+        if (govId !== null) setGouvernorat(govId);
+        const delegList = govId !== null ? await getDelegations(govId).catch(() => []) : [];
         const resolvedDeleg = resolveDelegationFromReverse(result, delegList);
         if (resolvedDeleg) setDelegation(resolvedDeleg);
-
-        const govs = govQuery.data ?? [];
-        const govName = govId !== null
-          ? govs.find((g: any) => g.id === govId)?.name ?? ""
-          : "";
+        const govName =
+          govId !== null
+            ? (govQuery.data ?? []).find((g) => g.id === govId)?.name ?? ""
+            : "";
         setMapSyncMsg(
-          `✅ Position épinglée · ${govName}${resolvedDeleg ? ` · ${resolvedDeleg}` : ""}`
+          `Position épinglée · ${govName}${resolvedDeleg ? ` · ${resolvedDeleg}` : ""}`
         );
-      } catch (error) {
+      } catch {
         setMapSyncMsg("Position enregistrée. Vérifiez le gouvernorat et la délégation.");
-        console.error("Reverse geocode error:", error);
       }
     },
     [govQuery.data]
   );
 
-  // ────────────────────────────────────────────────────────
-  // Fonctions - Form Submission
-  // ────────────────────────────────────────────────────────
+  const getMyPosition = useCallback(async () => {
+    setMapLocating(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      await handleMapPick(position.coords.latitude, position.coords.longitude);
+    } catch {
+      setMapSyncMsg("Impossible d'accéder à votre position GPS.");
+    } finally {
+      setMapLocating(false);
+    }
+  }, [handleMapPick]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
-      setMapSyncMsg("Les mots de passe ne correspondent pas.");
+      setPwError("Les mots de passe ne correspondent pas.");
       return;
     }
-
-    const formData: RegisterFormData = {
-      firstName,
-      lastName,
-      email,
-      phone,
-      password,
-      confirmPassword,
-      gouvernorat,
-      delegation,
-      address,
-      postalCode,
-      latitude,
-      longitude,
-    };
-
-    registerMutation.mutate(formData);
+    setPwError("");
+    mutation.mutate();
   };
 
-  // ────────────────────────────────────────────────────────
-  // Render
-  // ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl bg-white dark:bg-slate-800 shadow-lg p-8">
-          {/* En-tête */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+    <>
+      <AuthSplitShell screen="register" formClassName="!items-start overflow-y-auto">
+        <div className="w-full max-w-[500px] py-2">
+          <div className="text-center">
+            <BrandMark />
+            <div className="mt-6 text-[11px] font-black uppercase tracking-[0.24em] text-muted-foreground">
+              Inscription
+            </div>
+            <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-card-foreground">
               Créer un compte
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              Remplissez le formulaire pour vous inscrire
+            <p className="mx-auto mt-3 max-w-[360px] text-sm leading-6 text-muted-foreground">
+              Remplissez le formulaire pour accéder au catalogue et gérer vos commandes.
             </p>
           </div>
 
-          {/* Formulaire */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             {/* Identité */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Prénom
-                </label>
-                <input
-                  type="text"
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Prénom</label>
+                <Input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                   placeholder="Jean"
+                  className="h-11"
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Nom
-                </label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Nom</label>
+                <Input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                   placeholder="Dupont"
+                  className="h-11"
                   required
                 />
               </div>
             </div>
 
             {/* Contact */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Email
-                </label>
-                <input
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Email</label>
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
-                  placeholder="jean@example.com"
+                  placeholder="email@exemple.tn"
+                  autoComplete="email"
+                  className="h-11"
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Téléphone
-                </label>
-                <input
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Téléphone</label>
+                <Input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                   placeholder="+216 20 000 000"
-                  required
+                  className="h-11"
                 />
               </div>
             </div>
 
             {/* Adresse */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Adresse
-              </label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <label className="text-sm font-extrabold text-card-foreground">Adresse</label>
+              <Input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                 placeholder="123 Rue de la Paix"
+                className="h-11"
               />
             </div>
 
             {/* Gouvernorat & Délégation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Gouvernorat
-                </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Gouvernorat</label>
                 <select
                   value={gouvernorat ?? ""}
-                  onChange={(e) => setGouvernorat(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
+                  onChange={(e) => {
+                    setGouvernorat(e.target.value ? Number(e.target.value) : null);
+                    setDelegation(null);
+                  }}
+                  className={selectCls}
+                  required
                 >
                   <option value="">Sélectionner...</option>
                   {(govQuery.data ?? []).map((g) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Délégation
-                </label>
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Délégation</label>
                 <select
-                  value={delegation || ""}
+                  value={delegation ?? ""}
                   onChange={(e) => setDelegation(e.target.value || null)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
+                  className={selectCls}
+                  disabled={gouvernorat === null}
+                  required
                 >
                   <option value="">Sélectionner...</option>
-                  {/* À remplir avec les délégations */}
+                  {(delegQuery.data ?? []).map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Code Postal */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Code postal
-              </label>
-              <input
-                type="text"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
-                placeholder="1000"
-              />
-            </div>
-
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            {/* GÉOLOCALISATION - Boutons GPS + Carte */}
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            <div className="md:col-span-2 space-y-2">
-              {/* Les deux boutons côte à côte */}
-              <div className="flex flex-wrap gap-2">
-                {/* Bouton GPS existant */}
-                <button
-                  type="button"
-                  onClick={getMyPosition}
-                  disabled={mapLocating}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-slate-800"
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-                  </svg>
-                  {safeLatitude !== null && safeLongitude !== null
-                    ? "Position GPS détectée"
-                    : "Utiliser ma position (GPS)"}
-                </button>
-
-                {/* Nouveau bouton carte */}
-                <button
-                  type="button"
-                  onClick={() => setMapOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-slate-800"
-                >
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z" />
-                    <line x1="9" y1="4" x2="9" y2="17" />
-                    <line x1="15" y1="7" x2="15" y2="20" />
-                  </svg>
-                  Épingler sur la carte
-                </button>
+            {/* Code Postal + GPS */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Code postal</label>
+                <Input
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder="1000"
+                  className="h-11"
+                />
               </div>
-
-              {/* Indicateurs d'état */}
-              {(safeLatitude !== null || mapSyncMsg) && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {safeLatitude !== null && safeLongitude !== null && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      📍 {safeLatitude.toFixed(4)}, {safeLongitude.toFixed(4)}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLatitude(null);
-                          setLongitude(null);
-                          setMapSyncMsg("");
-                        }}
-                        className="ml-1 text-emerald-400 hover:text-rose-500 transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  )}
-                  {mapSyncMsg && (
-                    <span
-                      className={`text-[11px] font-medium ${
-                        mapSyncMsg.startsWith("✅")
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {mapSyncMsg}
-                    </span>
-                  )}
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Géolocalisation</label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 flex-1 gap-1.5 text-xs font-bold"
+                    onClick={getMyPosition}
+                    isLoading={mapLocating}
+                    disabled={mapLocating}
+                  >
+                    <IconTarget className="h-3.5 w-3.5" />
+                    {latitude !== null ? "GPS ✓" : "GPS"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 flex-1 gap-1.5 text-xs font-bold"
+                    onClick={() => setMapOpen(true)}
+                  >
+                    <IconMap className="h-3.5 w-3.5" />
+                    Carte
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Mot de passe */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Mot de passe
-                </label>
-                <input
-                  type="password"
+            {/* GPS status badge */}
+            {(latitude !== null || mapSyncMsg) ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {latitude !== null && longitude !== null ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-2.5 py-1 text-[11px] font-bold text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                    {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLatitude(null);
+                        setLongitude(null);
+                        setMapSyncMsg("");
+                      }}
+                      className="ml-1 text-success/60 transition-colors hover:text-danger"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ) : null}
+                {mapSyncMsg ? (
+                  <span className="text-[11px] font-medium text-muted-foreground">{mapSyncMsg}</span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Mots de passe */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Mot de passe</label>
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                   placeholder="••••••••"
+                  autoComplete="new-password"
+                  className="h-11"
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  Confirmer le mot de passe
-                </label>
-                <input
-                  type="password"
+              <div className="space-y-2">
+                <label className="text-sm font-extrabold text-card-foreground">Confirmer</label>
+                <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition"
                   placeholder="••••••••"
+                  autoComplete="new-password"
+                  className="h-11"
                   required
                 />
               </div>
             </div>
 
-            {/* Bouton d'envoi */}
-            <button
-              type="submit"
-              disabled={registerMutation.isPending}
-              className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-center transition hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-            >
-              {registerMutation.isPending ? "Inscription en cours..." : "S'inscrire"}
-            </button>
+            {pwError ? (
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
+                {pwError}
+              </div>
+            ) : null}
 
-            {/* Messages d'erreur */}
-            {registerMutation.isError && (
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-sm">
+            {mutation.isError ? (
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
                 Une erreur est survenue lors de l'inscription. Veuillez réessayer.
               </div>
-            )}
+            ) : null}
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="h-[52px] w-full rounded-2xl text-base font-black"
+              isLoading={mutation.isPending}
+              disabled={mutation.isPending}
+            >
+              S'inscrire
+            </Button>
+
+            <div className="pt-1 text-center text-sm font-medium text-muted-foreground">
+              Déjà un compte ?{" "}
+              <Link to="/login" className="font-black text-primary hover:underline">
+                Se connecter
+              </Link>
+            </div>
           </form>
-
-          {/* Lien vers connexion */}
-          <p className="mt-6 text-center text-slate-600 dark:text-slate-400">
-            Vous avez déjà un compte?{" "}
-            <a href="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-              Se connecter
-            </a>
-          </p>
         </div>
-      </div>
+      </AuthSplitShell>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      {/* MODAL DE CARTE */}
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <AddressMapModal
         open={mapOpen}
         onClose={() => setMapOpen(false)}
         gouvernorat={gouvernorat}
         delegation={delegation}
-        latitude={safeLatitude}
-        longitude={safeLongitude}
+        latitude={latitude}
+        longitude={longitude}
         onChange={(lat, lng) => {
           void handleMapPick(lat, lng);
           setMapOpen(false);
         }}
       />
-    </div>
+    </>
   );
 }
 

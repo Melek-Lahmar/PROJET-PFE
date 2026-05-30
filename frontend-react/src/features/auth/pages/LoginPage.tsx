@@ -22,7 +22,7 @@ function IconMail(props: SVGProps<SVGSVGElement>) {
 }
 
 function FieldIcon({ children }: { children: React.ReactNode }) {
-  return <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">{children}</div>;
+  return <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted-foreground">{children}</div>;
 }
 
 export function LoginPage() {
@@ -80,13 +80,13 @@ export function LoginPage() {
       <div className="w-full max-w-[420px]">
         <div className="text-center">
           <BrandMark />
-          <div className="mt-6 text-[11px] font-black uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+          <div className="mt-6 text-[11px] font-black uppercase tracking-[0.24em] text-muted-foreground">
             Authentification
           </div>
-          <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-slate-950 dark:text-white">
+          <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-card-foreground">
             Connexion
           </h1>
-          <p className="mx-auto mt-3 max-w-[330px] text-sm leading-6 text-slate-600 dark:text-slate-300">
+          <p className="mx-auto mt-3 max-w-[330px] text-sm leading-6 text-muted-foreground">
             {returnTo === "/checkout"
               ? "Connectez-vous pour reprendre immédiatement votre checkout."
               : "Connectez-vous à votre compte pour accéder au catalogue et à vos commandes."}
@@ -94,7 +94,7 @@ export function LoginPage() {
         </div>
 
         {returnTo === "/checkout" ? (
-          <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200">
+          <div className="mt-6 rounded-2xl border border-info/25 bg-info/10 px-4 py-3 text-sm font-semibold text-info">
             Après connexion, vous serez redirigé directement vers la validation de commande.
           </div>
         ) : null}
@@ -105,7 +105,7 @@ export function LoginPage() {
 
         <form onSubmit={onSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-extrabold text-slate-900 dark:text-white">Email</label>
+            <label className="text-sm font-extrabold text-card-foreground">Email</label>
             <div className="relative">
               <FieldIcon>
                 <IconMail className="h-5 w-5" />
@@ -116,19 +116,19 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@exemple.tn"
                 autoComplete="email"
-                className="h-12 rounded-2xl border-slate-200 bg-white pl-12 shadow-none dark:border-white/10 dark:bg-slate-900/70"
+                className="h-12 pl-12"
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <label className="text-sm font-extrabold text-slate-900 dark:text-white">
+              <label className="text-sm font-extrabold text-card-foreground">
                 Mot de passe
               </label>
               <Link
                 to="/forgot-password"
-                className="text-sm font-extrabold text-blue-600 transition hover:text-blue-700 hover:underline dark:text-blue-300"
+                className="text-sm font-extrabold text-primary transition hover:underline"
               >
                 Mot de passe oublié ?
               </Link>
@@ -139,12 +139,12 @@ export function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="h-12 rounded-2xl border-slate-200 bg-white shadow-none dark:border-white/10 dark:bg-slate-900/70"
+              className="h-12"
             />
           </div>
 
           {mutation.isError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-200">
+            <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
               Identifiants invalides ou erreur serveur.
             </div>
           ) : null}
@@ -159,9 +159,9 @@ export function LoginPage() {
             Se connecter
           </Button>
 
-          <div className="pt-1 text-center text-sm font-medium text-slate-500 dark:text-slate-300">
+          <div className="pt-1 text-center text-sm font-medium text-muted-foreground">
             Pas de compte ?{" "}
-            <Link to={registerHref} className="font-black text-blue-600 hover:underline dark:text-blue-300">
+            <Link to={registerHref} className="font-black text-primary hover:underline">
               Créer un compte
             </Link>
           </div>

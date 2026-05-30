@@ -185,10 +185,10 @@ function buildLocationErrorMessage(error: unknown) {
 }
 
 const cardClass =
-  "rounded-[24px] border border-slate-200 bg-white text-slate-900 shadow-[0_22px_64px_-52px_rgba(15,23,42,0.5)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100";
+  "rounded-[24px] border border-border bg-card text-card-foreground shadow-[0_22px_64px_-52px_rgba(15,23,42,0.5)]";
 const inputClass =
-  "h-11 rounded-2xl border-slate-200 bg-white text-slate-900 shadow-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15";
-const labelClass = "mb-2 block text-xs font-bold uppercase text-slate-500 dark:text-slate-400";
+  "h-11 rounded-2xl border-border bg-input text-card-foreground shadow-none placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10";
+const labelClass = "mb-2 block text-xs font-bold uppercase text-muted-foreground";
 
 function SectionTitle({
   icon,
@@ -202,14 +202,14 @@ function SectionTitle({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-5">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-muted/40 text-muted-foreground">
           {icon}
         </span>
         <div>
-          {eyebrow ? <div className="text-xs font-semibold uppercase text-slate-400">{eyebrow}</div> : null}
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-50">{title}</h2>
+          {eyebrow ? <div className="text-xs font-semibold uppercase text-muted-foreground">{eyebrow}</div> : null}
+          <h2 className="text-lg font-extrabold text-card-foreground">{title}</h2>
         </div>
       </div>
       {action}
@@ -219,9 +219,9 @@ function SectionTitle({
 
 function InfoTile({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/70">
-      <div className="text-xs font-bold uppercase text-slate-400">{label}</div>
-      <div className="mt-1 truncate text-sm font-extrabold text-slate-950 dark:text-slate-100">{safeText(value)}</div>
+    <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3">
+      <div className="text-xs font-bold uppercase text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate text-sm font-extrabold text-card-foreground">{safeText(value)}</div>
     </div>
   );
 }
@@ -231,8 +231,8 @@ function LockedCoordinateField({ label, value, placeholder }: { label: string; v
     <div>
       <label className={labelClass}>{label}</label>
       <div className="relative">
-        <Input value={value} readOnly placeholder={placeholder} className={`${inputClass} pr-11 text-slate-500 dark:text-slate-300`} />
-        <IconLock className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Input value={value} readOnly placeholder={placeholder} className={`${inputClass} pr-11 text-muted-foreground`} />
+        <IconLock className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
     </div>
   );
@@ -249,14 +249,14 @@ function AccountSidebar({ onLogout }: { onLogout: () => void }) {
 
   return (
     <aside className="lg:sticky lg:top-28">
-      <div className="rounded-[24px] border border-slate-200 bg-white p-3 shadow-[0_22px_64px_-54px_rgba(15,23,42,0.55)] dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-[24px] border border-border bg-card p-3 shadow-[0_22px_64px_-54px_rgba(15,23,42,0.55)]">
         <div className="mb-3 flex items-center gap-3 px-3 py-3 lg:hidden">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-600 text-white">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <IconMenu className="h-4 w-4" />
           </span>
           <div>
-            <div className="text-sm font-extrabold text-slate-950 dark:text-slate-50">Navigation</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Compte client</div>
+            <div className="text-sm font-extrabold text-card-foreground">Navigation</div>
+            <div className="text-xs text-muted-foreground">Compte client</div>
           </div>
         </div>
 
@@ -268,19 +268,19 @@ function AccountSidebar({ onLogout }: { onLogout: () => void }) {
               className={[
                 "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition",
                 item.active
-                  ? "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white",
+                  ? "bg-primary/8 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-card-foreground",
               ].join(" ")}
             >
-              {item.active ? <span className="absolute left-0 top-3 h-6 w-1 rounded-r-full bg-blue-600" /> : null}
-              <span className={item.active ? "text-blue-600 dark:text-blue-300" : "text-slate-400"}>{item.icon}</span>
+              {item.active ? <span className="absolute left-0 top-3 h-6 w-1 rounded-r-full bg-primary" /> : null}
+              <span className={item.active ? "text-primary" : "text-muted-foreground"}>{item.icon}</span>
               {item.label}
             </Link>
           ))}
           <button
             type="button"
             onClick={onLogout}
-            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-danger transition hover:bg-danger/10"
           >
             <IconLogout className="h-4 w-4" />
             Déconnexion
@@ -609,33 +609,33 @@ export function ProfilePage() {
         <AccountSidebar onLogout={logout} />
 
         <main className="min-w-0 space-y-6">
-          <h1 className="text-3xl font-extrabold text-slate-950 dark:text-slate-50 md:text-4xl">Mon compte</h1>
+          <h1 className="text-3xl font-extrabold text-card-foreground md:text-4xl">Mon compte</h1>
 
           <section className={`${cardClass} overflow-hidden`}>
             <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center">
               <div className="flex min-w-0 items-center gap-5">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-black text-white shadow-[0_18px_38px_-24px_rgba(37,99,235,0.95)]">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-xl font-black text-white shadow-[0_18px_38px_-24px_hsl(var(--primary)/0.8)]">
                   {initials}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-2xl font-extrabold text-slate-950 dark:text-slate-50">{displayName}</h2>
-                  <div className="mt-1 truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{email}</div>
+                  <h2 className="truncate text-2xl font-extrabold text-card-foreground">{displayName}</h2>
+                  <div className="mt-1 truncate text-sm font-semibold text-muted-foreground">{email}</div>
                   <div className="mt-3">
-                    <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-extrabold text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200">
+                    <span className="inline-flex items-center rounded-full badge-info px-3 py-1 text-xs font-extrabold">
                       {primaryRole}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/70">
+              <div className="rounded-[22px] border border-border bg-muted/30 p-5">
                 <div className="flex items-start gap-4">
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-200 dark:ring-blue-400/20">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/20">
                     <IconShield className="h-5 w-5" />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-base font-extrabold text-slate-950 dark:text-slate-50">Sécurité</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    <h3 className="text-base font-extrabold text-card-foreground">Sécurité</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       {isConfirmateur
                         ? "Le profil confirmateur ne contient ni carte ni coordonnées GPS."
                         : isVendeur
@@ -645,7 +645,7 @@ export function ProfilePage() {
                     {!isConfirmateur && !isVendeur ? (
                       <Link
                         to="/profile/addresses"
-                        className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-4 text-sm font-extrabold text-blue-700 transition hover:bg-blue-50 dark:border-blue-500/30 dark:bg-slate-900 dark:text-blue-200 dark:hover:bg-blue-500/10"
+                        className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-primary/8 px-4 text-sm font-extrabold text-primary transition hover:bg-primary/15"
                       >
                         <IconPin className="h-4 w-4" />
                         Mes adresses (carnet)
@@ -671,7 +671,7 @@ export function ProfilePage() {
                     icon={<IconUser className="h-5 w-5" />}
                     title="Informations générales"
                     action={
-                      <span className="inline-flex h-9 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      <span className="inline-flex h-9 items-center gap-2 rounded-2xl border border-border bg-card px-3 text-xs font-extrabold text-card-foreground">
                         <IconEdit className="h-3.5 w-3.5" />
                         Modifier
                       </span>
@@ -727,7 +727,7 @@ export function ProfilePage() {
                       icon={<IconPin className="h-5 w-5" />}
                       title="Localisation (Carte, GPS et adresse)"
                       action={
-                          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                          <span className="inline-flex items-center gap-2 rounded-full border border-success/25 bg-success/10 px-3 py-1 text-xs font-extrabold text-success">
                           <IconSync className="h-3.5 w-3.5" />
                           {locationBusyLabel ?? "Synchronisation active"}
                         </span>
@@ -755,13 +755,13 @@ export function ProfilePage() {
 
                       <div className="space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <label className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Carte synchronisée</label>
-                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          <label className="text-xs font-extrabold uppercase text-muted-foreground">Carte synchronisée</label>
+                          <span className="text-xs font-bold text-muted-foreground">
                             Gouvernorat : {safeText(getGouvernoratLabelById(gouvernorat))} {delegation ? `• Délégation : ${delegation}` : ""}
                           </span>
                         </div>
 
-                        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.6)] dark:border-slate-800 dark:bg-slate-900">
+                        <div className="overflow-hidden rounded-[24px] border border-border bg-card p-2 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.6)]">
                           <AddressMapField
                             gouvernoratId={gouvernorat}
                             delegation={delegation}
@@ -778,14 +778,14 @@ export function ProfilePage() {
               </div>
 
               <section className={`${cardClass} xl:sticky xl:top-28`}>
-                <header className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+                <header className="border-b border-border px-6 py-5">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-muted/40 text-muted-foreground">
                       <IconTruck className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-50">Adresse de livraison</h2>
-                      <div className="mt-2 h-1 w-16 rounded-full bg-blue-600" />
+                      <h2 className="text-lg font-extrabold text-card-foreground">Adresse de livraison</h2>
+                      <div className="mt-2 h-1 w-16 rounded-full bg-primary" />
                     </div>
                   </div>
                 </header>
@@ -805,8 +805,8 @@ export function ProfilePage() {
                     <div>
                       <label className={labelClass}>Pays</label>
                       <div className="relative">
-                        <Input value={`🇹🇳  ${PAYS_FIXE}`} readOnly className={`${inputClass} cursor-default text-slate-700 dark:text-slate-200`} />
-                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400">⌄</span>
+                        <Input value={`🇹🇳  ${PAYS_FIXE}`} readOnly className={`${inputClass} cursor-default text-card-foreground`} />
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">⌄</span>
                       </div>
                     </div>
                   </div>
@@ -818,7 +818,7 @@ export function ProfilePage() {
                       onChange={(event) => setAdresse(event.target.value)}
                       rows={4}
                       placeholder="Route de Gremda, Markaz Kammoun"
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15"
+                      className="w-full rounded-2xl border border-border/80 bg-input px-4 py-3 text-sm text-card-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
                     />
                   </div>
 
@@ -832,23 +832,24 @@ export function ProfilePage() {
                     />
                   </div>
 
-                  <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-5 dark:border-blue-500/30 dark:bg-blue-500/10">
-                    <div className="text-sm font-extrabold text-slate-950 dark:text-slate-50">Synchronisation</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  <div className="rounded-[22px] border border-primary/20 bg-primary/[0.06] p-5">
+                    <div className="text-sm font-extrabold text-card-foreground">Synchronisation</div>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       Gouvernorat et délégation recentrent la carte. GPS et pin mettent à jour automatiquement l'adresse, le code postal et la région quand c'est détectable.
                     </p>
                     <Button
                       type="button"
+                      variant="primary"
                       onClick={() => mut.mutate()}
                       isLoading={mut.isPending}
                       disabled={mut.isPending || !canSave}
-                      className="mt-5 h-12 w-full rounded-2xl bg-blue-600 text-base font-extrabold shadow-[0_20px_44px_-26px_rgba(37,99,235,0.95)] hover:bg-blue-700"
+                      className="mt-5 h-12 w-full rounded-2xl text-base font-extrabold"
                     >
                       Enregistrer les modifications
                     </Button>
                   </div>
 
-                  <div className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  <div className="text-xs leading-5 text-muted-foreground">
                     Champs requis : Délégation et adresse. Les coordonnées GPS sont calculées automatiquement et restent visibles en lecture seule.
                   </div>
                 </div>

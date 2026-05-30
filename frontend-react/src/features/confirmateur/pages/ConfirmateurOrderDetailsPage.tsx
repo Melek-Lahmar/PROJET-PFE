@@ -79,7 +79,7 @@ function workflowNodeClass(state: "done" | "active" | "pending" | "failed") {
     case "active":
       return "border-primary/25 bg-primary text-white shadow-lg shadow-primary/20";
     case "failed":
-      return "border-rose-200 bg-rose-500 text-white";
+      return "border-danger/25 bg-danger text-white";
     default:
       return "border-border bg-card text-muted-foreground";
   }
@@ -296,7 +296,7 @@ export function ConfirmateurOrderDetailsPage() {
               <div className="space-y-3 px-6 py-6 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Total avant remise</span><span className="font-bold">{money(data.totalBeforeDiscount ?? data.dO_TotalTTC)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Taux</span><span className="font-bold">{Number(data.b2BDiscountRate ?? 0).toFixed(2)} %</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Montant</span><span className="font-bold text-emerald-700">-{money(data.b2BDiscountAmount ?? 0)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Montant</span><span className="font-bold text-success">-{money(data.b2BDiscountAmount ?? 0)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="font-bold">{safe(data.discountSource)}</span></div>
                 <div className="h-px bg-border/70" />
                 <div className="flex justify-between"><span className="text-muted-foreground">Net à payer</span><span className="font-black text-primary">{money(data.dO_NetAPayer)}</span></div>

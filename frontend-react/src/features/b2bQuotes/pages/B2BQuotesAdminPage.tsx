@@ -289,7 +289,7 @@ export function B2BQuotesAdminPage() {
       {quotesQuery.isLoading ? (
         <div className="text-sm text-muted-foreground">Chargement des devis...</div>
       ) : quotesQuery.isError ? (
-        <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-rose-700">{getApiErrorMessage(quotesQuery.error)}</div>
+        <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger">{getApiErrorMessage(quotesQuery.error)}</div>
       ) : filtered.length === 0 ? (
         <EmptyView
           title="Aucun devis B2B"

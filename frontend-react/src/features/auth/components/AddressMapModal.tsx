@@ -143,7 +143,7 @@ export function AddressMapModal({ open, onClose, gouvernorat, delegation, latitu
       <button
         type="button"
         aria-label="Fermer"
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -238,7 +238,7 @@ export function AddressMapModal({ open, onClose, gouvernorat, delegation, latitu
 
           {/* Hint flottant en haut */}
           {!pendingConfirm && (
-            <div className="pointer-events-none absolute top-3 left-1/2 z-[1000] -translate-x-1/2 whitespace-nowrap rounded-full border border-border/60 bg-white/92 px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm backdrop-blur-sm">
+            <div className="pointer-events-none absolute top-3 left-1/2 z-[1000] -translate-x-1/2 whitespace-nowrap rounded-full border border-border/60 bg-card/92 px-3 py-1.5 text-[11px] font-semibold text-card-foreground shadow-sm backdrop-blur-sm">
               {source ? "Glissez le pin ou cliquez pour ajuster" : "Cliquez sur la carte pour placer l'epingle"}
             </div>
           )}

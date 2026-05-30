@@ -70,8 +70,8 @@ function normalizeText(s?: string | null) {
 
 function getLivreurTypeBadge(l: Livreur) {
   if (l.isTransit)
-    return <span className="rounded-full bg-indigo-100 px-3 py-0.5 text-xs font-black text-indigo-700">🚛 Transit</span>;
-  return <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-black text-emerald-700">🛵 Classique</span>;
+    return <span className="rounded-full bg-info/10 px-3 py-0.5 text-xs font-black text-info">🚛 Transit</span>;
+  return <span className="rounded-full bg-success/10 px-3 py-0.5 text-xs font-black text-success">🛵 Classique</span>;
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
@@ -398,14 +398,14 @@ export function SupervisorZonesPage() {
                 </div>
 
                 {l.isTransit ? (
-                  <div className="rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-800">
+                  <div className="rounded-xl bg-info/10 px-3 py-2 text-sm text-info">
                     <b>Dépôt rattaché : </b>{depotLabel(l.depotRattacheNo)}
-                    <span className="ml-2 text-xs text-indigo-500">(déplace articles entre dépôts)</span>
+                    <span className="ml-2 text-xs text-info/60">(déplace articles entre dépôts)</span>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {l.zones?.map((z, i) => (
-                      <span key={i} className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                      <span key={i} className="rounded-full border border-success/25 bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
                         {z.gouvernorat} · {z.delegation}
                       </span>
                     ))}
@@ -416,7 +416,7 @@ export function SupervisorZonesPage() {
 
               <div className="flex shrink-0 gap-2">
                 <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => openEdit(l)}>Modifier</Button>
-                <Button type="button" variant="ghost" size="sm" className="rounded-xl text-rose-500 hover:bg-rose-50"
+                <Button type="button" variant="ghost" size="sm" className="rounded-xl text-danger hover:bg-danger/10"
                   onClick={() => { if (confirm(`Supprimer ${l.fullName} ?`)) deleteMutation.mutate(l.id); }}
                   disabled={deleteMutation.isPending}>
                   Supprimer
@@ -548,7 +548,7 @@ export function SupervisorZonesPage() {
                   </div>
 
                   {form.depotRattacheNo !== "" && (
-                    <div className="rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-800">
+                    <div className="rounded-xl border border-info/25 bg-info/10 px-3 py-2 text-sm text-info">
                       ✅ Ce livreur-transit sera rattaché à <b>{depotLabel(Number(form.depotRattacheNo))}</b>.
                       Il interviendra entre ce dépôt et les dépôts de destination.
                     </div>
@@ -558,10 +558,10 @@ export function SupervisorZonesPage() {
 
               {/* ── Section classique : zones exactes ──────────────────────── */}
               {!form.isTransit && (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                <div className="rounded-2xl border border-success/25 bg-success/8 p-4 space-y-3">
                   <div>
-                    <h3 className="font-extrabold text-emerald-800">Zones de livraison</h3>
-                    <p className="mt-1 text-xs text-emerald-600">
+                    <h3 className="font-extrabold text-success">Zones de livraison</h3>
+                    <p className="mt-1 text-xs text-success/70">
                       Ce livreur ne verra que les BL dont le gouvernorat + délégation correspondent exactement à ses zones.
                     </p>
                   </div>
@@ -583,9 +583,9 @@ export function SupervisorZonesPage() {
                   {/* Liste zones */}
                   <div className="flex flex-wrap gap-2">
                     {form.zones.map((z, i) => (
-                      <span key={i} className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-white px-3 py-1 text-xs font-semibold text-emerald-800">
+                      <span key={i} className="flex items-center gap-1.5 rounded-full border border-success/30 bg-card px-3 py-1 text-xs font-semibold text-success">
                         {z.gouvernorat} · {z.delegation}
-                        <button type="button" onClick={() => removeZone(i)} className="text-rose-400 hover:text-rose-600">×</button>
+                        <button type="button" onClick={() => removeZone(i)} className="text-danger/60 hover:text-danger">×</button>
                       </span>
                     ))}
                     {form.zones.length === 0 && (
@@ -597,7 +597,7 @@ export function SupervisorZonesPage() {
 
               {/* Erreur */}
               {error && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+                <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">{error}</div>
               )}
 
               {/* Actions */}

@@ -52,8 +52,8 @@ export function ConfirmateurBlDetailsPage() {
   if (isError || !data) {
     return (
       <div className="w-full py-10">
-        <div className="rounded-[30px] border border-rose-200 bg-rose-50/60 p-6 shadow-sm">
-          <div className="text-sm font-bold text-rose-700">BL introuvable</div>
+        <div className="rounded-[30px] border border-danger/25 bg-danger/10 p-6 shadow-sm">
+          <div className="text-sm font-bold text-danger">BL introuvable</div>
           <div className="mt-1 text-sm text-muted-foreground">
             {(error as Error)?.message ?? "Impossible de charger le détail du bon de livraison."}
           </div>
@@ -136,9 +136,9 @@ export function ConfirmateurBlDetailsPage() {
                 <div className="text-sm font-black text-card-foreground">2. Confirmation validée</div>
                 <div className="mt-2 text-sm leading-6 text-muted-foreground">Le flux BC → BL a été exécuté en conservant les données métier existantes.</div>
               </div>
-              <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/70 p-4">
-                <div className="text-sm font-black text-emerald-700">3. BL disponible</div>
-                <div className="mt-2 text-sm leading-6 text-emerald-700">Le bon de livraison est maintenant consultable dans cette vue dédiée.</div>
+              <div className="rounded-[24px] border border-success/25 bg-success/10 p-4">
+                <div className="text-sm font-black text-success">3. BL disponible</div>
+                <div className="mt-2 text-sm leading-6 text-success/80">Le bon de livraison est maintenant consultable dans cette vue dédiée.</div>
               </div>
             </div>
           </section>

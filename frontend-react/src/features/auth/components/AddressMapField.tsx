@@ -216,7 +216,7 @@ export function AddressMapField({
 
         {/* Hint flottant en haut */}
         {!pending && (
-          <div className="pointer-events-none absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur-sm">
+          <div className="pointer-events-none absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-card/90 px-3 py-1 text-[11px] font-semibold text-card-foreground shadow-sm backdrop-blur-sm">
             {source ? "Glissez le pin pour ajuster" : "Cliquez sur la carte pour epingler"}
           </div>
         )}

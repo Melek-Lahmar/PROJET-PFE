@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
@@ -244,7 +244,7 @@ export function AdminHomepagePage() {
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [templateToPreview, setTemplateToPreview] = useState<HomepageTemplateDefinition | null>(null);
   const [templateToApply, setTemplateToApply] = useState<HomepageTemplateDefinition | null>(null);
-  const pendingPublish = useRef(false);
+  const [pendingPublish, setPendingPublish] = useState(false);
 
   const adminQuery = useQuery({
     queryKey: ["homepage", "admin"],
@@ -294,15 +294,15 @@ export function AdminHomepagePage() {
         queryClient.invalidateQueries({ queryKey: ["homepage", "admin"] }),
         queryClient.invalidateQueries({ queryKey: ["homepage", "public"] }),
       ]);
-      if (pendingPublish.current) {
-        pendingPublish.current = false;
+      if (pendingPublish) {
+        setPendingPublish(false);
         publishMutation.mutate();
       } else {
         setMessage({ text: "Brouillon enregistré.", type: "success" });
       }
     },
     onError: (error: unknown) => {
-      pendingPublish.current = false;
+      setPendingPublish(false);
       setMessage({ text: getApiErrorMessage(error) || "Erreur lors de l'enregistrement.", type: "error" });
     },
   });
@@ -335,7 +335,7 @@ export function AdminHomepagePage() {
     setTemplateToApply(null);
     setTemplateToPreview(null);
     setMessage({ text: "Application en cours...", type: "success" });
-    pendingPublish.current = true;
+    setPendingPublish(true);
     saveMutation.mutate({ content: sortedDraft });
   };
 
@@ -380,7 +380,7 @@ export function AdminHomepagePage() {
           <Button
             type="button"
             variant="secondary"
-            isLoading={saveMutation.isPending && !pendingPublish.current}
+            isLoading={saveMutation.isPending && !pendingPublish}
             onClick={() => saveMutation.mutate({ content: draft })}
           >
             Enregistrer brouillon
@@ -388,9 +388,9 @@ export function AdminHomepagePage() {
           <Button
             type="button"
             variant="primary"
-            isLoading={publishMutation.isPending || (saveMutation.isPending && pendingPublish.current)}
+            isLoading={publishMutation.isPending || (saveMutation.isPending && pendingPublish)}
             onClick={() => {
-              pendingPublish.current = true;
+              setPendingPublish(true);
               saveMutation.mutate({ content: draft });
             }}
             className="shadow-md"

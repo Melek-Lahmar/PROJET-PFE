@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
@@ -82,13 +82,13 @@ export function ResetPasswordPage() {
           </div>
 
           {!isLinkValid ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
               Le lien de réinitialisation est invalide ou incomplet. Veuillez recommencer
-              depuis la page “Mot de passe oublié”.
+              depuis la page &laquo;&nbsp;Mot de passe oublié&nbsp;&raquo;.
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              Réinitialisation pour <span className="font-semibold">{email}</span>
+            <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              Réinitialisation pour <span className="font-semibold text-card-foreground">{email}</span>
             </div>
           )}
 
@@ -120,19 +120,19 @@ export function ResetPasswordPage() {
             </div>
 
             {clientError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
                 {clientError}
               </div>
             ) : null}
 
             {mutation.isError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
                 {getApiErrorMessage(mutation.error)}
               </div>
             ) : null}
 
             {successMessage ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+              <div className="rounded-2xl border border-success/25 bg-success/10 px-4 py-3 text-sm font-semibold text-success">
                 {successMessage}
               </div>
             ) : null}

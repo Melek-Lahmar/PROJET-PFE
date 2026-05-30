@@ -53,22 +53,22 @@ export function ForgotPasswordPage() {
       <div className="w-full max-w-[440px]">
         <div className="text-center">
           <BrandMark />
-          <div className="mt-7 text-[11px] font-black uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-            Récupération d’accès
+          <div className="mt-7 text-[11px] font-black uppercase tracking-[0.24em] text-muted-foreground">
+            Récupération d'accès
           </div>
-          <h1 className="mt-3 text-3xl font-black tracking-[-0.045em] text-slate-950 dark:text-white md:text-[34px]">
+          <h1 className="mt-3 text-3xl font-black tracking-[-0.045em] text-card-foreground md:text-[34px]">
             Mot de passe oublié
           </h1>
-          <p className="mx-auto mt-4 max-w-[340px] text-[15px] leading-7 text-slate-600 dark:text-slate-300">
+          <p className="mx-auto mt-4 max-w-[340px] text-[15px] leading-7 text-muted-foreground">
             Saisissez votre email. Si un compte existe, nous préparerons le lien de réinitialisation.
           </p>
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-extrabold text-slate-900 dark:text-white">Email</label>
+            <label className="text-sm font-extrabold text-card-foreground">Email</label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+              <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted-foreground">
                 <IconMail className="h-5 w-5" />
               </div>
               <Input
@@ -77,19 +77,19 @@ export function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@exemple.tn"
                 autoComplete="email"
-                className="h-12 rounded-2xl border-slate-200 bg-white pl-12 shadow-none dark:border-white/10 dark:bg-slate-900/70"
+                className="h-12 pl-12"
               />
             </div>
           </div>
 
           {successMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
+            <div className="rounded-2xl border border-success/25 bg-success/10 px-4 py-3 text-sm font-semibold text-success">
               {successMessage}
             </div>
           ) : null}
 
           {mutation.isError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-200">
+            <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
               {getApiErrorMessage(mutation.error)}
             </div>
           ) : null}
@@ -97,7 +97,7 @@ export function ForgotPasswordPage() {
           <Button
             type="submit"
             variant="primary"
-            className="h-[52px] w-full rounded-2xl bg-[linear-gradient(135deg,#0f63ff,#4f46e5)] text-base font-black shadow-[0_24px_55px_-26px_rgba(37,99,235,0.95)]"
+            className="h-[52px] w-full rounded-2xl text-base font-black"
             isLoading={mutation.isPending}
             disabled={mutation.isPending}
           >
@@ -105,8 +105,8 @@ export function ForgotPasswordPage() {
             Envoyer la demande
           </Button>
 
-          <div className="pt-1 text-center text-sm font-medium text-slate-500 dark:text-slate-300">
-            <Link to="/login" className="font-black text-blue-600 hover:underline dark:text-blue-300">
+          <div className="pt-1 text-center text-sm font-medium text-muted-foreground">
+            <Link to="/login" className="font-black text-primary hover:underline">
               Retour à la connexion
             </Link>
           </div>
