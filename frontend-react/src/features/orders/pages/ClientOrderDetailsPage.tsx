@@ -29,9 +29,7 @@ function statusBadgeClass(status?: string | null) {
   if (s === "REFUSE" || s === "REFUSÉ" || s === "REJECTED") {
     return "badge-danger";
   }
-  if (s === "CANCELLED" || s === "ANNULE" || s === "ANNULÉ") {
-    return "bg-red-50 text-red-600 ring-1 ring-red-100";
-  }
+  if (s === "CANCELLED" || s === "ANNULE" || s === "ANNULÉ") return "badge-danger";
   return "bg-muted/55 text-muted-foreground ring-1 ring-border";
 }
 
@@ -162,7 +160,7 @@ export function ClientOrderDetailsPage() {
           <div className="flex flex-wrap gap-2 pt-1 text-xs">
             <span
               className={`rounded-full px-3 py-1 font-semibold ring-1 ${
-                isHome ? "bg-blue-50 text-blue-700 ring-blue-100" : "bg-violet-50 text-violet-700 ring-violet-100"
+                isHome ? "bg-info/10 text-info ring-info/20" : "bg-indigo/10 text-indigo ring-indigo/20"
               }`}
             >
               {isHome ? "🚚 Domicile" : "🏪 Dépôt"}
@@ -215,7 +213,7 @@ export function ClientOrderDetailsPage() {
                     <th className="py-3 pr-0">TTC</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border/70">
                   {(data.lines ?? []).map((l, idx) => (
                     <tr key={`${l.articleRef}-${idx}`} className="hover:bg-muted/35">
                       <td className="py-4 pr-4">

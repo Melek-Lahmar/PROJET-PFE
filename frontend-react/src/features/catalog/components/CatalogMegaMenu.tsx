@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCatalogueTree } from "../hooks/useCatalogueTree";
 import type { CatalogueNode } from "../types/catalogue";
 import { isLeaf } from "../utils/buildCatalogueTree";
+import { CatalogueIcon } from "../utils/catalogueIcons";
 
 type Props = {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export function CatalogMegaMenu({ isOpen, onClose }: Props) {
             </div>
 
             {isLoading && <div className="px-4 py-3 text-sm text-muted-foreground">Loading...</div>}
-            {isError && <div className="px-4 py-3 text-sm text-red-600">Erreur catalogues</div>}
+            {isError && <div className="px-4 py-3 text-sm text-danger">Erreur catalogues</div>}
 
             <ul className="divide-y">
               {roots.map((root) => {
@@ -67,7 +68,17 @@ export function CatalogMegaMenu({ isOpen, onClose }: Props) {
                         active ? "bg-accent/50 font-semibold" : "hover:bg-accent/50",
                       ].join(" ")}
                     >
-                      <span className="uppercase text-sm">{root.cL_Intitule}</span>
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span
+                          className={[
+                            "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+                            active ? "border-primary/20 bg-accent text-primary" : "border-border/70 bg-card text-muted-foreground",
+                          ].join(" ")}
+                        >
+                          <CatalogueIcon name={root.cL_Intitule} className="h-4 w-4" />
+                        </span>
+                        <span className="truncate text-sm uppercase">{root.cL_Intitule}</span>
+                      </span>
                       <span className="text-muted-foreground/70">›</span>
                     </button>
                   </li>
@@ -129,8 +140,13 @@ function MegaColumns({
     <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-4">
       {sections.map((section) => (
         <div key={section.cL_No} className="space-y-3">
-          <div className="text-sm font-semibold uppercase tracking-wide">
-            {section.cL_Intitule}
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-accent/60 text-primary">
+              <CatalogueIcon name={section.cL_Intitule} className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 truncate text-sm font-semibold uppercase tracking-wide">
+              {section.cL_Intitule}
+            </div>
           </div>
 
           <ul className="space-y-2">

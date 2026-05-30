@@ -34,7 +34,7 @@ export function Modal({ open, title, onClose, children, footer }: Props) {
       {/* Backdrop */}
       <button
         type="button"
-        className="absolute inset-0 animate-premium-backdrop-in bg-slate-950/50 backdrop-blur-md"
+        className="absolute inset-0 animate-premium-backdrop-in bg-foreground/50 backdrop-blur-md"
         onClick={onClose}
         aria-label="Fermer la fenêtre"
       />

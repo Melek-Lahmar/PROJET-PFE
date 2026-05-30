@@ -46,6 +46,13 @@ SET IDENTITY_INSERT [F_APP_CONFIG] OFF;");
             UserManager<ApplicationUser> userManager,
             AppDbContext db)
         {
+            var realisticSeedExists = await db.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Email == "NourBenSalem@admin.tn");
+
+            if (realisticSeedExists)
+                return;
+
             var seeds = new (string Email, string Password, string Role, TypeProfil Profil, string NomComplet)[]
             {
                 ("client@gmail.com",        "123456", AppRoles.CLIENT,       TypeProfil.Client,  "Client Demo"),

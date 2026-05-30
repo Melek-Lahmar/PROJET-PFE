@@ -12,6 +12,7 @@ namespace Web_Api.Model
 
         public string AR_Ref { get; set; } = null!;
         public string AR_Design { get; set; } = null!;
+        public string? AR_Description { get; set; }
         public string FA_CodeFamille { get; set; } = null!;
         public short AR_UniteVen { get; set; }
         public decimal AR_PrixVen { get; set; }

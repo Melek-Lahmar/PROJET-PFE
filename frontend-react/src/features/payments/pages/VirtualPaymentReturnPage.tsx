@@ -37,36 +37,36 @@ function getStatusPresentation(data?: VirtualPaymentStatusDto) {
       return {
         title: "Paiement virtuel confirmé",
         badge: "Succès",
-        panelClassName: "border-emerald-200 bg-emerald-50/80 text-emerald-950",
-        badgeClassName: "bg-emerald-600 text-white",
+        panelClassName: "border-success/25 bg-success/10 text-card-foreground",
+        badgeClassName: "badge-success",
       };
     case "ECHEC":
       return {
         title: "Paiement virtuel refusé",
         badge: "Echec",
-        panelClassName: "border-rose-200 bg-rose-50/80 text-rose-950",
-        badgeClassName: "bg-rose-600 text-white",
+        panelClassName: "border-danger/25 bg-danger/10 text-card-foreground",
+        badgeClassName: "badge-danger",
       };
     case "ANNULE":
       return {
         title: "Paiement virtuel annulé",
         badge: "Annulé",
-        panelClassName: "border-amber-200 bg-amber-50/80 text-amber-950",
-        badgeClassName: "bg-amber-500 text-white",
+        panelClassName: "border-warning/25 bg-warning/10 text-card-foreground",
+        badgeClassName: "badge-warning",
       };
     case "EXPIRE":
       return {
         title: "Session de paiement expirée",
         badge: "Expiré",
-        panelClassName: "border-orange-200 bg-orange-50/80 text-orange-950",
-        badgeClassName: "bg-orange-600 text-white",
+        panelClassName: "border-warning/25 bg-warning/10 text-card-foreground",
+        badgeClassName: "badge-warning",
       };
     default:
       return {
         title: "Paiement virtuel en attente",
         badge: "En attente",
-        panelClassName: "border-sky-200 bg-sky-50/80 text-sky-950",
-        badgeClassName: "bg-sky-600 text-white",
+        panelClassName: "border-info/25 bg-info/10 text-card-foreground",
+        badgeClassName: "badge-info",
       };
   }
 }
@@ -88,14 +88,14 @@ function StatusDetails({ data }: { data: VirtualPaymentStatusDto }) {
             <p className="mt-3 max-w-3xl text-sm leading-6 opacity-80">{data.message}</p>
           </div>
 
-          <div className="rounded-2xl border border-white/55 bg-white/80 px-5 py-4 text-slate-950 shadow-sm lg:min-w-[280px]">
-            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+          <div className="rounded-2xl border border-border bg-card px-5 py-4 text-card-foreground shadow-sm lg:min-w-[280px]">
+            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
               Montant
             </div>
             <div className="mt-2 text-3xl font-black tracking-tight text-primary">
               {money(data.amount, data.currency)}
             </div>
-            <div className="mt-1 text-sm text-slate-600">
+            <div className="mt-1 text-sm text-muted-foreground">
               {data.provider} {data.isSandbox ? "(sandbox)" : ""}
             </div>
           </div>
@@ -165,7 +165,7 @@ function StatusDetails({ data }: { data: VirtualPaymentStatusDto }) {
         </div>
 
         {!data.isFinal ? (
-          <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-900">
+          <div className="mt-5 rounded-2xl border border-info/25 bg-info/10 p-4 text-sm text-card-foreground">
             Le statut est encore en attente. La page interroge périodiquement l’API pour afficher la vérité backend.
           </div>
         ) : null}

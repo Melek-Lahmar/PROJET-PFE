@@ -104,7 +104,7 @@ export function ArticleCard({
               alt={article.aR_Design || "Produit"}
               fit="contain"
               className="catalog-product-image-v2"
-              placeholderClassName="flex h-full w-full items-center justify-center rounded-[22px] bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
+              placeholderClassName="flex h-full w-full items-center justify-center rounded-[22px] bg-muted/35 text-muted-foreground"
             />
           </div>
         </div>

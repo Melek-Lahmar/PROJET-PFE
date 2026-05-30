@@ -7,6 +7,7 @@ using Web_Api.Auth.Entities;
 using Web_Api.data;
 using Web_Api.Geo;
 using Web_Api.Model;
+using Web_Api.Services.DevTest;
 
 namespace Web_Api.Controllers.Admin
 {
@@ -23,17 +24,73 @@ namespace Web_Api.Controllers.Admin
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly RealisticFullDatabaseSeeder _realisticSeeder;
 
         public AdminDevController(
             AppDbContext db,
             IWebHostEnvironment env,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole<Guid>> roleManager)
+            RoleManager<IdentityRole<Guid>> roleManager,
+            RealisticFullDatabaseSeeder realisticSeeder)
         {
             _db = db;
             _env = env;
             _userManager = userManager;
             _roleManager = roleManager;
+            _realisticSeeder = realisticSeeder;
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-and-seed-full-database")]
+        public async Task<IActionResult> ResetAndSeedFullDatabase(
+            [FromBody] RealisticSeedRequest request,
+            CancellationToken ct)
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            if (request?.Confirm != RealisticFullDatabaseSeeder.RequiredConfirmValue)
+            {
+                return BadRequest(new
+                {
+                    message = $"Champ 'confirm' obligatoire avec la valeur '{RealisticFullDatabaseSeeder.RequiredConfirmValue}'."
+                });
+            }
+
+            var adminUsers = await _userManager.GetUsersInRoleAsync(AppRoles.ADMIN);
+            if (adminUsers.Count > 0 && !(User?.Identity?.IsAuthenticated == true && User.IsInRole(AppRoles.ADMIN)))
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                var report = await _realisticSeeder.RunAsync(ct);
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Erreur pendant le seed réaliste complet.",
+                    detail = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("seed-full-database-summary")]
+        public async Task<IActionResult> SeedFullDatabaseSummary(CancellationToken ct)
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            var adminUsers = await _userManager.GetUsersInRoleAsync(AppRoles.ADMIN);
+            if (adminUsers.Count > 0 && !(User?.Identity?.IsAuthenticated == true && User.IsInRole(AppRoles.ADMIN)))
+                return Forbid();
+
+            return Ok(await _realisticSeeder.GetSummaryAsync(ct));
         }
 
         public class ResetReport

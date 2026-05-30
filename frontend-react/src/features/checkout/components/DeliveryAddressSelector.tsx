@@ -404,7 +404,7 @@ export function DeliveryAddressSelector({
                           </span>
                         )}
                         {a.latitude && a.longitude && (
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                          <span className="rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
                             📍 GPS
                           </span>
                         )}
@@ -441,7 +441,7 @@ export function DeliveryAddressSelector({
           {/* Gouvernorat */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-card-foreground">
-              Gouvernorat <span className="text-rose-500">*</span>
+              Gouvernorat <span className="text-danger">*</span>
             </label>
             <select
               className={SELECT_CLASS}
@@ -463,7 +463,7 @@ export function DeliveryAddressSelector({
           {/* Délégation */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-card-foreground">
-              Délégation <span className="text-rose-500">*</span>
+              Délégation <span className="text-danger">*</span>
             </label>
             {delegQuery.isLoading ? (
               <div className="flex h-11 items-center rounded-2xl border border-border bg-[hsl(var(--input))] px-4 text-sm text-muted-foreground">
@@ -492,7 +492,7 @@ export function DeliveryAddressSelector({
           {/* Adresse texte */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-card-foreground">
-              Adresse <span className="text-rose-500">*</span>
+              Adresse <span className="text-danger">*</span>
             </label>
             <Input
               value={adresseText}
@@ -522,7 +522,7 @@ export function DeliveryAddressSelector({
               </div>
 
               {hasGps && (
-                <div className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                <div className="flex items-center gap-1.5 rounded-xl border border-success/20 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success">
                   <span>📍</span>
                   <span>{latitude!.toFixed(4)}, {longitude!.toFixed(4)}</span>
                   <button
@@ -536,7 +536,7 @@ export function DeliveryAddressSelector({
                       onTouched("latitude");
                       onTouched("longitude");
                     }}
-                    className="ml-1 text-emerald-400 transition-colors hover:text-rose-500"
+                    className="ml-1 text-success/70 transition-colors hover:text-danger"
                   >
                     ✕
                   </button>
@@ -581,10 +581,10 @@ export function DeliveryAddressSelector({
                   syncStatus === "loading"
                     ? "border-border/60 bg-muted/40 text-muted-foreground"
                     : syncStatus === "ok"
-                      ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                      ? "border-success/25 bg-success/10 text-success"
                       : syncStatus === "mismatch"
                         ? "border-amber-200 bg-amber-50/80 text-amber-700"
-                        : "border-rose-200 bg-rose-50/70 text-rose-700",
+                        : "border-danger/25 bg-danger/10 text-danger",
                 ].join(" ")}
               >
                 {syncStatus === "loading" && (
@@ -595,7 +595,7 @@ export function DeliveryAddressSelector({
             )}
 
             {gpsError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs text-rose-700">
+              <div className="rounded-xl border border-danger/25 bg-danger/10 px-3 py-2 text-xs text-danger">
                 {gpsError}
               </div>
             )}

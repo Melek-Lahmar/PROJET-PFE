@@ -291,7 +291,7 @@ export function AddressForm({
             {locating ? "Localisation en cours..." : "Me localiser maintenant"}
           </Button>
           {latitude !== null && longitude !== null && (
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100">
+            <span className="rounded-full border border-success/25 bg-success/10 px-2.5 py-1 text-[11px] font-bold text-success">
               📍 GPS détecté
             </span>
           )}

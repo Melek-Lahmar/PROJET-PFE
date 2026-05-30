@@ -26,15 +26,15 @@ interface PremiumButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_STYLES: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50",
+    "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30",
   secondary:
-    "bg-white text-slate-900 border border-slate-200 shadow-sm hover:bg-slate-50 hover:shadow-md",
+    "bg-card text-card-foreground border border-border shadow-sm hover:bg-accent hover:text-primary hover:shadow-md",
   ghost:
-    "bg-transparent text-slate-700 hover:bg-slate-100",
+    "bg-transparent text-card-foreground hover:bg-accent hover:text-primary",
   danger:
-    "bg-gradient-to-br from-rose-600 to-red-600 text-white shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50",
+    "bg-danger text-danger-foreground shadow-lg shadow-danger/20 hover:bg-danger/90 hover:shadow-danger/30",
   success:
-    "bg-gradient-to-br from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50",
+    "bg-success text-success-foreground shadow-lg shadow-success/20 hover:bg-success/90 hover:shadow-success/30",
 };
 
 const SIZE_STYLES: Record<Size, string> = {
@@ -110,7 +110,7 @@ export function PremiumButton({
         "transition-all duration-200 ease-out will-change-transform",
         "hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.97]",
         "disabled:opacity-60 disabled:pointer-events-none",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         VARIANT_STYLES[variant],
         SIZE_STYLES[size],
         glow ? "premium-btn-glow" : "",

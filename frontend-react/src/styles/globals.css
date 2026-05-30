@@ -834,22 +834,25 @@
   .premium-hero {
     @apply relative overflow-hidden rounded-[32px] border border-border/70 px-6 py-9 sm:px-10 sm:py-12;
     background:
-      linear-gradient(135deg, hsl(var(--primary) / 0.18), transparent 38%),
-      radial-gradient(circle at top right, hsl(var(--info) / 0.20), transparent 36%),
+      radial-gradient(circle at 14px 14px, hsl(var(--primary) / 0.12) 1px, transparent 1.2px),
+      linear-gradient(135deg, hsl(var(--primary) / 0.12), transparent 42%),
+      linear-gradient(110deg, transparent 58%, hsl(var(--danger) / 0.075)),
       linear-gradient(180deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.88));
+    background-size: 24px 24px, auto, auto, auto;
     box-shadow: var(--homepage-hero-shadow), var(--surface-glow);
   }
 
   .premium-hero::after {
-    content: "";
+    display: none;
+  }
+
+  .premium-hero-ambient {
     position: absolute;
-    inset: -40% -10% auto auto;
-    width: 360px;
-    height: 360px;
-    border-radius: 999px;
-    background: radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 65%);
+    inset: 0;
     pointer-events: none;
-    animation: premium-glow 14s ease-in-out infinite;
+    background:
+      linear-gradient(90deg, hsl(var(--primary) / 0.08), transparent 42%),
+      linear-gradient(120deg, transparent 58%, hsl(var(--danger) / 0.08));
   }
 
   /* =========================================================

@@ -137,6 +137,7 @@ namespace Web_Api.data
                 .HasIndex(x => x.PA_Statut);
 
             modelBuilder.Entity<F_TAXE>().Property(x => x.TX_TAUX).HasColumnType("decimal(24,13)");
+            modelBuilder.Entity<F_ARTICLE>().Property(x => x.AR_Description).HasMaxLength(2000);
             modelBuilder.Entity<F_ARTICLE>().Property(x => x.AR_PrixVen).HasColumnType("decimal(24,13)");
             modelBuilder.Entity<F_ARTSTOCK>().Property(x => x.AS_QteMaxi).HasColumnType("decimal(24,13)");
             modelBuilder.Entity<F_ARTSTOCK>().Property(x => x.AS_QteMini).HasColumnType("decimal(24,13)");

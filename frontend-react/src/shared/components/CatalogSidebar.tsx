@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCatalogues } from "../../features/catalog/api/cataloguesApi";
 import type { Catalogue } from "../../features/catalog/types/catalogue";
+import { CatalogueIcon } from "../../features/catalog/utils/catalogueIcons";
 import { Button } from "./Button";
 
 type Props = {
@@ -74,23 +75,23 @@ export function CatalogSidebar({ open, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-stretch">
       <button
         type="button"
-        className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"
+        className="absolute inset-0 bg-foreground/55 backdrop-blur-md"
         onClick={onClose}
         aria-label="Fermer le catalogue"
       />
 
       <div className="relative z-10 m-0 flex h-full w-full max-w-[1180px] overflow-hidden border border-shell-border/70 bg-shell text-shell-foreground shadow-[0_45px_120px_-60px_rgba(2,6,23,0.95)] sm:m-4 sm:h-[calc(100%-2rem)] sm:w-[94vw] sm:rounded-[34px]">
-        <aside className="flex w-full flex-col border-r border-shell-border/70 bg-shell-elevated/95 sm:w-80">
-          <div className="flex items-center justify-between border-b border-shell-border/70 px-5 py-5">
+        <aside className="flex w-full flex-col border-r border-border/70 bg-card text-card-foreground sm:w-80">
+          <div className="flex items-center justify-between border-b border-border/70 bg-card px-5 py-5">
             <div>
-              <div className="app-kicker text-shell-foreground/70">Catalogue</div>
-              <h2 className="mt-1 text-lg font-bold text-white">Départements</h2>
+              <div className="app-kicker text-muted-foreground">Catalogue</div>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-card-foreground">Départements</h2>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-shell-border/80 bg-shell text-shell-foreground shadow-sm transition hover:text-shell-foreground"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition hover:border-primary/25 hover:text-primary"
               aria-label="Fermer"
             >
               <span className="text-lg leading-none">×</span>
@@ -98,8 +99,8 @@ export function CatalogSidebar({ open, onClose }: Props) {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-            {isLoading ? <div className="px-3 py-4 text-sm text-shell-foreground/75">Chargement des départements...</div> : null}
-            {isError ? <div className="px-3 py-4 text-sm text-rose-300">Erreur de chargement du catalogue.</div> : null}
+            {isLoading ? <div className="px-3 py-4 text-sm text-muted-foreground">Chargement des départements...</div> : null}
+            {isError ? <div className="px-3 py-4 text-sm text-danger">Erreur de chargement du catalogue.</div> : null}
 
             <nav className="space-y-2">
               {roots.map((root) => {
@@ -110,20 +111,31 @@ export function CatalogSidebar({ open, onClose }: Props) {
                     type="button"
                     onMouseEnter={() => setActiveRoot(root.cL_No)}
                     onClick={() => setActiveRoot(root.cL_No)}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                    className={`w-full rounded-2xl border px-4 py-3.5 text-left shadow-sm transition ${
                       isActive
-                        ? "border-primary/30 bg-shell-elevated text-shell-foreground shadow-lg"
-                        : "border-shell-border/70 bg-shell text-shell-foreground hover:border-primary/25 hover:text-shell-foreground"
+                        ? "border-primary/35 bg-primary/[0.07] text-card-foreground shadow-md"
+                        : "border-border/70 bg-card text-card-foreground hover:border-primary/25 hover:bg-accent/45"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{root.cL_Intitule}</div>
-                        <div className={`mt-1 text-xs ${isActive ? "text-shell-foreground/60" : "text-shell-foreground/60"}`}>
-                          {flattenLeafCount(root)} sous-catégories
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span
+                          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${
+                            isActive
+                              ? "border-primary/25 bg-card text-primary"
+                              : "border-border/70 bg-accent/45 text-primary/80"
+                          }`}
+                        >
+                          <CatalogueIcon name={root.cL_Intitule} className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold">{root.cL_Intitule}</div>
+                          <div className="mt-1 text-xs font-medium text-muted-foreground">
+                            {flattenLeafCount(root)} sous-catégories
+                          </div>
                         </div>
                       </div>
-                      <span className={`text-lg ${isActive ? "text-primary" : "text-shell-foreground/55"}`}>›</span>
+                      <span className={`text-lg ${isActive ? "text-primary" : "text-muted-foreground"}`}>›</span>
                     </div>
                   </button>
                 );
@@ -164,10 +176,15 @@ export function CatalogSidebar({ open, onClose }: Props) {
                     return (
                       <div key={section.cL_No} className="app-surface-soft flex h-full flex-col p-5">
                         <div className="flex items-start justify-between gap-3 border-b border-border/60 pb-4">
-                          <div>
-                            <div className="text-sm font-bold text-card-foreground">{section.cL_Intitule}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {children.length > 0 ? `${children.length} éléments` : "Catégorie finale"}
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-accent/60 text-primary">
+                              <CatalogueIcon name={section.cL_Intitule} className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="text-sm font-bold text-card-foreground">{section.cL_Intitule}</div>
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                {children.length > 0 ? `${children.length} éléments` : "Catégorie finale"}
+                              </div>
                             </div>
                           </div>
 

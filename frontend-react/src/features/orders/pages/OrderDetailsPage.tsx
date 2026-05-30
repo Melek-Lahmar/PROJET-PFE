@@ -90,8 +90,8 @@ function getDeliveryLabel(deliveryType?: string | null) {
 function getDeliveryBadgeClass(deliveryType?: string | null) {
   const normalized = (deliveryType ?? "").trim().toUpperCase();
 
-  if (normalized === "HOME") return "bg-blue-50 text-blue-700 ring-1 ring-blue-100";
-  if (normalized === "PICKUP") return "bg-violet-50 text-violet-700 ring-1 ring-violet-100";
+  if (normalized === "HOME") return "bg-info/10 text-info ring-1 ring-info/20";
+  if (normalized === "PICKUP") return "bg-primary/10 text-primary ring-1 ring-primary/20";
 
   return "bg-muted/55 text-card-foreground/90 ring-1 ring-border";
 }
@@ -132,26 +132,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  hint,
-  valueClassName = "text-card-foreground",
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="rounded-[24px] border border-border/70 bg-muted/25 px-4 py-4">
-      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-      <div className={`mt-2 text-xl font-black tracking-tight ${valueClassName}`}>{value}</div>
-      {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
-    </div>
-  );
-}
-
 export function OrderDetailsPage() {
   const { piece } = useParams<{ piece: string }>();
 
@@ -172,11 +152,6 @@ export function OrderDetailsPage() {
     return (
       <div className="w-full space-y-6 py-10">
         <Skeleton width={256} height={28} rounded="full" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[...Array(4)].map((_, index) => (
-            <Skeleton key={index} height={112} rounded="lg" />
-          ))}
-        </div>
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
             <Skeleton height={288} rounded="xl" />
@@ -269,30 +244,6 @@ export function OrderDetailsPage() {
             <div className="mt-1 text-sm text-muted-foreground">Commande du {formatDateTime(data.date)}</div>
           </div>
         </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          label="Statut"
-          value={safeText(data.status)}
-          hint={getStatusSummary(data.status, data.statusCode)}
-        />
-        <SummaryCard
-          label="Livraison"
-          value={getDeliveryLabel(data.deliveryType)}
-          hint={isPickup ? `Dépôt n°${data.depotNo || 0}` : safeText(data.city)}
-        />
-        <SummaryCard
-          label="Paiement"
-          value={getPaymentLabel(data.paymentMethod)}
-          hint="Mode réellement enregistré sur la commande"
-        />
-        <SummaryCard
-          label="Articles"
-          value={`${linesCount} ligne${linesCount > 1 ? "s" : ""}`}
-          hint={`Total TTC : ${money(data.totalTTC)}`}
-          valueClassName="text-card-foreground"
-        />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -397,7 +348,7 @@ export function OrderDetailsPage() {
               </div>
 
               {isPickup ? (
-                <div className="rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-800">
+                <div className="rounded-[24px] border border-primary/20 bg-primary/10 p-4 text-sm text-card-foreground">
                   <div>
                     Retrait prévu au dépôt : <b>#{data.depotNo || 0}</b>
                   </div>

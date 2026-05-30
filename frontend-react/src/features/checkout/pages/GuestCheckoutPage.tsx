@@ -312,7 +312,7 @@ export function GuestCheckoutPage() {
               </Button>
             </Link>
             <Link to="/login?returnTo=%2Fcheckout">
-              <Button variant="ghost" className="rounded-2xl px-5 text-white hover:bg-white/10">
+              <Button variant="ghost" className="rounded-2xl px-5 text-card-foreground hover:bg-accent hover:text-primary">
                 J’ai déjà un compte
               </Button>
             </Link>
@@ -335,31 +335,31 @@ export function GuestCheckoutPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-semibold text-card-foreground">
-                  Nom complet <span className="text-red-500">*</span>
+                  Nom complet <span className="text-danger">*</span>
                 </label>
                 <Input
                   value={nomComplet}
                   onChange={(e) => setNomComplet(e.target.value)}
                   placeholder="Nom et prénom"
-                  className={showErrors && fieldErrors.nomComplet ? "border-red-400 bg-red-50 focus:border-red-500" : ""}
+                  className={showErrors && fieldErrors.nomComplet ? "border-danger/50 bg-danger/10 focus:border-danger" : ""}
                 />
                 {showErrors && fieldErrors.nomComplet && (
-                  <p className="text-xs font-medium text-red-500">{fieldErrors.nomComplet}</p>
+                  <p className="text-xs font-medium text-danger">{fieldErrors.nomComplet}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-card-foreground">
-                  Téléphone <span className="text-red-500">*</span>
+                  Téléphone <span className="text-danger">*</span>
                 </label>
                 <Input
                   value={telephone}
                   onChange={(e) => setTelephone(e.target.value)}
                   placeholder="Ex: 22123456"
-                  className={showErrors && fieldErrors.telephone ? "border-red-400 bg-red-50 focus:border-red-500" : ""}
+                  className={showErrors && fieldErrors.telephone ? "border-danger/50 bg-danger/10 focus:border-danger" : ""}
                 />
                 {showErrors && fieldErrors.telephone && (
-                  <p className="text-xs font-medium text-red-500">{fieldErrors.telephone}</p>
+                  <p className="text-xs font-medium text-danger">{fieldErrors.telephone}</p>
                 )}
               </div>
 

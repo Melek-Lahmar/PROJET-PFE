@@ -68,13 +68,13 @@ function getStageSummary(stage: ReturnType<typeof resolveOrderTimelineStage>) {
   }
 }
 
-// ── Nœud vertical ─────────────────────────────────────────────────────────────
+// ── Nœud horizontal ───────────────────────────────────────────────────────────
 
 function nodeColors(state: TimelineStep["state"]) {
   switch (state) {
-    case "done":    return { circle: "border-emerald-300 bg-emerald-500 text-white", line: "bg-emerald-300", label: "text-emerald-700", caption: "text-emerald-600" };
+    case "done":    return { circle: "border-success/35 bg-success text-success-foreground", line: "bg-success/35", label: "text-success", caption: "text-success/80" };
     case "active":  return { circle: "border-primary/40 bg-primary text-white shadow-lg shadow-primary/25", line: "bg-primary/30", label: "text-primary", caption: "text-primary/70" };
-    case "failed":  return { circle: "border-rose-300 bg-rose-500 text-white", line: "bg-rose-200", label: "text-rose-600", caption: "text-rose-500" };
+    case "failed":  return { circle: "border-danger/35 bg-danger text-danger-foreground", line: "bg-danger/25", label: "text-danger", caption: "text-danger/80" };
     default:        return { circle: "border-border bg-card text-muted-foreground", line: "bg-border/50", label: "text-muted-foreground", caption: "text-muted-foreground/60" };
   }
 }
@@ -86,27 +86,31 @@ function stepIcon(state: TimelineStep["state"], index: number) {
   return String(index + 1);
 }
 
-function VerticalStep({
+function HorizontalStep({
   step, index, isLast,
 }: { step: TimelineStep; index: number; isLast: boolean }) {
   const c = nodeColors(step.state);
   return (
-    <div className="flex gap-4">
-      {/* Colonne gauche : cercle + ligne */}
-      <div className="flex flex-col items-center">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-black transition-all ${c.circle}`}>
+    <div className="relative flex w-[190px] shrink-0 flex-col items-center text-center">
+      <div className="relative flex w-full items-center justify-center">
+        {!isLast && (
+          <div
+            className={`absolute left-1/2 top-1/2 h-[2px] w-full -translate-y-1/2 rounded-full ${c.line}`}
+            aria-hidden="true"
+          />
+        )}
+        <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-card text-sm font-black transition-all ${c.circle}`}>
           {stepIcon(step.state, index)}
         </div>
-        {!isLast && <div className={`mt-1 w-[2px] flex-1 rounded-full ${c.line}`} style={{ minHeight: 32 }} />}
       </div>
-      {/* Contenu */}
-      <div className={`pb-6 pt-1.5 min-w-0 ${isLast ? "" : ""}`}>
+
+      <div className="mt-3 min-w-0 px-2">
         <div className={`text-sm font-black leading-5 ${c.label}`}>{step.label}</div>
         <div className={`mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${c.caption}`}>
           {step.state === "done" ? "Terminé" : step.state === "active" ? "En cours" : step.state === "failed" ? "Échec" : "En attente"}
         </div>
         {step.description && (
-          <div className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.description}</div>
+          <div className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{step.description}</div>
         )}
       </div>
     </div>
@@ -117,10 +121,10 @@ function VerticalStep({
 
 function transitStatusColor(status: string) {
   const s = status.toUpperCase();
-  if (s === "EN_COURS_TRANSIT") return { bg: "bg-primary/8 border-primary/20", badge: "bg-primary/10 text-primary", dot: "bg-primary" };
-  if (s === "RECU_DEPOT_DESTINE" || s === "TRANSIT_TERMINE") return { bg: "bg-emerald-50 border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" };
-  if (s === "AUCUN_TRANSIT") return { bg: "bg-slate-50 border-slate-200", badge: "bg-slate-100 text-slate-600", dot: "bg-slate-400" };
-  return { bg: "bg-amber-50 border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
+  if (s === "EN_COURS_TRANSIT") return { bg: "bg-primary/[0.08] border-primary/20", badge: "bg-primary/10 text-primary", dot: "bg-primary" };
+  if (s === "RECU_DEPOT_DESTINE" || s === "TRANSIT_TERMINE") return { bg: "bg-success/10 border-success/25", badge: "bg-success/10 text-success", dot: "bg-success" };
+  if (s === "AUCUN_TRANSIT") return { bg: "bg-muted/35 border-border", badge: "bg-muted/60 text-muted-foreground", dot: "bg-muted-foreground" };
+  return { bg: "bg-warning/10 border-warning/25", badge: "bg-warning/10 text-warning", dot: "bg-warning" };
 }
 
 function TransitItems({ timeline }: { timeline?: OrderTimelineDto | null }) {
@@ -136,10 +140,10 @@ function TransitItems({ timeline }: { timeline?: OrderTimelineDto | null }) {
         {timeline.transitTotalCount > 0 && (
           <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ring-1 ring-border ${
             timeline.transitReceivedCount === timeline.transitTotalCount
-              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-              : "bg-primary/8 text-primary ring-primary/20"
+              ? "bg-success/10 text-success ring-success/25"
+              : "bg-primary/[0.08] text-primary ring-primary/20"
           }`}>
-            <span className={`h-2 w-2 rounded-full ${timeline.transitReceivedCount === timeline.transitTotalCount ? "bg-emerald-500" : "bg-primary animate-pulse"}`} />
+            <span className={`h-2 w-2 rounded-full ${timeline.transitReceivedCount === timeline.transitTotalCount ? "bg-success" : "bg-primary animate-pulse"}`} />
             {timeline.transitReceivedCount} / {timeline.transitTotalCount} reçus
           </span>
         )}
@@ -209,11 +213,13 @@ export function OrderTimeline({
         </div>
       </div>
 
-      {/* Étapes verticales */}
-      <div className="px-6 py-6">
-        {steps.map((step, i) => (
-          <VerticalStep key={`${step.key}-${i}`} step={step} index={i} isLast={i === steps.length - 1} />
-        ))}
+      {/* Étapes horizontales */}
+      <div className="overflow-x-auto px-6 py-6">
+        <div className="flex min-w-max items-start pb-2">
+          {steps.map((step, i) => (
+            <HorizontalStep key={`${step.key}-${i}`} step={step} index={i} isLast={i === steps.length - 1} />
+          ))}
+        </div>
       </div>
 
       {/* Articles en transit */}

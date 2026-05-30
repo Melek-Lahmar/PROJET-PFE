@@ -136,7 +136,7 @@ export function FavoriteToggleButton({ arRef, designation, mode = "card", classN
         isLoading={mutation.isPending || existsQuery.isFetching}
         aria-label={label}
         className={`h-12 w-full rounded-2xl text-base font-semibold ${
-          selected ? "bg-rose-600 hover:brightness-110" : ""
+          selected ? "bg-danger text-danger-foreground hover:bg-danger/90" : ""
         } ${className}`}
       >
         <IconHeart filled={selected} className="h-5 w-5" />

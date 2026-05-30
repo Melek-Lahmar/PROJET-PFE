@@ -78,7 +78,7 @@ function FavoriteCard({ item }: { item: FavoriteArticleDto }) {
           alt={item.designation}
           fit="contain"
           className="h-full w-full"
-          placeholderClassName="flex h-full w-full items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"
+          placeholderClassName="flex h-full w-full items-center justify-center bg-muted/35 text-muted-foreground"
         />
       </Link>
 
@@ -165,9 +165,9 @@ export function FavoritesPage() {
   if (favoritesQuery.isError) {
     return (
       <div className="favorites-page">
-        <Card className="border-rose-200 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10">
-          <div className="text-sm font-bold text-rose-700 dark:text-rose-200">Impossible de charger vos favoris.</div>
-          <div className="mt-1 text-sm text-rose-700/80 dark:text-rose-200/80">
+        <Card className="border-danger/25 bg-danger/10">
+          <div className="text-sm font-bold text-danger">Impossible de charger vos favoris.</div>
+          <div className="mt-1 text-sm text-danger/80">
             {getApiErrorMessage(favoritesQuery.error)}
           </div>
           <Button type="button" variant="outline" onClick={() => favoritesQuery.refetch()} className="mt-4">

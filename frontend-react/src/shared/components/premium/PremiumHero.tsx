@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { FloatingOrbs } from "./FloatingOrbs";
 
 interface PremiumHeroProps {
   kicker?: string;
@@ -9,8 +8,8 @@ interface PremiumHeroProps {
   trailing?: ReactNode;
   className?: string;
   /**
-   * Si `true` (default), affiche des orbes lumineux ambient en fond.
-   * Mettre à `false` pour les heroes minimalistes.
+   * Si `true`, affiche l'ancien décor ambient.
+   * Default `false` pour garder les pages client sobres et lisibles.
    */
   withOrbs?: boolean;
   /**
@@ -25,7 +24,6 @@ interface PremiumHeroProps {
  * Mirrors flutter `lib/ui/widgets/premium/premium_hero.dart`.
  *
  * Étendu 2026-05-13 :
- * - Orbes lumineux ambient en fond (FloatingOrbs).
  * - Option gradient text animé sur le titre.
  */
 export function PremiumHero({
@@ -35,7 +33,7 @@ export function PremiumHero({
   actions,
   trailing,
   className = "",
-  withOrbs = true,
+  withOrbs = false,
   gradientTitle = false,
 }: PremiumHeroProps) {
   const titleClass = gradientTitle
@@ -46,7 +44,7 @@ export function PremiumHero({
     <section
       className={`premium-hero anim-fade-up relative overflow-hidden ${className}`}
     >
-      {withOrbs && <FloatingOrbs />}
+      {withOrbs ? <div className="premium-hero-ambient" aria-hidden="true" /> : null}
       <div className="relative grid items-center gap-8 md:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           {kicker && <p className="app-kicker">{kicker}</p>}

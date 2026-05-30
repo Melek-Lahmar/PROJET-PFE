@@ -4,6 +4,7 @@ export type Article = {
   cbMarq: number;
   aR_Ref: string;
   aR_Design: string;
+  aR_Description?: string | null;
   fA_CodeFamille: string;
   aR_UniteVen: number;
   aR_PrixVen: number;

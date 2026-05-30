@@ -136,13 +136,13 @@ export function CartPage() {
           description="Vérifiez vos articles, ajustez les quantités et choisissez votre mode de livraison avant de passer commande."
           actions={
             <>
-              <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white ring-1 ring-white/30">
+              <span className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold text-card-foreground shadow-sm">
                 {items.length} article{items.length > 1 ? "s" : ""}
               </span>
               <Button
                 type="button"
                 variant="outline"
-                className="text-rose-600 hover:bg-rose-50"
+                className="text-danger hover:bg-danger/10"
                 onClick={() => clear()}
               >
                 Tout vider
@@ -192,7 +192,7 @@ export function CartPage() {
                         <button
                           type="button"
                           onClick={() => removeItem(x.arRef)}
-                          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-[hsl(var(--input))] text-muted-foreground shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-input text-muted-foreground shadow-sm transition hover:border-danger/25 hover:bg-danger/10 hover:text-danger"
                           aria-label="Supprimer"
                           title="Supprimer"
                         >
@@ -242,7 +242,7 @@ export function CartPage() {
 
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 bg-muted/30 px-5 py-3 text-xs text-muted-foreground">
                     <div className="inline-flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="h-2 w-2 rounded-full bg-success" />
                       Disponible
                     </div>
                     <div className="font-semibold text-card-foreground/75">
@@ -276,11 +276,11 @@ export function CartPage() {
                       onClick={() => setDeliveryMode("HOME")}
                       className={`flex items-center gap-4 rounded-[24px] border p-4 text-left transition ${
                         deliveryMode === "HOME"
-                          ? "border-primary/35 bg-primary/8 shadow-sm"
+                      ? "border-primary/35 bg-primary/[0.08] shadow-sm"
                           : "border-border bg-card hover:border-primary/15 hover:bg-accent/40"
                       }`}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-shell text-white shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
                         🚚
                       </div>
                       <div className="flex-1">
@@ -297,18 +297,18 @@ export function CartPage() {
                       onClick={() => setDeliveryMode("PICKUP")}
                       className={`flex items-center gap-4 rounded-[24px] border p-4 text-left transition ${
                         deliveryMode === "PICKUP"
-                          ? "border-primary/35 bg-primary/8 shadow-sm"
+                      ? "border-primary/35 bg-primary/[0.08] shadow-sm"
                           : "border-border bg-card hover:border-primary/15 hover:bg-accent/40"
                       }`}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-shell text-white shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
                         🏪
                       </div>
                       <div className="flex-1">
                         <div className="font-bold text-card-foreground">Retrait au dépôt</div>
                         <div className="text-xs text-muted-foreground">Frais : 0 TND</div>
                       </div>
-                      <div className="text-sm font-black text-emerald-600">Gratuit</div>
+                      <div className="text-sm font-black text-success">Gratuit</div>
                     </button>
                   </div>
                 </div>

@@ -73,6 +73,7 @@ export function normalizeArticle(raw: unknown): Article {
 
   const aR_Ref = asString(pick(source, ["aR_Ref", "AR_Ref", "ar_Ref", "arRef"]));
   const aR_Design = asString(pick(source, ["aR_Design", "AR_Design", "ar_Design", "arDesign"]));
+  const aR_DescriptionValue = pick(source, ["aR_Description", "AR_Description", "ar_Description", "arDescription"]);
   const fA_CodeFamille = asString(pick(source, ["fA_CodeFamille", "FA_CodeFamille", "fa_CodeFamille", "faCodeFamille"]));
   const aR_ImageValue = pick(source, ["aR_Image", "AR_Image", "ar_Image", "arImage"]);
   const availableStock = asNumber(pick(source, ["availableStock", "AvailableStock"]));
@@ -88,6 +89,7 @@ export function normalizeArticle(raw: unknown): Article {
     cbMarq: asNumber(pick(source, ["cbMarq", "CbMarq"])),
     aR_Ref,
     aR_Design,
+    aR_Description: aR_DescriptionValue == null ? null : asString(aR_DescriptionValue),
     fA_CodeFamille,
     aR_UniteVen: asNumber(pick(source, ["aR_UniteVen", "AR_UniteVen"])),
     aR_PrixVen: asNumber(pick(source, ["aR_PrixVen", "AR_PrixVen"])),

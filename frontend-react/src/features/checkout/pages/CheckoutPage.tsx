@@ -404,7 +404,7 @@ export function CheckoutPage() {
                 >
                   <div className="text-2xl mb-1">🏪</div>
                   <div className="font-bold text-card-foreground">Retrait au dépôt</div>
-                  <div className="text-xs font-medium text-[hsl(var(--success))] mt-0.5">Gratuit</div>
+                  <div className="mt-0.5 text-xs font-medium text-success">Gratuit</div>
                 </button>
               </div>
             </div>
@@ -439,7 +439,7 @@ export function CheckoutPage() {
                   <div className="text-sm text-[hsl(var(--danger))]">Aucun dépôt disponible.</div>
                 ) : (
                   <select
-                    className="flex h-11 w-full rounded-xl border border-input/40 bg-muted/40 px-3 py-2 text-sm"
+                    className="h-11 w-full rounded-2xl border border-border/80 bg-input px-3 py-2 text-sm text-card-foreground outline-none focus:border-primary/45 focus:ring-4 focus:ring-primary/10"
                     value={effectiveDepotNo}
                     onChange={(e) => setDepotNo(Number(e.target.value))}
                   >
@@ -500,11 +500,11 @@ export function CheckoutPage() {
               </div>
               {b2bDiscount.isApplied ? (
                 <>
-                  <div className="flex justify-between text-emerald-700 dark:text-emerald-300">
+                  <div className="flex justify-between text-success">
                     <span>Remise B2B {b2bDiscount.rate.toFixed(2)} %</span>
                     <span className="font-bold">-{b2bDiscount.amount.toFixed(3)} TND</span>
                   </div>
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs font-semibold text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200">
+                  <div className="rounded-2xl border border-success/25 bg-success/10 px-3 py-2 text-xs font-semibold text-card-foreground">
                     Remise professionnelle appliquée à votre compte B2B.
                   </div>
                 </>
@@ -529,7 +529,7 @@ export function CheckoutPage() {
             </div>
 
             {currentError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
                 {getApiErrorMessage(currentError)}
               </div>
             ) : null}

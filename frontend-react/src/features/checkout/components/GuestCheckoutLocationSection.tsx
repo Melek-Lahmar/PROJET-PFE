@@ -157,7 +157,7 @@ export function GuestCheckoutLocationSection({
 
   const fieldClass = (hasError?: string) =>
     `w-full px-3 py-2.5 rounded-xl border ${
-      hasError ? "border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-200" : "border-border/70 bg-background focus:border-primary/50 focus:ring-primary/20"
+      hasError ? "border-danger/50 bg-danger/10 focus:border-danger focus:ring-danger/20" : "border-border/70 bg-background focus:border-primary/50 focus:ring-primary/20"
     } text-foreground transition focus:ring-2 outline-none`;
 
   return (
@@ -167,7 +167,7 @@ export function GuestCheckoutLocationSection({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-card-foreground">
-            Gouvernorat <span className="text-red-500">*</span>
+            Gouvernorat <span className="text-danger">*</span>
           </label>
           <select
             value={gouvernorat || ""}
@@ -180,13 +180,13 @@ export function GuestCheckoutLocationSection({
             ))}
           </select>
           {errors?.gouvernorat && (
-            <p className="text-xs font-medium text-red-500">{errors.gouvernorat}</p>
+            <p className="text-xs font-medium text-danger">{errors.gouvernorat}</p>
           )}
         </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-card-foreground">
-            Delegation <span className="text-red-500">*</span>
+            Delegation <span className="text-danger">*</span>
           </label>
           <select
             value={delegation}
@@ -200,7 +200,7 @@ export function GuestCheckoutLocationSection({
             ))}
           </select>
           {errors?.delegation && (
-            <p className="text-xs font-medium text-red-500">{errors.delegation}</p>
+            <p className="text-xs font-medium text-danger">{errors.delegation}</p>
           )}
         </div>
       </div>
@@ -225,7 +225,7 @@ export function GuestCheckoutLocationSection({
       {/* Adresse */}
       <div className="space-y-1.5">
         <label className="text-sm font-semibold text-card-foreground">
-          Adresse <span className="text-red-500">*</span>
+          Adresse <span className="text-danger">*</span>
         </label>
         <input
           type="text"
@@ -235,7 +235,7 @@ export function GuestCheckoutLocationSection({
           className={fieldClass(errors?.address)}
         />
         {errors?.address && (
-          <p className="text-xs font-medium text-red-500">{errors.address}</p>
+          <p className="text-xs font-medium text-danger">{errors.address}</p>
         )}
       </div>
 
@@ -300,7 +300,7 @@ export function GuestCheckoutLocationSection({
         )}
 
         {/* Mini-carte preview */}
-        <div className="h-64 bg-slate-50">
+        <div className="h-64 bg-muted/30">
           <MapContainer
             center={[resolvedLatitude, resolvedLongitude]}
             zoom={latitude !== null ? 14 : DEFAULT_ZOOM}
@@ -342,7 +342,7 @@ export function GuestCheckoutLocationSection({
             <button
               type="button"
               onClick={handleClearLocation}
-              className="font-semibold text-red-500 hover:text-red-700 transition"
+              className="font-semibold text-danger transition hover:text-danger/80"
             >
               Effacer
             </button>

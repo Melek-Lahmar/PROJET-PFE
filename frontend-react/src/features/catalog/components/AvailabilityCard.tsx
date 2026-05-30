@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { AvailabilityItem } from "../hooks/useAvailability";
 import { Card } from "../../../shared/components/Card";
 
-function StatusBadge({ dispo }: { dispo: number }) {
+function StatusBadge({ dispo, unavailableLabel }: { dispo: number; unavailableLabel: string }) {
   const ok = dispo > 0;
 
   return (
@@ -11,8 +11,8 @@ function StatusBadge({ dispo }: { dispo: number }) {
         ok ? "badge-success" : "badge-warning"
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-emerald-500" : "bg-amber-500"}`} />
-      {ok ? "En stock" : "Sur commande (48h)"}
+      <span className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-success" : "bg-warning"}`} />
+      {ok ? "En stock" : unavailableLabel}
     </span>
   );
 }
@@ -44,8 +44,9 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
-export function AvailabilityCard({ data }: { data: AvailabilityItem[] }) {
+export function AvailabilityCard({ data, showQuantities = false }: { data: AvailabilityItem[]; showQuantities?: boolean }) {
   const [open, setOpen] = useState(false);
+  const unavailableLabel = showQuantities ? "Sur commande (48h)" : "Hors stock";
 
   return (
     <Card className="overflow-hidden p-0">
@@ -74,17 +75,17 @@ export function AvailabilityCard({ data }: { data: AvailabilityItem[] }) {
 
       {open ? (
         <div className="space-y-5 p-6">
-          <div className="flex flex-col gap-3 rounded-[24px] border border-blue-100 bg-blue-50/65 p-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 rounded-[24px] border border-primary/15 bg-primary/[0.06] p-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-card text-sm font-black text-primary shadow-sm">
                 WEB
               </div>
               <div>
-                <div className="text-sm font-bold text-blue-900">Achat en ligne</div>
-                <div className="text-xs text-blue-700/80">Traitement prioritaire de la commande.</div>
+                <div className="text-sm font-bold text-card-foreground">Achat en ligne</div>
+                <div className="text-xs text-muted-foreground">Traitement prioritaire de la commande.</div>
               </div>
             </div>
-            <span className="inline-flex items-center rounded-full border border-blue-100 bg-card px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm">
+            <span className="inline-flex items-center rounded-full border border-primary/15 bg-card px-3 py-1 text-xs font-semibold text-primary shadow-sm">
               ⚡ Expédition 24h
             </span>
           </div>
@@ -108,16 +109,18 @@ export function AvailabilityCard({ data }: { data: AvailabilityItem[] }) {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span>Dépôt N°{item.dE_No}</span>
-                      <span>Physique: {item.aS_QteSto}</span>
-                      <span>Réservé: {item.aS_QteRes}</span>
-                    </div>
+                    {showQuantities ? (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>Dépôt N°{item.dE_No}</span>
+                        <span>Physique: {item.aS_QteSto}</span>
+                        <span>Réservé: {item.aS_QteRes}</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 md:justify-end">
-                    <QtyPill dispo={item.dispo} />
-                    <StatusBadge dispo={item.dispo} />
+                    {showQuantities ? <QtyPill dispo={item.dispo} /> : null}
+                    <StatusBadge dispo={item.dispo} unavailableLabel={unavailableLabel} />
                   </div>
                 </div>
               ))}

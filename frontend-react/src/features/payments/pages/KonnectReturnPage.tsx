@@ -43,8 +43,8 @@ function getStatusPresentation(status?: string | null) {
         description:
           "Le backend a confirmé le paiement. L’état affiché ici provient du service serveur, pas uniquement du retour visuel.",
         icon: "✓",
-        panelClassName: "border-emerald-200 bg-emerald-50/80",
-        badgeClassName: "bg-emerald-600 text-white",
+        panelClassName: "border-success/25 bg-success/10",
+        badgeClassName: "badge-success",
       };
     case "ECHEC":
       return {
@@ -52,8 +52,8 @@ function getStatusPresentation(status?: string | null) {
         description:
           "Le paiement n’a pas été confirmé. Tu peux revenir à la commande et retenter un paiement plus tard si besoin.",
         icon: "!",
-        panelClassName: "border-rose-200 bg-rose-50/80",
-        badgeClassName: "bg-rose-600 text-white",
+        panelClassName: "border-danger/25 bg-danger/10",
+        badgeClassName: "badge-danger",
       };
     case "ANNULE":
       return {
@@ -61,8 +61,8 @@ function getStatusPresentation(status?: string | null) {
         description:
           "Le paiement a été interrompu ou annulé. La commande locale existe toujours, mais elle n’est pas réglée.",
         icon: "↺",
-        panelClassName: "border-amber-200 bg-amber-50/80",
-        badgeClassName: "bg-amber-500 text-white",
+        panelClassName: "border-warning/25 bg-warning/10",
+        badgeClassName: "badge-warning",
       };
     case "EXPIRE":
       return {
@@ -70,8 +70,8 @@ function getStatusPresentation(status?: string | null) {
         description:
           "La tentative de paiement a expiré. Il faudra relancer un paiement depuis l’application si tu veux continuer.",
         icon: "⌛",
-        panelClassName: "border-orange-200 bg-orange-50/80",
-        badgeClassName: "bg-orange-600 text-white",
+        panelClassName: "border-warning/25 bg-warning/10",
+        badgeClassName: "badge-warning",
       };
     default:
       return {
@@ -79,8 +79,8 @@ function getStatusPresentation(status?: string | null) {
         description:
           "Le backend attend encore une confirmation finale. La page interroge automatiquement l’API pour récupérer l’état réel.",
         icon: "…",
-        panelClassName: "border-sky-200 bg-sky-50/80",
-        badgeClassName: "bg-sky-600 text-white",
+        panelClassName: "border-info/25 bg-info/10",
+        badgeClassName: "badge-info",
       };
   }
 }
@@ -102,7 +102,7 @@ function StatusOverview({ data }: { data: KonnectPublicPaymentStatusDto }) {
             </span>
 
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-white/60 bg-white/85 text-3xl shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-border bg-card text-3xl text-card-foreground shadow-sm">
                 {presentation.icon}
               </div>
 
@@ -117,7 +117,7 @@ function StatusOverview({ data }: { data: KonnectPublicPaymentStatusDto }) {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-border/70 bg-white/85 px-5 py-4 shadow-sm lg:min-w-[280px]">
+          <div className="rounded-[28px] border border-border/70 bg-card px-5 py-4 shadow-sm lg:min-w-[280px]">
             <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
               Montant
             </div>
@@ -205,7 +205,7 @@ function StatusOverview({ data }: { data: KonnectPublicPaymentStatusDto }) {
         </div>
 
         {!data.isFinal ? (
-          <div className="mt-5 rounded-[22px] border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-800">
+          <div className="mt-5 rounded-[22px] border border-info/25 bg-info/10 p-4 text-sm text-card-foreground">
             Cette page continue d’interroger automatiquement le backend tant que le statut n’est pas final.
           </div>
         ) : null}

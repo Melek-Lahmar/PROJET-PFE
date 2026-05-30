@@ -121,15 +121,15 @@ export function CheckoutEntryPage() {
           </div>
 
           <div className="app-surface border border-primary/15 bg-primary/[0.045] p-7">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">🛍️</div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card text-2xl shadow-sm">🛍️</div>
             <h2 className="mt-5 text-2xl font-black tracking-tight text-card-foreground">Continuer sans se connecter</h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Passez votre commande comme invité en remplissant un formulaire complet. Le suivi détaillé restera réservé aux
               comptes connectés, mais votre BC sera bien créé côté système.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex rounded-full bg-white/80 px-3 py-1 font-semibold shadow-sm">Commande invitée</span>
-              <span className="inline-flex rounded-full bg-white/80 px-3 py-1 font-semibold shadow-sm">Panier conservé</span>
+              <span className="inline-flex rounded-full border border-border bg-card px-3 py-1 font-semibold shadow-sm">Commande invitée</span>
+              <span className="inline-flex rounded-full border border-border bg-card px-3 py-1 font-semibold shadow-sm">Panier conservé</span>
             </div>
             <Link to="/checkout/guest" className="mt-7 inline-flex">
               <Button type="button" size="lg" className="h-12 rounded-2xl px-6 text-base font-bold">

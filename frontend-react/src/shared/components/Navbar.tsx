@@ -159,7 +159,7 @@ function staffHome(roles: string[]) {
 }
 
 const shellButtonClass =
-  "rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/10 dark:hover:text-blue-200";
+  "rounded-2xl border border-border bg-card text-card-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/25 hover:bg-accent hover:text-primary hover:shadow-md focus-visible:ring-primary/15";
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -353,9 +353,9 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-slate-900 shadow-[0_10px_28px_-26px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
+      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/88 text-foreground shadow-[0_10px_28px_-26px_rgba(15,23,42,0.45)] backdrop-blur-xl">
         <div className="container-app py-3">
-          <div className="flex min-h-16 items-center gap-3 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_18px_45px_-38px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900 md:px-5">
+          <div className="flex min-h-16 items-center gap-3 rounded-[22px] border border-border/70 bg-card/92 px-4 py-3 text-card-foreground shadow-[0_18px_45px_-38px_rgba(15,23,42,0.45)] backdrop-blur-xl md:px-5">
             <div className="flex items-center gap-2 lg:gap-4">
               {!isStaff ? (
                 <>
@@ -387,8 +387,8 @@ export function Navbar() {
                   E
                 </div>
                 <div className="hidden min-w-0 flex-col leading-tight sm:flex">
-                  <span className="truncate text-sm font-bold text-slate-950 dark:text-slate-50">{t("app.brand")}</span>
-                  <span className="truncate text-xs text-slate-500 dark:text-slate-400">
+                  <span className="truncate text-sm font-bold text-card-foreground">{t("app.brand")}</span>
+                  <span className="truncate text-xs text-muted-foreground">
                     {isVendeur ? t("app.subtitle.vendeur") : t("app.subtitle.client")}
                   </span>
                 </div>
@@ -398,12 +398,12 @@ export function Navbar() {
             {showSearch ? (
               <form onSubmit={submitSearch} className="mx-auto hidden max-w-xl flex-1 md:block">
                 <div className="relative">
-                  <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder={isVendeur ? t("header.search.placeholder.vendeur") : t("header.search.placeholder")}
-                    className="h-11 rounded-2xl border-slate-200 bg-slate-50 pl-11 text-slate-900 placeholder:text-slate-400 shadow-none focus:border-blue-300 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15"
+                    className="h-11 rounded-2xl border-border bg-input pl-11 text-card-foreground placeholder:text-muted-foreground shadow-none focus:border-primary/45 focus:ring-primary/10"
                   />
                 </div>
               </form>
@@ -436,13 +436,13 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => navigate("/favorites")}
-                  className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300/60 hover:bg-rose-50 hover:text-rose-600 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-rose-400/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+                  className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-danger/30 hover:bg-danger/10 hover:text-danger hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-danger/15"
                   aria-label={t("header.favorites")}
                   title={t("header.favorites")}
                 >
                   <IconHeart className="h-5 w-5" />
                   {favoritesCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-white shadow">
+                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-danger-foreground shadow">
                       {favoritesCount > 99 ? "99+" : favoritesCount}
                     </span>
                   ) : null}
@@ -454,7 +454,7 @@ export function Navbar() {
               <div className="relative" data-user-menu>
                 <button
                   type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/10 dark:hover:text-blue-200"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-accent hover:text-primary hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
                   aria-label="Mon compte"
                   onClick={() => {
                     if (window.innerWidth < 640) return onAccountClick();
@@ -465,7 +465,7 @@ export function Navbar() {
                 </button>
 
                 {userMenuOpen ? (
-                  <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-[24px] border border-slate-200 bg-white text-slate-900 shadow-[0_35px_90px_-45px_rgba(2,6,23,0.55)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+                  <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-[24px] border border-border bg-card text-card-foreground shadow-[0_35px_90px_-45px_rgba(2,6,23,0.55)]">
                     {!bootstrapped ? (
                       <div className="p-5 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
                     ) : !isAuth ? (
@@ -611,7 +611,7 @@ export function Navbar() {
                               <IconHeart className="h-4 w-4 text-muted-foreground" />
                               <span className="flex-1">{t("header.favorites")}</span>
                               {favoritesCount > 0 ? (
-                                <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-black text-white">
+                                <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-black text-danger-foreground">
                                   {favoritesCount}
                                 </span>
                               ) : null}
@@ -712,7 +712,7 @@ export function Navbar() {
 
                         <button
                           type="button"
-                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-danger transition hover:bg-danger/10"
                           onClick={logout}
                         >
                           <IconLogout className="h-4 w-4" />
@@ -729,14 +729,14 @@ export function Navbar() {
 
         {showSearch ? (
           <div className="container-app pt-3 md:hidden">
-            <form onSubmit={submitSearch} className="rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <form onSubmit={submitSearch} className="rounded-[22px] border border-border bg-card px-4 py-3 shadow-sm">
               <div className="relative">
-                <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={isVendeur ? t("header.search.placeholder.vendeur") : t("header.search.placeholder")}
-                  className="h-11 rounded-2xl border-slate-200 bg-slate-50 pl-11 text-slate-900 placeholder:text-slate-400 shadow-none focus:border-blue-300 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/15"
+                  className="h-11 rounded-2xl border-border bg-input pl-11 text-card-foreground placeholder:text-muted-foreground shadow-none focus:border-primary/45 focus:ring-primary/10"
                 />
               </div>
             </form>

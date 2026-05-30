@@ -10,9 +10,7 @@ import {
   cancelVirtualPayment,
   confirmVirtualPayment,
   getVirtualPaymentStatus,
-  getVirtualTestCards,
 } from "../api/virtualPaymentsApi";
-import type { VirtualTestCardDto } from "../types/virtualPayment";
 import { EmptyView } from "../../../shared/components/premium";
 
 type FormState = {
@@ -35,16 +33,6 @@ function money(value: number, currency: string) {
   return `${value.toFixed(3)} ${currency}`;
 }
 
-function fillFromCard(card: VirtualTestCardDto): FormState {
-  return {
-    cardNumber: card.cardNumber,
-    expiry: "12/30",
-    cvv: card.cvv,
-    cardHolderName: "Client Test",
-    otp: card.otp,
-  };
-}
-
 function compactCard(cardNumber: string) {
   return cardNumber.replace(/\s+/g, "");
 }
@@ -57,17 +45,10 @@ export function VirtualPaymentPage() {
   const paymentRef = (searchParams.get("paymentRef") ?? "").trim();
 
   const [form, setForm] = useState<FormState>(initialForm);
-  const [selectedCard, setSelectedCard] = useState<string>("");
 
   const statusQuery = useQuery({
     queryKey: ["virtual-payment-status", piece, paymentRef],
     queryFn: () => getVirtualPaymentStatus(piece, paymentRef),
-    enabled: Boolean(piece && paymentRef),
-  });
-
-  const testCardsQuery = useQuery({
-    queryKey: ["virtual-test-cards"],
-    queryFn: getVirtualTestCards,
     enabled: Boolean(piece && paymentRef),
   });
 
@@ -118,11 +99,6 @@ export function VirtualPaymentPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleUseCard(card: VirtualTestCardDto) {
-    setSelectedCard(card.cardNumber);
-    setForm(fillFromCard(card));
-  }
-
   if (!piece || !paymentRef) {
     return (
       <div className="w-full py-10">
@@ -157,13 +133,13 @@ export function VirtualPaymentPage() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Virtual Payment Gateway
+                Passerelle de paiement sécurisée
               </div>
               <h1 className="mt-4 text-3xl font-black tracking-tight text-card-foreground">
                 Paiement virtuel sécurisé
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Carte de test uniquement — aucune transaction bancaire réelle ne sera effectuée.
+                Effectuez votre paiement en toute sécurité. Vos informations sont protégées à chaque étape.
               </p>
             </div>
 
@@ -176,7 +152,7 @@ export function VirtualPaymentPage() {
                   {money(status.amount, status.currency)}
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {status.provider} {status.isSandbox ? "(sandbox)" : ""}
+                  {status.provider} {status.isSandbox ? "· sandbox sécurisé" : ""}
                 </div>
               </div>
             ) : null}
@@ -220,11 +196,11 @@ export function VirtualPaymentPage() {
       <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
         <section className="app-surface space-y-6 p-6 md:p-8 lg:col-span-7">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-card-foreground">
-              Carte virtuelle
+          <h2 className="text-2xl font-black tracking-tight text-card-foreground">
+              Informations de paiement
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Les données saisies servent seulement à valider le scénario de test et ne sont pas enregistrées.
+              Saisissez les informations de votre carte bancaire. Aucune information bancaire n'est stockée sur nos serveurs.
             </p>
           </div>
 
@@ -331,57 +307,78 @@ export function VirtualPaymentPage() {
           </div>
         </section>
 
-        <aside className="app-surface space-y-5 p-6 md:p-8 lg:col-span-5">
+        <aside className="app-surface space-y-6 p-6 md:p-8 lg:col-span-5">
           <div>
             <h2 className="text-xl font-black tracking-tight text-card-foreground">
-              Cartes de test disponibles
+              Résumé du paiement
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Chaque carte déclenche un état backend différent dans B_PAIEMENT.
+              Vérifiez les informations avant validation. Le statut réel reste contrôlé par le backend.
             </p>
           </div>
 
-          {testCardsQuery.isLoading ? (
-            <Loader />
-          ) : (
-            <div className="space-y-3">
-              {(testCardsQuery.data ?? []).map((card) => (
-                <button
-                  key={`${card.cardNumber}-${card.externalStatus}`}
-                  type="button"
-                  onClick={() => handleUseCard(card)}
-                  className={`w-full rounded-2xl border p-4 text-left transition ${
-                    selectedCard === card.cardNumber
-                      ? "border-primary bg-primary/5 ring-4 ring-primary/10"
-                      : "border-border bg-card hover:border-primary/30 hover:bg-accent/40"
-                  }`}
-                >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <div className="font-mono text-sm font-black text-card-foreground">
-                        {card.cardNumber}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">{card.message}</div>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-muted-foreground">
-                        <span className="rounded-full border border-border/70 bg-muted/30 px-2 py-1">
-                          Date 12/30
-                        </span>
-                        <span className="rounded-full border border-border/70 bg-muted/30 px-2 py-1">
-                          CVV {card.cvv}
-                        </span>
-                        <span className="rounded-full border border-border/70 bg-muted/30 px-2 py-1">
-                          OTP {card.otp}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="inline-flex w-fit rounded-full border border-border/70 bg-muted/35 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                      {card.result}
-                    </span>
-                  </div>
-                </button>
+          {status ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Montant à payer</span>
+                <span className="font-black text-primary">{money(status.amount, status.currency)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Commande</span>
+                <span className="font-mono font-semibold text-card-foreground">{status.piece}</span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">Référence paiement</span>
+                <span className="max-w-[220px] break-all text-right font-mono font-semibold text-card-foreground">{status.paymentRef}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Statut</span>
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
+                  {status.localStatus}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Environnement</span>
+                <span className="font-semibold text-card-foreground">{status.isSandbox ? "Sandbox sécurisé" : "Production"}</span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="border-t border-border/70 pt-5">
+            <div className="text-sm font-black text-card-foreground">Méthodes acceptées</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["Mastercard", "Visa", "e-Dinar"].map((method) => (
+                <span key={method} className="rounded-2xl border border-border bg-card px-4 py-2 text-sm font-black text-card-foreground shadow-sm">
+                  {method}
+                </span>
               ))}
             </div>
-          )}
+          </div>
+
+          <div className="border-t border-border/70 pt-5">
+            <div className="text-sm font-black text-card-foreground">Sécurité et confidentialité</div>
+            <div className="mt-3 space-y-3">
+              {[
+                ["Paiement chiffré", "Vos informations sont protégées pendant la saisie."],
+                ["Passerelle sécurisée", "La transaction est traitée par le flux existant."],
+                ["Validation par OTP", "Un code de vérification est demandé pour confirmer."],
+              ].map(([title, description]) => (
+                <div key={title} className="rounded-2xl border border-border/70 bg-muted/25 px-4 py-3">
+                  <div className="text-sm font-bold text-card-foreground">{title}</div>
+                  <div className="mt-1 text-xs leading-5 text-muted-foreground">{description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-border/70 bg-card/75 p-4">
+            <div className="text-sm font-black text-card-foreground">Besoin d’aide ?</div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Notre équipe support reste disponible pour vous accompagner.</p>
+            <div className="mt-4 space-y-1 text-sm font-semibold text-card-foreground">
+              <div>+216 00 000 000</div>
+              <div>support@ecommerce.tn</div>
+            </div>
+          </div>
         </aside>
       </div>
     </div>

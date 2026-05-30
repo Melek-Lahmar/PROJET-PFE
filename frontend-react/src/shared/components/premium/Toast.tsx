@@ -36,11 +36,12 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-const VARIANT_STYLES: Record<ToastVariant, { bar: string; bg: string; icon: ReactNode; ring: string }> = {
+const VARIANT_STYLES: Record<ToastVariant, { bar: string; bg: string; icon: ReactNode; ring: string; iconColor: string }> = {
   success: {
-    bar: "bg-gradient-to-b from-emerald-500 to-green-600",
-    bg: "from-emerald-50 to-green-50",
-    ring: "ring-emerald-200",
+    bar: "bg-success",
+    bg: "bg-card",
+    ring: "ring-success/25",
+    iconColor: "text-success",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -48,9 +49,10 @@ const VARIANT_STYLES: Record<ToastVariant, { bar: string; bg: string; icon: Reac
     ),
   },
   error: {
-    bar: "bg-gradient-to-b from-rose-500 to-red-600",
-    bg: "from-rose-50 to-red-50",
-    ring: "ring-rose-200",
+    bar: "bg-danger",
+    bg: "bg-card",
+    ring: "ring-danger/25",
+    iconColor: "text-danger",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -58,9 +60,10 @@ const VARIANT_STYLES: Record<ToastVariant, { bar: string; bg: string; icon: Reac
     ),
   },
   info: {
-    bar: "bg-gradient-to-b from-sky-500 to-blue-600",
-    bg: "from-sky-50 to-blue-50",
-    ring: "ring-sky-200",
+    bar: "bg-info",
+    bg: "bg-card",
+    ring: "ring-info/25",
+    iconColor: "text-info",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -68,9 +71,10 @@ const VARIANT_STYLES: Record<ToastVariant, { bar: string; bg: string; icon: Reac
     ),
   },
   warning: {
-    bar: "bg-gradient-to-b from-amber-500 to-orange-600",
-    bg: "from-amber-50 to-orange-50",
-    ring: "ring-amber-200",
+    bar: "bg-warning",
+    bg: "bg-card",
+    ring: "ring-warning/25",
+    iconColor: "text-warning",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
@@ -140,27 +144,27 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       role="status"
       className={[
         "pointer-events-auto relative flex items-start gap-3 overflow-hidden",
-        "rounded-2xl bg-gradient-to-br p-4 pr-9",
+        "rounded-2xl p-4 pr-9",
         "shadow-xl ring-1 backdrop-blur-md animate-premium-toast-in",
         style.bg,
         style.ring,
       ].join(" ")}
     >
       <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${style.bar}`} />
-      <div className={`shrink-0 mt-0.5 text-${toast.variant === "warning" ? "amber" : toast.variant === "success" ? "emerald" : toast.variant === "error" ? "rose" : "sky"}-600`}>
+      <div className={`shrink-0 mt-0.5 ${style.iconColor}`}>
         {style.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm text-slate-900 leading-tight">{toast.title}</p>
+        <p className="font-bold text-sm text-card-foreground leading-tight">{toast.title}</p>
         {toast.description && (
-          <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">{toast.description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{toast.description}</p>
         )}
       </div>
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Fermer"
-        className="absolute top-2 right-2 inline-grid place-items-center w-6 h-6 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/60 transition"
+        className="absolute top-2 right-2 inline-grid place-items-center w-6 h-6 rounded-full text-muted-foreground transition hover:bg-accent hover:text-primary"
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

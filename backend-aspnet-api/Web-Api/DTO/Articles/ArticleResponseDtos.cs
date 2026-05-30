@@ -5,6 +5,7 @@ namespace Web_Api.DTO.Articles
         public int CbMarq { get; set; }
         public string AR_Ref { get; set; } = string.Empty;
         public string AR_Design { get; set; } = string.Empty;
+        public string? AR_Description { get; set; }
         public string FA_CodeFamille { get; set; } = string.Empty;
         public short AR_UniteVen { get; set; }
         public decimal AR_PrixVen { get; set; }

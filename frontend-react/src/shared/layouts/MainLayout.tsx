@@ -59,7 +59,7 @@ export function MainLayout() {
 
       <main
         className={`container-app relative z-10 flex-1 ${
-          isAccountPage ? "bg-slate-50 py-6 dark:bg-slate-950 md:py-8" : "py-8 md:py-10 lg:py-12"
+          isAccountPage ? "bg-background py-6 md:py-8" : "py-8 md:py-10 lg:py-12"
         } ${
           isAuthPage ? "flex items-center justify-center" : ""
         }`}

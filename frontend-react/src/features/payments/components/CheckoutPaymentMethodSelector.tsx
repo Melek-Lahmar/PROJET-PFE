@@ -65,7 +65,7 @@ export function CheckoutPaymentMethodSelector({ value, onChange, total }: Props)
 
               <div className="relative">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-white/80 text-2xl shadow-sm">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card text-2xl shadow-sm">
                     {option.icon}
                   </div>
 
@@ -106,7 +106,7 @@ export function CheckoutPaymentMethodSelector({ value, onChange, total }: Props)
       </div>
 
       {value === "COD" ? (
-        <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-800">
+        <div className="rounded-[22px] border border-success/25 bg-success/10 px-4 py-3 text-sm text-card-foreground">
           Le comportement actuel est conservé : la commande sera créée immédiatement, puis l’utilisateur sera redirigé vers son récapitulatif.
         </div>
       ) : (
@@ -119,7 +119,7 @@ export function CheckoutPaymentMethodSelector({ value, onChange, total }: Props)
               </p>
             </div>
 
-            <div className="rounded-2xl border border-primary/15 bg-white/80 px-4 py-3 text-right shadow-sm">
+            <div className="rounded-2xl border border-primary/15 bg-card px-4 py-3 text-right shadow-sm">
               <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 Montant à transmettre
               </div>

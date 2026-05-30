@@ -148,7 +148,7 @@ export function CheckoutChoiceModal({
         type="button"
         aria-label="Fermer la fenêtre"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/72 backdrop-blur-[8px]"
+        className="absolute inset-0 bg-foreground/72 backdrop-blur-[8px]"
       />
 
       <div className="absolute inset-0 overflow-y-auto">

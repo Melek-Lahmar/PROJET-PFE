@@ -12,10 +12,10 @@ export function DepotPickerSection() {
     setOptions(data.nearestDepots ?? []);
   }
   return (
-    <section className="space-y-3 rounded-2xl border p-4 dark:border-slate-800">
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-4 text-card-foreground">
       <h3 className="font-bold">Retrait au dépôt</h3>
-      <div className="grid gap-3 md:grid-cols-3"><input className="rounded-xl border p-3 dark:bg-slate-950 dark:border-slate-700" placeholder="Gouvernorat" value={gouvernorat} onChange={(e) => setGouvernorat(e.target.value)} /><input className="rounded-xl border p-3 dark:bg-slate-950 dark:border-slate-700" placeholder="Délégation" value={delegation} onChange={(e) => setDelegation(e.target.value)} /><button onClick={load} className="rounded-xl bg-blue-600 px-4 py-2 text-white">Chercher dépôts</button></div>
-      {options.map((x) => <div key={x.depotNo} className="rounded-xl border p-3 dark:border-slate-800">{x.isRecommended && <span>✨ </span>}{x.name} — {x.city} — {x.distanceKm} km</div>)}
+      <div className="grid gap-3 md:grid-cols-3"><input className="rounded-xl border border-border bg-input p-3 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Gouvernorat" value={gouvernorat} onChange={(e) => setGouvernorat(e.target.value)} /><input className="rounded-xl border border-border bg-input p-3 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Délégation" value={delegation} onChange={(e) => setDelegation(e.target.value)} /><button type="button" onClick={load} className="rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground transition hover:bg-primary/90">Chercher dépôts</button></div>
+      {options.map((x) => <div key={x.depotNo} className="rounded-xl border border-border bg-muted/25 p-3">{x.isRecommended && <span>✨ </span>}{x.name} — {x.city} — {x.distanceKm} km</div>)}
     </section>
   );
 }

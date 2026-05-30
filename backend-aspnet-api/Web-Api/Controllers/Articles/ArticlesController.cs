@@ -265,6 +265,7 @@ namespace Web_Api.Controllers.Articles
                     CbMarq = a.CbMarq,
                     AR_Ref = a.AR_Ref,
                     AR_Design = a.AR_Design,
+                    AR_Description = a.AR_Description,
                     FA_CodeFamille = a.FA_CodeFamille,
                     AR_UniteVen = a.AR_UniteVen,
                     AR_PrixVen = a.AR_PrixVen,
@@ -371,6 +372,7 @@ namespace Web_Api.Controllers.Articles
                 CbMarq = row.CbMarq ?? 0,
                 AR_Ref = (row.AR_Ref ?? string.Empty).Trim(),
                 AR_Design = (row.AR_Design ?? string.Empty).Trim(),
+                AR_Description = string.IsNullOrWhiteSpace(row.AR_Description) ? null : row.AR_Description.Trim(),
                 FA_CodeFamille = (row.FA_CodeFamille ?? string.Empty).Trim(),
                 AR_UniteVen = row.AR_UniteVen ?? 0,
                 AR_PrixVen = row.AR_PrixVen ?? 0m,
@@ -402,6 +404,7 @@ namespace Web_Api.Controllers.Articles
                     CbMarq = EF.Property<int?>(a, nameof(F_ARTICLE.cbMarq)) ?? 0,
                     AR_Ref = (EF.Property<string?>(a, nameof(F_ARTICLE.AR_Ref)) ?? string.Empty).Trim(),
                     AR_Design = (EF.Property<string?>(a, nameof(F_ARTICLE.AR_Design)) ?? string.Empty).Trim(),
+                    AR_Description = EF.Property<string?>(a, nameof(F_ARTICLE.AR_Description)),
                     FA_CodeFamille = (EF.Property<string?>(a, nameof(F_ARTICLE.FA_CodeFamille)) ?? string.Empty).Trim(),
                     AR_UniteVen = EF.Property<short?>(a, nameof(F_ARTICLE.AR_UniteVen)) ?? (short)0,
                     AR_PrixVen = EF.Property<decimal?>(a, nameof(F_ARTICLE.AR_PrixVen)) ?? 0m,
@@ -460,6 +463,7 @@ namespace Web_Api.Controllers.Articles
             public int? CbMarq { get; set; }
             public string? AR_Ref { get; set; }
             public string? AR_Design { get; set; }
+            public string? AR_Description { get; set; }
             public string? FA_CodeFamille { get; set; }
             public short? AR_UniteVen { get; set; }
             public decimal? AR_PrixVen { get; set; }
@@ -483,6 +487,7 @@ namespace Web_Api.Controllers.Articles
             public int CbMarq { get; set; }
             public string AR_Ref { get; set; } = string.Empty;
             public string AR_Design { get; set; } = string.Empty;
+            public string? AR_Description { get; set; }
             public string FA_CodeFamille { get; set; } = string.Empty;
             public short AR_UniteVen { get; set; }
             public decimal AR_PrixVen { get; set; }

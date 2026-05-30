@@ -146,13 +146,13 @@ export function ProfileAddressesPage() {
                 <div>
                   <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{a.label}</div>
                   {a.isDefault && (
-                    <span className="mt-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                    <span className="mt-1 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
                       Par défaut
                     </span>
                   )}
                 </div>
                 {a.latitude && a.longitude && (
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  <span className="inline-flex items-center rounded-full border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
                     📍 GPS
                   </span>
                 )}
@@ -190,7 +190,7 @@ export function ProfileAddressesPage() {
                 </Button>
                 <Button
                   type="button" variant="ghost" size="sm"
-                  className="h-8 rounded-xl px-3 text-xs text-rose-500 hover:bg-rose-50"
+                  className="h-8 rounded-xl px-3 text-xs text-danger hover:bg-danger/10"
                   onClick={() => handleDelete(a)}
                   disabled={remove.isPending}
                 >

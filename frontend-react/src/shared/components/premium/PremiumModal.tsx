@@ -55,12 +55,11 @@ export function PremiumModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9000] grid place-items-center p-4 animate-premium-backdrop-in"
       onClick={(e) => {
         if (preventBackdropClose) return;
         if (e.target === e.currentTarget) onClose();
       }}
-      style={{ background: "rgba(15, 23, 42, 0.55)", backdropFilter: "blur(10px)" }}
+      className="fixed inset-0 z-[9000] grid place-items-center bg-foreground/55 p-4 backdrop-blur-[10px] animate-premium-backdrop-in"
     >
       <div
         ref={panelRef}
@@ -69,7 +68,7 @@ export function PremiumModal({
         aria-modal="true"
         aria-labelledby={title ? "premium-modal-title" : undefined}
         className={[
-          "relative w-full bg-white rounded-3xl shadow-2xl ring-1 ring-slate-200",
+          "relative w-full rounded-3xl bg-card text-card-foreground shadow-2xl ring-1 ring-border",
           "animate-premium-modal-in focus:outline-none",
           SIZE_CLASSES[size],
         ].join(" ")}
@@ -79,7 +78,7 @@ export function PremiumModal({
           type="button"
           aria-label="Fermer"
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 inline-grid place-items-center w-9 h-9 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
+          className="absolute top-3.5 right-3.5 inline-grid place-items-center w-9 h-9 rounded-full text-muted-foreground hover:bg-accent hover:text-primary transition"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -90,19 +89,19 @@ export function PremiumModal({
             {title && (
               <h2
                 id="premium-modal-title"
-                className="text-lg font-bold text-slate-900 pr-12"
+                className="text-lg font-bold text-card-foreground pr-12"
               >
                 {title}
               </h2>
             )}
             {description && (
-              <p className="mt-1 text-sm text-slate-600">{description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
             )}
           </div>
         )}
         {children && <div className="px-6 py-4">{children}</div>}
         {footer && (
-          <div className="px-6 pb-6 pt-2 flex flex-row-reverse gap-2 border-t border-slate-100">
+          <div className="px-6 pb-6 pt-2 flex flex-row-reverse gap-2 border-t border-border">
             {footer}
           </div>
         )}

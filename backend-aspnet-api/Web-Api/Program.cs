@@ -156,6 +156,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ReclamationsService>();
 builder.Services.AddScoped<ReclamationPhotoStorageService>();
 builder.Services.AddScoped<DevTestDataSeeder>();
+builder.Services.AddScoped<RealisticFullDatabaseSeeder>();
 builder.Services.AddScoped<ConfirmatriceStatusService>();
 builder.Services.AddScoped<Web_Api.Services.Confirmatrice.CommandeConfirmationLockService>();
 

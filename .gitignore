@@ -80,6 +80,9 @@ TestResults/
 *.7z
 *.bak
 *.backup
+_seed-output/
+SeedOutput/
+PFE_TEST_ACCOUNTS.txt
 
 # =========================
 # Database local files

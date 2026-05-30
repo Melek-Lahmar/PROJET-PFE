@@ -386,8 +386,8 @@ export function ArticlesPage() {
             Parcourez notre catalogue et ajoutez les articles nécessaires à votre panier.
           </p>
 
-          <div className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-blue-200/70 bg-blue-50 px-4 py-2 text-sm font-black text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200">
-            <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-300" />
+          <div className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-black text-primary shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-primary" />
             {total} produits disponibles
           </div>
         </div>
@@ -411,7 +411,7 @@ export function ArticlesPage() {
           <button
             type="button"
             aria-label="Fermer les filtres"
-            className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+            className="absolute inset-0 bg-foreground/45 backdrop-blur-sm"
             onClick={() => setMobileFiltersOpen(false)}
           />
 
@@ -452,10 +452,10 @@ export function ArticlesPage() {
         <main className="min-w-0 space-y-5">
           <section className="catalog-pro-toolbar">
             <div>
-              <div className="text-sm font-black text-slate-950 dark:text-white">
+              <div className="text-sm font-black text-card-foreground">
                 {total} résultat{total > 1 ? "s" : ""}
               </div>
-              <div className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <div className="mt-1 text-xs font-medium text-muted-foreground">
                 {startItem} - {endItem} sur {total} produits
               </div>
             </div>
@@ -472,7 +472,7 @@ export function ArticlesPage() {
                 </div>
               ) : null}
 
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                 <span className="hidden sm:inline">Trier par</span>
                 <select
                   value={filtersFromParams.sortBy}
@@ -521,7 +521,7 @@ export function ArticlesPage() {
             </div>
           ) : showBlockingError ? (
             <Card className="p-6">
-              <div className="text-sm font-semibold text-rose-700 dark:text-rose-300">Erreur</div>
+              <div className="text-sm font-semibold text-danger">Erreur</div>
               <div className="mt-1 text-sm text-muted-foreground">
                 {(error as Error)?.message ?? "Impossible de charger les articles."}
               </div>
@@ -559,15 +559,15 @@ export function ArticlesPage() {
 
               <section className="catalog-pro-pagination-shell">
                 <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
-                  <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>Afficher</span>
-                    <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-black text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
+                    <span className="rounded-xl border border-border bg-card px-3 py-2 font-black text-card-foreground">
                       {DEFAULT_TAKE}
                     </span>
                     <span>par page</span>
                   </div>
 
-                  <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  <div className="text-sm font-semibold text-muted-foreground">
                     {startItem} - {endItem} sur {total} produits
                   </div>
 

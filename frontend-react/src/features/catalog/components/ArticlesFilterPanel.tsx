@@ -129,7 +129,7 @@ export function ArticlesFilterPanel({
         <section className="space-y-3">
           <label className="catalog-pro-section-label">Recherche</label>
           <div className="relative">
-            <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <IconSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={filters.search}
               onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
@@ -162,7 +162,7 @@ export function ArticlesFilterPanel({
               <button
                 type="button"
                 onClick={() => setFilters((prev) => ({ ...prev, stockStatus: "" }))}
-                className="text-xs font-black text-blue-600 hover:underline dark:text-blue-300"
+                className="text-xs font-black text-primary hover:underline"
               >
                 Tout
               </button>
@@ -190,13 +190,13 @@ export function ArticlesFilterPanel({
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <label className="catalog-pro-section-label">Prix (TND)</label>
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+            <span className="text-xs font-bold text-muted-foreground">
               {metadataLoading ? "Calcul..." : hasPriceBounds ? `${formatTnd(minPrice)} - ${formatTnd(maxPrice)}` : "—"}
             </span>
           </div>
 
           <div className="catalog-pro-price-range">
-            <div className="h-2 rounded-full bg-blue-600" />
+            <div className="h-2 rounded-full bg-primary" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -225,7 +225,7 @@ export function ArticlesFilterPanel({
           <label className="catalog-pro-section-label">Dépôts</label>
           <div className="catalog-pro-depot-list">
             {depots.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
+              <div className="rounded-2xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
                 Aucun dépôt disponible.
               </div>
             ) : (
@@ -235,7 +235,7 @@ export function ArticlesFilterPanel({
                   <label key={depot.dE_No} className={["catalog-pro-depot-row", checked ? "catalog-pro-depot-row-active" : ""].join(" ")}>
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                      className="h-4 w-4 rounded border-border accent-primary focus:ring-primary/20"
                       checked={checked}
                       onChange={(e) => setSelectedDepot(String(depot.dE_No), e.target.checked)}
                     />

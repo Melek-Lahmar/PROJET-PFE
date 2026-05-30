@@ -404,7 +404,7 @@ export function ArticleDetailsPage() {
                 </h1>
               </div>
 
-              <StockBadge status={article.stockStatus} availableStock={article.availableStock} />
+              <StockBadge status={article.stockStatus} availableStock={article.availableStock} compact={!isVendorRoute} />
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -519,7 +519,7 @@ export function ArticleDetailsPage() {
             </div>
           </div>
 
-          <AvailabilityCard data={availability.data ?? []} />
+          <AvailabilityCard data={availability.data ?? []} showQuantities={isVendorRoute} />
         </div>
       </div>
 
