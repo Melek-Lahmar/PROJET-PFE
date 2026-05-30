@@ -203,12 +203,14 @@ export function ProfilePage() {
     queryFn: () => me(),
   });
 
-  const isVendeur = q.data?.roles?.includes("VENDEUR") ?? false;
-  // Module 6 (Master Prompt) — Aucune carte / GPS dans le profil confirmateur.
-  // L'utilisateur n'a besoin ni de visualiser ni d'éditer ses coordonnées GPS dans son profil.
-  const isConfirmateur =
-    (q.data?.roles?.includes("CONFIRMATEUR") ?? false) ||
-    (q.data?.roles?.includes("CONFIRMATRICE") ?? false);
+  const roles = q.data?.roles ?? [];
+  const isVendeur = roles.includes("VENDEUR");
+  const isConfirmateur = roles.includes("CONFIRMATEUR") || roles.includes("CONFIRMATRICE");
+  const isAdmin = roles.includes("ADMIN");
+  const isSuperviseur = roles.includes("SUPERVISEUR");
+
+  // Rôles métier internes : affichent un profil simple sans onglets client
+  const isStaffRole = isAdmin || isSuperviseur || isConfirmateur || isVendeur;
 
   const vendeurContextQuery = useQuery({
     queryKey: ["vendeur-context", "profile"],
@@ -424,6 +426,7 @@ export function ProfilePage() {
   if (q.isLoading) return <Loader />;
 
   if (q.isError || !q.data) {
+
     return (
       <div className="w-full space-y-6 py-10">
         <PremiumHero kicker="Profil" title="Mon compte" gradientTitle />
@@ -432,6 +435,75 @@ export function ProfilePage() {
           description="Erreur lors du chargement du profil. Vérifiez votre connexion ou réessayez."
           iconPath="M12 9v4 M12 17h.01 M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
         />
+      </div>
+    );
+  }
+
+  // ── Profil simplifié pour Admin / Superviseur (sans onglets client) ──────────
+  if (isAdmin || isSuperviseur) {
+    const profile = q.data.profile;
+    return (
+      <div className="w-full space-y-7">
+        <PremiumHero
+          kicker={isAdmin ? "Administrateur" : "Superviseur"}
+          title="Mon profil"
+          description="Informations du compte. Les onglets Commandes et Adresses ne sont pas disponibles pour ce rôle."
+        />
+
+        <div className="rounded-3xl border border-border bg-card p-7 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-lg font-black text-primary">
+              {initials}
+            </div>
+            <div>
+              <div className="font-extrabold text-card-foreground">{email}</div>
+              <div className="flex gap-2 mt-1">
+                {roles.map((r) => (
+                  <span key={r} className="rounded-full bg-muted/40 px-2.5 py-0.5 text-xs font-bold text-card-foreground">
+                    {r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Téléphone</label>
+              <Input
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+                placeholder="Ex: 22123456"
+                className="h-11 rounded-2xl"
+              />
+            </div>
+            <InfoRow label="Nom complet" value={profile?.nomComplet} />
+            <InfoRow label="CIN" value={profile?.cin} />
+            <InfoRow label="Poste" value={profile?.poste} />
+            <InfoRow label="Département" value={profile?.departement} />
+          </div>
+
+          {mut.isError && (
+            <div className="mt-4 rounded-2xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm text-[hsl(var(--danger))]">
+              {getApiErrorMessage(mut.error)}
+            </div>
+          )}
+          {mut.isSuccess && (
+            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              Profil mis à jour.
+            </div>
+          )}
+
+          <Button
+            type="button"
+            className="mt-6 h-11 w-full rounded-2xl font-bold"
+            isLoading={mut.isPending}
+            disabled={mut.isPending}
+            onClick={() => mut.mutate()}
+          >
+            Enregistrer les modifications
+          </Button>
+        </div>
       </div>
     );
   }

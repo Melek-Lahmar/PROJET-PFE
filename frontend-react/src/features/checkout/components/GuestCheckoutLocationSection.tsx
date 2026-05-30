@@ -134,6 +134,8 @@ export function GuestCheckoutLocationSection({
     }
   }, []);
 
+  // Règle d'interdépendance :
+  // Gouvernorat manuel → reset délégation + position GPS (cohérence obligatoire)
   const handleGouvernoratChange = (value: string) => {
     setGouvernorat(value ? Number(value) : 0);
     setDelegation("");
@@ -141,6 +143,19 @@ export function GuestCheckoutLocationSection({
     setLongitude(null);
     setMapSource(null);
     setMapSyncMsg("");
+  };
+
+  // Délégation manuelle → reset position GPS uniquement (gouvernorat conservé)
+  const handleDelegationChange = (value: string) => {
+    setDelegation(value);
+    // Si la position avait été fixée par carte/GPS, on la réinitialise :
+    // l'utilisateur a recentré sa zone manuellement → forcer une nouvelle épingle
+    if (mapSource !== null) {
+      setLatitude(null);
+      setLongitude(null);
+      setMapSource(null);
+      setMapSyncMsg("Zone modifiée manuellement — épinglez à nouveau votre position.");
+    }
   };
 
   const handleClearLocation = () => {
@@ -190,7 +205,7 @@ export function GuestCheckoutLocationSection({
           </label>
           <select
             value={delegation}
-            onChange={(e) => setDelegation(e.target.value)}
+            onChange={(e) => handleDelegationChange(e.target.value)}
             disabled={delegations.length === 0}
             className={fieldClass(errors?.delegation)}
           >
