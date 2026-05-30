@@ -71,16 +71,217 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// ─── Modal détails / édition manuelle d'une mission ──────────────────────────
+
+const STATUS_OPTIONS = [
+  "EN_ATTENTE_AFFECTATION",
+  "AFFECTE",
+  "EN_TRANSIT",
+  "RECU",
+  "TERMINE",
+  "ANNULE",
+];
+
+function InfoLine({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="mt-0.5 truncate text-sm font-medium text-card-foreground">{value}</div>
+    </div>
+  );
+}
+
+function TransfertDetailsModal({
+  transfert,
+  livreurs,
+  depots,
+  onClose,
+}: {
+  transfert: Transfert;
+  livreurs: Livreur[];
+  depots: Depot[];
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [editStatus, setEditStatus] = useState(transfert.status);
+  const [editLivreurId, setEditLivreurId] = useState(transfert.transitLivreurUserId ?? "");
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const depotLabel = (no: number) => {
+    const d = depots.find((x) => x.dE_No === no);
+    return d ? `${d.dE_Intitule} (${d.dE_Code})` : `Dépôt #${no}`;
+  };
+
+  const livreurLabel = (id?: string | null) => {
+    if (!id) return "Non affecté";
+    const l = livreurs.find((lv) => lv.userId === id);
+    return l ? `${l.nomComplet}${l.telephone ? ` — ${l.telephone}` : ""}` : id;
+  };
+
+  const invalidateAll = async () => {
+    await qc.invalidateQueries({ queryKey: ["supervisor-missions"] });
+    await qc.invalidateQueries({ queryKey: ["supervisor-transferts"] });
+    await qc.invalidateQueries({ queryKey: ["supervisor-livreurs"] });
+    await qc.invalidateQueries({ queryKey: ["supervisor-stats"] });
+  };
+
+  const statusMutation = useMutation({
+    mutationFn: (status: string) =>
+      axiosClient.post(endpoints.supervisorTransitMissionChangeStatus(transfert.id), { status }),
+    onSuccess: async () => {
+      setSuccessMsg("Statut mis à jour.");
+      await invalidateAll();
+    },
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: (livreurId: string) =>
+      axiosClient.post(endpoints.supervisorTransitMissionAssign(transfert.id), { livreurId }),
+    onSuccess: async () => {
+      setSuccessMsg("Livreur réaffecté.");
+      await invalidateAll();
+    },
+  });
+
+  const statusChanged = editStatus !== transfert.status;
+  const livreurChanged = editLivreurId !== (transfert.transitLivreurUserId ?? "");
+  const anyError = statusMutation.error || assignMutation.error;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-card-foreground">Détails de la mission</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pièce <span className="font-semibold text-card-foreground">{transfert.doPiece}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-card-foreground"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 rounded-xl border border-border/60 bg-muted/15 p-4 sm:grid-cols-2">
+          <InfoLine label="Pièce" value={transfert.doPiece} />
+          <InfoLine label="Référence article" value={transfert.arRef} />
+          <InfoLine label="Quantité" value={Number(transfert.quantite ?? 0).toLocaleString("fr-FR")} />
+          <InfoLine label="Version" value={String(transfert.version)} />
+          <InfoLine label="Dépôt source" value={depotLabel(transfert.sourceDepotNo)} />
+          <InfoLine label="Dépôt destination" value={depotLabel(transfert.destinationDepotNo)} />
+          <InfoLine label="Statut actuel" value={<StatusBadge status={transfert.status} />} />
+          <InfoLine
+            label="Livreur affecté"
+            value={
+              <span className={transfert.transitLivreurUserId ? "" : "italic text-amber-600"}>
+                {livreurLabel(transfert.transitLivreurUserId)}
+              </span>
+            }
+          />
+        </div>
+
+        <div className="mt-5 space-y-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <h4 className="text-sm font-bold text-card-foreground">✏️ Modifier manuellement</h4>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-card-foreground">Statut</label>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+                className="h-10 flex-1 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              >
+                {!STATUS_OPTIONS.includes(editStatus) && (
+                  <option value={editStatus}>{editStatus}</option>
+                )}
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                isLoading={statusMutation.isPending}
+                disabled={!statusChanged || statusMutation.isPending}
+                onClick={() => statusMutation.mutate(editStatus)}
+              >
+                Enregistrer statut
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-card-foreground">Livreur</label>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={editLivreurId}
+                onChange={(e) => setEditLivreurId(e.target.value)}
+                className="h-10 flex-1 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="">— Non affecté —</option>
+                {livreurs.map((lv) => (
+                  <option key={lv.userId} value={lv.userId}>
+                    {lv.nomComplet}
+                    {lv.telephone ? ` — ${lv.telephone}` : ""}
+                    {lv.disponible ? " (dispo)" : ` (${lv.missionsEnCours} missions)`}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                isLoading={assignMutation.isPending}
+                disabled={!livreurChanged || !editLivreurId || assignMutation.isPending}
+                onClick={() => assignMutation.mutate(editLivreurId)}
+              >
+                Réaffecter
+              </Button>
+            </div>
+          </div>
+
+          {successMsg && !anyError && (
+            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-700">
+              ✓ {successMsg}
+            </div>
+          )}
+
+          {anyError && (
+            <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-2.5 text-sm text-[hsl(var(--danger))]">
+              {getApiErrorMessage(anyError)}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Fermer
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Onglet "Vue globale" ──────────────────────────────────────────────────────
 
 function GlobalTab({
   items,
   onRetry,
   retryingPiece,
+  onOpenDetails,
 }: {
   items: Transfert[];
   onRetry: (piece: string) => void;
   retryingPiece: string | null;
+  onOpenDetails: (t: Transfert) => void;
 }) {
   return (
     <section className="space-y-2">
@@ -115,18 +316,27 @@ function GlobalTab({
                 </div>
               </div>
 
-              {!t.transitLivreurUserId && (
+              <div className="flex shrink-0 flex-wrap gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  isLoading={retryingPiece === t.doPiece}
-                  onClick={() => onRetry(t.doPiece)}
-                  className="shrink-0"
+                  onClick={() => onOpenDetails(t)}
                 >
-                  Relancer affectation
+                  Détails
                 </Button>
-              )}
+                {!t.transitLivreurUserId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    isLoading={retryingPiece === t.doPiece}
+                    onClick={() => onRetry(t.doPiece)}
+                  >
+                    Relancer affectation
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ))
@@ -142,11 +352,13 @@ function ByDepotTab({
   depots,
   onRetry,
   retryingPiece,
+  onOpenDetails,
 }: {
   items: Transfert[];
   depots: Depot[];
   onRetry: (piece: string) => void;
   retryingPiece: string | null;
+  onOpenDetails: (t: Transfert) => void;
 }) {
   const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
 
@@ -235,18 +447,27 @@ function ByDepotTab({
                     </span>
                   </div>
                 </div>
-                {!t.transitLivreurUserId && (
+                <div className="flex shrink-0 flex-wrap gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    isLoading={retryingPiece === t.doPiece}
-                    onClick={() => onRetry(t.doPiece)}
-                    className="shrink-0"
+                    onClick={() => onOpenDetails(t)}
                   >
-                    Relancer
+                    Détails
                   </Button>
-                )}
+                  {!t.transitLivreurUserId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isLoading={retryingPiece === t.doPiece}
+                      onClick={() => onRetry(t.doPiece)}
+                    >
+                      Relancer
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -638,6 +859,7 @@ export function SupervisorDashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>("global");
   const [retryingPiece, setRetryingPiece] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [detailsTransfert, setDetailsTransfert] = useState<Transfert | null>(null);
 
   const statsQuery = useQuery({
     queryKey: ["supervisor-stats"],
@@ -663,9 +885,23 @@ export function SupervisorDashboardPage() {
     staleTime: 5 * 60_000,
   });
 
+  const livreursQuery = useQuery({
+    queryKey: ["supervisor-livreurs"],
+    queryFn: () =>
+      axiosClient.get<Livreur[]>(endpoints.supervisorLivreurs).then((r) => r.data),
+    staleTime: 30_000,
+  });
+
   const stats = statsQuery.data;
   const items = missionsQuery.data ?? [];
   const depots = depotsQuery.data ?? [];
+  const livreurs = livreursQuery.data ?? [];
+
+  // Garder le detailsTransfert synchronisé après mutation (status/livreur ont changé)
+  const currentDetails = useMemo(
+    () => (detailsTransfert ? items.find((t) => t.id === detailsTransfert.id) ?? detailsTransfert : null),
+    [detailsTransfert, items]
+  );
 
   const handleRefresh = async () => {
     setGlobalError(null);
@@ -780,6 +1016,7 @@ export function SupervisorDashboardPage() {
                   items={items}
                   onRetry={(p) => void handleRetry(p)}
                   retryingPiece={retryingPiece}
+                  onOpenDetails={setDetailsTransfert}
                 />
               )}
               {activeTab === "par-depot" && (
@@ -788,6 +1025,7 @@ export function SupervisorDashboardPage() {
                   depots={depots}
                   onRetry={(p) => void handleRetry(p)}
                   retryingPiece={retryingPiece}
+                  onOpenDetails={setDetailsTransfert}
                 />
               )}
               {activeTab === "livreurs" && <LivreursTab depots={depots} />}
@@ -796,6 +1034,16 @@ export function SupervisorDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Modal détails / édition manuelle */}
+      {currentDetails && (
+        <TransfertDetailsModal
+          transfert={currentDetails}
+          livreurs={livreurs}
+          depots={depots}
+          onClose={() => setDetailsTransfert(null)}
+        />
+      )}
     </div>
   );
 }
