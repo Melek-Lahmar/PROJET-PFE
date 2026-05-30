@@ -2,6 +2,7 @@
 // Correction : livreur-transit → dépôt filtré par gouvernorat choisi (1 dépôt = 1 gouvernorat)
 
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
@@ -506,7 +507,19 @@ export function SupervisorZonesPage() {
               {livreurs.filter((l) => !l.isTransit).length} livreur(s) classique(s)
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/supervisor/dashboard"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/15"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="9" rx="1"/>
+                <rect x="14" y="3" width="7" height="5" rx="1"/>
+                <rect x="14" y="12" width="7" height="9" rx="1"/>
+                <rect x="3" y="16" width="7" height="5" rx="1"/>
+              </svg>
+              Tableau de bord transit
+            </Link>
             <button
               type="button"
               onClick={() => setProblemesOpen(true)}
