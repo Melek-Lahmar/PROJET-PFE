@@ -33,13 +33,15 @@ interface Transfert {
 }
 
 interface Livreur {
-  userId: string;
-  nomComplet: string;
-  telephone?: string | null;
+  id: string;
+  fullName: string;
   email?: string | null;
-  depotNo?: number | null;
-  missionsEnCours: number;
-  disponible: boolean;
+  telephone?: string | null;
+  isTransit: boolean;
+  depotRattacheNo?: number | null;
+  depotRattacheName?: string | null;
+  gouvernorat?: string | null;
+  delegation?: string | null;
 }
 
 interface Depot {
@@ -118,8 +120,8 @@ function TransfertDetailsModal({
 
   const livreurLabel = (id?: string | null) => {
     if (!id) return "Non affecté";
-    const l = livreurs.find((lv) => lv.userId === id);
-    return l ? `${l.nomComplet}${l.telephone ? ` — ${l.telephone}` : ""}` : id;
+    const l = livreurs.find((lv) => lv.id === id);
+    return l ? `${l.fullName}${l.telephone ? ` — ${l.telephone}` : ""}` : id;
   };
 
   const invalidateAll = async () => {
@@ -230,11 +232,10 @@ function TransfertDetailsModal({
                 className="h-10 flex-1 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               >
                 <option value="">— Non affecté —</option>
-                {livreurs.map((lv) => (
-                  <option key={lv.userId} value={lv.userId}>
-                    {lv.nomComplet}
+                {livreurs.filter((lv) => lv.isTransit).map((lv) => (
+                  <option key={lv.id} value={lv.id}>
+                    {lv.fullName}
                     {lv.telephone ? ` — ${lv.telephone}` : ""}
-                    {lv.disponible ? " (dispo)" : ` (${lv.missionsEnCours} missions)`}
                   </option>
                 ))}
               </select>
@@ -391,14 +392,17 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
     },
   });
 
-  const livreurs = livreursQuery.data ?? [];
+  // Garde uniquement les livreurs de transit pour cet onglet
+  const livreurs = (livreursQuery.data ?? []).filter((lv) => lv.isTransit);
   const transferts = transfertsQuery.data ?? [];
 
-  // Missions en cours par livreur
+  // Missions actives par livreur (statuts en cours uniquement)
+  const ACTIVE_STATUSES = ["EN_ATTENTE_TRANSIT", "EN_ATTENTE_AFFECTATION_TRANSIT", "EN_TRANSIT", "EN_COURS_TRANSIT", "TRANSIT_REQUIS"];
   const missionsByLivreur = useMemo(() => {
     const map = new Map<string, Transfert[]>();
     for (const t of transferts) {
       if (!t.transitLivreurUserId) continue;
+      if (!ACTIVE_STATUSES.includes(t.status.toUpperCase())) continue;
       const list = map.get(t.transitLivreurUserId) ?? [];
       list.push(t);
       map.set(t.transitLivreurUserId, list);
@@ -435,21 +439,28 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
         </div>
       ) : (
         livreurs.map((lv) => {
-          const missions = missionsByLivreur.get(lv.userId) ?? [];
+          const missions = missionsByLivreur.get(lv.id) ?? [];
+          const isAvailable = missions.length === 0;
+          const initial = (lv.fullName?.trim() || lv.email || "?").slice(0, 1).toUpperCase();
           return (
             <div
-              key={lv.userId}
+              key={lv.id}
               className="rounded-2xl border border-border bg-card shadow-sm"
             >
               {/* En-tête livreur */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                    {(lv.nomComplet ?? "?").slice(0, 1).toUpperCase()}
+                    {initial}
                   </div>
                   <div>
-                    <div className="font-bold text-card-foreground">{lv.nomComplet}</div>
-                    <div className="text-xs text-muted-foreground">{depotLabel(lv.depotNo)}</div>
+                    <div className="font-bold text-card-foreground">
+                      {lv.fullName?.trim() || lv.email || "Livreur sans nom"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {lv.depotRattacheName ?? depotLabel(lv.depotRattacheNo)}
+                      {lv.gouvernorat && <> · {lv.gouvernorat}</>}
+                    </div>
                   </div>
                 </div>
 
@@ -467,12 +478,10 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
                   )}
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-                      lv.disponible
-                        ? "bg-green-100 text-green-800"
-                        : "bg-amber-100 text-amber-800"
+                      isAvailable ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
                     }`}
                   >
-                    {lv.disponible ? "Disponible" : "En mission"}
+                    {isAvailable ? "Disponible" : "En mission"}
                   </span>
                   <span className="text-xs font-semibold text-muted-foreground">
                     {missions.length} mission{missions.length !== 1 ? "s" : ""}
@@ -535,14 +544,17 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
                 className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
               >
                 <option value="">Sélectionner un livreur…</option>
-                {livreurs.map((lv) => (
-                  <option key={lv.userId} value={lv.userId}>
-                    {lv.nomComplet}
-                    {lv.telephone ? ` — ${lv.telephone}` : ""}
-                    {" "}
-                    ({lv.disponible ? "disponible" : `${missionsByLivreur.get(lv.userId)?.length ?? 0} missions`})
-                  </option>
-                ))}
+                {livreurs.map((lv) => {
+                  const count = missionsByLivreur.get(lv.id)?.length ?? 0;
+                  return (
+                    <option key={lv.id} value={lv.id}>
+                      {lv.fullName?.trim() || lv.email}
+                      {lv.telephone ? ` — ${lv.telephone}` : ""}
+                      {" "}
+                      ({count === 0 ? "disponible" : `${count} mission${count > 1 ? "s" : ""}`})
+                    </option>
+                  );
+                })}
               </select>
 
               {reassignMutation.isError && (
@@ -775,13 +787,13 @@ function DepotsTab({
 
   const livreurName = (id?: string | null) => {
     if (!id) return null;
-    const l = livreurs.find((lv) => lv.userId === id);
-    return l ? l.nomComplet : id;
+    const l = livreurs.find((lv) => lv.id === id);
+    return l ? (l.fullName?.trim() || l.email || id) : id;
   };
 
   const livreurPhone = (id?: string | null) => {
     if (!id) return null;
-    return livreurs.find((lv) => lv.userId === id)?.telephone ?? null;
+    return livreurs.find((lv) => lv.id === id)?.telephone ?? null;
   };
 
   // Tous les dépôts sources présents dans les transferts
