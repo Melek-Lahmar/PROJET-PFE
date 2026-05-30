@@ -45,6 +45,7 @@ import { TermsPage } from "../features/static/pages/TermsPage";
 import { ProtectedRoute } from "./guards/ProtectedRoute";
 import { RoleRoute } from "./guards/RoleRoute";
 import { PublicShopRoute } from "./guards/PublicShopRoute";
+import { LivreurMobileGuardOutlet } from "./guards/LivreurMobileGuard";
 
 import { AdminUsersPage } from "../features/adminUsers/pages/AdminUsersPage";
 import { AdminSyncPage } from "../features/admin/pages/AdminSyncPage";
@@ -261,11 +262,16 @@ export const router = createBrowserRouter([
           {
             element: <RoleRoute roles={["LIVREUR"]} />,
             children: [
-              { path: "livreur/dashboard", element: <LivreurDashboardPage /> },
-              { path: "livreur/bl", element: <LivreurBlListPage /> },
-              { path: "livreur/bl/:piece", element: <LivreurBlDetailsPage /> },
-              { path: "transit", element: <TransitDashboardPage /> },
-              { path: "transit/dashboard", element: <TransitDashboardPage /> },
+              {
+                element: <LivreurMobileGuardOutlet />,
+                children: [
+                  { path: "livreur/dashboard", element: <LivreurDashboardPage /> },
+                  { path: "livreur/bl", element: <LivreurBlListPage /> },
+                  { path: "livreur/bl/:piece", element: <LivreurBlDetailsPage /> },
+                  { path: "transit", element: <TransitDashboardPage /> },
+                  { path: "transit/dashboard", element: <TransitDashboardPage /> },
+                ],
+              },
             ],
           },
         ],
