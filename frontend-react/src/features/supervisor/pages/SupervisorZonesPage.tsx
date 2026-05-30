@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../core/http/axiosClient";
+import { endpoints } from "../../../core/http/endpoints";
 import { Button } from "../../../shared/components/Button";
 import { getDepots } from "../../catalog/api/depotsApi";
 import type { DepotDto } from "../../catalog/api/depotsApi";
@@ -102,6 +103,164 @@ async function deleteLivreur(id: string) {
   await axiosClient.delete(`/api/supervisor/livreurs/${id}`);
 }
 
+// ─── Types problèmes ──────────────────────────────────────────────────────────
+
+interface Issue {
+  id: string;
+  severity: string;
+  alertType: string;
+  message: string;
+  createdAt: string;
+  acknowledgedAt?: string | null;
+}
+
+// ─── Panel gestion des problèmes ──────────────────────────────────────────────
+
+function severityClass(s: string) {
+  const u = s.toUpperCase();
+  if (u === "HIGH" || u === "URGENT" || u === "CRITICAL") return "bg-red-100 text-red-800";
+  if (u === "WARNING" || u === "MEDIUM") return "bg-amber-100 text-amber-800";
+  return "bg-blue-100 text-blue-800";
+}
+
+function ProblemesPanel({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState<"open" | "all">("open");
+
+  const issuesQuery = useQuery({
+    queryKey: ["supervisor-issues", filter],
+    queryFn: () =>
+      axiosClient
+        .get<Issue[]>(endpoints.supervisorIssues, { params: { includeRead: filter === "all" } })
+        .then((r) => r.data),
+    staleTime: 30_000,
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => axiosClient.post(endpoints.supervisorIssueResolve(id)),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["supervisor-issues"] });
+      await qc.invalidateQueries({ queryKey: ["supervisor-stats"] });
+    },
+  });
+
+  const issues = issuesQuery.data ?? [];
+  const openCount = issues.filter((i) => !i.acknowledgedAt).length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h3 className="text-lg font-bold text-card-foreground">Problèmes opérationnels</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {openCount} problème{openCount !== 1 ? "s" : ""} ouvert{openCount !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Filtres */}
+        <div className="flex items-center gap-2 border-b border-border/60 px-6 py-3">
+          {(["open", "all"] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                filter === f
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "border border-border bg-card text-card-foreground hover:bg-muted"
+              }`}
+            >
+              {f === "open" ? `Ouverts (${openCount})` : `Tous (${issues.length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Corps scrollable */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+          {issuesQuery.isLoading && (
+            <div className="py-8 text-center text-sm text-muted-foreground">Chargement…</div>
+          )}
+
+          {issuesQuery.isError && (
+            <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm text-[hsl(var(--danger))]">
+              {getApiErrorMessage(issuesQuery.error)}
+            </div>
+          )}
+
+          {resolveMutation.isError && (
+            <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm text-[hsl(var(--danger))]">
+              {getApiErrorMessage(resolveMutation.error)}
+            </div>
+          )}
+
+          {!issuesQuery.isLoading && issues.length === 0 && (
+            <div className="rounded-2xl border border-border bg-muted/20 py-10 text-center text-sm text-muted-foreground">
+              ✅ Aucun problème {filter === "open" ? "ouvert" : ""} signalé.
+            </div>
+          )}
+
+          {issues.map((issue) => (
+            <div
+              key={issue.id}
+              className={`rounded-xl border p-4 transition ${
+                issue.acknowledgedAt ? "border-border/40 bg-muted/10 opacity-60" : "border-border/70 bg-muted/15"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${severityClass(issue.severity)}`}>
+                      {issue.severity}
+                    </span>
+                    <span className="font-semibold text-card-foreground">{issue.alertType}</span>
+                  </div>
+                  <p className="mt-1.5 text-sm text-card-foreground/90">{issue.message}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(issue.createdAt).toLocaleString("fr-FR")}
+                  </p>
+                </div>
+
+                {!issue.acknowledgedAt ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    isLoading={resolveMutation.isPending && resolveMutation.variables === issue.id}
+                    onClick={() => resolveMutation.mutate(issue.id)}
+                    className="shrink-0"
+                  >
+                    Résoudre
+                  </Button>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800">
+                    Résolu
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-border px-6 py-3 flex justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>Fermer</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export function SupervisorZonesPage() {
@@ -124,6 +283,19 @@ export function SupervisorZonesPage() {
   const [filterGovId, setFilterGovId]   = useState<number | "">("");
   const [filterDeleg, setFilterDeleg]   = useState("");
   const [filterDepotNo, setFilterDepotNo] = useState<number | "">("");
+
+  // ── Panel problèmes ──────────────────────────────────────────────────────
+  const [problemesOpen, setProblemesOpen] = useState(false);
+
+  const openIssuesQuery = useQuery({
+    queryKey: ["supervisor-issues", "open"],
+    queryFn: () =>
+      axiosClient
+        .get<Issue[]>(endpoints.supervisorIssues, { params: { includeRead: false } })
+        .then((r) => r.data.filter((i) => !i.acknowledgedAt)),
+    staleTime: 30_000,
+  });
+  const openIssuesCount = openIssuesQuery.data?.length ?? 0;
 
   // ── Modal ─────────────────────────────────────────────────────────────────
   const [modalOpen, setModalOpen]       = useState(false);
@@ -334,9 +506,26 @@ export function SupervisorZonesPage() {
               {livreurs.filter((l) => !l.isTransit).length} livreur(s) classique(s)
             </p>
           </div>
-          <Button type="button" variant="primary" className="h-11 rounded-2xl px-5" onClick={openCreate}>
-            + Ajouter un livreur
-          </Button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setProblemesOpen(true)}
+              className="relative inline-flex h-11 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-card-foreground shadow-sm transition hover:bg-muted"
+            >
+              <svg className="h-4 w-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              </svg>
+              Problèmes
+              {openIssuesCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
+                  {openIssuesCount > 9 ? "9+" : openIssuesCount}
+                </span>
+              )}
+            </button>
+            <Button type="button" variant="primary" className="h-11 rounded-2xl px-5" onClick={openCreate}>
+              + Ajouter un livreur
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -426,6 +615,9 @@ export function SupervisorZonesPage() {
           ))}
         </div>
       </section>
+
+      {/* Panel problèmes */}
+      {problemesOpen && <ProblemesPanel onClose={() => setProblemesOpen(false)} />}
 
       {/* ── MODAL ──────────────────────────────────────────────────────────── */}
       {modalOpen && (
