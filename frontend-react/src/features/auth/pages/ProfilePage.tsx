@@ -209,9 +209,6 @@ export function ProfilePage() {
   const isAdmin = roles.includes("ADMIN");
   const isSuperviseur = roles.includes("SUPERVISEUR");
 
-  // Rôles métier internes : affichent un profil simple sans onglets client
-  const isStaffRole = isAdmin || isSuperviseur || isConfirmateur || isVendeur;
-
   const vendeurContextQuery = useQuery({
     queryKey: ["vendeur-context", "profile"],
     queryFn: getVendeurContext,

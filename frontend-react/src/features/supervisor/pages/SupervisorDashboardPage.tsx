@@ -44,6 +44,15 @@ interface Depot {
   dE_Code: string;
 }
 
+interface Issue {
+  id: string;
+  severity: string;
+  alertType: string;
+  message: string;
+  createdAt: string;
+  acknowledgedAt?: string | null;
+}
+
 // ─── Badge helper ─────────────────────────────────────────────────────────────
 
 function badgeClass(status: string) {
@@ -484,9 +493,145 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
   );
 }
 
+// ─── Onglet "Problèmes" ───────────────────────────────────────────────────────
+
+function severityBadgeClass(severity: string) {
+  const s = severity.toUpperCase();
+  if (s === "HIGH" || s === "URGENT" || s === "CRITICAL") return "bg-red-100 text-red-800";
+  if (s === "WARNING" || s === "MEDIUM") return "bg-amber-100 text-amber-800";
+  return "bg-blue-100 text-blue-800";
+}
+
+function ProblemesTab() {
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState<"open" | "all">("open");
+
+  const issuesQuery = useQuery({
+    queryKey: ["supervisor-issues", filter],
+    queryFn: () =>
+      axiosClient
+        .get<Issue[]>(endpoints.supervisorIssues, {
+          params: { includeRead: filter === "all" },
+        })
+        .then((r) => r.data),
+    staleTime: 30_000,
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) =>
+      axiosClient.post(endpoints.supervisorIssueResolve(id)),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["supervisor-issues"] });
+      await qc.invalidateQueries({ queryKey: ["supervisor-stats"] });
+    },
+  });
+
+  const issues = issuesQuery.data ?? [];
+  const openCount = issues.filter((i) => !i.acknowledgedAt).length;
+
+  if (issuesQuery.isLoading) {
+    return <div className="py-8 text-center text-sm text-muted-foreground">Chargement des problèmes…</div>;
+  }
+
+  if (issuesQuery.isError) {
+    return (
+      <div className="rounded-2xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-4 text-sm text-[hsl(var(--danger))]">
+        {getApiErrorMessage(issuesQuery.error)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Filtres */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-semibold text-muted-foreground">Afficher :</span>
+        <button
+          type="button"
+          onClick={() => setFilter("open")}
+          className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            filter === "open"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "border border-border bg-card text-card-foreground hover:bg-muted"
+          }`}
+        >
+          Ouverts ({openCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilter("all")}
+          className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            filter === "all"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "border border-border bg-card text-card-foreground hover:bg-muted"
+          }`}
+        >
+          Tous ({issues.length})
+        </button>
+      </div>
+
+      {resolveMutation.isError && (
+        <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm text-[hsl(var(--danger))]">
+          {getApiErrorMessage(resolveMutation.error)}
+        </div>
+      )}
+
+      {/* Liste */}
+      {issues.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+          Aucun problème {filter === "open" ? "ouvert" : ""} signalé.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {issues.map((issue) => (
+            <div
+              key={issue.id}
+              className={`rounded-xl border bg-muted/15 p-4 transition ${
+                issue.acknowledgedAt ? "border-border/40 opacity-60" : "border-border/70"
+              }`}
+            >
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${severityBadgeClass(issue.severity)}`}>
+                      {issue.severity}
+                    </span>
+                    <span className="font-bold text-card-foreground">{issue.alertType}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-card-foreground/90">{issue.message}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(issue.createdAt).toLocaleString("fr-FR")}
+                  </p>
+                </div>
+
+                {!issue.acknowledgedAt ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    isLoading={resolveMutation.isPending && resolveMutation.variables === issue.id}
+                    onClick={() => resolveMutation.mutate(issue.id)}
+                    className="shrink-0"
+                  >
+                    Résoudre
+                  </Button>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800">
+                    Résolu
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-type Tab = "global" | "par-depot" | "livreurs";
+type Tab = "global" | "par-depot" | "livreurs" | "problemes";
 
 export function SupervisorDashboardPage() {
   const qc = useQueryClient();
@@ -544,10 +689,21 @@ export function SupervisorDashboardPage() {
     }
   };
 
+  const issuesCountQuery = useQuery({
+    queryKey: ["supervisor-issues", "open"],
+    queryFn: () =>
+      axiosClient
+        .get<Issue[]>(endpoints.supervisorIssues, { params: { includeRead: false } })
+        .then((r) => r.data),
+    staleTime: 30_000,
+  });
+  const openIssuesCount = (issuesCountQuery.data ?? []).filter((i) => !i.acknowledgedAt).length;
+
   const TABS: { key: Tab; label: string; count?: number }[] = [
     { key: "global", label: "Vue globale", count: items.length },
     { key: "par-depot", label: "Par dépôt" },
     { key: "livreurs", label: "Livreurs de transit" },
+    { key: "problemes", label: "Problèmes", count: openIssuesCount },
   ];
 
   const statCards = [
@@ -635,6 +791,7 @@ export function SupervisorDashboardPage() {
                 />
               )}
               {activeTab === "livreurs" && <LivreursTab depots={depots} />}
+              {activeTab === "problemes" && <ProblemesTab />}
             </>
           )}
         </div>
