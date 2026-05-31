@@ -55,7 +55,7 @@ namespace Web_Api.Controllers.Confirmateur
             var text = (value ?? string.Empty).Trim().ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
-            text = text.Replace(‘–‘, ‘-’).Replace(‘—‘, ‘-’).Replace(‘’’, ‘\’’);
+            text = text.Replace('\u2013', '-').Replace('\u2014', '-').Replace('\u2019', '\'');
             var normalized = text.Normalize(NormalizationForm.FormD);
             var sb = new StringBuilder(normalized.Length);
             foreach (var c in normalized)
@@ -63,10 +63,10 @@ namespace Web_Api.Controllers.Confirmateur
                 var category = CharUnicodeInfo.GetUnicodeCategory(c);
                 if (category == UnicodeCategory.NonSpacingMark) continue;
                 if (char.IsLetterOrDigit(c)) sb.Append(c);
-                else if (c == ‘-’ || char.IsWhiteSpace(c)) sb.Append(‘ ‘);
+                else if (c == '-' || char.IsWhiteSpace(c)) sb.Append(' ');
             }
-            return string.Join(‘ ‘, sb.ToString().Normalize(NormalizationForm.FormC)
-                .Split(‘ ‘, StringSplitOptions.RemoveEmptyEntries));
+            return string.Join(' ', sb.ToString().Normalize(NormalizationForm.FormC)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries));
         }
 
         private static string? TypeClientToString(TypeClient? t)
@@ -552,7 +552,7 @@ namespace Web_Api.Controllers.Confirmateur
                 });
             }
 
-            // ✅ On marque BC comme “transformé” => DO_Valide = 1 (historique)
+            // ✅ On marque BC comme "transformé" => DO_Valide = 1 (historique)
             bc.DO_Valide = 1;
             bc.cbModification = DateTime.UtcNow;
 
