@@ -73,6 +73,20 @@ class ConfirmatriceOrdersService {
     );
   }
 
+  /// Retourne la couverture de zone pour la commande (livreur dispo dans la
+  /// gouvernorat/délégation du client). Backend : `{ hasCoverage: bool,
+  /// gouvernorat: string?, delegation: string?, livreurCount: int }`.
+  Future<Map<String, dynamic>> getZoneCoverage(String piece) async {
+    return api.getMap('/api/confirmateur/commandes/$piece/zone-coverage');
+  }
+
+  /// Liste des superviseurs (nom + téléphone) à contacter si aucun livreur
+  /// ne couvre la zone du client.
+  Future<List<Map<String, dynamic>>> getSupervisors() async {
+    final data = await api.getList('/api/confirmateur/supervisors');
+    return data.whereType<Map<String, dynamic>>().toList();
+  }
+
   Future<String?> transformToBl(String piece) async {
     final data = await api.postJson(
       '/api/confirmateur/commandes/$piece/transform-to-bl',

@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
 import { Button } from "../../../shared/components/Button";
-import { PremiumHero } from "../../../shared/components/premium";
+import { PremiumHero, useToast } from "../../../shared/components/premium";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
+import { useSuperviseurAlertSignalR } from "../hooks/useSuperviseurAlertSignalR";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -558,8 +559,29 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
               </select>
 
               {reassignMutation.isError && (
-                <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm text-[hsl(var(--danger))]">
-                  {getApiErrorMessage(reassignMutation.error)}
+                <div className="rounded-xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.08)] px-4 py-3 text-sm">
+                  {(reassignMutation.error as { response?: { status?: number } })?.response?.status === 409 ? (
+                    <div className="space-y-2">
+                      <div className="font-bold text-[hsl(var(--danger))]">⚠️ Conflit de version</div>
+                      <div className="text-[hsl(var(--danger))]/85">
+                        Cette mission a été modifiée par un autre superviseur entre temps. Rechargez pour voir la dernière version.
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          reassignMutation.reset();
+                          await qc.invalidateQueries({ queryKey: ["supervisor-transferts"] });
+                          setReassigning(null);
+                          setSelectedLivreurId("");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[hsl(var(--danger))] px-3 py-1.5 text-xs font-bold text-white transition hover:opacity-90"
+                      >
+                        🔄 Recharger
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-[hsl(var(--danger))]">{getApiErrorMessage(reassignMutation.error)}</div>
+                  )}
                 </div>
               )}
             </div>
@@ -767,11 +789,21 @@ function DepotsTab({
   livreurs: Livreur[];
   onOpenDetails: (t: Transfert) => void;
 }) {
+  const qcDepots = useQueryClient();
   const transfertsQuery = useQuery({
     queryKey: ["supervisor-transferts-all"],
     queryFn: () =>
       axiosClient.get<Transfert[]>(endpoints.supervisorTransferts).then((r) => r.data),
     staleTime: 30_000,
+  });
+
+  const retryMutation = useMutation({
+    mutationFn: (piece: string) =>
+      axiosClient.post(endpoints.supervisorRetryAssignment(piece)).then((r) => r.data as { count?: number }),
+    onSuccess: async () => {
+      await qcDepots.invalidateQueries({ queryKey: ["supervisor-transferts-all"] });
+      await qcDepots.invalidateQueries({ queryKey: ["supervisor-missions"] });
+    },
   });
 
   const transferts = transfertsQuery.data ?? [];
@@ -989,13 +1021,26 @@ function DepotsTab({
                         {formatDate(t.deliveredAt as unknown as string)}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => onOpenDetails(t)}
-                          className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground transition hover:bg-muted"
-                        >
-                          Modifier
-                        </button>
+                        <div className="flex flex-wrap gap-1.5">
+                          {t.status === "EN_ATTENTE_AFFECTATION_TRANSIT" && (
+                            <button
+                              type="button"
+                              onClick={() => retryMutation.mutate(t.doPiece)}
+                              disabled={retryMutation.isPending && retryMutation.variables === t.doPiece}
+                              title="Relancer l'auto-affectation"
+                              className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50"
+                            >
+                              {retryMutation.isPending && retryMutation.variables === t.doPiece ? "..." : "🔄 Retry"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onOpenDetails(t)}
+                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground transition hover:bg-muted"
+                          >
+                            Modifier
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1015,10 +1060,16 @@ type Tab = "global" | "depots" | "livreurs" | "problemes";
 
 export function SupervisorDashboardPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("global");
   const [retryingPiece, setRetryingPiece] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [detailsTransfert, setDetailsTransfert] = useState<Transfert | null>(null);
+
+  useSuperviseurAlertSignalR((alert) => {
+    toast.error("Zone sans livreur", alert.message);
+    void qc.invalidateQueries({ queryKey: ["supervisor-alerts"] });
+  });
 
   const statsQuery = useQuery({
     queryKey: ["supervisor-stats"],

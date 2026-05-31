@@ -36,7 +36,7 @@ interface GuestCheckoutLocationSectionProps {
   delegations: string[];
   delegationsLoading?: boolean;
   // erreurs de validation passees par le parent
-  errors?: { gouvernorat?: string; delegation?: string; address?: string };
+  errors?: { gouvernorat?: string; delegation?: string; address?: string; gps?: string };
 }
 
 const roundCoordinate = (coord: number) => Math.round(coord * 1000000) / 1000000;
@@ -152,7 +152,7 @@ export function GuestCheckoutLocationSection({
   }, []);
 
   // Règle d'interdépendance :
-  // Gouvernorat manuel → reset délégation + position GPS (cohérence obligatoire)
+  // Gouvernorat manuel → reset délégation + position GPS + recherche Mapbox
   const handleGouvernoratChange = (value: string) => {
     setGouvernorat(value ? Number(value) : 0);
     setDelegation("");
@@ -160,6 +160,9 @@ export function GuestCheckoutLocationSection({
     setLongitude(null);
     setMapSource(null);
     setMapSyncMsg("");
+    setSearchQuery("");
+    mapboxClear();
+    setShowSuggestions(false);
   };
 
   // Délégation manuelle → reset position GPS uniquement (gouvernorat conservé)
@@ -232,10 +235,14 @@ export function GuestCheckoutLocationSection({
           <select
             value={delegation}
             onChange={(e) => handleDelegationChange(e.target.value)}
-            disabled={delegations.length === 0}
+            disabled={delegations.length === 0 && !delegation}
             className={fieldClass(errors?.delegation)}
           >
             <option value="">Selectionnez une delegation</option>
+            {/* Fallback : si la délégation détectée n'est pas (encore) dans la liste, on l'ajoute */}
+            {delegation && !delegations.includes(delegation) && (
+              <option value={delegation}>{delegation}</option>
+            )}
             {delegations.map((d) => (
               <option key={d} value={d}>{d}</option>
             ))}
@@ -291,8 +298,16 @@ export function GuestCheckoutLocationSection({
         />
       </div>
 
+      {/* Erreur GPS si manquant */}
+      {errors?.gps && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700">
+          <span className="text-base leading-none">📍</span>
+          <span>{errors.gps}</span>
+        </div>
+      )}
+
       {/* Carte interactive */}
-      <div className="overflow-hidden rounded-2xl border border-border/70 shadow-sm">
+      <div className={`overflow-hidden rounded-2xl border ${errors?.gps ? "border-red-300" : "border-border/70"} shadow-sm`}>
         {/* Barre de recherche Mapbox */}
         <div ref={searchContainerRef} className="relative border-b border-border/60 bg-muted/15 px-4 py-3">
           <div className="relative">

@@ -56,8 +56,17 @@ namespace Web_Api.Hubs
         /// vers la confirmatrice cible via Clients.User().</summary>
         public const string CommandeAttribuee = "CommandeAttribuee";
 
+        /// <summary>Nouvelle alerte superviseur créée (zone sans livreur, transit bloqué, etc.).
+        /// Push vers le groupe superviseurs. Charge : { id, severity, alertType, message }.</summary>
+        public const string NouvelleAlerte = "NouvelleAlerte";
+
+        /// <summary>Un BL vient d'être auto-affecté à un livreur à la confirmation.
+        /// Push direct au livreur (Clients.User). Charge : { doPiece, netAPayer, clientDisplay, adresse, gouvernorat, delegation }.</summary>
+        public const string NouvelleLivraisonAffectee = "NouvelleLivraisonAffectee";
+
         // Noms des groupes SignalR utilisés par le hub.
         public const string GroupConfirmateurs = "confirmateurs";
         public const string GroupLivreurs = "livreurs";
+        public const string GroupSuperviseurs = "superviseurs";
     }
 }

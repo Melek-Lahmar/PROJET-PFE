@@ -176,6 +176,11 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
 
   @override
   Future<List<Delivery>> fetchNewOrders() async {
+    // `/api/livreur/orders/available` ne retourne que les BL CONFIRME NON
+    // assignées à un livreur (pool ouvert). Depuis l'auto-assignation à la
+    // création du BL côté backend, les BL auto-assignées ne remontent pas ici
+    // et arrivent directement dans `fetchMyOrders` → onglet « Mes livraisons ».
+    // Le filtre `shouldAppearInNewOrders` reste utile en défense (CONFIRME).
     final list = await api.getList('/api/livreur/orders/available');
     return list
         .map((e) => _mapDelivery(e as Map<String, dynamic>))
@@ -185,6 +190,11 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
 
   @override
   Future<List<Delivery>> fetchMyOrders() async {
+    // `/api/livreur/orders/mine` retourne toutes les BL dont
+    // `AssignedLivreurId == currentUser` quel que soit le statut. Les BL
+    // auto-assignées (statut CONFIRME) tombent donc bien ici, dans la liste
+    // « Mes livraisons » — aucun bouton « Prendre » n'est rendu sur cet écran
+    // (cf. `LivreurMyOrdersScreen`), seul « Lancer la livraison » apparaît.
     final list = await api.getList('/api/livreur/orders/mine');
     return list
         .map((e) => _mapDelivery(e as Map<String, dynamic>))

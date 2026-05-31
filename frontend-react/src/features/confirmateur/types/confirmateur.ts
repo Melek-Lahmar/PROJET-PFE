@@ -52,6 +52,42 @@ export type ConfirmateurOrder = {
 
   client?: ConfirmateurClient | null;
   lignes?: ConfirmateurOrderLine[];
+
+  // Champs livraison
+  dO_PassagerGouvernorat?: string | null;
+  dO_PassagerDelegation?: string | null;
+  dO_LatitudeLivraison?: string | null;
+  dO_LongitudeLivraison?: string | null;
+  dO_ModeLivraison?: string | null;
+  dO_ModePaiement?: string | null;
+  dO_FraisLivraison?: number | null;
+  dO_TimbreFiscal?: number | null;
+  dO_AdresseLivraison?: string | null;
+  dO_VilleLivraison?: string | null;
+  dO_CodePostalLivraison?: string | null;
+  dO_TelephoneLivraison?: string | null;
+};
+
+export type ZoneCoverageLivreur = {
+  userId: string;
+  nomComplet: string | null;
+  telephone: string | null;
+  activeOrders: number;
+};
+
+export type ZoneCoverageDto = {
+  hasCoverage: boolean;
+  gouvernorat: string | null;
+  delegation: string | null;
+  livreurCount: number;
+  livreurs: ZoneCoverageLivreur[];
+};
+
+export type SupervisorDto = {
+  userId: string;
+  nomComplet: string | null;
+  telephone: string | null;
+  email: string | null;
 };
 
 export type OrderStatusValue = 0 | 2 | 3;
