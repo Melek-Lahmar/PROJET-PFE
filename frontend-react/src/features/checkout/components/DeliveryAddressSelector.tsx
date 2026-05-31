@@ -45,6 +45,7 @@ type Props = {
   setLongitude: (v: number | null) => void;
   onTouched: (f: "address" | "city" | "postalCode" | "latitude" | "longitude") => void;
   onCoverageBlocked?: (blocked: boolean) => void;
+  onValidityChange?: (valid: boolean) => void;
 };
 
 type SyncStatus = "idle" | "loading" | "ok" | "mismatch" | "error";
@@ -86,6 +87,7 @@ export function DeliveryAddressSelector({
   setLongitude,
   onTouched,
   onCoverageBlocked,
+  onValidityChange,
 }: Props) {
   const { data: savedAddresses = [], isPending: addrPending } = useAddresses();
 
@@ -312,6 +314,22 @@ export function DeliveryAddressSelector({
   const hasGps = typeof latitude === "number" && typeof longitude === "number";
   void getCenterForTunisia(gouvernoratId);
 
+  // ── Validité globale : tous les champs obligatoires remplis ─────────────────
+  const isValid = useMemo(() => {
+    if (noCoverage) return false;
+    if (mode === "saved") {
+      return Boolean(selectedAddress?.adresse?.trim());
+    }
+    return (
+      delegation.trim().length > 0 &&
+      adresseText.trim().length > 0
+    );
+  }, [mode, selectedAddress, delegation, adresseText, noCoverage]);
+
+  useEffect(() => {
+    onValidityChange?.(isValid);
+  }, [isValid, onValidityChange]);
+
   // ─── Rendu ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4 pt-2">
@@ -450,7 +468,14 @@ export function DeliveryAddressSelector({
                 setGouvernoratId(Number(e.target.value));
                 setSyncStatus("idle");
                 setSyncMessage("");
-                // FIX : gouvernorat changé manuellement → coordonnées GPS invalides
+                // Reset complet : gouvernorat changé → adresse/CP/délégation/GPS invalides
+                setDelegation("");
+                setAdresseText("");
+                setAddress("");
+                setCodePostalLocal("");
+                setPostalCode("");
+                onTouched("address");
+                onTouched("postalCode");
                 clearGpsIfPresent();
               }}
             >

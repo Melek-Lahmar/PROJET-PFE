@@ -222,6 +222,7 @@ export function CheckoutPage() {
   });
 
   const [coverageBlocked, setCoverageBlocked] = useState(false);
+  const [addressValid, setAddressValid] = useState(false);
 
   // ── NOUVEAU : callback transmis à DeliveryAddressSelector ─────────────────
   const handleTouched = (
@@ -273,10 +274,11 @@ export function CheckoutPage() {
     if (isHome && coverageBlocked) return false;
     if (!isHome && effectiveDepotNo <= 0) return false;
     if (isHome) {
-      if (!address.trim() || !city.trim() || !postalCode.trim()) return false;
+      if (!addressValid) return false;
+      if (!address.trim() || !city.trim()) return false;
     }
     return true;
-  }, [items.length, isHome, coverageBlocked, effectiveDepotNo, address, city, postalCode]);
+  }, [items.length, isHome, coverageBlocked, effectiveDepotNo, addressValid, address, city]);
 
   const codMutation = useMutation({
     mutationFn: async () => {
@@ -424,6 +426,7 @@ export function CheckoutPage() {
                 setLongitude={setLongitude}
                 onTouched={handleTouched}
                 onCoverageBlocked={setCoverageBlocked}
+                onValidityChange={setAddressValid}
               />
             ) : null}
 
