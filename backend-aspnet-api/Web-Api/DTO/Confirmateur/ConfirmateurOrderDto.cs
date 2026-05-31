@@ -58,6 +58,15 @@ namespace Web_Api.DTO.Confirmateur
         [JsonPropertyName("dO_ModeLivraison")]
         public string? DO_ModeLivraison { get; set; }
 
+        [JsonPropertyName("dO_ModePaiement")]
+        public string? DO_ModePaiement { get; set; }
+
+        [JsonPropertyName("dO_FraisLivraison")]
+        public decimal? DO_FraisLivraison { get; set; }
+
+        [JsonPropertyName("dO_TimbreFiscal")]
+        public decimal? DO_TimbreFiscal { get; set; }
+
         [JsonPropertyName("dO_AdresseLivraison")]
         public string? DO_AdresseLivraison { get; set; }
 

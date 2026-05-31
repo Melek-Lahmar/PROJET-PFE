@@ -52,6 +52,9 @@ export type ConfirmateurOrder = {
   dO_LatitudeLivraison?: string | null;
   dO_LongitudeLivraison?: string | null;
   dO_ModeLivraison?: string | null;
+  dO_ModePaiement?: string | null;
+  dO_FraisLivraison?: number | null;
+  dO_TimbreFiscal?: number | null;
   dO_AdresseLivraison?: string | null;
   dO_VilleLivraison?: string | null;
   dO_CodePostalLivraison?: string | null;
