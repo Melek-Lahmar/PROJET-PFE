@@ -80,6 +80,8 @@ class _ConfirmatriceOrderDetailsScreenState
       setState(() {
         _order = data;
         _loading = false;
+        // Initialise le compteur de tentatives depuis la commande réelle.
+        _tentativeCount = (data.status == 2) ? 1 : 1;
       });
 
       // Charge la timeline réelle en parallèle (non bloquant).
@@ -97,7 +99,10 @@ class _ConfirmatriceOrderDetailsScreenState
 
   Future<void> _loadCoverage() async {
     if (_coverageLoading) return;
-    setState(() => _coverageLoading = true);
+    setState(() {
+      _coverageLoading = true;
+      _coverage = null; // efface l'ancien résultat pour éviter affichage périmé
+    });
     try {
       final api = context.read<ApiClient>();
       final svc = ConfirmatriceOrdersService(api);
