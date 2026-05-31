@@ -81,7 +81,7 @@ class _ConfirmatriceOrderDetailsScreenState
         _order = data;
         _loading = false;
         // Initialise le compteur de tentatives depuis la commande réelle.
-        _tentativeCount = (data.status == 2) ? 1 : 1;
+        _tentativeCount = (data?.status == 2) ? 1 : 1;
       });
 
       // Charge la timeline réelle en parallèle (non bloquant).
