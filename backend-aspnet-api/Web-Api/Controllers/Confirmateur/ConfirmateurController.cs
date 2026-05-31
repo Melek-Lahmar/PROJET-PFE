@@ -539,6 +539,7 @@ namespace Web_Api.Controllers.Confirmateur
                         var chosen = candidateProfiles
                             .Where(p => p.UtilisateurId.HasValue)
                             .OrderBy(p => countDict.TryGetValue(p.UtilisateurId!.Value, out var c) ? c : 0)
+                            .ThenBy(_ => Random.Shared.Next()) // tie-break aléatoire
                             .First();
 
                         bl.AssignedLivreurId = chosen.UtilisateurId;
