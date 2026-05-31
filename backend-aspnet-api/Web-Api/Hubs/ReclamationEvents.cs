@@ -60,6 +60,10 @@ namespace Web_Api.Hubs
         /// Push vers le groupe superviseurs. Charge : { id, severity, alertType, message }.</summary>
         public const string NouvelleAlerte = "NouvelleAlerte";
 
+        /// <summary>Un BL vient d'être auto-affecté à un livreur à la confirmation.
+        /// Push direct au livreur (Clients.User). Charge : { doPiece, netAPayer, clientDisplay, adresse, gouvernorat, delegation }.</summary>
+        public const string NouvelleLivraisonAffectee = "NouvelleLivraisonAffectee";
+
         // Noms des groupes SignalR utilisés par le hub.
         public const string GroupConfirmateurs = "confirmateurs";
         public const string GroupLivreurs = "livreurs";

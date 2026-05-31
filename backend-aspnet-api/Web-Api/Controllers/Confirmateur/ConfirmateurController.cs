@@ -529,6 +529,7 @@ namespace Web_Api.Controllers.Confirmateur
             await _db.SaveChangesAsync(ct);
 
             // Phase 3 — Auto-assignment (coverage garantie par la vérification en amont).
+            Guid? affectedLivreurUserId = null;
             if (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
             {
                 var normGov = NormalizeZoneKey(govZone);
@@ -570,6 +571,7 @@ namespace Web_Api.Controllers.Confirmateur
                         .First();
 
                     bl.AssignedLivreurId = chosen.UtilisateurId;
+                    affectedLivreurUserId = chosen.UtilisateurId;
 
                     _db.F_LIVRAISONS.Add(new F_LIVRAISON
                     {
@@ -605,6 +607,28 @@ namespace Web_Api.Controllers.Confirmateur
                 .ExecuteDeleteAsync(ct);
 
             await trx.CommitAsync(ct);
+
+            // Push SignalR au livreur auto-affecté (non bloquant).
+            if (affectedLivreurUserId.HasValue)
+            {
+                try
+                {
+                    await _hub.Clients.User(affectedLivreurUserId.Value.ToString())
+                        .SendAsync(ReclamationEvents.NouvelleLivraisonAffectee, new
+                        {
+                            doPiece = blPiece,
+                            netAPayer = bl.DO_NetAPayer ?? 0m,
+                            clientDisplay = bc.DO_PassagerNomComplet,
+                            adresse = bl.DO_AdresseLivraison,
+                            gouvernorat = govZone,
+                            delegation = delZone,
+                        }, ct);
+                }
+                catch
+                {
+                    // Non bloquant : le BL est en base, le livreur le verra au prochain refresh.
+                }
+            }
 
             // ----- Sync Sage : POST docentete BL après commit local ------------
             // L'envoi est volontairement non-bloquant : si Sage est HS ou répond
