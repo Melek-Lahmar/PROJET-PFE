@@ -145,11 +145,6 @@ export function DeliveryAddressSelector({
     onCoverageBlocked?.(!!noCoverage);
   }, [noCoverage, onCoverageBlocked]);
 
-  // Reset délégation si le gouvernorat change
-  useEffect(() => {
-    setDelegation("");
-  }, [gouvernoratId]);
-
   // Synchronise city → parent quand délégation change
   useEffect(() => {
     if (mode !== "temp") return;
