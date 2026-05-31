@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Globalization;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -22,15 +25,38 @@ namespace Web_Api.Controllers.Confirmateur
         private readonly AppDbContext _db;
         private readonly IHubContext<ReclamationHub> _hub;
         private readonly SageService _sage;
+        private readonly UserManager<ApplicationUser> _users;
 
         public ConfirmateurController(
             AppDbContext db,
             IHubContext<ReclamationHub> hub,
-            SageService sage)
+            SageService sage,
+            UserManager<ApplicationUser> users)
         {
             _db = db;
             _hub = hub;
             _sage = sage;
+            _users = users;
+        }
+
+        // ── Zone key normalisation (same logic as CommandePoolService.NormalizeZoneKey) ──
+        private static string NormalizeZoneKey(string? value)
+        {
+            var text = (value ?? string.Empty).Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            text = text.Replace('–', '-').Replace('—', '-').Replace('’', '\'');
+            var normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(normalized.Length);
+            foreach (var c in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (category == UnicodeCategory.NonSpacingMark) continue;
+                if (char.IsLetterOrDigit(c)) sb.Append(c);
+                else if (c == '-' || char.IsWhiteSpace(c)) sb.Append(' ');
+            }
+            return string.Join(' ', sb.ToString().Normalize(NormalizationForm.FormC)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries));
         }
 
         private static string? TypeClientToString(TypeClient? t)
@@ -349,6 +375,9 @@ namespace Web_Api.Controllers.Confirmateur
             public bool SageSuccess { get; set; }
             public int SageHttpStatus { get; set; }
             public string? SageMessage { get; set; }
+
+            // Auto-assignment result: true when no livreur covers the zone.
+            public bool NoLivreurForZone { get; set; }
         }
 
         // ✅ CONFIRMER = TRANSFORMER BC → BL
@@ -441,6 +470,103 @@ namespace Web_Api.Controllers.Confirmateur
 
             await _db.SaveChangesAsync(ct);
 
+            // Phase 3 — Auto-assignment: find livreur covering the BC zone.
+            bool noLivreurForZone = false;
+            var govZone = bc.DO_PassagerGouvernorat;
+            var delZone = bc.DO_PassagerDelegation;
+
+            if (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
+            {
+                var normGov = NormalizeZoneKey(govZone);
+                var normDel = NormalizeZoneKey(delZone);
+
+                // Collect all livreur zones and find matching LivreurUserIds.
+                var matchingLivreurIds = await _db.F_LIVREUR_ZONES
+                    .AsNoTracking()
+                    .ToListAsync(ct);
+
+                var candidateIds = matchingLivreurIds
+                    .Where(z =>
+                        NormalizeZoneKey(z.Gouvernorat) == normGov &&
+                        NormalizeZoneKey(z.Delegation) == normDel)
+                    .Select(z => z.LivreurUserId)
+                    .Distinct()
+                    .ToList();
+
+                if (candidateIds.Count > 0)
+                {
+                    // Filter: non-transit livreurs only.
+                    var candidateProfiles = await _db.ProfilsUtilisateurs
+                        .AsNoTracking()
+                        .Where(p => p.UtilisateurId != null
+                            && candidateIds.Contains(p.UtilisateurId!.Value)
+                            && p.IsTransit == false)
+                        .ToListAsync(ct);
+
+                    if (candidateProfiles.Count == 0)
+                    {
+                        noLivreurForZone = true;
+                    }
+                    else
+                    {
+                        // Pick the livreur with fewest active assignments.
+                        var profileIds = candidateProfiles
+                            .Where(p => p.UtilisateurId.HasValue)
+                            .Select(p => p.UtilisateurId!.Value)
+                            .ToList();
+
+                        var activeCounts = await _db.F_DOCENTETES
+                            .AsNoTracking()
+                            .Where(d => d.AssignedLivreurId != null
+                                && profileIds.Contains(d.AssignedLivreurId.Value)
+                                && d.DO_Valide == 1)
+                            .GroupBy(d => d.AssignedLivreurId!.Value)
+                            .Select(g => new { LivreurId = g.Key, Count = g.Count() })
+                            .ToListAsync(ct);
+
+                        var countDict = activeCounts.ToDictionary(x => x.LivreurId, x => x.Count);
+
+                        var chosen = candidateProfiles
+                            .Where(p => p.UtilisateurId.HasValue)
+                            .OrderBy(p => countDict.TryGetValue(p.UtilisateurId!.Value, out var c) ? c : 0)
+                            .First();
+
+                        bl.AssignedLivreurId = chosen.UtilisateurId;
+
+                        // Create F_LIVRAISON for the BL.
+                        _db.F_LIVRAISONS.Add(new F_LIVRAISON
+                        {
+                            DO_Piece = blPiece,
+                            LivreurId = chosen.cbMarq,
+                            LI_Adresse = bl.DO_AdresseLivraison ?? string.Empty,
+                            LI_Ville = bl.DO_VilleLivraison ?? string.Empty,
+                            LI_CodePostal = bl.DO_CodePostalLivraison,
+                            LI_Latitude = bl.DO_LatitudeLivraison,
+                            LI_Longitude = bl.DO_LongitudeLivraison,
+                            LI_Statut = DeliveryStatusCodes.Depot,
+                            DepotPassageNumber = 0,
+                            LI_DateCreation = DateTime.UtcNow,
+                        });
+
+                        _db.F_LIVRAISON_HISTORIQUES.Add(new F_LIVRAISON_HISTORIQUE
+                        {
+                            DoPiece = blPiece,
+                            LivreurUserId = chosen.UtilisateurId,
+                            LivreurProfileId = chosen.cbMarq,
+                            Type = "ASSIGN_AUTO",
+                            Note = "Affectation automatique à la confirmation.",
+                            CreatedAt = DateTime.UtcNow,
+                        });
+
+                        await _db.SaveChangesAsync(ct);
+                    }
+                }
+                else
+                {
+                    noLivreurForZone = true;
+                }
+            }
+
             // Phase 4 — libération automatique du verrou 15 min après confirmation.
             await _db.CommandeConfirmationLocks
                 .Where(l => l.DoPiece == piece)
@@ -523,7 +649,8 @@ namespace Web_Api.Controllers.Confirmateur
                 SageSent = sageResult.Sent,
                 SageSuccess = sageResult.Success,
                 SageHttpStatus = sageResult.HttpStatus,
-                SageMessage = sageResult.Message
+                SageMessage = sageResult.Message,
+                NoLivreurForZone = noLivreurForZone
             });
         }
 
@@ -609,6 +736,214 @@ namespace Web_Api.Controllers.Confirmateur
 
                 Lignes = lignes
             });
+        }
+
+        // ── Request / Response DTOs for new endpoints ──────────────────────────────
+
+        public class UpdateLocationRequest
+        {
+            public string? Gouvernorat { get; set; }
+            public string? Delegation { get; set; }
+            public decimal? Latitude { get; set; }
+            public decimal? Longitude { get; set; }
+        }
+
+        // ── 1. PUT /api/confirmateur/commandes/{piece}/location ─────────────────────
+
+        [HttpPut("commandes/{piece}/location")]
+        public async Task<IActionResult> UpdateLocation(string piece, [FromBody] UpdateLocationRequest req, CancellationToken ct)
+        {
+            var entete = await _db.Set<F_DOCENTETE>()
+                .FirstOrDefaultAsync(x => x.DO_Piece == piece && x.DO_Domaine == 0 && x.DO_Type == 0, ct);
+
+            if (entete == null)
+                return NotFound(new { message = "BC introuvable." });
+
+            if (entete.DO_Valide == 1)
+                return BadRequest(new { message = "BC déjà transformé" });
+
+            entete.DO_PassagerGouvernorat = req.Gouvernorat;
+            entete.DO_PassagerDelegation = req.Delegation;
+
+            if (req.Latitude.HasValue)
+                entete.DO_LatitudeLivraison = req.Latitude.Value.ToString(CultureInfo.InvariantCulture);
+
+            if (req.Longitude.HasValue)
+                entete.DO_LongitudeLivraison = req.Longitude.Value.ToString(CultureInfo.InvariantCulture);
+
+            if (!string.IsNullOrWhiteSpace(req.Gouvernorat) && !string.IsNullOrWhiteSpace(req.Delegation))
+                entete.DO_AdresseLivraison = $"{req.Delegation}, {req.Gouvernorat}";
+
+            entete.cbModification = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync(ct);
+            return Ok();
+        }
+
+        // ── 2. GET /api/confirmateur/commandes/{piece}/zone-coverage ───────────────
+
+        public class ZoneLivreurDto
+        {
+            public string? UserId { get; set; }
+            public string? NomComplet { get; set; }
+            public string? Telephone { get; set; }
+            public int ActiveOrders { get; set; }
+        }
+
+        public class ZoneCoverageDto
+        {
+            public bool HasCoverage { get; set; }
+            public string? Gouvernorat { get; set; }
+            public string? Delegation { get; set; }
+            public int LivreurCount { get; set; }
+            public List<ZoneLivreurDto> Livreurs { get; set; } = new();
+        }
+
+        [HttpGet("commandes/{piece}/zone-coverage")]
+        public async Task<ActionResult<ZoneCoverageDto>> GetZoneCoverage(string piece, CancellationToken ct)
+        {
+            var entete = await _db.Set<F_DOCENTETE>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.DO_Piece == piece && x.DO_Domaine == 0 && x.DO_Type == 0, ct);
+
+            if (entete == null)
+                return NotFound(new { message = "BC introuvable." });
+
+            var gov = entete.DO_PassagerGouvernorat;
+            var del = entete.DO_PassagerDelegation;
+
+            if (string.IsNullOrWhiteSpace(gov) || string.IsNullOrWhiteSpace(del))
+            {
+                return Ok(new ZoneCoverageDto
+                {
+                    HasCoverage = false,
+                    Gouvernorat = null,
+                    Delegation = null,
+                    LivreurCount = 0,
+                    Livreurs = new List<ZoneLivreurDto>()
+                });
+            }
+
+            var normGov = NormalizeZoneKey(gov);
+            var normDel = NormalizeZoneKey(del);
+
+            var allZones = await _db.F_LIVREUR_ZONES.AsNoTracking().ToListAsync(ct);
+
+            var candidateIds = allZones
+                .Where(z =>
+                    NormalizeZoneKey(z.Gouvernorat) == normGov &&
+                    NormalizeZoneKey(z.Delegation) == normDel)
+                .Select(z => z.LivreurUserId)
+                .Distinct()
+                .ToList();
+
+            if (candidateIds.Count == 0)
+            {
+                return Ok(new ZoneCoverageDto
+                {
+                    HasCoverage = false,
+                    Gouvernorat = gov,
+                    Delegation = del,
+                    LivreurCount = 0,
+                    Livreurs = new List<ZoneLivreurDto>()
+                });
+            }
+
+            var profiles = await _db.ProfilsUtilisateurs
+                .AsNoTracking()
+                .Where(p => p.UtilisateurId != null
+                    && candidateIds.Contains(p.UtilisateurId!.Value)
+                    && p.IsTransit == false)
+                .ToListAsync(ct);
+
+            if (profiles.Count == 0)
+            {
+                return Ok(new ZoneCoverageDto
+                {
+                    HasCoverage = false,
+                    Gouvernorat = gov,
+                    Delegation = del,
+                    LivreurCount = 0,
+                    Livreurs = new List<ZoneLivreurDto>()
+                });
+            }
+
+            var profileIds = profiles
+                .Where(p => p.UtilisateurId.HasValue)
+                .Select(p => p.UtilisateurId!.Value)
+                .ToList();
+
+            var activeCounts = await _db.F_DOCENTETES
+                .AsNoTracking()
+                .Where(d => d.AssignedLivreurId != null
+                    && profileIds.Contains(d.AssignedLivreurId.Value)
+                    && d.DO_Valide == 1)
+                .GroupBy(d => d.AssignedLivreurId!.Value)
+                .Select(g => new { LivreurId = g.Key, Count = g.Count() })
+                .ToListAsync(ct);
+
+            var countDict = activeCounts.ToDictionary(x => x.LivreurId, x => x.Count);
+
+            var livreurs = profiles
+                .Where(p => p.UtilisateurId.HasValue)
+                .Select(p => new ZoneLivreurDto
+                {
+                    UserId = p.UtilisateurId!.Value.ToString(),
+                    NomComplet = p.NomComplet,
+                    Telephone = p.Telephone,
+                    ActiveOrders = countDict.TryGetValue(p.UtilisateurId!.Value, out var c) ? c : 0
+                })
+                .ToList();
+
+            return Ok(new ZoneCoverageDto
+            {
+                HasCoverage = true,
+                Gouvernorat = gov,
+                Delegation = del,
+                LivreurCount = livreurs.Count,
+                Livreurs = livreurs
+            });
+        }
+
+        // ── 3. GET /api/confirmateur/supervisors ───────────────────────────────────
+
+        public class SupervisorDto
+        {
+            public string? UserId { get; set; }
+            public string? NomComplet { get; set; }
+            public string? Telephone { get; set; }
+            public string? Email { get; set; }
+        }
+
+        [HttpGet("supervisors")]
+        public async Task<ActionResult<List<SupervisorDto>>> GetSupervisors(CancellationToken ct)
+        {
+            var supervisors = await _users.GetUsersInRoleAsync(AppRoles.SUPERVISEUR);
+
+            var ids = supervisors.Select(u => u.Id).ToList();
+
+            var profiles = await _db.ProfilsUtilisateurs
+                .AsNoTracking()
+                .Where(p => p.UtilisateurId != null && ids.Contains(p.UtilisateurId!.Value))
+                .ToListAsync(ct);
+
+            var profileDict = profiles
+                .Where(p => p.UtilisateurId.HasValue)
+                .ToDictionary(p => p.UtilisateurId!.Value);
+
+            var result = supervisors.Select(u =>
+            {
+                profileDict.TryGetValue(u.Id, out var prof);
+                return new SupervisorDto
+                {
+                    UserId = u.Id.ToString(),
+                    NomComplet = prof?.NomComplet,
+                    Telephone = prof?.Telephone,
+                    Email = u.Email
+                };
+            }).ToList();
+
+            return Ok(result);
         }
 
         /// <summary>
