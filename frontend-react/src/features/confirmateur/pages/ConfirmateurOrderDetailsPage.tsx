@@ -21,6 +21,7 @@ import {
   money,
   safe,
 } from "../utils/confirmateurUi";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 import { AddressMapModal } from "../../auth/components/AddressMapModal";
 import { reverseGeocodeNominatim } from "../../geo/api/nominatimApi";
 import {
@@ -817,8 +818,9 @@ export function ConfirmateurOrderDetailsPage() {
                 <div className="ds-alert ds-alert-danger text-xs">Erreur de mise à jour du statut.</div>
               )}
               {confirmMutation.isError && (
-                <div className="ds-alert ds-alert-danger text-xs">
-                  Erreur lors de la transformation BC → BL.
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800">
+                  <div className="font-bold">Confirmation impossible</div>
+                  <div className="mt-0.5">{getApiErrorMessage(confirmMutation.error)}</div>
                 </div>
               )}
             </div>

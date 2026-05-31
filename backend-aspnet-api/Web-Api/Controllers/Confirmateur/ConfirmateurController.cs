@@ -413,6 +413,47 @@ namespace Web_Api.Controllers.Confirmateur
             if (bcLines.Count == 0)
                 return BadRequest(new { message = "BC sans lignes." });
 
+            // ── Vérification couverture livreur AVANT création du BL ──────────────────
+            // Si la zone est définie mais aucun livreur ne la couvre, on bloque.
+            // La confirmatrice doit d'abord corriger la zone ou appeler un superviseur.
+            var govZone = bc.DO_PassagerGouvernorat;
+            var delZone = bc.DO_PassagerDelegation;
+
+            if (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
+            {
+                var normGov = NormalizeZoneKey(govZone);
+                var normDel = NormalizeZoneKey(delZone);
+
+                var allZones = await _db.F_LIVREUR_ZONES.AsNoTracking().ToListAsync(ct);
+                var candidateIds = allZones
+                    .Where(z => NormalizeZoneKey(z.Gouvernorat) == normGov && NormalizeZoneKey(z.Delegation) == normDel)
+                    .Select(z => z.LivreurUserId)
+                    .Distinct()
+                    .ToList();
+
+                bool hasCoverage = false;
+                if (candidateIds.Count > 0)
+                {
+                    hasCoverage = await _db.ProfilsUtilisateurs
+                        .AsNoTracking()
+                        .AnyAsync(p => p.UtilisateurId != null
+                            && candidateIds.Contains(p.UtilisateurId!.Value)
+                            && p.IsTransit == false, ct);
+                }
+
+                if (!hasCoverage)
+                {
+                    return Conflict(new
+                    {
+                        message = $"Aucun livreur ne couvre la zone {govZone} / {delZone}. Corrigez la zone de livraison ou contactez un superviseur.",
+                        errorCode = "ZONE_SANS_LIVREUR",
+                        gouvernorat = govZone,
+                        delegation = delZone,
+                    });
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────────────
+
             // ✅ DO_Piece max 13 => "BL" + yyMMddHHmm (10) + 1 digit = 13
             var blPiece = "BL" + DateTime.UtcNow.ToString("yyMMddHHmm") + Random.Shared.Next(0, 10);
 
@@ -484,120 +525,75 @@ namespace Web_Api.Controllers.Confirmateur
 
             await _db.SaveChangesAsync(ct);
 
-            // Phase 3 — Auto-assignment: find livreur covering the BC zone.
-            bool noLivreurForZone = false;
-            var govZone = bc.DO_PassagerGouvernorat;
-            var delZone = bc.DO_PassagerDelegation;
-
+            // Phase 3 — Auto-assignment (coverage garantie par la vérification en amont).
             if (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
             {
                 var normGov = NormalizeZoneKey(govZone);
                 var normDel = NormalizeZoneKey(delZone);
 
-                // Collect all livreur zones and find matching LivreurUserIds.
-                var matchingLivreurIds = await _db.F_LIVREUR_ZONES
-                    .AsNoTracking()
-                    .ToListAsync(ct);
-
-                var candidateIds = matchingLivreurIds
-                    .Where(z =>
-                        NormalizeZoneKey(z.Gouvernorat) == normGov &&
-                        NormalizeZoneKey(z.Delegation) == normDel)
+                var allZones = await _db.F_LIVREUR_ZONES.AsNoTracking().ToListAsync(ct);
+                var candidateIds = allZones
+                    .Where(z => NormalizeZoneKey(z.Gouvernorat) == normGov && NormalizeZoneKey(z.Delegation) == normDel)
                     .Select(z => z.LivreurUserId)
                     .Distinct()
                     .ToList();
 
-                if (candidateIds.Count > 0)
+                var candidateProfiles = await _db.ProfilsUtilisateurs
+                    .AsNoTracking()
+                    .Where(p => p.UtilisateurId != null
+                        && candidateIds.Contains(p.UtilisateurId!.Value)
+                        && p.IsTransit == false)
+                    .ToListAsync(ct);
+
+                if (candidateProfiles.Count > 0)
                 {
-                    // Filter: non-transit livreurs only.
-                    var candidateProfiles = await _db.ProfilsUtilisateurs
-                        .AsNoTracking()
-                        .Where(p => p.UtilisateurId != null
-                            && candidateIds.Contains(p.UtilisateurId!.Value)
-                            && p.IsTransit == false)
+                    var profileIds = candidateProfiles.Where(p => p.UtilisateurId.HasValue)
+                        .Select(p => p.UtilisateurId!.Value).ToList();
+
+                    var activeCounts = await _db.F_DOCENTETES.AsNoTracking()
+                        .Where(d => d.AssignedLivreurId != null
+                            && profileIds.Contains(d.AssignedLivreurId.Value)
+                            && d.DO_Valide == 1)
+                        .GroupBy(d => d.AssignedLivreurId!.Value)
+                        .Select(g => new { LivreurId = g.Key, Count = g.Count() })
                         .ToListAsync(ct);
 
-                    if (candidateProfiles.Count == 0)
+                    var countDict = activeCounts.ToDictionary(x => x.LivreurId, x => x.Count);
+
+                    var chosen = candidateProfiles
+                        .Where(p => p.UtilisateurId.HasValue)
+                        .OrderBy(p => countDict.TryGetValue(p.UtilisateurId!.Value, out var c) ? c : 0)
+                        .ThenBy(_ => Random.Shared.Next())
+                        .First();
+
+                    bl.AssignedLivreurId = chosen.UtilisateurId;
+
+                    _db.F_LIVRAISONS.Add(new F_LIVRAISON
                     {
-                        noLivreurForZone = true;
-                    }
-                    else
+                        DO_Piece = blPiece,
+                        LivreurId = chosen.cbMarq,
+                        LI_Adresse = bl.DO_AdresseLivraison ?? string.Empty,
+                        LI_Ville = bl.DO_VilleLivraison ?? string.Empty,
+                        LI_CodePostal = bl.DO_CodePostalLivraison,
+                        LI_Latitude = bl.DO_LatitudeLivraison,
+                        LI_Longitude = bl.DO_LongitudeLivraison,
+                        LI_Statut = DeliveryStatusCodes.Depot,
+                        DepotPassageNumber = 0,
+                        LI_DateCreation = DateTime.UtcNow,
+                    });
+
+                    _db.F_LIVRAISON_HISTORIQUES.Add(new F_LIVRAISON_HISTORIQUE
                     {
-                        // Pick the livreur with fewest active assignments.
-                        var profileIds = candidateProfiles
-                            .Where(p => p.UtilisateurId.HasValue)
-                            .Select(p => p.UtilisateurId!.Value)
-                            .ToList();
+                        DoPiece = blPiece,
+                        LivreurUserId = chosen.UtilisateurId,
+                        LivreurProfileId = chosen.cbMarq,
+                        Type = "ASSIGN_AUTO",
+                        Note = "Affectation automatique à la confirmation.",
+                        CreatedAt = DateTime.UtcNow,
+                    });
 
-                        var activeCounts = await _db.F_DOCENTETES
-                            .AsNoTracking()
-                            .Where(d => d.AssignedLivreurId != null
-                                && profileIds.Contains(d.AssignedLivreurId.Value)
-                                && d.DO_Valide == 1)
-                            .GroupBy(d => d.AssignedLivreurId!.Value)
-                            .Select(g => new { LivreurId = g.Key, Count = g.Count() })
-                            .ToListAsync(ct);
-
-                        var countDict = activeCounts.ToDictionary(x => x.LivreurId, x => x.Count);
-
-                        var chosen = candidateProfiles
-                            .Where(p => p.UtilisateurId.HasValue)
-                            .OrderBy(p => countDict.TryGetValue(p.UtilisateurId!.Value, out var c) ? c : 0)
-                            .ThenBy(_ => Random.Shared.Next()) // tie-break aléatoire
-                            .First();
-
-                        bl.AssignedLivreurId = chosen.UtilisateurId;
-
-                        // Create F_LIVRAISON for the BL.
-                        _db.F_LIVRAISONS.Add(new F_LIVRAISON
-                        {
-                            DO_Piece = blPiece,
-                            LivreurId = chosen.cbMarq,
-                            LI_Adresse = bl.DO_AdresseLivraison ?? string.Empty,
-                            LI_Ville = bl.DO_VilleLivraison ?? string.Empty,
-                            LI_CodePostal = bl.DO_CodePostalLivraison,
-                            LI_Latitude = bl.DO_LatitudeLivraison,
-                            LI_Longitude = bl.DO_LongitudeLivraison,
-                            LI_Statut = DeliveryStatusCodes.Depot,
-                            DepotPassageNumber = 0,
-                            LI_DateCreation = DateTime.UtcNow,
-                        });
-
-                        _db.F_LIVRAISON_HISTORIQUES.Add(new F_LIVRAISON_HISTORIQUE
-                        {
-                            DoPiece = blPiece,
-                            LivreurUserId = chosen.UtilisateurId,
-                            LivreurProfileId = chosen.cbMarq,
-                            Type = "ASSIGN_AUTO",
-                            Note = "Affectation automatique à la confirmation.",
-                            CreatedAt = DateTime.UtcNow,
-                        });
-
-                        await _db.SaveChangesAsync(ct);
-                    }
+                    await _db.SaveChangesAsync(ct);
                 }
-                else
-                {
-                    noLivreurForZone = true;
-                }
-            }
-
-            // Phase 3b — alerte superviseur si aucun livreur ne couvre la zone.
-            F_SUPERVISOR_ALERT? zoneAlert = null;
-            if (noLivreurForZone)
-            {
-                var zoneLabel = (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
-                    ? $"{govZone} / {delZone}"
-                    : govZone ?? delZone ?? "zone inconnue";
-
-                zoneAlert = new F_SUPERVISOR_ALERT
-                {
-                    Severity = "CRITICAL",
-                    AlertType = "ZONE_SANS_LIVREUR",
-                    Message = $"BC {blPiece} confirmé mais aucun livreur ne couvre la zone {zoneLabel}. Affectation manuelle requise.",
-                    CreatedAt = DateTime.UtcNow
-                };
-                _db.F_SUPERVISOR_ALERTS.Add(zoneAlert);
             }
 
             // Phase 4 — libération automatique du verrou 15 min après confirmation.
@@ -606,26 +602,6 @@ namespace Web_Api.Controllers.Confirmateur
                 .ExecuteDeleteAsync(ct);
 
             await trx.CommitAsync(ct);
-
-            // Phase 3c — push SignalR vers superviseurs (non bloquant, après commit).
-            if (zoneAlert != null)
-            {
-                try
-                {
-                    await _hub.Clients.Group(ReclamationEvents.GroupSuperviseurs)
-                        .SendAsync(ReclamationEvents.NouvelleAlerte, new
-                        {
-                            id = zoneAlert.Id,
-                            severity = zoneAlert.Severity,
-                            alertType = zoneAlert.AlertType,
-                            message = zoneAlert.Message,
-                        }, ct);
-                }
-                catch
-                {
-                    // Non bloquant.
-                }
-            }
 
             // ----- Sync Sage : POST docentete BL après commit local ------------
             // L'envoi est volontairement non-bloquant : si Sage est HS ou répond
