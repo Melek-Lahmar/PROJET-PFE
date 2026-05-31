@@ -581,9 +581,11 @@ export function ConfirmateurOrderDetailsPage() {
   const isTransformed = statusMeta.workflowState === "transformed";
   const hasB2BDiscount = Number(data.b2BDiscountAmount ?? 0) > 0;
 
-  // Données zone (priorité passager > client)
-  const zoneGouvernorat = data.dO_PassagerGouvernorat ?? client?.gouvernorat ?? null;
-  const zoneDelegation = data.dO_PassagerDelegation ?? client?.delegation ?? null;
+  // ⚠️ Données de livraison = uniquement celles saisies au moment de la commande
+  // (pas de fallback vers le profil client). Ces champs sont la source de vérité
+  // pour la confirmatrice : c'est là que le livreur doit aller.
+  const zoneGouvernorat = data.dO_PassagerGouvernorat ?? null;
+  const zoneDelegation = data.dO_PassagerDelegation ?? null;
   const zoneLat = data.dO_LatitudeLivraison ? parseFloat(data.dO_LatitudeLivraison) : null;
   const zoneLng = data.dO_LongitudeLivraison ? parseFloat(data.dO_LongitudeLivraison) : null;
 
@@ -592,11 +594,26 @@ export function ConfirmateurOrderDetailsPage() {
   const noLivreur = coverage !== undefined && coverage.gouvernorat && coverage.delegation && !coverage.hasCoverage;
   const noZone = coverage !== undefined && (!coverage.gouvernorat || !coverage.delegation);
 
+  // Téléphone : le numéro de livraison passe en priorité, mais on tolère le
+  // fallback profil car il s'agit de la même personne dans la quasi-totalité
+  // des cas (et il faut bien pouvoir appeler le client).
   const phone = data.dO_TelephoneLivraison ?? client?.telephone ?? null;
-  const adresse = data.dO_AdresseLivraison ?? client?.adresse ?? null;
+
+  // Adresse de LIVRAISON (saisie à la commande) — pas de fallback profil
+  const adresse = data.dO_AdresseLivraison ?? null;
   const ville = data.dO_VilleLivraison ?? null;
-  const cp = data.dO_CodePostalLivraison ?? client?.codePostal ?? null;
-  const adresseComp = client?.adresseComplementaire ?? null;
+  const cp = data.dO_CodePostalLivraison ?? null;
+
+  // Adresse du PROFIL client (création de compte) — affichée séparément
+  // pour comparaison, en lecture seule.
+  const profilAdresse = client?.adresse ?? null;
+  const profilVille = null; // pas de ville sur le profil dans le DTO
+  const profilCp = client?.codePostal ?? null;
+  const profilGouv = client?.gouvernorat ?? null;
+  const profilDele = client?.delegation ?? null;
+  const profilAdresseComp = client?.adresseComplementaire ?? null;
+  const hasProfilAddress = !!(profilAdresse || profilGouv || profilDele || profilCp);
+  const hasDeliveryAddress = !!(adresse || ville || cp || zoneGouvernorat || zoneDelegation);
 
   const totalArticles = (data.lignes ?? []).reduce((acc, l) => acc + Number(l.dL_Qte ?? 0), 0);
   const totalLignes = (data.lignes ?? []).length;
@@ -665,27 +682,61 @@ export function ConfirmateurOrderDetailsPage() {
             </div>
           </section>
 
-          {/* Adresse de livraison */}
-          {(adresse || ville || cp) && (
-            <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-lg">📮</div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adresse de livraison</div>
-                  <h2 className="text-lg font-black text-card-foreground">Coordonnées physiques</h2>
-                </div>
+          {/* Adresse de LIVRAISON (saisie à la commande) — source de vérité */}
+          <section className="rounded-[28px] border-2 border-purple-200 bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-lg">📮</div>
+              <div className="flex-1">
+                <div className="text-[10px] font-black uppercase tracking-widest text-purple-700">Adresse de livraison</div>
+                <h2 className="text-lg font-black text-card-foreground">Où livrer cette commande</h2>
               </div>
+              <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-800">
+                Saisie à la commande
+              </span>
+            </div>
+            {hasDeliveryAddress ? (
               <div className="space-y-3">
                 {adresse && (
-                  <div className="rounded-2xl border border-border/60 bg-muted/15 p-4">
+                  <div className="rounded-2xl border border-purple-200/60 bg-purple-50/40 p-4">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Adresse complète</div>
                     <div className="mt-1 text-base font-bold text-card-foreground">{safe(adresse)}</div>
-                    {adresseComp && <div className="mt-1 text-sm text-muted-foreground">📋 {safe(adresseComp)}</div>}
                   </div>
                 )}
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {zoneGouvernorat && <InfoTile icon="🏛️" label="Gouvernorat" value={safe(zoneGouvernorat)} />}
+                  {zoneDelegation && <InfoTile icon="📍" label="Délégation" value={safe(zoneDelegation)} />}
                   {ville && <InfoTile icon="🏙️" label="Ville" value={safe(ville)} />}
                   {cp && <InfoTile icon="📬" label="Code postal" value={safe(cp)} />}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
+                ⚠️ Aucune adresse de livraison renseignée à la commande. Demandez l'adresse au client avant de confirmer.
+              </div>
+            )}
+          </section>
+
+          {/* Adresse du PROFIL client (création de compte) — pour comparaison */}
+          {hasProfilAddress && (
+            <section className="rounded-[28px] border border-dashed border-border bg-muted/10 p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-base">🪪</div>
+                <div className="flex-1">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adresse du profil client</div>
+                  <h3 className="text-sm font-black text-muted-foreground">Renseignée à la création du compte (référence)</h3>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600">
+                  Référence — non utilisée pour la livraison
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {profilAdresse && <div>📍 {safe(profilAdresse)}</div>}
+                {profilAdresseComp && <div className="text-xs">📋 {safe(profilAdresseComp)}</div>}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  {profilGouv && <span>🏛️ {safe(profilGouv)}</span>}
+                  {profilDele && <span>📍 {safe(profilDele)}</span>}
+                  {profilVille && <span>🏙️ {safe(profilVille)}</span>}
+                  {profilCp && <span>📬 {safe(profilCp)}</span>}
                 </div>
               </div>
             </section>
