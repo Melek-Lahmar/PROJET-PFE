@@ -209,6 +209,7 @@ export function CheckoutPage() {
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [postalCode, setPostalCode] = useState<string>("");
+  const [gouvernorat, setGouvernorat] = useState<string>("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -262,11 +263,12 @@ export function CheckoutPage() {
       address: isHome ? address.trim() : undefined,
       city: isHome ? city.trim() : undefined,
       postalCode: isHome ? postalCode.trim() : undefined,
+      gouvernorat: isHome ? gouvernorat.trim() : undefined,
       latitude: isHome ? latitude : null,
       longitude: isHome ? longitude : null,
       lines,
     }),
-    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, latitude, longitude, lines],
+    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, gouvernorat, latitude, longitude, lines],
   );
 
   const canSubmit = useMemo(() => {
@@ -422,6 +424,7 @@ export function CheckoutPage() {
                 setAddress={setAddress}
                 setCity={setCity}
                 setPostalCode={setPostalCode}
+                setGouvernorat={setGouvernorat}
                 setLatitude={setLatitude}
                 setLongitude={setLongitude}
                 onTouched={handleTouched}

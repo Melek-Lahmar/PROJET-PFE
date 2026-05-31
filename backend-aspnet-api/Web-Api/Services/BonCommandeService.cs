@@ -90,6 +90,9 @@ namespace Web_Api.Services
                 Latitude = req.Latitude,
                 Longitude = req.Longitude,
                 PersistAddressSnapshot = false,
+                // Zone de livraison choisie au checkout (prioritaire sur profil)
+                DeliveryGouvernorat = TrimOrNull(req.Gouvernorat),
+                DeliveryDelegation = TrimOrNull(req.City),
                 Lines = req.Lines
             };
 
@@ -589,9 +592,10 @@ namespace Web_Api.Services
                 B2BDiscountRate = totals.DiscountRate,
                 B2BDiscountAmount = totals.DiscountAmount,
                 DiscountSource = totals.DiscountSource,
-                DO_AdresseLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedAddress, 150) : null,
-                DO_VilleLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedCity, 35) : null,
-                DO_CodePostalLivraison = shouldPersistAddressSnapshot ? LimitLength(normalizedPostalCode, 9) : null,
+                // Adresse textuelle : toujours sauvegardée pour la livraison HOME
+                DO_AdresseLivraison = (deliveryType == DeliveryTypeHome || shouldPersistAddressSnapshot) ? LimitLength(normalizedAddress, 150) : null,
+                DO_VilleLivraison = (deliveryType == DeliveryTypeHome || shouldPersistAddressSnapshot) ? LimitLength(normalizedCity, 35) : null,
+                DO_CodePostalLivraison = (deliveryType == DeliveryTypeHome || shouldPersistAddressSnapshot) ? LimitLength(normalizedPostalCode, 9) : null,
                 DO_LatitudeLivraison = deliveryType == DeliveryTypeHome ? req.Latitude?.ToString() : null,
                 DO_LongitudeLivraison = deliveryType == DeliveryTypeHome ? req.Longitude?.ToString() : null,
                 DO_VendeurUserId = req.VendeurUserId,
@@ -605,8 +609,9 @@ namespace Web_Api.Services
                 DO_PassagerMatriculeFiscal = req.PassengerSnapshot?.MatriculeFiscal,
                 DO_PassagerRegistreCommerce = req.PassengerSnapshot?.RegistreCommerce,
                 DO_PassagerNumeroTVA = req.PassengerSnapshot?.NumeroTVA,
-                DO_PassagerGouvernorat = req.PassengerSnapshot?.Gouvernorat,
-                DO_PassagerDelegation = req.PassengerSnapshot?.Delegation,
+                // Zone : priorité aux valeurs saisies au checkout sur le profil client
+                DO_PassagerGouvernorat = req.DeliveryGouvernorat ?? req.PassengerSnapshot?.Gouvernorat,
+                DO_PassagerDelegation = req.DeliveryDelegation ?? req.PassengerSnapshot?.Delegation,
                 DO_PassagerAdresse = req.PassengerSnapshot?.Adresse,
                 DO_PassagerAdresseComplementaire = req.PassengerSnapshot?.AdresseComplementaire,
                 DO_PassagerCodePostal = req.PassengerSnapshot?.CodePostal,
@@ -903,6 +908,9 @@ namespace Web_Api.Services
             public decimal? Latitude { get; set; }
             public decimal? Longitude { get; set; }
             public bool PersistAddressSnapshot { get; set; }
+            // Zone de livraison choisie au checkout (prioritaire sur le snapshot profil)
+            public string? DeliveryGouvernorat { get; set; }
+            public string? DeliveryDelegation { get; set; }
             public List<CreateBonCommandeLineRequestDto> Lines { get; set; } = new();
         }
 

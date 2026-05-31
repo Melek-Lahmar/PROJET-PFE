@@ -43,6 +43,7 @@ type Props = {
   setPostalCode: (v: string) => void;
   setLatitude: (v: number | null) => void;
   setLongitude: (v: number | null) => void;
+  setGouvernorat?: (v: string) => void;
   onTouched: (f: "address" | "city" | "postalCode" | "latitude" | "longitude") => void;
   onCoverageBlocked?: (blocked: boolean) => void;
   onValidityChange?: (valid: boolean) => void;
@@ -85,6 +86,7 @@ export function DeliveryAddressSelector({
   setPostalCode,
   setLatitude,
   setLongitude,
+  setGouvernorat,
   onTouched,
   onCoverageBlocked,
   onValidityChange,
@@ -145,11 +147,12 @@ export function DeliveryAddressSelector({
     onCoverageBlocked?.(!!noCoverage);
   }, [noCoverage, onCoverageBlocked]);
 
-  // Synchronise city → parent quand délégation change
+  // Synchronise city + gouvernorat → parent quand délégation/gouvernorat changent
   useEffect(() => {
     if (mode !== "temp") return;
     onTouched("city");
     setCity(delegation || TUNISIA_GOUVERNORATS[gouvernoratId] || "");
+    setGouvernorat?.(TUNISIA_GOUVERNORATS[gouvernoratId] || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [delegation, gouvernoratId, mode]);
 
@@ -169,6 +172,7 @@ export function DeliveryAddressSelector({
     setSelectedId(a.id);
     setAddress(a.adresse);
     setCity(a.ville ?? "");
+    setGouvernorat?.(a.gouvernorat ?? "");
     setPostalCode(a.codePostal ?? "");
     setLatitude(a.latitude ?? null);
     setLongitude(a.longitude ?? null);
