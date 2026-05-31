@@ -222,7 +222,17 @@ namespace Web_Api.Controllers.Confirmateur
                 ClientDisplay = ComputeDisplay(client),
                 Client = client,
 
-                Lignes = lignes
+                Lignes = lignes,
+
+                DO_PassagerGouvernorat = entete.DO_PassagerGouvernorat,
+                DO_PassagerDelegation = entete.DO_PassagerDelegation,
+                DO_LatitudeLivraison = entete.DO_LatitudeLivraison,
+                DO_LongitudeLivraison = entete.DO_LongitudeLivraison,
+                DO_ModeLivraison = entete.DO_ModeLivraison,
+                DO_AdresseLivraison = entete.DO_AdresseLivraison,
+                DO_VilleLivraison = entete.DO_VilleLivraison,
+                DO_CodePostalLivraison = entete.DO_CodePostalLivraison,
+                DO_TelephoneLivraison = entete.DO_TelephoneLivraison,
             };
 
             return Ok(dto);

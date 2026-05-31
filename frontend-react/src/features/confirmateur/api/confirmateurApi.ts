@@ -1,5 +1,5 @@
 import { axiosClient } from "../../../core/http/axiosClient";
-import type { ConfirmateurClient, ConfirmateurOrder, ConfirmateurOrderLine } from "../types/confirmateur";
+import type { ConfirmateurClient, ConfirmateurOrder, ConfirmateurOrderLine, ZoneCoverageDto, SupervisorDto } from "../types/confirmateur";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -79,6 +79,15 @@ function normalizeOrder(raw: unknown): ConfirmateurOrder {
     clientDisplay: asString(pick(source, ["clientDisplay", "ClientDisplay"])),
     client: normalizeClient(pick(source, ["client", "Client"])),
     lignes: Array.isArray(lignesRaw) ? lignesRaw.map(normalizeOrderLine) : [],
+    dO_PassagerGouvernorat: asString(pick(source, ["dO_PassagerGouvernorat", "DO_PassagerGouvernorat"])),
+    dO_PassagerDelegation: asString(pick(source, ["dO_PassagerDelegation", "DO_PassagerDelegation"])),
+    dO_LatitudeLivraison: asString(pick(source, ["dO_LatitudeLivraison", "DO_LatitudeLivraison"])),
+    dO_LongitudeLivraison: asString(pick(source, ["dO_LongitudeLivraison", "DO_LongitudeLivraison"])),
+    dO_ModeLivraison: asString(pick(source, ["dO_ModeLivraison", "DO_ModeLivraison"])),
+    dO_AdresseLivraison: asString(pick(source, ["dO_AdresseLivraison", "DO_AdresseLivraison"])),
+    dO_VilleLivraison: asString(pick(source, ["dO_VilleLivraison", "DO_VilleLivraison"])),
+    dO_CodePostalLivraison: asString(pick(source, ["dO_CodePostalLivraison", "DO_CodePostalLivraison"])),
+    dO_TelephoneLivraison: asString(pick(source, ["dO_TelephoneLivraison", "DO_TelephoneLivraison"])),
   };
 }
 
@@ -115,4 +124,27 @@ export async function getConfirmateurBlList(status?: number) {
 export async function getConfirmateurBlByPiece(piece: string) {
   const { data } = await axiosClient.get<unknown>(`/api/confirmateur/bl/${encodeURIComponent(piece.trim())}`);
   return normalizeOrder(data);
+}
+
+export type UpdateLocationPayload = {
+  gouvernorat?: string | null;
+  delegation?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+export async function updateConfirmateurLocation(piece: string, payload: UpdateLocationPayload) {
+  await axiosClient.put(`/api/confirmateur/commandes/${encodeURIComponent(piece.trim())}/location`, payload);
+}
+
+export async function getZoneCoverage(piece: string): Promise<ZoneCoverageDto> {
+  const { data } = await axiosClient.get<ZoneCoverageDto>(
+    `/api/confirmateur/commandes/${encodeURIComponent(piece.trim())}/zone-coverage`
+  );
+  return data;
+}
+
+export async function getConfirmateurSupervisors(): Promise<SupervisorDto[]> {
+  const { data } = await axiosClient.get<SupervisorDto[]>("/api/confirmateur/supervisors");
+  return Array.isArray(data) ? data : [];
 }
