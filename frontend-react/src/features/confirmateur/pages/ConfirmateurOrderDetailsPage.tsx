@@ -186,19 +186,6 @@ function CoverageBanner({
   );
 }
 
-function workflowNodeClass(state: "done" | "active" | "pending" | "failed") {
-  switch (state) {
-    case "done":
-      return "border-success/20 bg-success/10 text-success";
-    case "active":
-      return "border-primary/25 bg-primary text-white shadow-lg shadow-primary/20";
-    case "failed":
-      return "border-danger/25 bg-danger text-white";
-    default:
-      return "border-border bg-card text-muted-foreground";
-  }
-}
-
 // ─── Supervisors (premium) ───────────────────────────────────────────────────
 
 function SuperviseursList({ highlight }: { highlight: boolean }) {
@@ -592,7 +579,6 @@ export function ConfirmateurOrderDetailsPage() {
   const client = data.client ?? null;
   const currentStatus: OrderStatusValue = data.dO_Valide === 2 ? 2 : data.dO_Valide === 3 ? 3 : 0;
   const isTransformed = statusMeta.workflowState === "transformed";
-  const steps = workflowSteps(statusMeta.workflowState);
   const hasB2BDiscount = Number(data.b2BDiscountAmount ?? 0) > 0;
 
   // Données zone (priorité passager > client)

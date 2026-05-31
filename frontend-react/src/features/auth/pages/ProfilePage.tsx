@@ -626,10 +626,10 @@ export function ProfilePage() {
                 className="h-11 rounded-2xl"
               />
             </div>
-            <InfoRow label="Nom complet" value={profile?.nomComplet} />
-            <InfoRow label="CIN" value={profile?.cin} />
-            <InfoRow label="Poste" value={profile?.poste} />
-            <InfoRow label="Département" value={profile?.departement} />
+            <InfoTile label="Nom complet" value={profile?.nomComplet} />
+            <InfoTile label="CIN" value={profile?.cin} />
+            <InfoTile label="Poste" value={profile?.poste} />
+            <InfoTile label="Département" value={profile?.departement} />
           </div>
 
           {mut.isError && (
