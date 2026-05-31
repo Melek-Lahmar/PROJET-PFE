@@ -551,7 +551,7 @@ export function ConfirmateurOrderDetailsPage() {
 
   const invalidateCoverage = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["zone-coverage", piece] });
-    void queryClient.invalidateQueries({ queryKey: ["confirmateur-order", piece] });
+    void queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes", piece] });
   }, [queryClient, piece]);
 
   // Auto-invalidate coverage when order data updates (e.g., after location save)

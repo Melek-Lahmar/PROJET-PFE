@@ -284,7 +284,7 @@ export function OrderDetailsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-border/70">
-                  {data.lines.map((line, index) => (
+                  {(data.lines ?? []).map((line, index) => (
                     <tr key={`${line.articleRef}-${index}`} className="hover:bg-muted/30">
                       <td className="py-4 pr-4">
                         <span className="inline-flex items-center rounded-xl border border-border bg-card px-2.5 py-1 font-mono text-xs font-bold text-card-foreground/90 shadow-sm">

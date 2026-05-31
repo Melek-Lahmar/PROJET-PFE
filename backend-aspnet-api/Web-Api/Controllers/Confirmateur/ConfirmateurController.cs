@@ -736,7 +736,7 @@ namespace Web_Api.Controllers.Confirmateur
                 SageSuccess = sageResult.Success,
                 SageHttpStatus = sageResult.HttpStatus,
                 SageMessage = sageResult.Message,
-                NoLivreurForZone = noLivreurForZone
+                NoLivreurForZone = false
             });
         }
 
