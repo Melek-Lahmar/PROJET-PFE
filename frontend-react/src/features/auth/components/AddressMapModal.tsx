@@ -2,13 +2,14 @@
 // Layout dedie plein-ecran — ne depend plus du composant Modal generique
 // pour eviter le max-h-[66vh] qui coupe la carte.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import type { LatLngExpression } from "leaflet";
 
 import { getCenterForTunisia } from "../../geo/data/tunisiaCenters";
 import { createMapPin, type AddressMapChangeReason } from "./AddressMapField";
 import { roundCoordinate } from "../../geo/utils/tunisiaLocationSync";
+import { useMapboxGeocode } from "../../map/hooks/useMapboxGeocode";
 
 function SourceBadge({ source }: { source: AddressMapChangeReason | null }) {
   if (!source) return null;
@@ -62,6 +63,22 @@ export function AddressMapModal({ open, onClose, gouvernorat, delegation, latitu
   );
   const [pendingConfirm, setPendingConfirm] = useState(false);
 
+  // Recherche Mapbox dans la modal
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const { search: mapboxSearch, results: mapboxResults, loading: mapboxLoading, clear: mapboxClear } = useMapboxGeocode();
+
+  useEffect(() => {
+    function onOutsideClick(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutsideClick);
+    return () => document.removeEventListener("mousedown", onOutsideClick);
+  }, []);
+
   // Bloquer le scroll de la page quand la modal est ouverte
   useEffect(() => {
     if (!open) return;
@@ -86,7 +103,10 @@ export function AddressMapModal({ open, onClose, gouvernorat, delegation, latitu
     setGeoError(null);
     setSource(typeof latitude === "number" ? "gps" : null);
     setPendingConfirm(false);
-  }, [open, initial.lat, initial.lng, initial.zoom, latitude]);
+    setSearchQuery("");
+    mapboxClear();
+    setShowSuggestions(false);
+  }, [open, initial.lat, initial.lng, initial.zoom, latitude, mapboxClear]);
 
   const icon   = useMemo(() => createMapPin(source), [source]);
   const center: LatLngExpression = [pos.lat, pos.lng];
@@ -197,6 +217,63 @@ export function AddressMapModal({ open, onClose, gouvernorat, delegation, latitu
               </svg>
             </button>
           </div>
+        </div>
+
+        {/* ── Barre de recherche Mapbox ── */}
+        <div ref={searchBoxRef} className="relative shrink-0 border-b border-border/60 bg-muted/15 px-4 py-3">
+          <div className="relative">
+            <svg
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                mapboxSearch(e.target.value);
+                setShowSuggestions(true);
+                if (!e.target.value.trim()) mapboxClear();
+              }}
+              onFocus={() => mapboxResults.length > 0 && setShowSuggestions(true)}
+              placeholder="Rechercher une adresse, ville, délégation…"
+              className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm text-card-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+            />
+            {mapboxLoading && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
+              </span>
+            )}
+          </div>
+
+          {showSuggestions && mapboxResults.length > 0 && (
+            <ul className="absolute left-4 right-4 z-[2000] mt-1 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+              {mapboxResults.map((feature) => (
+                <li key={feature.id}>
+                  <button
+                    type="button"
+                    onMouseDown={() => {
+                      const [lng, lat] = feature.center;
+                      setSearchQuery(feature.place_name);
+                      setShowSuggestions(false);
+                      mapboxClear();
+                      handlePick(lat, lng, "map_click");
+                    }}
+                    className="flex w-full items-start gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-muted"
+                  >
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                    </svg>
+                    <span className="text-card-foreground">{feature.place_name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* ── Alertes (GPS error / hint precision) ── */}
