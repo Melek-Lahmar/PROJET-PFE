@@ -119,9 +119,9 @@ interface Issue {
 
 function severityClass(s: string) {
   const u = s.toUpperCase();
-  if (u === "HIGH" || u === "URGENT" || u === "CRITICAL") return "bg-red-100 text-red-800";
-  if (u === "WARNING" || u === "MEDIUM") return "bg-amber-100 text-amber-800";
-  return "bg-blue-100 text-blue-800";
+  if (u === "HIGH" || u === "URGENT" || u === "CRITICAL") return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  if (u === "WARNING" || u === "MEDIUM") return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+  return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
 }
 
 function ProblemesPanel({ onClose }: { onClose: () => void }) {
@@ -245,7 +245,7 @@ function ProblemesPanel({ onClose }: { onClose: () => void }) {
                     Résoudre
                   </Button>
                 ) : (
-                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800">
+                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800 dark:bg-green-900/30 dark:text-green-300">
                     Résolu
                   </span>
                 )}
@@ -721,19 +721,19 @@ export function SupervisorZonesPage() {
 
               {/* ── Section transit : dépôt filtré par gouvernorat ─────────── */}
               {form.isTransit && (
-                <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 space-y-3">
+                <div className="rounded-2xl border border-info/25 bg-info/10 p-4 space-y-3">
                   <div>
-                    <h3 className="font-extrabold text-indigo-800">Affectation dépôt transit</h3>
-                    <p className="mt-1 text-xs text-indigo-600">
+                    <h3 className="font-extrabold text-info">Affectation dépôt transit</h3>
+                    <p className="mt-1 text-xs text-info/80">
                       Seuls les dépôts couvrant le gouvernorat <b>{govName || "sélectionné"}</b> sont affichés.
                       Règle : 1 dépôt = 1 gouvernorat.
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wide text-indigo-700">Dépôt rattaché *</label>
+                    <label className="text-xs font-bold uppercase tracking-wide text-info">Dépôt rattaché *</label>
                     {depotsForGouvernorat.length === 0 ? (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                      <div className="rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning">
                         ⚠️ Aucun dépôt configuré pour le gouvernorat <b>{govName}</b>.
                         Configurez une zone dans l'admin avant d'affecter ce livreur-transit.
                       </div>

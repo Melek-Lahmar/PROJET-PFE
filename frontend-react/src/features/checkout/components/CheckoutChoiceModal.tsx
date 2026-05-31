@@ -266,7 +266,7 @@ export function CheckoutChoiceModal({
                     actionTo="/checkout/guest"
                     onClose={onClose}
                     variant="primary"
-                    accentClassName="border-primary/18 bg-[linear-gradient(180deg,rgba(79,70,229,0.06),rgba(255,255,255,0.98))]"
+                    accentClassName="border-primary/18 bg-[linear-gradient(180deg,hsl(var(--primary)/0.06),hsl(var(--card)/0.98))]"
                   />
                 </div>
 

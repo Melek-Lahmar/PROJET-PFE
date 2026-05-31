@@ -17,14 +17,14 @@ function initializeTheme() {
   try {
     const raw = window.localStorage.getItem("layout-ui");
     const parsed = raw ? JSON.parse(raw) : null;
-    const themeMode = parsed?.state?.themeMode === "light" ? "light" : "dark";
-    const isDark = themeMode === "dark";
+    const stored = parsed?.state?.themeMode;
+    const isDark = stored === "dark";
 
     root.classList.toggle("dark", isDark);
     root.style.colorScheme = isDark ? "dark" : "light";
   } catch {
-    root.classList.add("dark");
-    root.style.colorScheme = "dark";
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
   }
 }
 

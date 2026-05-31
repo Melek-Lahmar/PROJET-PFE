@@ -93,7 +93,7 @@ function FeatureItem({
 function DashboardIllustration() {
   return (
     <div className="pointer-events-none absolute bottom-8 right-4 hidden h-[220px] w-[330px] select-none 2xl:block">
-      <div className="absolute bottom-8 right-12 h-32 w-52 -skew-x-6 rounded-[20px] border border-white/20 bg-white/88 p-4 shadow-[0_30px_80px_-34px_rgba(2,6,23,0.8)]">
+      <div className="absolute bottom-8 right-12 h-32 w-52 -skew-x-6 rounded-[20px] border border-white/20 bg-white/88 p-4 dark:border-white/10 dark:bg-slate-950/50 shadow-[0_30px_80px_-34px_rgba(2,6,23,0.8)]">
         <div className="flex h-full gap-3">
           <div className="w-9 rounded-xl bg-blue-950/85 p-2">
             <div className="h-2 w-3 rounded-full bg-white/65" />
@@ -105,25 +105,25 @@ function DashboardIllustration() {
           </div>
 
           <div className="flex-1">
-            <div className="h-4 w-24 rounded-full bg-slate-200" />
+            <div className="h-4 w-24 rounded-full bg-muted" />
             <div className="mt-5 flex items-end gap-1.5">
               {[28, 42, 34, 54, 40, 62, 50].map((h) => (
                 <div key={h} className="w-4 rounded-t-lg bg-blue-500/70" style={{ height: `${h}px` }} />
               ))}
             </div>
-            <div className="mt-4 h-2 w-36 rounded-full bg-slate-200" />
-            <div className="mt-2 h-2 w-24 rounded-full bg-slate-100" />
+            <div className="mt-4 h-2 w-36 rounded-full bg-muted" />
+            <div className="mt-2 h-2 w-24 rounded-full bg-muted" />
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-8 right-0 flex h-24 w-24 items-center justify-center rounded-[26px] border border-white/25 bg-white/28 text-white shadow-[0_30px_70px_-38px_rgba(2,6,23,0.75)] backdrop-blur-md">
+      <div className="absolute bottom-8 right-0 flex h-24 w-24 items-center justify-center rounded-[26px] border border-white/25 bg-white/28 text-white dark:border-white/12 dark:bg-slate-950/30 shadow-[0_30px_70px_-38px_rgba(2,6,23,0.75)] backdrop-blur-md">
         <IconCart className="h-10 w-10" />
       </div>
 
-      <div className="absolute bottom-2 right-24 h-14 w-20 rounded-[18px] bg-blue-200/50 shadow-[0_24px_50px_-30px_rgba(2,6,23,0.8)]" />
+      <div className="absolute bottom-2 right-24 h-14 w-20 rounded-[18px] bg-blue-200/50 dark:bg-blue-950/35 shadow-[0_24px_50px_-30px_rgba(2,6,23,0.8)]" />
 
-      <div className="absolute bottom-14 left-12 flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/25 bg-white/90 text-blue-700 shadow-[0_24px_55px_-32px_rgba(2,6,23,0.7)]">
+      <div className="absolute bottom-14 left-12 flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/25 bg-white/90 text-blue-700 dark:border-white/12 dark:bg-slate-950/60 dark:text-blue-200 shadow-[0_24px_55px_-32px_rgba(2,6,23,0.7)]">
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8">
           <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z" />
         </svg>
@@ -142,8 +142,8 @@ function RecoveryIllustration() {
         <IconLock className="h-16 w-16" />
       </div>
 
-      <div className="absolute right-[18%] top-[104px] h-[86px] w-[150px] -rotate-3 rounded-[22px] border border-white/22 bg-white/38 shadow-[0_22px_55px_-28px_rgba(2,6,23,0.65)] backdrop-blur-md">
-        <div className="absolute inset-x-0 top-0 h-full rounded-[22px] bg-gradient-to-br from-white/65 to-white/10" />
+      <div className="absolute right-[18%] top-[104px] h-[86px] w-[150px] -rotate-3 rounded-[22px] border border-white/22 bg-white/38 dark:border-white/12 dark:bg-slate-950/40 shadow-[0_22px_55px_-28px_rgba(2,6,23,0.65)] backdrop-blur-md">
+        <div className="absolute inset-x-0 top-0 h-full rounded-[22px] bg-gradient-to-br from-white/65 to-white/10 dark:from-white/12 dark:to-white/5" />
         <div className="absolute left-0 top-0 h-full w-full rounded-[22px] border-t border-white/35" />
         <div className="absolute left-5 top-6 h-2 w-20 rounded-full bg-white/45" />
         <div className="absolute left-5 top-10 h-2 w-28 rounded-full bg-white/25" />

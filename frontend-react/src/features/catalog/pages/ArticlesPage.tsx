@@ -498,9 +498,9 @@ export function ArticlesPage() {
           </section>
 
           {showInlineError ? (
-            <Card className="border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10">
-              <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">Navigation temporairement indisponible</div>
-              <div className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+            <Card className="border-warning/25 bg-warning/10 p-4">
+              <div className="text-sm font-semibold text-warning">Navigation temporairement indisponible</div>
+              <div className="mt-1 text-sm text-warning/80">
                 {(error as Error)?.message ?? "Le changement de page a échoué. Les derniers articles chargés restent affichés."}
               </div>
             </Card>

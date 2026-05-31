@@ -349,7 +349,7 @@ export function MapboxSearchMap({
       >
         {/* Hint flottant */}
         {!disabled && (
-          <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur-sm">
+          <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2 rounded-full border border-border/60 bg-card/95 px-3 py-1 text-[11px] font-semibold text-card-foreground shadow-sm backdrop-blur-sm">
             {pinVisible ? "Glissez le pin pour ajuster" : "Cliquez sur la carte pour épingler"}
           </div>
         )}

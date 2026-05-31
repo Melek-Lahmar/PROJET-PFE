@@ -79,7 +79,7 @@ export function AdminToggle({
         className={`relative inline-flex h-6 w-11 rounded-full transition ${checked ? "bg-primary" : "bg-muted"}`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${checked ? "left-[22px]" : "left-0.5"}`}
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-sm transition ${checked ? "left-[22px]" : "left-0.5"}`}
         />
       </span>
       {label}

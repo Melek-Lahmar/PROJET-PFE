@@ -397,7 +397,7 @@ function HomepageCarouselSection({
                 key={slide.id}
                 type="button"
                 onClick={() => setActiveIndex(index)}
-                className={`h-2.5 rounded-full transition-all ${index === safeIndex ? 'w-8 bg-white' : 'w-2.5 bg-white/36 hover:bg-white/58'}`}
+                className={`h-2.5 rounded-full transition-all ${index === safeIndex ? 'w-8 bg-card' : 'w-2.5 bg-white/36 hover:bg-white/58'}`}
                 aria-label={`Aller au visuel ${index + 1}`}
               />
             ))}

@@ -19,7 +19,7 @@ export function buildCatalogueTree(items: Catalogue[]): CatalogueNode[] {
   }
 
   const sortRec = (arr: CatalogueNode[]) => {
-    arr.sort((a, b) => a.cL_Intitule.localeCompare(b.cL_Intitule));
+    arr.sort((a, b) => (a.cL_Intitule ?? "").localeCompare(b.cL_Intitule ?? ""));
     arr.forEach((x) => sortRec(x.children));
   };
   sortRec(roots);

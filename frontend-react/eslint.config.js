@@ -29,6 +29,7 @@ export default defineConfig([
       'react-hooks/purity': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
 
+
       // Fast refresh — warn pour les fichiers utilitaires partagés
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 

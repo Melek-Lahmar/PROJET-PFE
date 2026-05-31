@@ -165,7 +165,7 @@ export function ChatbotConversationsPage() {
                   {m.role !== "user" && (
                     <span className={[
                       "mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow",
-                      m.role === "system" ? "bg-slate-500" : "bg-gradient-to-br from-violet-500 to-indigo-500",
+                      m.role === "system" ? "bg-muted-foreground" : "bg-gradient-to-br from-violet-500 to-indigo-500",
                     ].join(" ")}>
                       {m.role === "system" ? "S" : "B"}
                     </span>
@@ -182,7 +182,7 @@ export function ChatbotConversationsPage() {
                   >
                     <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase opacity-70">
                       <span>{m.role}</span>
-                      {m.action && <span className="rounded-full bg-white/30 px-1.5 py-0.5">· {m.action}</span>}
+                      {m.action && <span className="rounded-full bg-foreground/20 px-1.5 py-0.5">· {m.action}</span>}
                       {m.feedback && <span>· {m.feedback === "up" ? "👍" : "👎"}</span>}
                     </div>
                     <div className="whitespace-pre-wrap break-words text-sm">{m.content}</div>

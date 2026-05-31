@@ -341,7 +341,7 @@ export function AdminUsersPage() {
                   items.map((u) => (
                     <tr
                       key={u.userId}
-                      className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/35"
+                      className="transition-colors hover:bg-muted/80 dark:hover:bg-slate-800/35"
                     >
                       <td className="px-5 py-4 align-middle">
                         <div className="flex min-w-0 items-center gap-3">

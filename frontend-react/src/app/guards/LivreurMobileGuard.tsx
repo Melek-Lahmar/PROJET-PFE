@@ -24,7 +24,7 @@ export function LivreurMobileWallPage() {
   const clear = useAuthStore((s) => s.clear);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-gradient-to-br from-slate-50 to-slate-100 px-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-6 text-center">
       {/* Icône mobile */}
       <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-sm">
         <svg
@@ -43,15 +43,15 @@ export function LivreurMobileWallPage() {
 
       {/* Titre */}
       <div className="max-w-sm space-y-3">
-        <h1 className="text-2xl font-black tracking-tight text-slate-900">
+        <h1 className="text-2xl font-black tracking-tight text-foreground">
           Application mobile requise
         </h1>
-        <p className="text-base leading-relaxed text-slate-600">
+        <p className="text-base leading-relaxed text-muted-foreground">
           Votre compte livreur est configuré pour l'application mobile uniquement.
           Le tableau de bord web n'est pas disponible pour ce rôle.
         </p>
         {email && (
-          <p className="text-sm font-semibold text-slate-500">Connecté en tant que : {email}</p>
+          <p className="text-sm font-semibold text-muted-foreground">Connecté en tant que : {email}</p>
         )}
       </div>
 

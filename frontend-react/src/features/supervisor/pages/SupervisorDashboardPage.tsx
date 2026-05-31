@@ -63,10 +63,10 @@ interface Issue {
 
 function badgeClass(status: string) {
   const s = status.toUpperCase();
-  if (s.includes("RECU") || s.includes("TERMINE")) return "bg-green-100 text-green-800";
-  if (s.includes("TRANSIT") && !s.includes("ATTENTE")) return "bg-blue-100 text-blue-800";
-  if (s.includes("AFFECTATION")) return "bg-red-100 text-red-800";
-  return "bg-amber-100 text-amber-800";
+  if (s.includes("RECU") || s.includes("TERMINE")) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+  if (s.includes("TRANSIT") && !s.includes("ATTENTE")) return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+  if (s.includes("AFFECTATION")) return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -253,7 +253,7 @@ function TransfertDetailsModal({
           </div>
 
           {successMsg && !anyError && (
-            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-700">
+            <div className="rounded-xl border border-success/25 bg-success/10 px-4 py-2.5 text-sm font-medium text-success">
               ✓ {successMsg}
             </div>
           )}
@@ -478,7 +478,7 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
                   )}
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-                      isAvailable ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                      isAvailable ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
                     }`}
                   >
                     {isAvailable ? "Disponible" : "En mission"}
@@ -602,9 +602,9 @@ function LivreursTab({ depots }: { depots: Depot[] }) {
 
 function severityBadgeClass(severity: string) {
   const s = severity.toUpperCase();
-  if (s === "HIGH" || s === "URGENT" || s === "CRITICAL") return "bg-red-100 text-red-800";
-  if (s === "WARNING" || s === "MEDIUM") return "bg-amber-100 text-amber-800";
-  return "bg-blue-100 text-blue-800";
+  if (s === "HIGH" || s === "URGENT" || s === "CRITICAL") return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  if (s === "WARNING" || s === "MEDIUM") return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+  return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
 }
 
 function ProblemesTab() {
@@ -721,7 +721,7 @@ function ProblemesTab() {
                     Résoudre
                   </Button>
                 ) : (
-                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800">
+                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-800 dark:bg-green-900/30 dark:text-green-300">
                     Résolu
                   </span>
                 )}
@@ -737,16 +737,16 @@ function ProblemesTab() {
 // ─── Onglet "Dépôts" ─────────────────────────────────────────────────────────
 
 const STATUS_COLOR: Record<string, string> = {
-  EN_ATTENTE_TRANSIT:              "bg-amber-100 text-amber-800",
-  EN_ATTENTE_AFFECTATION_TRANSIT:  "bg-red-100 text-red-800",
-  EN_TRANSIT:                      "bg-blue-100 text-blue-800",
-  EN_COURS_TRANSIT:                "bg-blue-100 text-blue-800",
-  RECU_AU_DEPOT:                   "bg-green-100 text-green-800",
-  RECU_DEPOT_DESTINE:              "bg-green-100 text-green-800",
-  TRANSIT_TERMINE:                 "bg-slate-100 text-slate-700",
-  TRANSIT_PARTIELLEMENT_RECU:      "bg-purple-100 text-purple-800",
-  ANNULE:                          "bg-slate-100 text-slate-500",
-  TRANSIT_REQUIS:                  "bg-orange-100 text-orange-800",
+  EN_ATTENTE_TRANSIT:              "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  EN_ATTENTE_AFFECTATION_TRANSIT:  "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  EN_TRANSIT:                      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  EN_COURS_TRANSIT:                "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  RECU_AU_DEPOT:                   "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  RECU_DEPOT_DESTINE:              "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  TRANSIT_TERMINE:                 "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  TRANSIT_PARTIELLEMENT_RECU:      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  ANNULE:                          "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  TRANSIT_REQUIS:                  "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
 };
 
 function statusColor(s: string) {
@@ -814,14 +814,12 @@ function DepotsTab({
     return transferts.filter((t) => {
       const matchDepot = selectedDepot === null || t.sourceDepotNo === selectedDepot;
       const matchStatus = statusFilter === "ALL" || t.status === statusFilter;
-      const matchSearch =
-        !q ||
-        t.doPiece.toLowerCase().includes(q) ||
-        t.arRef.toLowerCase().includes(q) ||
-        (livreurName(t.transitLivreurUserId) ?? "").toLowerCase().includes(q);
+      const lv = t.transitLivreurUserId ? livreurs.find((l) => l.id === t.transitLivreurUserId) : null;
+      const lvName = lv ? (lv.fullName?.trim() || lv.email || t.transitLivreurUserId || "") : (t.transitLivreurUserId ?? "");
+      const matchSearch = !q || t.doPiece.toLowerCase().includes(q) || t.arRef.toLowerCase().includes(q) || lvName.toLowerCase().includes(q);
       return matchDepot && matchStatus && matchSearch;
     });
-  }, [transferts, selectedDepot, statusFilter, search]);
+  }, [transferts, selectedDepot, statusFilter, search, livreurs]);
 
   // Grouper par dépôt source
   const grouped = useMemo(() => {
@@ -949,11 +947,11 @@ function DepotsTab({
                     : false;
 
                   return (
-                    <tr key={t.id} className={`transition hover:bg-muted/20 ${blocked24h ? "bg-red-50/50" : ""}`}>
+                    <tr key={t.id} className={`transition hover:bg-muted/20 ${blocked24h ? "bg-danger/5" : ""}`}>
                       <td className="px-4 py-3">
                         <span className="font-bold text-card-foreground">{t.doPiece}</span>
                         {blocked24h && (
-                          <span className="ml-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">+24h</span>
+                          <span className="ml-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-300">+24h</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{t.arRef}</td>
@@ -974,7 +972,7 @@ function DepotsTab({
                             )}
                           </div>
                         ) : (
-                          <span className="italic text-amber-600 text-xs">Non affecté</span>
+                          <span className="italic text-warning text-xs">Non affecté</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -1102,10 +1100,10 @@ export function SupervisorDashboardPage() {
   ];
 
   const statCards = [
-    { label: "En attente", value: stats?.pending ?? "—", color: "text-amber-600" },
-    { label: "En transit", value: stats?.inProgress ?? "—", color: "text-blue-600" },
-    { label: "Reçus aujourd'hui", value: stats?.receivedToday ?? "—", color: "text-green-600" },
-    { label: "Bloqués >24h", value: stats?.blocked24h ?? "—", color: "text-red-600" },
+    { label: "En attente", value: stats?.pending ?? "—", color: "text-warning" },
+    { label: "En transit", value: stats?.inProgress ?? "—", color: "text-info" },
+    { label: "Reçus aujourd'hui", value: stats?.receivedToday ?? "—", color: "text-success" },
+    { label: "Bloqués >24h", value: stats?.blocked24h ?? "—", color: "text-danger" },
   ] as const;
 
   return (

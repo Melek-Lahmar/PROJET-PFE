@@ -7,6 +7,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
+import { useLayoutStore } from "../../../shared/store/layoutStore";
 import { 
   HOMEPAGE_THEMES, 
   getTheme, 
@@ -47,11 +48,33 @@ export function HomepageThemeProvider({
   };
 
   const activeTheme = useMemo(() => getTheme(activeThemeId), [activeThemeId]);
+  const themeMode = useLayoutStore((state) => state.themeMode);
 
-  // Inject Tailwind-compatible CSS vars into :root so every component using
-  // classes like bg-primary, text-card-foreground etc. picks up the theme.
+  // Keep the homepage theme customisation compatible with the global dark mode.
+  // The provider wraps the whole app, so inline :root variables would otherwise
+  // override the .dark tokens defined in globals.css.
   useEffect(() => {
     const root = document.documentElement;
+    const themedTokenNames = [
+      "--primary",
+      "--primary-foreground",
+      "--background",
+      "--foreground",
+      "--card",
+      "--card-foreground",
+      "--muted",
+      "--muted-foreground",
+      "--border",
+      "--accent",
+      "--accent-foreground",
+      "--info",
+    ];
+
+    if (themeMode === "dark") {
+      themedTokenNames.forEach((tokenName) => root.style.removeProperty(tokenName));
+      return;
+    }
+
     root.style.setProperty("--primary", hexToHsl(activeTheme.colors.primary));
     root.style.setProperty("--primary-foreground", hexToHsl(activeTheme.buttons.primary.text));
     root.style.setProperty("--background", hexToHsl(activeTheme.colors.background));
@@ -64,7 +87,7 @@ export function HomepageThemeProvider({
     root.style.setProperty("--accent", hexToHsl(activeTheme.colors.accent));
     root.style.setProperty("--accent-foreground", hexToHsl(activeTheme.colors.text));
     root.style.setProperty("--info", hexToHsl(activeTheme.colors.secondary));
-  }, [activeTheme]);
+  }, [activeTheme, themeMode]);
 
   const value: HomepageThemeContextType = {
     activeThemeId,

@@ -229,7 +229,7 @@ export function ChatbotSandboxPage() {
                 {lastBot.meta.data ? (
                   <div className="rounded-xl border border-border bg-muted/30 p-3">
                     <div className="mb-1 text-[11px] font-bold uppercase text-muted-foreground">Données brutes</div>
-                    <pre className="overflow-x-auto rounded-lg bg-slate-900 p-2 text-[10px] text-slate-100">
+                    <pre className="overflow-x-auto rounded-lg bg-[#0f172a] p-2 text-[10px] text-slate-200 dark:bg-[#020617]">
                       {JSON.stringify(lastBot.meta.data, null, 2)}
                     </pre>
                   </div>
