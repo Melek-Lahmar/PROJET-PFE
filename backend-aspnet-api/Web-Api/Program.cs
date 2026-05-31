@@ -176,6 +176,10 @@ builder.Services.AddScoped<ISupervisorAlertService, SupervisorAlertService>();
 // Section 1.1 — DepotIncrementJob (Hangfire) + Section 5.4 — ProactiveInsightsJob
 builder.Services.AddScoped<Web_Api.Services.Livreur.DepotIncrementJob>();
 
+// T-10 / T-03 — Jobs Hangfire transit
+builder.Services.AddScoped<Web_Api.Services.Jobs.TransitRetryAssignmentJob>();
+builder.Services.AddScoped<Web_Api.Services.Jobs.TransitEscalation24hJob>();
+
 // Section 1.3 — Sms gateway selon config "Sms:Provider" (Mock par défaut)
 builder.Services.AddSingleton<Web_Api.Services.Sms.ISmsGateway>(sp =>
 {
@@ -529,6 +533,26 @@ using (var scope2 = app.Services.CreateScope())
         Web_Api.Services.Admin.Chat.ProactiveInsightsJob.JobId,
         job => job.RunAsync(),
         "*/30 * * * *",
+        new Hangfire.RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Utc
+        });
+
+    // T-10 — Relance affectation transit toutes les 5 minutes
+    Hangfire.RecurringJob.AddOrUpdate<Web_Api.Services.Jobs.TransitRetryAssignmentJob>(
+        Web_Api.Services.Jobs.TransitRetryAssignmentJob.JobId,
+        job => job.RunAsync(),
+        "*/5 * * * *",
+        new Hangfire.RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Utc
+        });
+
+    // T-03 — Escalade 24h sans affectation, toutes les heures
+    Hangfire.RecurringJob.AddOrUpdate<Web_Api.Services.Jobs.TransitEscalation24hJob>(
+        Web_Api.Services.Jobs.TransitEscalation24hJob.JobId,
+        job => job.RunAsync(),
+        "0 * * * *",
         new Hangfire.RecurringJobOptions
         {
             TimeZone = TimeZoneInfo.Utc

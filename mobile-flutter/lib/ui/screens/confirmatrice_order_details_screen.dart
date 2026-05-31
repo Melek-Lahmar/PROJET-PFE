@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../data/services/confirmatrice_order_history_service.dart';
+import '../../data/services/confirmatrice_orders_service.dart';
 import '../../models/confirmatrice_order.dart';
 import '../../models/livreur_order_details.dart' show LivreurOrderHistoryItem;
 import '../../state/confirmatrice_orders_provider.dart';
@@ -44,6 +45,15 @@ class _ConfirmatriceOrderDetailsScreenState
   /// aucune donnée, fallback synthèse si erreur réseau / 404.
   List<LivreurOrderHistoryItem>? _history;
 
+  /// Couverture de zone livreur (chargée en parallèle). `null` = pas encore
+  /// chargé, sinon contient `hasCoverage`, `gouvernorat`, `delegation`,
+  /// `livreurCount` et éventuellement `message`.
+  Map<String, dynamic>? _coverage;
+  bool _coverageLoading = false;
+
+  /// Liste des superviseurs (chargée seulement si la couverture est rouge).
+  List<Map<String, dynamic>>? _supervisors;
+
   static const _gradientStart = Color(0xFF6E3CE9);
   static const _gradientEnd = Color(0xFF8E5FF8);
   static const _accentYellow = Color(0xFFFFE066);
@@ -74,6 +84,8 @@ class _ConfirmatriceOrderDetailsScreenState
 
       // Charge la timeline réelle en parallèle (non bloquant).
       unawaited(_loadHistory());
+      // Charge la couverture de zone livreur (non bloquant).
+      unawaited(_loadCoverage());
     } catch (e) {
       if (!mounted) return;
       setState(() {

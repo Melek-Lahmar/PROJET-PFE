@@ -13,6 +13,7 @@ namespace Web_Api.Services.Refonte
         Task<F_TRANSFERT?> GetMissionForActorAsync(Guid transfertId, Guid actorId, bool canAccessAll, CancellationToken ct = default);
         Task<F_TRANSFERT> ScanPickupAsync(Guid livreurId, TransitScanRequest request, CancellationToken ct = default);
         Task<F_TRANSFERT> ScanDeliveryAsync(Guid livreurId, TransitScanRequest request, CancellationToken ct = default);
+        Task<F_TRANSFERT> ScanPartialDeliveryAsync(Guid transfertId, int receivedQty, string? note, Guid actorId, CancellationToken ct = default);
         Task<TransitScanResultDto> ScanTransitBarcodeAsync(Guid actorId, bool canAccessAll, TransitScanRequestDto request, CancellationToken ct = default);
     }
 
@@ -102,6 +103,108 @@ namespace Web_Api.Services.Refonte
                 throw new InvalidOperationException("Le scan d'arrivée est impossible avant le scan de prise en charge.");
 
             await ApplyDeliveryAsync(transfert, livreurId, request.Latitude, request.Longitude, ct);
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return transfert;
+        }
+
+        public async Task<F_TRANSFERT> ScanPartialDeliveryAsync(
+            Guid transfertId,
+            int receivedQty,
+            string? note,
+            Guid actorId,
+            CancellationToken ct = default)
+        {
+            if (receivedQty < 0)
+                throw new InvalidOperationException("Quantité reçue invalide.");
+            if (receivedQty == 0)
+                throw new InvalidOperationException("Quantité reçue ne peut être 0.");
+
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            var transfert = await _db.F_TRANSFERTS.FirstOrDefaultAsync(x => x.Id == transfertId, ct)
+                ?? throw new KeyNotFoundException("Transfert introuvable.");
+
+            if (TransitStatuses.IsReceived(transfert.Status))
+                throw new InvalidOperationException("Ce transfert est déjà réceptionné au dépôt.");
+            if (!TransitStatuses.IsInTransit(transfert.Status))
+                throw new InvalidOperationException("Le scan de réception est impossible avant le scan de prise en charge.");
+
+            var originalQty = transfert.Quantite;
+            var before = System.Text.Json.JsonSerializer.Serialize(transfert);
+            var trimmedNote = (note ?? string.Empty).Trim();
+
+            if ((decimal)receivedQty >= originalQty)
+            {
+                // Réception complète — flux normal, on bascule en RECU_DEPOT_DESTINE.
+                var source = await _db.F_ARTSTOCKS.FirstOrDefaultAsync(
+                    x => x.AR_Ref == transfert.ArRef && x.DE_No == transfert.SourceDepotNo, ct)
+                    ?? throw new InvalidOperationException("Stock source introuvable.");
+                var dest = await _db.F_ARTSTOCKS.FirstOrDefaultAsync(
+                    x => x.AR_Ref == transfert.ArRef && x.DE_No == transfert.DestinationDepotNo, ct);
+
+                if (source.AS_QteSto < transfert.Quantite)
+                    throw new InvalidOperationException("Stock source insuffisant : risque de stock négatif.");
+
+                if (dest == null)
+                {
+                    dest = new F_ARTSTOCK
+                    {
+                        AR_Ref = transfert.ArRef,
+                        DE_No = transfert.DestinationDepotNo,
+                        AS_QteSto = 0,
+                        AS_QteRes = 0,
+                        AS_Principal = 0
+                    };
+                    _db.F_ARTSTOCKS.Add(dest);
+                }
+
+                source.AS_QteSto -= transfert.Quantite;
+                dest.AS_QteSto += transfert.Quantite;
+
+                transfert.Status = TransitStatuses.RecuDepotDestine;
+                transfert.DeliveredAt = DateTime.UtcNow;
+                transfert.Version++;
+
+                _db.F_TRANSFERT_AUDIT_LOGS.Add(new F_TRANSFERT_AUDIT_LOG
+                {
+                    TransfertId = transfert.Id,
+                    ActionType = "SCAN_PARTIAL_FULL",
+                    ActorUserId = actorId,
+                    SnapshotBefore = before,
+                    SnapshotAfter = System.Text.Json.JsonSerializer.Serialize(transfert),
+                    Motif = $"Réception complète via scan-partial. Reçu={receivedQty}/{originalQty}. {trimmedNote}".Trim(),
+                    OccurredAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                // Réception partielle — receivedQty > 0 && < originalQty.
+                var missing = originalQty - (decimal)receivedQty;
+                transfert.Status = TransitStatuses.TransitPartiellementRecu;
+                transfert.DeliveredAt = DateTime.UtcNow;
+                transfert.Version++;
+
+                _db.F_TRANSFERT_AUDIT_LOGS.Add(new F_TRANSFERT_AUDIT_LOG
+                {
+                    TransfertId = transfert.Id,
+                    ActionType = "SCAN_PARTIAL",
+                    ActorUserId = actorId,
+                    SnapshotBefore = before,
+                    SnapshotAfter = System.Text.Json.JsonSerializer.Serialize(transfert),
+                    Motif = $"Réception partielle. Reçu={receivedQty}/{originalQty} (manquant {missing}). Note: {trimmedNote}",
+                    OccurredAt = DateTime.UtcNow
+                });
+
+                _db.F_SUPERVISOR_ALERTS.Add(new F_SUPERVISOR_ALERT
+                {
+                    Severity = "WARNING",
+                    AlertType = "TRANSIT_PARTIAL",
+                    RelatedTransfertId = transfert.Id,
+                    Message = $"Transfert {transfert.DoPiece} reçu partiellement : {receivedQty}/{originalQty} (manquant {missing}). Note: {trimmedNote}",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
             await _db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
             return transfert;

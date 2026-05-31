@@ -257,6 +257,48 @@ namespace Web_Api.Controllers.Refonte
         }
 
         // ─────────────────────────────────────────────────────────────────────
+        // POST /api/transit/missions/{id}/scan-partial
+        // T-06 — Réception partielle d'un transfert.
+        // - receivedQty >= quantité initiale → RECU_DEPOT_DESTINE (flux normal)
+        // - 0 < receivedQty < quantité initiale → TRANSIT_PARTIELLEMENT_RECU
+        //   + création d'une alerte superviseur WARNING/TRANSIT_PARTIAL
+        // - receivedQty == 0 → 400 Conflict
+        // Réservé au livreur-transit propriétaire (rôle LIVREUR + IsTransit).
+        // ─────────────────────────────────────────────────────────────────────
+        [HttpPost("missions/{id:guid}/scan-partial")]
+        public async Task<IActionResult> ScanPartial(
+            Guid id,
+            [FromBody] ScanPartialRequest request,
+            CancellationToken ct)
+        {
+            var userId = CurrentUserId();
+            if (userId == null) return Forbid();
+            if (!await IsTransitLivreurAsync(userId.Value, ct)) return Forbid();
+
+            if (request == null)
+                return BadRequest(new
+                {
+                    errorCode = "BODY_REQUIRED",
+                    errorMessage = "Corps de requête obligatoire."
+                });
+
+            try
+            {
+                var updated = await _service.ScanPartialDeliveryAsync(
+                    id, request.ReceivedQty, request.Note, userId.Value, ct);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { errorCode = "TRANSIT_NOT_FOUND", errorMessage = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { errorCode = "TRANSIT_CONFLICT", errorMessage = ex.Message });
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
         // POST /api/transit/my-missions/{id}/revert-pickup
         //
         // Annule un scan de pickup accidentel et remet la mission à
