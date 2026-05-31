@@ -90,6 +90,11 @@ namespace Web_Api.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, ReclamationEvents.GroupLivreurs);
             }
 
+            if (Context.User?.IsInRole(AppRoles.SUPERVISEUR) == true)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, ReclamationEvents.GroupSuperviseurs);
+            }
+
             await base.OnConnectedAsync();
         }
 
@@ -108,6 +113,11 @@ namespace Web_Api.Hubs
             if (isLivreur)
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, ReclamationEvents.GroupLivreurs);
+            }
+
+            if (Context.User?.IsInRole(AppRoles.SUPERVISEUR) == true)
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, ReclamationEvents.GroupSuperviseurs);
             }
 
             // Section 2.2.2 — délai de grâce 5s avant libération des cas

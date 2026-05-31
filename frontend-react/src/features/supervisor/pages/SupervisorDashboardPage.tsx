@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../core/http/axiosClient";
 import { endpoints } from "../../../core/http/endpoints";
 import { Button } from "../../../shared/components/Button";
-import { PremiumHero } from "../../../shared/components/premium";
+import { PremiumHero, useToast } from "../../../shared/components/premium";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
+import { useSuperviseurAlertSignalR } from "../hooks/useSuperviseurAlertSignalR";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1015,10 +1016,16 @@ type Tab = "global" | "depots" | "livreurs" | "problemes";
 
 export function SupervisorDashboardPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("global");
   const [retryingPiece, setRetryingPiece] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [detailsTransfert, setDetailsTransfert] = useState<Transfert | null>(null);
+
+  useSuperviseurAlertSignalR((alert) => {
+    toast.error("Zone sans livreur", alert.message);
+    void qc.invalidateQueries({ queryKey: ["supervisor-alerts"] });
+  });
 
   const statsQuery = useQuery({
     queryKey: ["supervisor-stats"],

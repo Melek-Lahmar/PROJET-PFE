@@ -14,6 +14,7 @@ using Web_Api.DTO.Confirmateur;
 using Web_Api.Hubs;
 using Web_Api.Model;
 using Web_Api.Services;
+using Web_Api.Services.Refonte;
 
 namespace Web_Api.Controllers.Confirmateur
 {
@@ -26,17 +27,20 @@ namespace Web_Api.Controllers.Confirmateur
         private readonly IHubContext<ReclamationHub> _hub;
         private readonly SageService _sage;
         private readonly UserManager<ApplicationUser> _users;
+        private readonly ISupervisorAlertService _alerts;
 
         public ConfirmateurController(
             AppDbContext db,
             IHubContext<ReclamationHub> hub,
             SageService sage,
-            UserManager<ApplicationUser> users)
+            UserManager<ApplicationUser> users,
+            ISupervisorAlertService alerts)
         {
             _db = db;
             _hub = hub;
             _sage = sage;
             _users = users;
+            _alerts = alerts;
         }
 
         // ── Zone key normalisation (same logic as CommandePoolService.NormalizeZoneKey) ──
@@ -578,12 +582,50 @@ namespace Web_Api.Controllers.Confirmateur
                 }
             }
 
+            // Phase 3b — alerte superviseur si aucun livreur ne couvre la zone.
+            F_SUPERVISOR_ALERT? zoneAlert = null;
+            if (noLivreurForZone)
+            {
+                var zoneLabel = (!string.IsNullOrWhiteSpace(govZone) && !string.IsNullOrWhiteSpace(delZone))
+                    ? $"{govZone} / {delZone}"
+                    : govZone ?? delZone ?? "zone inconnue";
+
+                zoneAlert = new F_SUPERVISOR_ALERT
+                {
+                    Severity = "CRITICAL",
+                    AlertType = "ZONE_SANS_LIVREUR",
+                    Message = $"BC {blPiece} confirmé mais aucun livreur ne couvre la zone {zoneLabel}. Affectation manuelle requise.",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.F_SUPERVISOR_ALERTS.Add(zoneAlert);
+            }
+
             // Phase 4 — libération automatique du verrou 15 min après confirmation.
             await _db.CommandeConfirmationLocks
                 .Where(l => l.DoPiece == piece)
                 .ExecuteDeleteAsync(ct);
 
             await trx.CommitAsync(ct);
+
+            // Phase 3c — push SignalR vers superviseurs (non bloquant, après commit).
+            if (zoneAlert != null)
+            {
+                try
+                {
+                    await _hub.Clients.Group(ReclamationEvents.GroupSuperviseurs)
+                        .SendAsync(ReclamationEvents.NouvelleAlerte, new
+                        {
+                            id = zoneAlert.Id,
+                            severity = zoneAlert.Severity,
+                            alertType = zoneAlert.AlertType,
+                            message = zoneAlert.Message,
+                        }, ct);
+                }
+                catch
+                {
+                    // Non bloquant.
+                }
+            }
 
             // ----- Sync Sage : POST docentete BL après commit local ------------
             // L'envoi est volontairement non-bloquant : si Sage est HS ou répond
