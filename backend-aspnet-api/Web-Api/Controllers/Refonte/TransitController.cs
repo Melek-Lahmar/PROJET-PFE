@@ -478,4 +478,14 @@ namespace Web_Api.Controllers.Refonte
         /// Raison de l'annulation — obligatoire (tracée dans l'audit log).
         public string? Justification { get; set; }
     }
+
+    /// T-06 — Payload de l'endpoint scan-partial.
+    public class ScanPartialRequest
+    {
+        /// Quantité effectivement reçue au dépôt destiné (entier).
+        public int ReceivedQty { get; set; }
+
+        /// Note libre du livreur (raison du delta, état des colis…).
+        public string? Note { get; set; }
+    }
 }
