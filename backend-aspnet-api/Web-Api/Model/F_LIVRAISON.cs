@@ -36,6 +36,12 @@ namespace MODELS_CREATEUR.MODELS_SAGE
         public DateTime? LI_DateLivree { get; set; }
         public DateTime? LI_DateReplanification { get; set; }
 
+        // Report partiel (même journée). Le statut reste EN_LIVRAISON ; la
+        // commande est juste « bloquée » dans l'UI livreur jusqu'à cet
+        // instant, puis revient automatiquement dans la liste active.
+        // null = pas de blocage, livraison normale.
+        public DateTime? LI_HeureSouhaitee { get; set; }
+
         [StringLength(250)]
         public string? LI_Commentaire { get; set; }
 

@@ -126,6 +126,9 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
       dateReplanification: _toDate(
         _pick(m, ['replannedAt', 'dateReplanification']),
       ),
+      heureSouhaitee: _toDate(
+        _pick(m, ['heureSouhaitee', 'HeureSouhaitee', 'LI_HeureSouhaitee']),
+      ),
       noteLivreur: _nullableString(
         _pick(m, ['note', 'noteLivreur', 'driverNote', 'LI_Commentaire']),
       ),
@@ -276,5 +279,18 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
       skippedPieces: readList('skippedPieces'),
       notFoundPieces: readList('notFoundPieces'),
     );
+  }
+
+  @override
+  Future<void> setHeureSouhaitee({
+    required String doPiece,
+    required DateTime? heureSouhaitee,
+    String? noteLivreur,
+  }) async {
+    final body = <String, dynamic>{
+      'heureSouhaitee': heureSouhaitee?.toUtc().toIso8601String(),
+      'note': noteLivreur,
+    };
+    await api.patchJson('/api/livreur/orders/$doPiece/heure-souhaitee', body);
   }
 }

@@ -25,6 +25,9 @@ namespace Web_Api.DTO.Livreur
         public DateTime? AssignedAt { get; set; }
         public DateTime? DeliveredAt { get; set; }
         public DateTime? ReplannedAt { get; set; }
+        // Report partiel (même journée) : instant à partir duquel la commande
+        // sort de la section « bloquée » et redevient livrable.
+        public DateTime? HeureSouhaitee { get; set; }
         public string? Note { get; set; }
 
         // Section 1.1 / 2.4 — numéro de passage dépôt (filtres chips livreur)

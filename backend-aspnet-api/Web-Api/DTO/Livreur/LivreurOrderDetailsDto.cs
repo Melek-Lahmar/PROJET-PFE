@@ -59,6 +59,11 @@ namespace Web_Api.DTO.Livreur
         [JsonPropertyName("noteClient")]
         public string? NoteClient { get; set; }
 
+        // Report partiel (même journée). Quand non null, la commande est
+        // « en attente » dans l'UI livreur jusqu'à cet instant.
+        [JsonPropertyName("heureSouhaitee")]
+        public DateTime? HeureSouhaitee { get; set; }
+
         [JsonPropertyName("client")]
         public LivreurOrderClientDto? Client { get; set; }
 

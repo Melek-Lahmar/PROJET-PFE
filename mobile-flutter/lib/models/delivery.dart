@@ -11,6 +11,9 @@ class Delivery {
   final DateTime? dateAffectation;
   final DateTime? dateLivree;
   final DateTime? dateReplanification;
+  // Report partiel (même journée) : instant à partir duquel la commande sort
+  // de la section « Bloquées » et redevient livrable. null = pas de blocage.
+  final DateTime? heureSouhaitee;
   final String? noteLivreur;
   final String? apiStatus;
 
@@ -41,6 +44,7 @@ class Delivery {
     this.dateAffectation,
     this.dateLivree,
     this.dateReplanification,
+    this.heureSouhaitee,
     this.noteLivreur,
     this.apiStatus,
     this.clientCode,
@@ -65,6 +69,8 @@ class Delivery {
     DateTime? dateLivree,
     DateTime? dateReplanification,
     bool clearDateReplanification = false,
+    DateTime? heureSouhaitee,
+    bool clearHeureSouhaitee = false,
     String? noteLivreur,
     String? apiStatus,
     String? clientCode,
@@ -89,6 +95,9 @@ class Delivery {
       dateReplanification: clearDateReplanification
           ? null
           : (dateReplanification ?? this.dateReplanification),
+      heureSouhaitee: clearHeureSouhaitee
+          ? null
+          : (heureSouhaitee ?? this.heureSouhaitee),
       noteLivreur: noteLivreur ?? this.noteLivreur,
       apiStatus: apiStatus ?? this.apiStatus,
       clientCode: clientCode ?? this.clientCode,
@@ -143,5 +152,22 @@ class Delivery {
 
   bool get isInDelivery {
     return statut == Statut.enLivraison;
+  }
+
+  /// Report partiel actif : commande EN_LIVRAISON, heure souhaitée définie
+  /// et encore future. Affichée dans la section « Bloquées » côté UI.
+  bool get isPartiallyDeferred {
+    final h = heureSouhaitee;
+    return statut == Statut.enLivraison &&
+        h != null &&
+        h.isAfter(DateTime.now());
+  }
+
+  /// Temps restant avant déblocage automatique (null si pas de blocage actif).
+  Duration? get timeUntilUnblock {
+    final h = heureSouhaitee;
+    if (h == null) return null;
+    final diff = h.difference(DateTime.now());
+    return diff.isNegative ? null : diff;
   }
 }

@@ -261,6 +261,9 @@ namespace Web_Api.Controllers
                 if (normalizedStatus != DeliveryStatuses.Reporte)
                     li.LI_DateReplanification = null;
 
+                // Un changement de statut invalide tout report partiel en cours.
+                li.LI_HeureSouhaitee = null;
+
                 if (entetes.TryGetValue(li.DO_Piece, out var entete))
                     entete.cbModification = now;
 
@@ -331,6 +334,9 @@ namespace Web_Api.Controllers
             li.LI_DateLivree =
                 normalizedStatus == DeliveryStatuses.Livre ? DateTime.UtcNow : li.LI_DateLivree;
 
+            // Un changement de statut invalide tout report partiel en cours.
+            li.LI_HeureSouhaitee = null;
+
             // Auto-encaissement COD à la transition Livré (PFE = Cash on Delivery).
             if (normalizedStatus == DeliveryStatuses.Livre && !li.Encaisse)
             {
@@ -360,6 +366,58 @@ namespace Web_Api.Controllers
                 status = normalizedStatus,
                 motif = normalizedMotif,
                 note = req.Note
+            });
+        }
+
+        /// <summary>
+        /// Report partiel (même journée) : la commande reste EN_LIVRAISON mais
+        /// est « bloquée » côté UI livreur jusqu'à <c>HeureSouhaitee</c>. Mettre
+        /// null pour débloquer manuellement.
+        /// </summary>
+        [HttpPatch("{piece}/heure-souhaitee")]
+        public async Task<IActionResult> SetHeureSouhaitee(
+            string piece,
+            [FromBody] SetHeureSouhaiteeRequestDto req,
+            CancellationToken ct)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            var profile = await GetCurrentProfileAsync(ct);
+            if (profile == null)
+                return StatusCode(403, new { message = "Profil livreur introuvable." });
+
+            var li = await _db.F_LIVRAISONS.FirstOrDefaultAsync(
+                x => x.DO_Piece == piece && x.LivreurId == profile.cbMarq,
+                ct);
+
+            if (li == null)
+                return NotFound(new { message = "Livraison introuvable pour ce livreur." });
+
+            // Seules les commandes en cours de livraison peuvent recevoir un
+            // report partiel. Pour les autres jours, utiliser le statut REPORTE.
+            if (li.LI_Statut != DeliveryStatusCodes.EnLivraison)
+                return BadRequest(new
+                {
+                    message = "Le report partiel n'est possible que sur une commande EN_LIVRAISON."
+                });
+
+            li.LI_HeureSouhaitee = req.HeureSouhaitee?.Kind == DateTimeKind.Utc
+                ? req.HeureSouhaitee
+                : req.HeureSouhaitee?.ToUniversalTime();
+
+            if (!string.IsNullOrWhiteSpace(req.Note))
+                li.LI_Commentaire = req.Note.Trim();
+
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(new
+            {
+                message = req.HeureSouhaitee.HasValue
+                    ? "Report partiel enregistré."
+                    : "Déblocage immédiat enregistré.",
+                piece,
+                heureSouhaitee = li.LI_HeureSouhaitee
             });
         }
 
@@ -428,6 +486,7 @@ namespace Web_Api.Controllers
                 AssignedAt = li?.LI_DateCreation,
                 DeliveredAt = li?.LI_DateLivree,
                 ReplannedAt = li?.LI_DateReplanification,
+                HeureSouhaitee = li?.LI_HeureSouhaitee,
                 Note = li?.LI_Commentaire,
                 DepotPassageNumber = li?.DepotPassageNumber,
                 IsActiveDelivery = e.IsActiveDelivery,
@@ -712,6 +771,7 @@ namespace Web_Api.Controllers
                 Adresse = entete.DO_AdresseLivraison,
                 Ville = entete.DO_VilleLivraison,
                 CodePostal = entete.DO_CodePostalLivraison,
+                HeureSouhaitee = li?.LI_HeureSouhaitee,
                 Client = new LivreurOrderClientDto
                 {
                     DisplayName = clientDisplay,

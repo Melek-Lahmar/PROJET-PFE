@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Web_Api.data;
 
@@ -11,9 +12,11 @@ using Web_Api.data;
 namespace Web_Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601120000_AddLIHeureSouhaitee")]
+    partial class AddLIHeureSouhaitee
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -701,10 +704,6 @@ namespace Web_Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AR_Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
                     b.Property<string>("AR_Design")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1269,40 +1268,6 @@ namespace Web_Api.Migrations
                     b.ToTable("F_CLIENT_DEVICE_TOKEN");
                 });
 
-            modelBuilder.Entity("Web_Api.Model.F_CLIENT_FAVORI", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AR_Ref")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("ClientUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AR_Ref");
-
-                    b.HasIndex("ClientUserId");
-
-                    b.HasIndex("ClientUserId", "AR_Ref")
-                        .IsUnique();
-
-                    b.ToTable("F_CLIENT_FAVORIS", (string)null);
-                });
-
             modelBuilder.Entity("Web_Api.Model.F_CONFIRMATRICE_SESSION", b =>
                 {
                     b.Property<long>("Id")
@@ -1476,186 +1441,6 @@ namespace Web_Api.Migrations
                     b.ToTable("F_DEPOT_ZONE");
                 });
 
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_ENTETE", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid?>("AssignedConfirmateurId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BcPiece")
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
-
-                    b.Property<string>("ClientCode")
-                        .HasMaxLength(17)
-                        .HasColumnType("nvarchar(17)");
-
-                    b.Property<string>("ClientType")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<Guid>("ClientUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DevisPiece")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("DiscountPercentSnapshot")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal>("NetAPayer")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<string>("StatusKey")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<decimal>("TotalHT")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal>("TotalHTNet")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal>("TotalTTC")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedConfirmateurId");
-
-                    b.HasIndex("BcPiece")
-                        .HasFilter("[BcPiece] IS NOT NULL");
-
-                    b.HasIndex("ClientUserId");
-
-                    b.HasIndex("DevisPiece")
-                        .IsUnique();
-
-                    b.HasIndex("StatusKey");
-
-                    b.ToTable("F_DEVIS_ENTETE");
-                });
-
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_EVENT", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuthorRole")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<Guid?>("AuthorUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DevisId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("NewStatus")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("OldStatus")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DevisId", "CreatedAt");
-
-                    b.ToTable("F_DEVIS_EVENT");
-                });
-
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_LIGNE", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AmountHT")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal>("AmountTTC")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<string>("ArticleRef")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Designation")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("DevisId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("DiscountLinePercent")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal>("Qty")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPriceHT")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DevisId", "SortOrder");
-
-                    b.ToTable("F_DEVIS_LIGNE");
-                });
-
             modelBuilder.Entity("Web_Api.Model.F_DOCENTETE", b =>
                 {
                     b.Property<int>("cbMarq")
@@ -1666,12 +1451,6 @@ namespace Web_Api.Migrations
 
                     b.Property<Guid?>("AssignedLivreurId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("B2BDiscountAmount")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("B2BDiscountRate")
-                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("CT_NumPayeur")
                         .HasMaxLength(17)
@@ -1835,10 +1614,6 @@ namespace Web_Api.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("HOME_DELIVERY");
 
-                    b.Property<string>("DiscountSource")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
                     b.Property<string>("EchangeArticleLivraison")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1871,48 +1646,8 @@ namespace Web_Api.Migrations
                     b.Property<bool>("ProximityAlertSent")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("QuoteAcceptedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("QuoteAssignedToUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("QuoteClientNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("QuoteConvertedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("QuoteConvertedToPiece")
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
-
-                    b.Property<Guid?>("QuoteCreatedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("QuoteInternalNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("QuoteRefusedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("QuoteSentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("QuoteStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("QuoteValidUntil")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("ReclamationOrigineId")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("TotalBeforeDiscount")
-                        .HasColumnType("decimal(24,13)");
 
                     b.Property<string>("TypeCommande")
                         .IsRequired()
@@ -1930,14 +1665,6 @@ namespace Web_Api.Migrations
                     b.HasIndex("AssignedLivreurId");
 
                     b.HasIndex("PickupDepotNo");
-
-                    b.HasIndex("QuoteAssignedToUserId");
-
-                    b.HasIndex("QuoteConvertedToPiece");
-
-                    b.HasIndex("QuoteCreatedByUserId");
-
-                    b.HasIndex("DO_Type", "QuoteStatus");
 
                     b.HasIndex("IsActiveDelivery", "AssignedLivreurId")
                         .HasDatabaseName("IX_F_DOCENTETE_ActiveDelivery");
@@ -2779,28 +2506,6 @@ namespace Web_Api.Migrations
                     b.Navigation("CustomerProfile");
                 });
 
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_EVENT", b =>
-                {
-                    b.HasOne("Web_Api.Model.F_DEVIS_ENTETE", "Devis")
-                        .WithMany("Events")
-                        .HasForeignKey("DevisId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Devis");
-                });
-
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_LIGNE", b =>
-                {
-                    b.HasOne("Web_Api.Model.F_DEVIS_ENTETE", "Devis")
-                        .WithMany("Lignes")
-                        .HasForeignKey("DevisId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Devis");
-                });
-
             modelBuilder.Entity("Web_Api.Model.F_RECLAMATION_PHOTO", b =>
                 {
                     b.HasOne("Web_Api.Model.F_RECLAMATION", null)
@@ -2816,13 +2521,6 @@ namespace Web_Api.Migrations
                         .WithMany("Tentatives")
                         .HasForeignKey("ReclamationId")
                         .OnDelete(DeleteBehavior.NoAction);
-                });
-
-            modelBuilder.Entity("Web_Api.Model.F_DEVIS_ENTETE", b =>
-                {
-                    b.Navigation("Events");
-
-                    b.Navigation("Lignes");
                 });
 
             modelBuilder.Entity("Web_Api.Model.F_RECLAMATION", b =>

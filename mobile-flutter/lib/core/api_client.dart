@@ -264,6 +264,26 @@ class ApiClient {
     );
   }
 
+  Future<Map<String, dynamic>> patchJson(
+      String path,
+      Map<String, dynamic> payload, {
+        bool auth = true,
+      }) async {
+    final response = await _send(() async => http.patch(
+          _buildUri(path),
+          headers: await _headers(auth: auth),
+          body: jsonEncode(payload),
+        ));
+    _ensureSuccess(response);
+    final body = _decodeBody(response);
+    if (body == null) return <String, dynamic>{};
+    if (body is Map<String, dynamic>) return body;
+    throw ApiException(
+      statusCode: response.statusCode,
+      message: 'Réponse inattendue : objet JSON attendu.',
+    );
+  }
+
   Future<void> postEmpty(String path, {bool auth = true}) async {
     final response = await _send(() async => http.post(
           _buildUri(path),
