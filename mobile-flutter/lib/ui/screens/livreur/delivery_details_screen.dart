@@ -1457,17 +1457,6 @@ final List<_StatusOption> _options = [
     requiresReplannedAt: true,
   ),
   _StatusOption(
-    label: 'Refus du client',
-    description: 'Le client refuse de prendre le colis.',
-    confirmLabel: 'Retour',
-    icon: Icons.cancel_schedule_send_outlined,
-    color: Colors.red.shade700,
-    bg: Colors.red.shade50,
-    newStatut: Statut.retourne,
-    motif: 'CLIENT_REFUSE',
-    needsNote: true,
-  ),
-  _StatusOption(
     label: 'Colis endommagé',
     description: 'Le produit est abîmé avant livraison.',
     confirmLabel: 'Signaler',

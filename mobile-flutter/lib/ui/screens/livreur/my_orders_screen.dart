@@ -181,13 +181,12 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
     });
   }
 
-  void _selectAllReady(List<Delivery> visible) {
-    final ready = visible.where(_isDepotReady).map((d) => d.doPiece);
+  void _selectAllVisible(List<Delivery> visible) {
     setState(() {
       _selectionMode = true;
       _selectedIds
         ..clear()
-        ..addAll(ready);
+        ..addAll(visible.map((d) => d.doPiece));
     });
   }
 
@@ -217,11 +216,44 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
     }
   }
 
+  /// Batch : passe toutes les sélections DEPOT (plain) à
+  /// DEPOT_EN_COURS_DE_PREPARATION. Appelé par le FAB quand la sélection
+  /// contient des commandes au dépôt non encore en préparation.
+  Future<void> _startPreparationBatch() async {
+    if (_launching) return;
+    final provider = context.read<DeliveriesProvider>();
+    final pieces = provider.myOrders
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotPlain)
+        .map((d) => d.doPiece)
+        .toList();
+    if (pieces.isEmpty) return;
+    setState(() => _launching = true);
+    try {
+      final result = await provider.setStatusBatch(
+        doPieces: pieces,
+        statut: Statut.depot,
+        apiStatusOverride: 'DEPOT_EN_COURS_DE_PREPARATION',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.amber.shade800,
+        content: Text('${result.updated} commande${result.updated > 1 ? "s" : ""} en préparation.'),
+      ));
+      _exitSelection();
+      setState(() => _filter = _StatusFilter.depotInPrep);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Échec : $e')));
+    } finally {
+      if (mounted) setState(() => _launching = false);
+    }
+  }
+
   /// Batch : passe toutes les sélections DEPOT_EN_COURS_DE_PREPARATION
   /// à DEPOT_PRET. Appelé par le FAB quand la sélection contient des
   /// commandes "en préparation".
-  // ignore: unused_element
-  Future<void> _markSelectedAsReady() async {
+  Future<void> _markSelectedReadyBatch() async {
     if (_launching) return;
     final provider = context.read<DeliveriesProvider>();
     final inPrep = provider.myOrders
@@ -373,16 +405,45 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
         .where(_isDepotReady)
         .length;
 
-    final showFab = _selectionMode && selectedReadyCount > 0;
+    final selectedDepotPlainCount = base
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotPlain)
+        .length;
+
+    final selectedInPrepCount = base
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotInPrep)
+        .length;
+
+    final showFab = _selectionMode &&
+        (selectedDepotPlainCount > 0 ||
+            selectedInPrepCount > 0 ||
+            selectedReadyCount > 0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: showFab
-          ? _GoLivraisonFab(
-              count: selectedReadyCount,
-              loading: _launching,
-              onPressed: _launchSelected,
-            )
+          ? selectedDepotPlainCount > 0
+              ? _BatchFab(
+                  label: 'En préparation ($selectedDepotPlainCount)',
+                  icon: Icons.inventory_2_rounded,
+                  colors: const [Color(0xFFB45309), Color(0xFFF59E0B)],
+                  loading: _launching,
+                  onPressed: _startPreparationBatch,
+                )
+              : selectedInPrepCount > 0
+                  ? _BatchFab(
+                      label: 'Marquer prêt ($selectedInPrepCount)',
+                      icon: Icons.task_alt_rounded,
+                      colors: const [Color(0xFF059669), Color(0xFF34D399)],
+                      loading: _launching,
+                      onPressed: _markSelectedReadyBatch,
+                    )
+                  : _GoLivraisonFab(
+                      count: selectedReadyCount,
+                      loading: _launching,
+                      onPressed: _launchSelected,
+                    )
           : null,
       body: RefreshIndicator(
         onRefresh: () => provider.refresh(),
@@ -393,9 +454,11 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
               child: _selectionMode
                   ? _SelectionHeader(
                       count: _selectedIds.length,
+                      depotPlainCount: selectedDepotPlainCount,
+                      inPrepCount: selectedInPrepCount,
                       readyCount: selectedReadyCount,
                       onCancel: _exitSelection,
-                      onSelectAll: () => _selectAllReady(filtered),
+                      onSelectAll: () => _selectAllVisible(filtered),
                     )
                   : _Header(total: counts[_StatusFilter.all] ?? 0),
             ),
@@ -502,7 +565,7 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                   icon: Icons.check_circle_outline_rounded,
                   title: 'Aucune livraison en cours',
                   subtitle:
-                      'Accepte une commande depuis l\'onglet Nouvelles commandes.',
+                      'Les nouvelles commandes apparaissent automatiquement ici.',
                   ctaLabel: 'Actualiser',
                   onCta: () => provider.refresh(),
                 ),
@@ -536,6 +599,11 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                     final selected = _selectedIds.contains(d.doPiece);
                     final isReady = _isDepotReady(d);
                     final isInPrep = _isDepotInPrep(d);
+                    final isDepotPlain = _isDepotPlain(d);
+                    final isNewOrder = isDepotPlain &&
+                        (d.depotPassageNumber == null ||
+                            d.depotPassageNumber! <= 1);
+                    final isReportedOrder = d.isReported;
 
                     return EntryAnimation(
                       duration: const Duration(milliseconds: 320),
@@ -545,6 +613,9 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                         delivery: d,
                         isReady: isReady,
                         isInPrep: isInPrep,
+                        isDepotPlain: isDepotPlain,
+                        isNewOrder: isNewOrder,
+                        isReportedOrder: isReportedOrder,
                         selectionMode: _selectionMode,
                         selected: selected,
                         onTap: () {
@@ -554,9 +625,11 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                             _openDetails(d);
                           }
                         },
-                        onLongPress: isReady && !_selectionMode
-                            ? () => _enterSelection(d)
-                            : null,
+                        onLongPress:
+                            (isReady || isInPrep || isDepotPlain) &&
+                                    !_selectionMode
+                                ? () => _enterSelection(d)
+                                : null,
                         onMarkReady:
                             isInPrep ? () => _markAsReady(d) : null,
                       ),
@@ -760,12 +833,16 @@ class _Header extends StatelessWidget {
 
 class _SelectionHeader extends StatelessWidget {
   final int count;
+  final int depotPlainCount;
+  final int inPrepCount;
   final int readyCount;
   final VoidCallback onCancel;
   final VoidCallback onSelectAll;
 
   const _SelectionHeader({
     required this.count,
+    required this.depotPlainCount,
+    required this.inPrepCount,
     required this.readyCount,
     required this.onCancel,
     required this.onSelectAll,
@@ -822,9 +899,11 @@ class _SelectionHeader extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      readyCount == count
-                          ? '$readyCount prêtes à partir'
-                          : '$readyCount prêtes / ${count - readyCount} non éligibles',
+                      [
+                        if (depotPlainCount > 0) '$depotPlainCount au dépôt',
+                        if (inPrepCount > 0) '$inPrepCount en prép.',
+                        if (readyCount > 0) '$readyCount prêtes',
+                      ].join(' · '),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.86),
                         fontSize: 12,
