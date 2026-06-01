@@ -6,11 +6,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants.dart';
 import '../../core/mapbox_routing_service.dart';
 import '../../core/premium_routing.dart';
 import '../../models/delivery.dart';
 import '../../state/deliveries_provider.dart';
 import '../../state/navigation_provider.dart';
+import '../widgets/livreur/heure_souhaitee_badge.dart';
+import '../widgets/livreur/heure_souhaitee_sheet.dart';
 import '../widgets/map/navigation_controls.dart';
 import '../widgets/map/route_premium_panel.dart';
 import '../widgets/map/route_reorder_sheet.dart';
@@ -536,13 +539,148 @@ class _MapScreenState extends State<MapScreen> {
     await showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (ctx) {
         final isUrgent = nav.isUrgent(d.doPiece);
+        // Re-watch sur la version "fraîche" du provider — si on revient
+        // d'une action (set/clear heure souhaitée) sans fermer le sheet,
+        // l'affichage de l'heure et des boutons reste cohérent.
+        final fresh = del.myOrders.firstWhere(
+          (x) => x.doPiece == d.doPiece,
+          orElse: () => d,
+        );
+        final isBlocked = fresh.isPartiallyDeferred;
+        final hasHeure = fresh.heureSouhaitee != null;
+        final canDefer = fresh.statut == Statut.enLivraison;
 
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // En-tête : numéro, ville, badge de blocage si actif.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            d.doPiece,
+                            style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          if (d.ville.trim().isNotEmpty)
+                            Text(
+                              d.ville,
+                              style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(ctx)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (hasHeure)
+                      HeureSouhaiteeBadge(heureSouhaitee: fresh.heureSouhaitee!),
+                  ],
+                ),
+              ),
+
+              // Bandeau report partiel actif — visible immédiatement, donne
+              // accès rapide à Modifier / Débloquer sans changer d'écran.
+              if (isBlocked) ...[
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEA580C).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFEA580C).withValues(alpha: 0.30),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.lock_clock_rounded,
+                              size: 16, color: Color(0xFFEA580C)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Reportée dans la journée',
+                            style: TextStyle(
+                              color: Color(0xFFEA580C),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                Navigator.pop(ctx);
+                                await _editHeureSouhaitee(fresh);
+                              },
+                              icon: const Icon(Icons.edit_calendar_rounded,
+                                  size: 16),
+                              label: const Text(
+                                'Modifier l\'heure',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 12),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFEA580C),
+                                side: const BorderSide(color: Color(0xFFEA580C)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () async {
+                                Navigator.pop(ctx);
+                                await _clearHeureSouhaitee(fresh);
+                              },
+                              icon:
+                                  const Icon(Icons.flash_on_rounded, size: 16),
+                              label: const Text(
+                                'Débloquer',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 12),
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF16A34A),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+              ],
+
               ListTile(
                 leading: Icon(isUrgent ? Icons.priority_high : Icons.bolt),
                 title: Text(isUrgent ? 'Annuler priorité' : 'Mettre en priorité'),
@@ -559,6 +697,26 @@ class _MapScreenState extends State<MapScreen> {
                 },
               ),
               const Divider(height: 1),
+
+              // Reporter dans la journée — visible uniquement quand la
+              // commande est EN_LIVRAISON et pas déjà bloquée (sinon le
+              // bandeau ci-dessus prend le relais).
+              if (canDefer && !isBlocked) ...[
+                ListTile(
+                  leading: const Icon(Icons.schedule_rounded,
+                      color: Color(0xFFEA580C)),
+                  title: const Text('Reporter dans la journée'),
+                  subtitle: const Text(
+                    'Bloque la commande jusqu\'à l\'heure choisie.',
+                  ),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await _editHeureSouhaitee(fresh);
+                  },
+                ),
+                const Divider(height: 1),
+              ],
+
               ListTile(
                 leading: const Icon(Icons.edit_road),
                 title: const Text('Changer statut'),
@@ -590,6 +748,56 @@ class _MapScreenState extends State<MapScreen> {
         );
       },
     );
+  }
+
+  /// Ouvre le bottom sheet de report partiel pour la commande [d] et
+  /// applique le résultat via `DeliveriesProvider.setHeureSouhaitee`.
+  /// Le plan de tournée est recalculé après l'action pour que la commande
+  /// bloquée sorte / rentre du circuit en fonction de l'heure choisie.
+  Future<void> _editHeureSouhaitee(Delivery d) async {
+    final del = context.read<DeliveriesProvider>();
+    final nav = context.read<NavigationProvider>();
+    final result = await showHeureSouhaiteeSheet(
+      context,
+      doPiece: d.doPiece,
+      current: d.heureSouhaitee,
+    );
+    if (result == null || !mounted) return;
+    try {
+      await del.setHeureSouhaitee(
+        doPiece: d.doPiece,
+        heureSouhaitee: result.clearNow ? null : result.heureSouhaitee,
+      );
+      if (!mounted) return;
+      _topSnack(
+        result.clearNow
+            ? '${d.doPiece} débloquée.'
+            : '${d.doPiece} reportée à ${_hh(result.heureSouhaitee!)}.',
+      );
+      nav.setOrders(del.activeForMap);
+      await nav.recompute(del.activeForMap);
+      _refreshPremiumPlan(del, nav);
+    } catch (e) {
+      if (!mounted) return;
+      _topSnack('Échec : $e');
+    }
+  }
+
+  /// Débloque immédiatement une commande en report partiel actif.
+  Future<void> _clearHeureSouhaitee(Delivery d) async {
+    final del = context.read<DeliveriesProvider>();
+    final nav = context.read<NavigationProvider>();
+    try {
+      await del.setHeureSouhaitee(doPiece: d.doPiece, heureSouhaitee: null);
+      if (!mounted) return;
+      _topSnack('${d.doPiece} débloquée.');
+      nav.setOrders(del.activeForMap);
+      await nav.recompute(del.activeForMap);
+      _refreshPremiumPlan(del, nav);
+    } catch (e) {
+      if (!mounted) return;
+      _topSnack('Échec : $e');
+    }
   }
 
   Set<Marker> _buildMarkers(DeliveriesProvider del, NavigationProvider nav) {
