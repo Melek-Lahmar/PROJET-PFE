@@ -194,6 +194,10 @@ class _MapScreenState extends State<MapScreen> {
     return LatLng(lat, lng);
   }
 
+  String _hh(DateTime t) {
+    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
   Set<String> _priorityPieces(NavigationProvider nav) =>
       nav.urgentPieces.toSet();
 
@@ -597,14 +601,23 @@ class _MapScreenState extends State<MapScreen> {
 
     for (final d in del.activeForMap) {
       final isUrgent = nav.isUrgent(d.doPiece);
+      final isBlocked = d.isPartiallyDeferred;
       final seq = orderById[d.doPiece];
       final isFirst = seq == 1;
 
-      final hue = isUrgent
-          ? BitmapDescriptor.hueOrange
-          : isFirst
-              ? BitmapDescriptor.hueAzure
-              : BitmapDescriptor.hueRed;
+      // Pins en report partiel : violet, pour les démarquer de la tournée
+      // active (rouge / bleu) et des urgences (orange).
+      final hue = isBlocked
+          ? BitmapDescriptor.hueViolet
+          : isUrgent
+              ? BitmapDescriptor.hueOrange
+              : isFirst
+                  ? BitmapDescriptor.hueAzure
+                  : BitmapDescriptor.hueRed;
+
+      final snippet = isBlocked && d.heureSouhaitee != null
+          ? '${d.adresse}  •  ⏰ ${_hh(d.heureSouhaitee!)}'
+          : d.adresse;
 
       markers.add(
         Marker(
@@ -613,7 +626,7 @@ class _MapScreenState extends State<MapScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(hue),
           infoWindow: InfoWindow(
             title: seq != null ? '#$seq · ${d.doPiece}' : d.doPiece,
-            snippet: d.adresse,
+            snippet: snippet,
           ),
           onTap: () => _openMarkerActions(d),
         ),

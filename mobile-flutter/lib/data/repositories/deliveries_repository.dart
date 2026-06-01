@@ -27,6 +27,14 @@ abstract class DeliveriesRepository {
     String? noteLivreur,
     String? apiStatusOverride,
   });
+
+  /// Report partiel (même journée) — la commande reste EN_LIVRAISON mais est
+  /// « bloquée » jusqu'à [heureSouhaitee]. Passer null débloque manuellement.
+  Future<void> setHeureSouhaitee({
+    required String doPiece,
+    required DateTime? heureSouhaitee,
+    String? noteLivreur,
+  });
 }
 
 class BatchStatusResult {
