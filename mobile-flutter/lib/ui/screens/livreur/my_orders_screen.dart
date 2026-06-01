@@ -919,7 +919,7 @@ class _SelectionHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
                 icon: const Icon(Icons.select_all_rounded, size: 18),
-                label: const Text('Toutes prêtes'),
+                label: const Text('Tout sélectionner'),
               ),
               IconButton(
                 tooltip: 'Annuler',
@@ -938,6 +938,9 @@ class _MyOrderCard extends StatelessWidget {
   final Delivery delivery;
   final bool isReady;
   final bool isInPrep;
+  final bool isDepotPlain;
+  final bool isNewOrder;
+  final bool isReportedOrder;
   final bool selectionMode;
   final bool selected;
   final VoidCallback onTap;
@@ -948,6 +951,9 @@ class _MyOrderCard extends StatelessWidget {
     required this.delivery,
     required this.isReady,
     required this.isInPrep,
+    required this.isDepotPlain,
+    required this.isNewOrder,
+    required this.isReportedOrder,
     required this.selectionMode,
     required this.selected,
     required this.onTap,
@@ -1027,6 +1033,13 @@ class _MyOrderCard extends StatelessWidget {
                 if ((d.depotPassageNumber ?? 0) > 0) ...[
                   const SizedBox(width: 6),
                   _DepotBadge(n: d.depotPassageNumber!),
+                ],
+                if (isNewOrder) ...[
+                  const SizedBox(width: 6),
+                  const _NewBadge(),
+                ] else if (isReportedOrder) ...[
+                  const SizedBox(width: 6),
+                  const _ReportedBadge(),
                 ],
               ],
             ),
@@ -1249,6 +1262,163 @@ class _GoLivraisonFab extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BatchFab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final List<Color> colors;
+  final bool loading;
+  final VoidCallback onPressed;
+
+  const _BatchFab({
+    required this.label,
+    required this.icon,
+    required this.colors,
+    required this.loading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return EntryScale(
+      duration: const Duration(milliseconds: 320),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withValues(alpha: 0.45),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: loading ? null : onPressed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (loading)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.4, color: Colors.white),
+                    )
+                  else
+                    Icon(icon, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    loading ? 'Mise à jour…' : label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NewBadge extends StatelessWidget {
+  const _NewBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.40),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.fiber_new_rounded, color: Colors.white, size: 13),
+          SizedBox(width: 3),
+          Text(
+            'Nouvelle',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportedBadge extends StatelessWidget {
+  const _ReportedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEA580C), Color(0xFFF97316)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEA580C).withValues(alpha: 0.38),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_repeat_rounded, color: Colors.white, size: 13),
+          SizedBox(width: 3),
+          Text(
+            'Reportée',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
       ),
     );
   }
