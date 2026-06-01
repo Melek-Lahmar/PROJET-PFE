@@ -7,7 +7,7 @@ namespace Web_Api.DTO.Livreur
     public class UpdateLivraisonStatusRequestDto : IValidatableObject
     {
         [Required]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string Status { get; set; } = "";
 
         [MaxLength(100)]
