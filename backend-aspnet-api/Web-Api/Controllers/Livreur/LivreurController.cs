@@ -417,7 +417,7 @@ namespace Web_Api.Controllers
                     ? "Report partiel enregistré."
                     : "Déblocage immédiat enregistré.",
                 piece,
-                heureSouhaitee = li.LI_HeureSouhaitee
+                heureSouhaitee = _ensureUtc(li.LI_HeureSouhaitee)
             });
         }
 
@@ -455,6 +455,21 @@ namespace Web_Api.Controllers
                 .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// EF Core remonte les DateTime avec Kind=Unspecified, ce qui fait que
+        /// System.Text.Json sérialise sans suffixe "Z" et le client Dart parse
+        /// alors la valeur comme heure locale (DateTime.tryParse). Tout ce qui
+        /// est stocké en UTC côté serveur doit être ré-étiqueté avant l'envoi
+        /// pour préserver le fuseau au round-trip.
+        /// </summary>
+        private static DateTime? _ensureUtc(DateTime? value)
+        {
+            if (!value.HasValue) return null;
+            return value.Value.Kind == DateTimeKind.Utc
+                ? value
+                : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        }
+
         private static LivreurOrderDto MapOrderDto(
             F_DOCENTETE e,
             F_LIVRAISON? li,
@@ -483,10 +498,15 @@ namespace Web_Api.Controllers
 
                 NetAPayer = e.DO_NetAPayer ?? 0m,
 
-                AssignedAt = li?.LI_DateCreation,
-                DeliveredAt = li?.LI_DateLivree,
-                ReplannedAt = li?.LI_DateReplanification,
-                HeureSouhaitee = li?.LI_HeureSouhaitee,
+                // Toutes les dates côté serveur sont stockées en UTC mais EF Core
+                // les remonte avec Kind=Unspecified — System.Text.Json sérialiserait
+                // alors sans suffixe "Z" et Dart parserait la valeur comme heure
+                // locale, faisant disparaître les commandes "reportées dans la
+                // journée" du panneau "Bloquées" après un simple refresh.
+                AssignedAt = _ensureUtc(li?.LI_DateCreation),
+                DeliveredAt = _ensureUtc(li?.LI_DateLivree),
+                ReplannedAt = _ensureUtc(li?.LI_DateReplanification),
+                HeureSouhaitee = _ensureUtc(li?.LI_HeureSouhaitee),
                 Note = li?.LI_Commentaire,
                 DepotPassageNumber = li?.DepotPassageNumber,
                 IsActiveDelivery = e.IsActiveDelivery,
@@ -771,7 +791,7 @@ namespace Web_Api.Controllers
                 Adresse = entete.DO_AdresseLivraison,
                 Ville = entete.DO_VilleLivraison,
                 CodePostal = entete.DO_CodePostalLivraison,
-                HeureSouhaitee = li?.LI_HeureSouhaitee,
+                HeureSouhaitee = _ensureUtc(li?.LI_HeureSouhaitee),
                 Client = new LivreurOrderClientDto
                 {
                     DisplayName = clientDisplay,
