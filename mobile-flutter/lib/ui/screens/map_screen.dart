@@ -66,8 +66,8 @@ class _MapScreenState extends State<MapScreen> {
       if (mounted && nav.isGpsBlocked) {
         _showGpsBlockedDialog(nav);
       }
-      nav.setOrders(del.activeForMap);
-      await nav.recompute(del.activeForMap);
+      nav.setOrders(_routableStops(del));
+      await nav.recompute(_routableStops(del));
       _refreshPremiumPlan(del, nav);
     });
 
@@ -204,10 +204,20 @@ class _MapScreenState extends State<MapScreen> {
   Set<String> _priorityPieces(NavigationProvider nav) =>
       nav.urgentPieces.toSet();
 
+  /// Commandes éligibles pour le calcul de tournée : on retire les commandes
+  /// en report partiel actif (heure souhaitée future). Elles restent visibles
+  /// sur la carte avec un marqueur violet — pour que le livreur sache où elles
+  /// sont — mais ne consomment plus de temps / km / carburant dans le plan,
+  /// et ne sont plus proposées comme "prochain stop".
+  List<Delivery> _routableStops(DeliveriesProvider del) {
+    return del.activeForMap.where((d) => !d.isPartiallyDeferred).toList();
+  }
+
   void _refreshPremiumPlan(DeliveriesProvider del, NavigationProvider nav) {
+    final routable = _routableStops(del);
     final stops = _useManualOrder && _manualOrder.isNotEmpty
-        ? _filterToActive(_manualOrder, del.activeForMap)
-        : del.activeForMap;
+        ? _filterToActive(_manualOrder, routable)
+        : routable;
 
     final plan = _useManualOrder
         ? _router.buildPlanInOrder(
@@ -468,7 +478,10 @@ class _MapScreenState extends State<MapScreen> {
   /// Si pas de position GPS → fallback : la prochaine livraison du plan.
   Future<void> _handleStoppedHere(
       DeliveriesProvider del, NavigationProvider nav) async {
-    final stops = del.activeForMap;
+    // "Arrêté ici" ne doit jamais pointer une commande bloquée — sinon le
+    // livreur serait dirigé vers une livraison non éligible (heure pas
+    // encore arrivée). On filtre dès le départ.
+    final stops = _routableStops(del);
     if (stops.isEmpty) {
       _topSnack('Aucune commande active à pointer.');
       return;
@@ -497,8 +510,8 @@ class _MapScreenState extends State<MapScreen> {
     );
     if (mounted) {
       await del.refresh();
-      nav.setOrders(del.activeForMap);
-      await nav.recompute(del.activeForMap);
+      nav.setOrders(_routableStops(del));
+      await nav.recompute(_routableStops(del));
       _refreshPremiumPlan(del, nav);
     }
   }
@@ -690,8 +703,8 @@ class _MapScreenState extends State<MapScreen> {
                 onTap: () async {
                   Navigator.pop(ctx);
                   await nav.toggleUrgent(d);
-                  nav.setOrders(del.activeForMap);
-                  await nav.recompute(del.activeForMap);
+                  nav.setOrders(_routableStops(del));
+                  await nav.recompute(_routableStops(del));
                   _refreshPremiumPlan(del, nav);
                   _topSnack(isUrgent ? 'Priorité annulée' : 'Priorité activée');
                 },
@@ -735,8 +748,8 @@ class _MapScreenState extends State<MapScreen> {
                       .then((_) async {
                     if (mounted) {
                       await del.refresh();
-                      nav.setOrders(del.activeForMap);
-                      await nav.recompute(del.activeForMap);
+                      nav.setOrders(_routableStops(del));
+                      await nav.recompute(_routableStops(del));
                       _refreshPremiumPlan(del, nav);
                     }
                   });
@@ -774,8 +787,8 @@ class _MapScreenState extends State<MapScreen> {
             ? '${d.doPiece} débloquée.'
             : '${d.doPiece} reportée à ${_hh(result.heureSouhaitee!)}.',
       );
-      nav.setOrders(del.activeForMap);
-      await nav.recompute(del.activeForMap);
+      nav.setOrders(_routableStops(del));
+      await nav.recompute(_routableStops(del));
       _refreshPremiumPlan(del, nav);
     } catch (e) {
       if (!mounted) return;
@@ -791,8 +804,8 @@ class _MapScreenState extends State<MapScreen> {
       await del.setHeureSouhaitee(doPiece: d.doPiece, heureSouhaitee: null);
       if (!mounted) return;
       _topSnack('${d.doPiece} débloquée.');
-      nav.setOrders(del.activeForMap);
-      await nav.recompute(del.activeForMap);
+      nav.setOrders(_routableStops(del));
+      await nav.recompute(_routableStops(del));
       _refreshPremiumPlan(del, nav);
     } catch (e) {
       if (!mounted) return;
@@ -1134,8 +1147,8 @@ class _MapScreenState extends State<MapScreen> {
       _lastStopsSignature = sig;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
-        nav.setOrders(del.activeForMap);
-        await nav.recompute(del.activeForMap);
+        nav.setOrders(_routableStops(del));
+        await nav.recompute(_routableStops(del));
         _refreshPremiumPlan(del, nav);
       });
     }
@@ -1318,8 +1331,8 @@ class _MapScreenState extends State<MapScreen> {
                         ? null
                         : () => _openGoogleMapsToCurrentStop(nav),
                     onRecomputePressed: () async {
-                      nav.setOrders(del.activeForMap);
-                      await nav.recompute(del.activeForMap);
+                      nav.setOrders(_routableStops(del));
+                      await nav.recompute(_routableStops(del));
                       setState(() => _useManualOrder = false);
                       _refreshPremiumPlan(del, nav);
                       _topSnack('Circuit recalculé');
