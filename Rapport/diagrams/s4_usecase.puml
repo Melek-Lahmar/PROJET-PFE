@@ -1,0 +1,109 @@
+@startuml
+title Diagramme de cas d'utilisation — Sprint 4
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Confirmatrice" as CF
+actor "Livreur COD" as LV
+actor "Livreur Transit" as LT
+actor "Client" as CL
+actor "Superviseur" as SV
+
+rectangle "Sprint 4 — Logistique, livraison & réclamations" {
+  package "Confirmation & documents Sage X3" {
+    usecase "Consulter les bons de commande" as UC1
+    usecase "Modifier le statut d'un BC" as UC2
+    usecase "Transformer BC en BL\n(+ sync Sage X3)" as UC3
+    usecase "Affecter automatiquement\nun livreur" as UC4
+    usecase "Traiter les devis B2B" as UC5
+  }
+
+  package "Livraison COD & GPS temps réel" {
+    usecase "Consulter le pool\nde livraisons (zone)" as UC6
+    usecase "Prendre en charge\nune livraison" as UC7
+    usecase "Démarrer la diffusion GPS\n(start-heading)" as UC8
+    usecase "Mettre à jour le statut\n(Livré / Retour / Reporté)" as UC9
+    usecase "Gérer la caisse COD\n(encaissement auto)" as UC10
+    usecase "Optimiser la tournée\n(plus-proche-voisin)" as UC11
+    usecase "Demander une correction\nd'adresse / téléphone" as UC12
+  }
+
+  package "Transit inter-dépôts" {
+    usecase "Consulter mes missions" as UC13
+    usecase "Scanner pickup\nau dépôt source" as UC14
+    usecase "Scanner delivery\nau dépôt destination" as UC15
+    usecase "Réception partielle" as UC16
+  }
+
+  package "Réclamations temps réel" {
+    usecase "Créer une réclamation" as UC17
+    usecase "Suivre sa commande\n(TrackingStateCard)" as UC18
+    usecase "Prendre en charge un cas" as UC19
+    usecase "Chatter en temps réel\n(SignalR)" as UC20
+  }
+
+  package "Supervision" {
+    usecase "Superviser les livreurs\nactifs" as UC21
+    usecase "Consulter la heatmap\ndes échecs (90 j)" as UC22
+    usecase "Réaffecter une mission\nde transit" as UC23
+  }
+}
+
+CF --> UC1
+CF --> UC2
+CF --> UC3
+CF --> UC4
+CF --> UC5
+CF --> UC19
+CF --> UC20
+
+LV --> UC6
+LV --> UC7
+LV --> UC8
+LV --> UC9
+LV --> UC10
+LV --> UC11
+LV --> UC12
+
+LT --> UC13
+LT --> UC14
+LT --> UC15
+LT --> UC16
+
+CL --> UC17
+CL --> UC18
+CL --> UC20
+
+SV --> UC21
+SV --> UC22
+SV --> UC23
+
+UC3 .> UC4 : <<include>>
+UC8 .> UC7 : <<include>>
+UC10 .> UC9 : <<include>>
+UC20 .> UC17 : <<include>>
+UC22 .> UC21 : <<extend>>
+@enduml

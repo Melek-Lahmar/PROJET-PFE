@@ -1,0 +1,78 @@
+@startuml
+title Diagramme de séquence — Transformation BC en BL et affectation automatique
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+participant "Confirmatrice" as CF
+participant "React\n(ConfirmateurOrders\nDetailsPage)" as R
+participant "ConfirmateurController\n/api/confirmateur" as CC
+participant "AssignmentService" as AS
+participant "SageX3Client" as SAGE
+database  "SQL Server\nF_DOCENTETE\nF_DOCLIGNE\nF_LIVRAISON" as DB
+
+CF -> R : Clic « Transformer en BL »
+R -> CC : POST /commandes/{piece}/transform-to-bl
+activate CC
+
+CC -> DB : SELECT F_DOCENTETE\n(WHERE DO_Piece = piece AND DO_Type = 0)
+DB --> CC : Bon de commande (BC)
+
+alt BC introuvable
+  CC --> R : 404 NotFound
+else BL déjà créé pour ce BC
+  CC -> DB : SELECT BL existant (DO_Type = 1)
+  DB --> CC : Référence BL
+  CC --> R : 200 OK { blPiece, alreadyExists = true }
+else Création du BL
+  CC -> DB : BEGIN TRANSACTION
+  CC -> DB : INSERT F_DOCENTETE\n(DO_Type = 1, DO_Piece = "BL" + yyMMddHHmm + n)
+  CC -> DB : INSERT F_DOCLIGNE (copie des lignes)
+  CC -> DB : INSERT F_LIVRAISON (LI_Statut = 0 Confirmé)
+  CC -> DB : UPDATE F_DOCENTETE (BC) SET DO_Valide = CONFIRME
+  CC -> DB : COMMIT
+
+  CC -> AS : ChoisirLivreur(zone, codeArticle…)
+  AS -> DB : SELECT livreurs (zones couvertes,\nstock disponible, file la plus courte)
+  AS -> AS : Filtre Haversine zone\n+ tri par charge croissante
+  AS --> CC : userId du livreur ou null
+
+  alt Livreur trouvé
+    CC -> DB : UPDATE F_LIVRAISON SET LivreurUserId
+    CC -> CC : SignalR « NouvelleLivraisonAffectee »\n→ user-{livreurId}
+  end
+
+  CC -> SAGE : POST /api/sage/documents (BL)
+  SAGE --> CC : { sageSuccess, httpStatus }
+  CC --> R : 201 Created { blPiece, sageSent, sageSuccess }
+end
+
+deactivate CC
+R --> CF : Notification + redirection vers la liste des BL
+
+note over CC, SAGE
+  L'envoi vers Sage X3 est **non bloquant** :
+  le BL est créé localement même si Sage est
+  indisponible. Le statut sageSuccess est
+  historisé dans le tableau de bord de synchronisation.
+end note
+@enduml

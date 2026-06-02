@@ -1,0 +1,82 @@
+@startuml
+title Diagramme de séquence — Réclamation client avec SignalR (grâce 5 s)
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+actor "Client" as C
+participant "App Flutter" as F
+participant "Reclamations\nController" as RC
+participant "ReclamationHub\n(SignalR)" as SH
+actor "Confirmatrice" as CF
+database  "SQL Server\nF_RECLAMATION\nF_CONFIRMATRICE_SESSION" as DB
+
+C -> F : Crée une réclamation\n(motif + photos)
+F -> RC : POST /api/reclamations\n{motif: COLIS_ENDOMMAGE, doPiece, photos}
+RC -> DB : INSERT F_RECLAMATION\n(Statut = ENVOYEE, TypeCas = RECLAMATION, VisibleClient = true)
+RC -> SH : Diffuser NouveauCas\n→ groupe "confirmateurs"
+SH -> CF : Réclamation visible (sans rafraîchissement)
+
+CF -> RC : POST /reclamations/{id}/prendre-en-charge
+RC -> DB : UPDATE confirmateurId, Statut = EN_COURS
+RC -> DB : INSERT F_CONFIRMATRICE_SESSION (ouverture)
+RC -> SH : CommandePriseEnCharge\n→ "confirmateurs"
+RC -> SH : CasAssigne → client-{userId}
+SH -> C : Chat ouvert + identité confirmatrice
+
+== Chat temps réel ==
+loop Echange Client ↔ Confirmatrice
+  C -> RC : POST /reclamations/{id}/messages
+  RC -> DB : INSERT F_RECLAMATION_MESSAGE
+  RC -> SH : NouveauMessage → "confirmateurs"
+  CF -> RC : POST /reclamations/{id}/messages
+  RC -> DB : INSERT F_RECLAMATION_MESSAGE
+  RC -> SH : NouveauMessage → client-{userId}
+end
+
+== Déconnexion : période de grâce de 5 secondes ==
+note over SH
+  OnDisconnectedAsync décrémente le compteur
+  de connexions de la confirmatrice. Si c'est
+  la dernière connexion, le cas n'est pas
+  libéré immédiatement : un timer de
+  **GracePeriod = TimeSpan.FromSeconds(5)**
+  est armé. Si la confirmatrice se reconnecte
+  dans cet intervalle (changement Wi-Fi / 4G),
+  le timer est annulé, le cas reste verrouillé.
+end note
+
+alt Reconnexion ≤ 5 s
+  CF -> SH : Reconnect (compteur++)
+  SH -> SH : Annule le timer de libération
+else Pas de reconnexion
+  SH -> DB : UPDATE Statut = ENVOYEE\n(confirmateurId = null)
+  SH -> SH : Ferme F_CONFIRMATRICE_SESSION
+  SH -> SH : Diffuse CommandeLiberee\n→ "confirmateurs"
+end
+
+== Clôture ==
+CF -> RC : PUT /reclamations/{id}/status (CLOTUREE)
+RC -> DB : UPDATE Statut = CLOTUREE
+RC -> SH : StatutCasChange → client-{userId}
+SH -> C : Notification finale
+@enduml

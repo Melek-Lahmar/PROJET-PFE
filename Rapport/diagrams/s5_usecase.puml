@@ -1,0 +1,90 @@
+@startuml
+title Diagramme de cas d'utilisation — Sprint 5
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrateur" as A
+actor "Groq LLM\n(llama-3.3-70b)" as LLM
+actor "n8n Workflow" as N8N
+actor "Sage X3" as SX
+
+rectangle "Sprint 5 — Pilotage, exports & chatbot" {
+  package "Tableaux de bord multi-dimensionnels" {
+    usecase "Vue d'ensemble (KPI, alertes)" as UC1
+    usecase "Ventes (CA, top produits)" as UC2
+    usecase "Commandes (statuts, délais)" as UC3
+    usecase "Produits & stocks" as UC4
+    usecase "Logistique (zones, heatmap)" as UC5
+    usecase "Livreurs (performance, COD)" as UC6
+    usecase "Clients (B2B/B2C, fidélité)" as UC7
+    usecase "Réclamations (motifs, SLA)" as UC8
+    usecase "Confirmatrices (cas, temps)" as UC9
+    usecase "Synchronisation Sage X3" as UC10
+    usecase "Insights stratégiques" as UC11
+  }
+
+  package "Exports & rapports" {
+    usecase "Exporter commandes\n(PDF / Excel)" as UC12
+    usecase "Exporter réclamations\n(PDF / Excel)" as UC13
+  }
+
+  package "Chatbot administrateur" {
+    usecase "Poser une question NL\n(/ask)" as UC14
+    usecase "Streaming SSE\n(/ask-stream)" as UC15
+    usecase "Historique des conversations" as UC16
+    usecase "Insights proactifs" as UC17
+    usecase "Rafraîchir la base de connaissances" as UC18
+  }
+}
+
+A --> UC1
+A --> UC2
+A --> UC3
+A --> UC4
+A --> UC5
+A --> UC6
+A --> UC7
+A --> UC8
+A --> UC9
+A --> UC10
+A --> UC11
+A --> UC12
+A --> UC13
+A --> UC14
+A --> UC15
+A --> UC16
+A --> UC17
+A --> UC18
+
+N8N --> UC14 : <<orchestre>>
+LLM --> UC14 : <<formate>>
+LLM --> UC17 : <<génère>>
+SX --> UC10 : <<source>>
+
+UC15 .> UC14 : <<extend>>
+UC11 .> UC1  : <<include>>
+UC17 .> UC14 : <<include>>
+@enduml

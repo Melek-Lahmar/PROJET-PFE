@@ -1,0 +1,67 @@
+@startuml
+title Diagramme de séquence — Chatbot administrateur (React → n8n → Groq)
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+actor "Administrateur" as A
+participant "ChatbotSandboxPage\n(React)" as R
+participant "Webhook n8n\n/admin-chat-v3" as W
+participant "Node Détecter langue\n(FR / AR / Tounsi)" as LANG
+participant "AdminChatController\n/api/admin/chat/ask" as CC
+participant "ChatOrchestrator\n(Router → Exécuteur → Formatter)" as ORCH
+participant "GroqClient\nllama-3.3-70b" as LLM
+database  "SQL Server\nF_CHATBOT_*,\nF_DOCENTETE…" as DB
+
+A -> R : « Quels livreurs ont le plus de retours ? »
+R -> W : POST /admin-chat-v3\n{question, sessionId, locale}
+W -> LANG : Détection langue
+LANG --> W : language = "fr"
+
+W -> CC : POST /api/admin/chat/ask\n(Bearer JWT + X-Chat-Api-Key)
+CC -> ORCH : AskAsync(question, sessionId, userId)
+
+ORCH -> LLM : Router (Groq) :\n→ action ∈ {KB, QUERY, ANALYZE, PREDICT}
+LLM --> ORCH : action = "QUERY"\n(metric = retours, subject = livreurs)
+
+ORCH -> DB : SELECT livreurs + GROUP BY\nstats retour 30 j
+DB --> ORCH : Rows + agrégats
+
+ORCH -> LLM : Formatter (Groq) :\ngénère message FR + chart spec
+LLM --> ORCH : { message, rows, chart, suggestions }
+
+ORCH --> CC : ChatAskResponseDto
+CC -> DB : INSERT F_CHATBOT_MESSAGE\n(question, response, sessionId)
+CC --> W : 200 OK + payload
+
+W -> W : Node « Insights proactifs »\nGET /api/admin/chat/insights/pending
+W -> W : Node « Merge réponse + insights »
+W --> R : 200 OK { message, rows, chart, insights[] }
+R --> A : Affichage texte + tableau + graphe Recharts
+
+note over R, ORCH
+  Variante streaming : POST /ask-stream renvoie
+  un flux SSE en quatre phases — **routing → data
+  → chunks → done** — pour un rendu mot-à-mot
+  côté React (EventSource).
+end note
+@enduml

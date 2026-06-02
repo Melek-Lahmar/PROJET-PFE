@@ -1,0 +1,79 @@
+@startuml
+title Diagramme de séquence — Transit inter-dépôts par double scan
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+actor "Livreur Transit" as LT
+participant "App Flutter\n(transit_mission_\ndetails_screen)" as F
+participant "mobile_scanner\n(transit_barcode_\nscanner_screen)" as SC
+participant "TransitController\n/api/transit" as TC
+participant "Supervisor\nHub" as SH
+database  "SQL Server\nF_TRANSFERT\nF_TRANSFERT_AUDIT_LOG" as DB
+
+LT -> F : Ouvre la mission
+F -> TC : GET /my-missions/{id}
+TC -> DB : SELECT F_TRANSFERT (lignes attendues)
+DB --> TC : Articles, quantités, dépôts
+TC --> F : MissionDto (statut EN_ATTENTE_TRANSIT)
+
+== Scan PICKUP (dépôt source) ==
+LT -> SC : Active le scanner caméra
+SC -> SC : Decode barcode (EAN13)
+SC -> TC : POST /scan-pickup\n{missionId, barcode, gps}
+TC -> DB : SELECT ligne (ArRef ↔ barcode,\nSourceDepotNo correspondant)
+alt Article appartient à la mission
+  TC -> DB : UPDATE statut = EN_TRANSIT,\nPickedUpAt, PickupGpsLat/Lng
+  TC -> DB : INSERT F_TRANSFERT_AUDIT_LOG (PICKUP)
+  TC --> SC : 200 { ok = true, son ✓ }
+  SC --> LT : Vibration + son confirmation
+else Article inconnu / mauvais dépôt
+  TC --> SC : 400 { ok = false, raison }
+  SC --> LT : Son d'erreur + message
+end
+
+note over TC
+  Fenêtre d'annulation : POST /revert-pickup
+  autorisé pendant **RevertWindowMinutes = 10**
+  après PickedUpAt, avec écriture d'audit.
+end note
+
+== Scan DELIVERY (dépôt destination) ==
+LT -> SC : Re-scanne à l'arrivée
+SC -> TC : POST /scan-delivery\n{missionId, barcode, gps}
+TC -> DB : UPDATE statut = RECU_DEPOT_DESTINE,\nDeliveredAt, DeliveryGpsLat/Lng
+TC -> DB : INSERT F_TRANSFERT_AUDIT_LOG (DELIVERY)
+TC --> F : 200 OK
+
+alt Réception partielle (quantité < attendue)
+  LT -> F : Saisir reçus = N (< quantite)
+  F -> TC : POST /missions/{id}/scan-partial\n{receivedQty}
+  TC -> DB : UPDATE statut = TRANSIT_PARTIELLEMENT_RECU
+  TC -> SH : NouvelleAlerte → "superviseurs"
+end
+
+opt Toutes les lignes RECU_DEPOT_DESTINE
+  TC -> DB : UPDATE F_TRANSFERT_ENTETE statut = TRANSIT_TERMINE
+  TC --> F : 200 OK
+  F --> LT : Mission clôturée
+end
+@enduml
