@@ -776,6 +776,9 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
         onMarkReady: isInPrep ? () => _markAsReady(d) : null,
         onSetHeureSouhaitee:
             canDeferPartially ? () => _openHeureSouhaiteeSheet(d) : null,
+        onEditHeureSouhaitee: d.heureSouhaitee != null
+            ? () => _openHeureSouhaiteeSheet(d)
+            : null,
         onClearHeureSouhaitee: d.isPartiallyDeferred
             ? () => _clearHeureSouhaitee(d)
             : null,
@@ -1198,8 +1201,12 @@ class _MyOrderCard extends StatelessWidget {
   final VoidCallback? onMarkReady;
 
   /// Ouvre le sheet de report partiel (même journée). Visible uniquement
-  /// sur les commandes EN_LIVRAISON.
+  /// sur les commandes EN_LIVRAISON sans heure souhaitée active.
   final VoidCallback? onSetHeureSouhaitee;
+
+  /// Édition rapide de l'heure souhaitée — affichée sur une card déjà
+  /// bloquée pour éviter d'avoir à entrer dans l'écran détail.
+  final VoidCallback? onEditHeureSouhaitee;
 
   /// Glisser-débloquer immédiat : affiche un slide premium quand la commande
   /// est en attente d'heure souhaitée.
@@ -1218,6 +1225,7 @@ class _MyOrderCard extends StatelessWidget {
     required this.onLongPress,
     this.onMarkReady,
     this.onSetHeureSouhaitee,
+    this.onEditHeureSouhaitee,
     this.onClearHeureSouhaitee,
   });
 
@@ -1396,13 +1404,16 @@ class _MyOrderCard extends StatelessWidget {
                 ),
               ),
             ],
-            // Glisser-débloquer : commande en report partiel actif.
-            // Le slide passe le champ à null côté backend, la card sort
-            // de la section « Bloquées » en quelques millisecondes.
+            // Card en report partiel actif — panneau premium qui réplique
+            // l'écran détail : affichage du blocage + bouton « Modifier
+            // l'heure » + slider de débloquage immédiat. Permet au livreur
+            // de tout faire depuis la liste sans entrer dans la card détail.
             if (isBlocked && !selectionMode && onClearHeureSouhaitee != null) ...[
               const SizedBox(height: 12),
-              _UnblockSlider(
-                onConfirmed: onClearHeureSouhaitee!,
+              _BlockedPanel(
+                heureSouhaitee: d.heureSouhaitee!,
+                onEdit: onEditHeureSouhaitee,
+                onClear: onClearHeureSouhaitee!,
               ),
             ],
             // Petit bouton outline pour ouvrir le sheet d'édition de l'heure
@@ -1732,6 +1743,102 @@ class _ReportedBadge extends StatelessWidget {
               letterSpacing: 0.4,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Panneau premium affiché sur une card bloquée (heure souhaitée future).
+/// Réplique en miniature le `_HeureSouhaiteePanel` de l'écran détail pour
+/// que le livreur puisse modifier l'heure ou débloquer sans changer
+/// d'écran. La hiérarchie visuelle est :
+///   1. Bandeau orange contenant l'icône + libellé + badge compte à rebours
+///   2. Bouton outline « Modifier l'heure » (édition rapide, faible risque)
+///   3. Slider de débloquage immédiat (geste explicite, évite les accidents
+///      pendant la conduite / le scan)
+class _BlockedPanel extends StatelessWidget {
+  final DateTime heureSouhaitee;
+  final VoidCallback? onEdit;
+  final VoidCallback onClear;
+
+  const _BlockedPanel({
+    required this.heureSouhaitee,
+    required this.onEdit,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const tone = Color(0xFFEA580C);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tone.withValues(alpha: 0.28), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.lock_clock_rounded,
+                    size: 15, color: tone),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Reportée dans la journée',
+                  style: TextStyle(
+                    color: tone,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+              HeureSouhaiteeBadge(heureSouhaitee: heureSouhaitee),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Débloquage auto à l\'heure dite, ou geste rapide ci-dessous.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+          ),
+          if (onEdit != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_calendar_rounded, size: 15),
+                label: const Text(
+                  'Modifier l\'heure',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tone,
+                  side: const BorderSide(color: tone, width: 1),
+                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          _UnblockSlider(onConfirmed: onClear),
         ],
       ),
     );
