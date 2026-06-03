@@ -34,9 +34,6 @@ namespace Web_Api.Services.Sage
     {
         public short Http { get; set; }
 
-        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
-        public string AdresseIP_API { get; set; } = "localhost";
-
         public string AdresseIP_X3 { get; set; } = "localhost:8124";
         public string Login { get; set; } = "admin";
         public string Password { get; set; } = "@Zerty1234";
@@ -46,6 +43,12 @@ namespace Web_Api.Services.Sage
         public string Service_Web_BC { get; set; } = "SOH";
 
         public string Type_BC { get; set; } = "WEB";
+
+        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
+        // Volontairement non sérialisé : ce n'est PAS un paramètre attendu par
+        // le wrapper Sage X3, c'est juste l'adresse du wrapper lui-même.
+        [JsonIgnore]
+        public string AdresseIP_API { get; set; } = "localhost";
     }
 
     public class DOCUMENT
@@ -83,37 +86,46 @@ namespace Web_Api.Services.Sage
 
     public class DataService
     {
+        // Logger statique pour tracer l'appel HTTP brut vers le wrapper Sage X3.
+        public static Microsoft.Extensions.Logging.ILogger? Logger { get; set; }
+
         private static HttpClientHandler GetClientProxy()
         {
             var handler = new HttpClientHandler();
             handler.UseProxy = false;
+            // Accepte les certificats auto-signés en dev (HTTPS local).
+            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
             return handler;
         }
 
         public static async Task<string> SetObjects(string token, string url, JObject jObject)
         {
+            string data = "";
+            string json = JsonConvert.SerializeObject(jObject);
+
+            Logger?.LogInformation("Sage X3 → POST {Url} | body={Body}", url, json);
+
             try
             {
-                string data = "";
                 using (HttpClient http = new HttpClient(GetClientProxy()))
                 {
-                    //http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                    var json = JsonConvert.SerializeObject(jObject);
                     HttpContent httpContent = new StringContent(json);
-
                     httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     http.Timeout = TimeSpan.FromMinutes(30);
 
                     var response = await http.PostAsync(url, httpContent);
-                    if (response != null)
-                        data = response.Content.ReadAsStringAsync().Result;
+                    data = response.Content != null ? await response.Content.ReadAsStringAsync() : "";
+
+                    Logger?.LogInformation(
+                        "Sage X3 ← HTTP {Status} {Reason} | body={Body}",
+                        (int)response.StatusCode, response.ReasonPhrase, data);
 
                     return data ?? "";
                 }
             }
             catch (Exception ex)
             {
+                Logger?.LogError(ex, "Sage X3 EXCEPTION lors du POST {Url}", url);
                 return "";
             }
         }
