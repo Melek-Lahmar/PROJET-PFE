@@ -151,6 +151,7 @@ builder.Services.AddScoped<HomepageTemplateService>();
 
 // Module 10 — App settings (cache 5 min)
 builder.Services.AddScoped<AppSettingsService>();
+builder.Services.AddScoped<Web_Api.Services.Sage.SageX3ConfigService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ReclamationsService>();

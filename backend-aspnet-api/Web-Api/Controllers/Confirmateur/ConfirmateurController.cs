@@ -660,10 +660,9 @@ namespace Web_Api.Controllers.Confirmateur
                 }
             }
 
-            // ----- Sync Sage X3 : POST document statique (test encadrant) ------
-            // Appel direct de la méthode statique fournie par l'encadrant.
-            // Les données envoyées sont en dur (BC2400009 / FR004 / DIS009 / DIS007).
-            await Web_Api.Services.Sage.INTEGRATION_DOCUMENT_X3.Integration_Document();
+            // L'envoi du BL vers Sage X3 a été déplacé dans LivreurController :
+            // il est désormais déclenché à la transition de statut LIVRE
+            // (cf. BatchUpdateStatus / UpdateStatus).
 
             // Phase 5 — Événement 4 : CommandeLiberee (suite à confirmation) vers groupe conf.
             // + Événement 7 : StatutCommandeChange vers le client (BC → BL).

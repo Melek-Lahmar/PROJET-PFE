@@ -9,6 +9,7 @@ using Web_Api.Constants;
 using Web_Api.data;
 using Web_Api.DTO.Livreur;
 using Web_Api.Model;
+using Web_Api.Services.Sage;
 using Web_Api.Services.Sms;
 
 namespace Web_Api.Controllers
@@ -20,12 +21,84 @@ namespace Web_Api.Controllers
     {
         private readonly AppDbContext _db;
         private readonly SmsNotificationService _sms;
+        private readonly SageX3ConfigService _sageX3Config;
+        private readonly ILogger<LivreurController> _logger;
         private const short BL_TYPE = 1;
 
-        public LivreurController(AppDbContext db, SmsNotificationService sms)
+        public LivreurController(
+            AppDbContext db,
+            SmsNotificationService sms,
+            SageX3ConfigService sageX3Config,
+            ILogger<LivreurController> logger)
         {
             _db = db;
             _sms = sms;
+            _sageX3Config = sageX3Config;
+            _logger = logger;
+        }
+
+        // ── Construction du DOCUMENT Sage X3 à partir du F_DOCENTETE local ──
+        private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, CancellationToken ct)
+        {
+            var entete = await _db.F_DOCENTETES
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.DO_Domaine == 0 && x.DO_Type == BL_TYPE && x.DO_Piece == piece, ct);
+
+            if (entete == null) return null;
+
+            var lignes = await _db.F_DOCLIGNES
+                .AsNoTracking()
+                .Where(l => l.DO_Piece == piece && l.DO_Domaine == 0 && l.DO_Type == BL_TYPE)
+                .Select(l => new LIGNE_DOCUMENT
+                {
+                    AR_Ref = l.AR_Ref ?? string.Empty,
+                    LP_QteMvt = l.DL_Qte,
+                    LP_PrixUnitaire = l.DL_PrixUnitaire,
+                    LP_ValeurRemise = 0,
+                    LP_PUTTC = l.DL_PrixUnitaire,
+                    LP_MontantTTC = l.DL_MontantTTC ?? 0m,
+                })
+                .ToListAsync(ct);
+
+            return new DOCUMENT
+            {
+                DO_NumDocument = entete.DO_Piece ?? piece,
+                DO_Date = entete.DO_Date ?? DateTime.Now,
+                CT_Num = entete.DO_Tiers ?? string.Empty,
+                DE_No = entete.DE_No ?? 0,
+                DO_Ref = entete.DO_Ref ?? string.Empty,
+                DO_TotalTTC = entete.DO_TotalTTC,
+                LIGNEDOCUMENTs = lignes,
+            };
+        }
+
+        // ── POST vers Sage X3 (best-effort, non bloquant) ──
+        private async Task PostSageBlAsync(string piece, CancellationToken ct)
+        {
+            try
+            {
+                var doc = await BuildSageDocumentAsync(piece, ct);
+                if (doc == null)
+                {
+                    _logger.LogWarning("Sage X3 POST ignoré : BL {Piece} introuvable.", piece);
+                    return;
+                }
+
+                var param = await _sageX3Config.GetAsync(ct);
+                var rep = await INTEGRATION_DOCUMENT_X3.Integration_Document(doc, param);
+
+                if (rep == null)
+                    _logger.LogWarning("Sage X3 POST {Piece} : réponse vide/illisible.", piece);
+                else if (rep.IsSuccess)
+                    _logger.LogInformation("Sage X3 POST {Piece} OK. NumeroSage={Num}", piece, rep.Value?.M_NumeroSage);
+                else
+                    _logger.LogWarning("Sage X3 POST {Piece} KO. Error={Err}", piece, rep.Error);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sage X3 POST {Piece} a levé une exception.", piece);
+            }
         }
 
         [HttpGet("available")]
@@ -279,6 +352,8 @@ namespace Web_Api.Controllers
                 foreach (var p in updated)
                 {
                     await _sms.NotifyAsync(SmsTrigger.Livre, p, ct);
+                    // Sync Sage X3 : POST du BL livré (best-effort, non bloquant).
+                    await PostSageBlAsync(p, ct);
                 }
             }
 
@@ -357,6 +432,8 @@ namespace Web_Api.Controllers
             if (normalizedStatus == DeliveryStatuses.Livre)
             {
                 await _sms.NotifyAsync(SmsTrigger.Livre, piece, ct);
+                // Sync Sage X3 : POST du BL livré (best-effort, non bloquant).
+                await PostSageBlAsync(piece, ct);
             }
 
             return Ok(new

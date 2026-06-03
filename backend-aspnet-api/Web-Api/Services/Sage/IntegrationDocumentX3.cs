@@ -8,55 +8,15 @@ namespace Web_Api.Services.Sage
 {
     public static class INTEGRATION_DOCUMENT_X3
     {
-        public static async Task Integration_Document()
+        public static async Task<Result<Message>?> Integration_Document(
+            DOCUMENT dOCUMENT,
+            Param_Connexion_X3 param_Connexion_X3)
         {
-            var dOCUMENT = new DOCUMENT()
-            {
-                DO_NumDocument = "BC2400009",
-                DO_Date = DateTime.Now,
-                CT_Num = "FR004",
-                DE_No = 26,
-                DO_Ref = "",
-                DO_TotalTTC = 520,
-                LIGNEDOCUMENTs = new List<LIGNE_DOCUMENT>() {
-                    new LIGNE_DOCUMENT()
-                    {
-                        AR_Ref="DIS009",
-                        LP_QteMvt=1,
-                        LP_PrixUnitaire=20,
-                        LP_ValeurRemise=0,
-                        LP_PUTTC=25,
-                        LP_MontantTTC=25,
-                    },
-                    new LIGNE_DOCUMENT()
-                    {
-                        AR_Ref="DIS007",
-                        LP_QteMvt=2,
-                        LP_PrixUnitaire=200,
-                        LP_ValeurRemise=0,
-                        LP_PUTTC=220,
-                        LP_MontantTTC=440,
-                    }
-                }
-            };
-
-            var http_API = Http.Http;
+            var http_API = (Http)(param_Connexion_X3?.Http ?? (short)Http.Http);
             var http = http_API == Http.Http ? "http://" : "https://";
-            var adresseIP_API = "localhost";
-
-            var param_Connexion_X3 = new
-            {
-                Http = (short)Http.Http,
-                AdresseIP_X3 = "localhost:8124",
-                Login = "admin",
-                Password = "@Zerty1234",
-
-                Dossier = "SEED",
-
-                Service_Web_BC = "SOH",
-
-                Type_BC = "WEB",
-            };
+            var adresseIP_API = string.IsNullOrWhiteSpace(param_Connexion_X3?.AdresseIP_API)
+                ? "localhost"
+                : param_Connexion_X3!.AdresseIP_API;
 
             var jsonObject = new JObject
                 {
@@ -66,7 +26,26 @@ namespace Web_Api.Services.Sage
 
             var rep = JsonConvert.DeserializeObject<Result<Message>>(await DataService.SetObjects("", $@"{http}{adresseIP_API}/WEB_API_STAGE_X3/api/v1/document", jsonObject));
 
+            return rep;
         }
+    }
+
+    public class Param_Connexion_X3
+    {
+        public short Http { get; set; }
+
+        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
+        public string AdresseIP_API { get; set; } = "localhost";
+
+        public string AdresseIP_X3 { get; set; } = "localhost:8124";
+        public string Login { get; set; } = "admin";
+        public string Password { get; set; } = "@Zerty1234";
+
+        public string Dossier { get; set; } = "SEED";
+
+        public string Service_Web_BC { get; set; } = "SOH";
+
+        public string Type_BC { get; set; } = "WEB";
     }
 
     public class DOCUMENT

@@ -32,6 +32,7 @@ import { ProfileAddressesPage } from "../features/addresses/pages/ProfileAddress
 
 import { AdminB2BClientsPage } from "../features/admin/pages/AdminB2BClientsPage";
 import { AdminSettingsPage } from "../features/admin/pages/AdminSettingsPage";
+import { AdminSageX3SettingsPage } from "../features/admin/pages/AdminSageX3SettingsPage";
 import { ChatbotOverviewPage } from "../features/admin/chatbot/pages/ChatbotOverviewPage";
 import { ChatbotSandboxPage } from "../features/admin/chatbot/pages/ChatbotSandboxPage";
 import { ChatbotConversationsPage } from "../features/admin/chatbot/pages/ChatbotConversationsPage";
@@ -221,6 +222,7 @@ export const router = createBrowserRouter([
                   { path: "admin/b2b/quotes", element: <B2BQuotesAdminPage /> },
                   { path: "admin/b2b/quotes/:piece", element: <B2BQuoteDetailsPage /> },
                   { path: "admin/settings", element: <AdminSettingsPage /> },
+                  { path: "admin/settings/sage-x3", element: <AdminSageX3SettingsPage /> },
                   { path: "admin/chatbot", element: <ChatbotOverviewPage /> },
                   { path: "admin/chatbot/sandbox", element: <ChatbotSandboxPage /> },
                   { path: "admin/chatbot/conversations", element: <ChatbotConversationsPage /> },
