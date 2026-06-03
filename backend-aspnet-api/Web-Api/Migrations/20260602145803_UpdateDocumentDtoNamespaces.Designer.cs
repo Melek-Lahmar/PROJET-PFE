@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Web_Api.data;
 
@@ -11,9 +12,11 @@ using Web_Api.data;
 namespace Web_Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602145803_UpdateDocumentDtoNamespaces")]
+    partial class UpdateDocumentDtoNamespaces
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2778,76 +2781,6 @@ namespace Web_Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("HomepageTemplates");
-                });
-
-            modelBuilder.Entity("Web_Api.Model.PARAM_CONNEXION_X3", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AdresseIP_X3")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("localhost:8124");
-
-                    b.Property<string>("Dossier")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("SEED");
-
-                    b.Property<short>("Http")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0);
-
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("admin");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("@Zerty1234");
-
-                    b.Property<string>("Service_Web_BC")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("SOH");
-
-                    b.Property<string>("Type_BC")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("WEB");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PARAM_CONNEXION_X3", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AdresseIP_X3 = "localhost:8124",
-                            Dossier = "SEED",
-                            Http = (short)0,
-                            Login = "admin",
-                            Password = "@Zerty1234",
-                            Service_Web_BC = "SOH",
-                            Type_BC = "WEB"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

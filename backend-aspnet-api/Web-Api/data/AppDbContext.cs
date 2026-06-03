@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MODELS_CREATEUR.MODELS_SAGE;
 using Web_Api.Auth.Entities;
+using Web_Api.DTO;
 using Web_Api.Model;
 
 namespace Web_Api.data
@@ -83,6 +84,10 @@ namespace Web_Api.data
         // A.2 — Sessions des confirmatrices (workload + temps de pause)
         public DbSet<F_CONFIRMATRICE_SESSION> F_CONFIRMATRICE_SESSIONS { get; set; } = null!;
 
+        public DbSet<DOCUMENT> DOCUMENTS { get; set; } = null!;
+        public DbSet<LIGNE_DOCUMENT> LIGNE_DOCUMENTS { get; set; } = null!;
+        public DbSet<PARAM_CONNEXION_X3> PARAM_CONNEXION_X3 { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -143,6 +148,54 @@ namespace Web_Api.data
             modelBuilder.Entity<F_ARTSTOCK>().Property(x => x.AS_QteMini).HasColumnType("decimal(24,13)");
             modelBuilder.Entity<F_ARTSTOCK>().Property(x => x.AS_QteRes).HasColumnType("decimal(24,13)");
             modelBuilder.Entity<F_ARTSTOCK>().Property(x => x.AS_QteSto).HasColumnType("decimal(24,13)");
+
+            modelBuilder.Entity<DOCUMENT>(entity =>
+            {
+                entity.ToTable("DOCUMENT");
+                entity.HasKey(x => x.DO_NumDocument);
+                entity.Property(x => x.DO_TotalTTC).HasColumnType("decimal(24,13)");
+                entity.HasMany(x => x.LIGNEDOCUMENTs)
+                    .WithOne()
+                    .HasForeignKey("DO_NumDocument")
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<LIGNE_DOCUMENT>(entity =>
+            {
+                entity.ToTable("LIGNE_DOCUMENT");
+                entity.Property<int>("Id").ValueGeneratedOnAdd();
+                entity.HasKey("Id");
+                entity.Property(x => x.LP_QteMvt).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.LP_PrixUnitaire).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.LP_ValeurRemise).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.LP_PUTTC).HasColumnType("decimal(24,13)");
+                entity.Property(x => x.LP_MontantTTC).HasColumnType("decimal(24,13)");
+            });
+
+            modelBuilder.Entity<PARAM_CONNEXION_X3>(entity =>
+            {
+                entity.ToTable("PARAM_CONNEXION_X3");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.Id).ValueGeneratedNever();
+                entity.Property(x => x.Http).HasDefaultValue((short)0);
+                entity.Property(x => x.AdresseIP_X3).IsRequired().HasMaxLength(100).HasDefaultValue("localhost:8124");
+                entity.Property(x => x.Login).IsRequired().HasMaxLength(100).HasDefaultValue("admin");
+                entity.Property(x => x.Password).IsRequired().HasMaxLength(100).HasDefaultValue("@Zerty1234");
+                entity.Property(x => x.Dossier).IsRequired().HasMaxLength(50).HasDefaultValue("SEED");
+                entity.Property(x => x.Service_Web_BC).IsRequired().HasMaxLength(50).HasDefaultValue("SOH");
+                entity.Property(x => x.Type_BC).IsRequired().HasMaxLength(50).HasDefaultValue("WEB");
+                entity.HasData(new PARAM_CONNEXION_X3
+                {
+                    Id = 1,
+                    Http = 0,
+                    AdresseIP_X3 = "localhost:8124",
+                    Login = "admin",
+                    Password = "@Zerty1234",
+                    Dossier = "SEED",
+                    Service_Web_BC = "SOH",
+                    Type_BC = "WEB"
+                });
+            });
 
             modelBuilder.Entity<F_RECLAMATION>(entity =>
             {

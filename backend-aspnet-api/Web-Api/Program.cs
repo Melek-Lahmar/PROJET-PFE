@@ -112,6 +112,7 @@ builder.Services.AddScoped<IEmailSenderService, BrevoSmtpEmailSender>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<BcToBlService>();
 builder.Services.AddScoped<BonCommandeService>();
+builder.Services.AddScoped<DocumentX3IntegrationService>();
 builder.Services.AddScoped<KonnectPaymentService>();
 builder.Services.AddScoped<IVirtualPaymentService, VirtualPaymentService>();
 

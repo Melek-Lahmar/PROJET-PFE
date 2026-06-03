@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Web_Api.data;
 
@@ -11,9 +12,11 @@ using Web_Api.data;
 namespace Web_Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602143229_SeparateDocumentModelFiles")]
+    partial class SeparateDocumentModelFiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -569,70 +572,6 @@ namespace Web_Api.Migrations
                     b.ToTable("ProfilsUtilisateurs");
                 });
 
-            modelBuilder.Entity("Web_Api.DTO.DOCUMENT", b =>
-                {
-                    b.Property<string>("DO_NumDocument")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CT_Num")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DE_No")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DO_Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DO_Ref")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("DO_TotalTTC")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.HasKey("DO_NumDocument");
-
-                    b.ToTable("DOCUMENT", (string)null);
-                });
-
-            modelBuilder.Entity("Web_Api.DTO.LIGNE_DOCUMENT", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AR_Ref")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DO_NumDocument")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<decimal>("LP_MontantTTC")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("LP_PUTTC")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("LP_PrixUnitaire")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("LP_QteMvt")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.Property<decimal?>("LP_ValeurRemise")
-                        .HasColumnType("decimal(24,13)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DO_NumDocument");
-
-                    b.ToTable("LIGNE_DOCUMENT", (string)null);
-                });
-
             modelBuilder.Entity("Web_Api.Model.AppSetting", b =>
                 {
                     b.Property<string>("Key")
@@ -719,6 +658,33 @@ namespace Web_Api.Migrations
                     b.HasKey("DoPiece");
 
                     b.ToTable("CommandeConfirmationLocks");
+                });
+
+            modelBuilder.Entity("Web_Api.Model.DOCUMENT", b =>
+                {
+                    b.Property<string>("DO_NumDocument")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CT_Num")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DE_No")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DO_Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DO_Ref")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("DO_TotalTTC")
+                        .HasColumnType("decimal(24,13)");
+
+                    b.HasKey("DO_NumDocument");
+
+                    b.ToTable("DOCUMENT", (string)null);
                 });
 
             modelBuilder.Entity("Web_Api.Model.F_APP_CONFIG", b =>
@@ -2780,74 +2746,41 @@ namespace Web_Api.Migrations
                     b.ToTable("HomepageTemplates");
                 });
 
-            modelBuilder.Entity("Web_Api.Model.PARAM_CONNEXION_X3", b =>
+            modelBuilder.Entity("Web_Api.Model.LIGNE_DOCUMENT", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("AdresseIP_X3")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("localhost:8124");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Dossier")
+                    b.Property<string>("AR_Ref")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("SEED");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<short>("Http")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0);
+                    b.Property<string>("DO_NumDocument")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("admin");
+                    b.Property<decimal>("LP_MontantTTC")
+                        .HasColumnType("decimal(24,13)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("@Zerty1234");
+                    b.Property<decimal?>("LP_PUTTC")
+                        .HasColumnType("decimal(24,13)");
 
-                    b.Property<string>("Service_Web_BC")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("SOH");
+                    b.Property<decimal?>("LP_PrixUnitaire")
+                        .HasColumnType("decimal(24,13)");
 
-                    b.Property<string>("Type_BC")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("WEB");
+                    b.Property<decimal?>("LP_QteMvt")
+                        .HasColumnType("decimal(24,13)");
+
+                    b.Property<decimal?>("LP_ValeurRemise")
+                        .HasColumnType("decimal(24,13)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PARAM_CONNEXION_X3", (string)null);
+                    b.HasIndex("DO_NumDocument");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AdresseIP_X3 = "localhost:8124",
-                            Dossier = "SEED",
-                            Http = (short)0,
-                            Login = "admin",
-                            Password = "@Zerty1234",
-                            Service_Web_BC = "SOH",
-                            Type_BC = "WEB"
-                        });
+                    b.ToTable("LIGNE_DOCUMENT", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -2910,14 +2843,6 @@ namespace Web_Api.Migrations
                     b.Navigation("CustomerProfile");
                 });
 
-            modelBuilder.Entity("Web_Api.DTO.LIGNE_DOCUMENT", b =>
-                {
-                    b.HasOne("Web_Api.DTO.DOCUMENT", null)
-                        .WithMany("LIGNEDOCUMENTs")
-                        .HasForeignKey("DO_NumDocument")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("Web_Api.Model.F_DEVIS_EVENT", b =>
                 {
                     b.HasOne("Web_Api.Model.F_DEVIS_ENTETE", "Devis")
@@ -2957,7 +2882,15 @@ namespace Web_Api.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
                 });
 
-            modelBuilder.Entity("Web_Api.DTO.DOCUMENT", b =>
+            modelBuilder.Entity("Web_Api.Model.LIGNE_DOCUMENT", b =>
+                {
+                    b.HasOne("Web_Api.Model.DOCUMENT", null)
+                        .WithMany("LIGNEDOCUMENTs")
+                        .HasForeignKey("DO_NumDocument")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Web_Api.Model.DOCUMENT", b =>
                 {
                     b.Navigation("LIGNEDOCUMENTs");
                 });
