@@ -137,6 +137,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/sync", label: "Sync Sage", icon: Ico.sync },
       { href: "/admin/chatbot", label: "Chatbot", icon: Ico.chatbot },
       { href: "/admin/settings", label: "Paramètres", icon: Ico.settings },
+      { href: "/admin/settings/sage-x3", label: "Connexion Sage X3", icon: Ico.sync },
     ],
   },
 ];

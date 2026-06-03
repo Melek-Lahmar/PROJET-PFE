@@ -218,9 +218,7 @@ namespace Web_Api.Services
 
     public sealed class SagePostResult
     {
-        /// <summary>Faux quand l'envoi est désactivé en config (no-op).</summary>
         public bool Sent { get; set; }
-        /// <summary>True uniquement si HTTP 2xx.</summary>
         public bool Success { get; set; }
         public int HttpStatus { get; set; }
         public string Message { get; set; } = string.Empty;

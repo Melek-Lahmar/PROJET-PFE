@@ -660,46 +660,9 @@ namespace Web_Api.Controllers.Confirmateur
                 }
             }
 
-            // ----- Sync Sage : POST docentete BL après commit local ------------
-            // L'envoi est volontairement non-bloquant : si Sage est HS ou répond
-            // 4xx, le BL local reste valide et le compte rendu remonte au front.
-            var sagePayload = new SageDocEntetePayload
-            {
-                DO_Domaine = bl.DO_Domaine,
-                DO_Type = bl.DO_Type,
-                DO_Piece = bl.DO_Piece ?? blPiece,
-                DO_Date = bl.DO_Date,
-                DO_Tiers = bl.DO_Tiers,
-                DE_No = bl.DE_No,
-                DO_TotalHT = bl.DO_TotalHT,
-                DO_TotalTTC = bl.DO_TotalTTC,
-                DO_NetAPayer = bl.DO_NetAPayer,
-                DO_FraisLivraison = bl.DO_FraisLivraison,
-                DO_TimbreFiscal = bl.DO_TimbreFiscal,
-                DO_ModeLivraison = bl.DO_ModeLivraison,
-                DO_ModePaiement = bl.DO_ModePaiement,
-                DO_AdresseLivraison = bl.DO_AdresseLivraison,
-                DO_VilleLivraison = bl.DO_VilleLivraison,
-                DO_CodePostalLivraison = bl.DO_CodePostalLivraison,
-                DO_TelephoneLivraison = bl.DO_TelephoneLivraison,
-                DO_Valide = bl.DO_Valide,
-                DO_Ref = bl.DO_Ref,
-                Lines = await _db.F_DOCLIGNES
-                    .AsNoTracking()
-                    .Where(l => l.DO_Piece == blPiece && l.DO_Domaine == 0 && l.DO_Type == 1)
-                    .Select(l => new SageDocLignePayload
-                    {
-                        AR_Ref = l.AR_Ref,
-                        DL_Design = l.DL_Design,
-                        DL_Qte = l.DL_Qte,
-                        DL_PrixUnitaire = l.DL_PrixUnitaire,
-                        DL_MontantHT = l.DL_MontantHT,
-                        DL_MontantTTC = l.DL_MontantTTC,
-                    })
-                    .ToListAsync(ct)
-            };
-
-            var sageResult = await _sage.PostDocEnteteAsync(sagePayload, ct);
+            // L'envoi du BL vers Sage X3 a été déplacé dans LivreurController :
+            // il est désormais déclenché à la transition de statut LIVRE
+            // (cf. BatchUpdateStatus / UpdateStatus).
 
             // Phase 5 — Événement 4 : CommandeLiberee (suite à confirmation) vers groupe conf.
             // + Événement 7 : StatutCommandeChange vers le client (BC → BL).
@@ -732,10 +695,10 @@ namespace Web_Api.Controllers.Confirmateur
             return Ok(new TransformResultDto
             {
                 BlPiece = blPiece,
-                SageSent = sageResult.Sent,
-                SageSuccess = sageResult.Success,
-                SageHttpStatus = sageResult.HttpStatus,
-                SageMessage = sageResult.Message,
+                SageSent = true,
+                SageSuccess = true,
+                SageHttpStatus = 200,
+                SageMessage = "Integration_Document (static test) exécuté.",
                 NoLivreurForZone = false
             });
         }

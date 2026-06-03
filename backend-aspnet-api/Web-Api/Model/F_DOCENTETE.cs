@@ -255,6 +255,11 @@ namespace Web_Api.Model
         [StringLength(500)]
         public string? QuoteInternalNote { get; set; }
 
+        public bool DO_ValiderSageX3 { get; set; }
+
+        [StringLength(25)]
+        public string? DO_NumeroSageX3 { get; set; }
+
         public void SetWorkflowStatus(short status)
         {
             if (status < STATUS_EN_ATTENTE || status > STATUS_REFUSE)
