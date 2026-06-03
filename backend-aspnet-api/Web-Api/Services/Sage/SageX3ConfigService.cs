@@ -48,6 +48,7 @@ namespace Web_Api.Services.Sage
             Dossier = "SEED",
             Service_Web_BC = "SOH",
             Type_BC = "WEB",
+            DefaultDepotNo = 1,
         };
     }
 }
