@@ -55,6 +55,26 @@ namespace Web_Api.Services.Sage
         // appliqué côté Document.
         [JsonIgnore]
         public int DefaultDepotNo { get; set; } = 1;
+
+        // Mode démo : force le DOCUMENT envoyé à Sage X3 à utiliser les
+        // valeurs statiques connues comme valides dans le dossier SEED de
+        // l'encadrant (client FR004, dépôt 26, articles DIS007/DIS009).
+        // Permet de valider la chaîne d'intégration sans dépendre du mapping
+        // des clients/articles locaux vers Sage. À désactiver en prod.
+        [JsonIgnore]
+        public bool DemoMode { get; set; } = false;
+
+        [JsonIgnore]
+        public string DemoCtNum { get; set; } = "FR004";
+
+        [JsonIgnore]
+        public int DemoDeNo { get; set; } = 26;
+
+        [JsonIgnore]
+        public string DemoArRef1 { get; set; } = "DIS007";
+
+        [JsonIgnore]
+        public string DemoArRef2 { get; set; } = "DIS009";
     }
 
     public class DOCUMENT
