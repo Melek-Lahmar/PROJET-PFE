@@ -466,14 +466,16 @@ export function SupervisorZonesPage() {
   }
 
   function buildPayload() {
-    const govName = gouvernorats.find((g) => g.id === form.gouvernoratId)?.name ?? "";
     return {
       email: form.email,
       password: form.password,
       fullName: form.fullName,
       telephone: form.telephone,
-      gouvernorat: govName,
-      delegation: form.delegation,
+      // Gouvernorat/délégation principaux : seulement pour livreur-transit
+      // (sert à filtrer son dépôt rattaché). Pour livreur-classique, ce sont
+      // les zones de la liste verte qui définissent sa couverture.
+      gouvernorat: form.isTransit ? (form.gouvernoratId === "" ? null : form.gouvernoratId) : null,
+      delegation: form.isTransit ? form.delegation : null,
       isTransit: form.isTransit,
       depotRattacheNo: form.isTransit && form.depotRattacheNo !== "" ? Number(form.depotRattacheNo) : null,
       zones: form.isTransit ? [] : form.zones,
@@ -696,28 +698,32 @@ export function SupervisorZonesPage() {
                 })}
               </div>
 
-              {/* Zone principale */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Gouvernorat *</label>
-                  <select className={SELECT_CLASS} value={form.gouvernoratId}
-                    onChange={(e) => setForm((p) => ({
-                      ...p,
-                      gouvernoratId: Number(e.target.value),
-                      delegation: "",
-                      depotRattacheNo: "" // reset dépôt quand gouvernorat change
-                    }))}>
-                    {gouvernorats.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
+              {/* Zone principale — utile uniquement pour livreur-transit
+                  (sert à filtrer le dépôt rattaché). Pour livreur-classique,
+                  les zones de couverture sont gérées dans la section verte. */}
+              {form.isTransit && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Gouvernorat *</label>
+                    <select className={SELECT_CLASS} value={form.gouvernoratId}
+                      onChange={(e) => setForm((p) => ({
+                        ...p,
+                        gouvernoratId: Number(e.target.value),
+                        delegation: "",
+                        depotRattacheNo: "" // reset dépôt quand gouvernorat change
+                      }))}>
+                      {gouvernorats.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Délégation *</label>
+                    <select className={SELECT_CLASS} value={form.delegation} onChange={(e) => setForm((p) => ({ ...p, delegation: e.target.value }))}>
+                      <option value="">— Choisir —</option>
+                      {(formDelegQuery.data ?? []).map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Délégation *</label>
-                  <select className={SELECT_CLASS} value={form.delegation} onChange={(e) => setForm((p) => ({ ...p, delegation: e.target.value }))}>
-                    <option value="">— Choisir —</option>
-                    {(formDelegQuery.data ?? []).map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-              </div>
+              )}
 
               {/* ── Section transit : dépôt filtré par gouvernorat ─────────── */}
               {form.isTransit && (

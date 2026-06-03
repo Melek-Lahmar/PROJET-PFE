@@ -139,6 +139,9 @@ namespace Web_Api.Migrations
                     b.Property<DateTime?>("LI_DateReplanification")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("LI_HeureSouhaitee")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LI_Latitude")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");

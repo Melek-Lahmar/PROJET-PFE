@@ -118,7 +118,11 @@ export function GuestCheckoutPage() {
     delegation: !effectiveDelegation ? "Délégation requise" : undefined,
     address: !adresse.trim() ? "Adresse requise" : undefined,
     codePostal: isHome && !codePostal.trim() ? "Code postal requis" : undefined,
-  }), [nomComplet, telephone, gouvernorat, effectiveDelegation, adresse, isHome, codePostal]);
+    gps:
+      isHome && (latitude === null || longitude === null)
+        ? "Position GPS requise — utilisez « Ma position GPS » ou « Épingler sur la carte »"
+        : undefined,
+  }), [nomComplet, telephone, gouvernorat, effectiveDelegation, adresse, isHome, codePostal, latitude, longitude]);
 
   const effectiveShippingAddress =
     touchedShipping.address || shippingAddress.trim()
@@ -382,7 +386,7 @@ export function GuestCheckoutPage() {
           <GuestCheckoutLocationSection
             gouvernorat={gouvernorat}
             setGouvernorat={setGouvernorat}
-            delegation={effectiveDelegation}
+            delegation={delegation}
             setDelegation={setDelegation}
             gouvernorats={gouvernorats}
             delegations={delegations}
@@ -399,6 +403,7 @@ export function GuestCheckoutPage() {
               gouvernorat: fieldErrors.gouvernorat,
               delegation: fieldErrors.delegation,
               address: fieldErrors.address,
+              gps: fieldErrors.gps,
             } : undefined}
           />
 

@@ -17,6 +17,8 @@ import '../../../state/deliveries_provider.dart';
 import '../../widgets/premium/action_tile.dart';
 import '../../widgets/premium/premium_card.dart';
 import '../../widgets/premium/status_pill.dart';
+import '../../widgets/livreur/heure_souhaitee_badge.dart';
+import '../../widgets/livreur/heure_souhaitee_sheet.dart';
 import '../order_history_screen.dart';
 import 'livreur_claims_history_screen.dart';
 
@@ -531,6 +533,13 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen>
                     ),
                   ),
                 ),
+                // Report partiel — visible uniquement EN_LIVRAISON. Permet de
+                // dire « le client veut 14h » sans changer le statut ni sortir
+                // la commande de la tournée.
+                if (!escalated && d.statut == Statut.enLivraison) ...[
+                  const SizedBox(height: 10),
+                  _HeureSouhaiteePanel(delivery: d),
+                ],
               ],
             ),
           ),
@@ -1457,17 +1466,6 @@ final List<_StatusOption> _options = [
     requiresReplannedAt: true,
   ),
   _StatusOption(
-    label: 'Refus du client',
-    description: 'Le client refuse de prendre le colis.',
-    confirmLabel: 'Retour',
-    icon: Icons.cancel_schedule_send_outlined,
-    color: Colors.red.shade700,
-    bg: Colors.red.shade50,
-    newStatut: Statut.retourne,
-    motif: 'CLIENT_REFUSE',
-    needsNote: true,
-  ),
-  _StatusOption(
     label: 'Colis endommagé',
     description: 'Le produit est abîmé avant livraison.',
     confirmLabel: 'Signaler',
@@ -1609,4 +1607,205 @@ class _StatusVisual {
   final String label;
   const _StatusVisual(
       {required this.color, required this.icon, required this.label});
+}
+
+/// Panneau report partiel (même journée) — affiché dans le bloc « Statut »
+/// quand la commande est EN_LIVRAISON.
+///
+///  - Pas d'heure : un bouton outline « Reporter dans la journée » qui ouvre
+///    le sheet de choix rapide (+30 min / +1 h / +2 h / heure précise).
+///  - Heure définie : un encadré pastel avec le badge live + 2 actions
+///    (modifier l'heure / débloquer maintenant).
+class _HeureSouhaiteePanel extends StatefulWidget {
+  final Delivery delivery;
+
+  const _HeureSouhaiteePanel({required this.delivery});
+
+  @override
+  State<_HeureSouhaiteePanel> createState() => _HeureSouhaiteePanelState();
+}
+
+class _HeureSouhaiteePanelState extends State<_HeureSouhaiteePanel> {
+  bool _saving = false;
+
+  Future<void> _openSheet() async {
+    final d = widget.delivery;
+    final result = await showHeureSouhaiteeSheet(
+      context,
+      doPiece: d.doPiece,
+      current: d.heureSouhaitee,
+    );
+    if (result == null || !mounted) return;
+
+    setState(() => _saving = true);
+    try {
+      await context.read<DeliveriesProvider>().setHeureSouhaitee(
+            doPiece: d.doPiece,
+            heureSouhaitee: result.clearNow ? null : result.heureSouhaitee,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: result.clearNow
+              ? const Color(0xFF16A34A)
+              : const Color(0xFFEA580C),
+          content: Text(
+            result.clearNow
+                ? 'Commande débloquée — livraison immédiate.'
+                : 'Reportée à ${_fmt(result.heureSouhaitee!)} dans la journée.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _clearNow() async {
+    setState(() => _saving = true);
+    try {
+      await context.read<DeliveriesProvider>().setHeureSouhaitee(
+            doPiece: widget.delivery.doPiece,
+            heureSouhaitee: null,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Color(0xFF16A34A),
+          content: Text('Commande débloquée.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  String _fmt(DateTime t) {
+    final hh = t.hour.toString().padLeft(2, '0');
+    final mm = t.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.delivery;
+    final has = d.heureSouhaitee != null;
+
+    if (!has) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _saving ? null : _openSheet,
+          icon: const Icon(Icons.schedule_rounded, size: 18),
+          label: const Text(
+            'Reporter dans la journée',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFEA580C),
+            side: const BorderSide(color: Color(0xFFEA580C), width: 1),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEA580C).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFEA580C).withValues(alpha: 0.35),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.lock_clock_rounded,
+                  size: 18, color: Color(0xFFEA580C)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Reportée dans la journée',
+                  style: TextStyle(
+                    color: Color(0xFFEA580C),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              HeureSouhaiteeBadge(heureSouhaitee: d.heureSouhaitee!),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Statut inchangé (« En livraison »). Débloquage auto à l\'heure dite, ou immédiat ci-dessous.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11.5,
+                ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _saving ? null : _openSheet,
+                  icon: const Icon(Icons.edit_calendar_rounded, size: 16),
+                  label: const Text(
+                    'Modifier l\'heure',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFEA580C),
+                    side: const BorderSide(color: Color(0xFFEA580C)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _clearNow,
+                  icon: const Icon(Icons.flash_on_rounded, size: 16),
+                  label: const Text(
+                    'Débloquer',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF16A34A),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

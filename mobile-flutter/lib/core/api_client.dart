@@ -51,7 +51,10 @@ class ApiClient {
   /// - Utilise : http://localhost:5000
   /// ============================================================
 
-  static const String phoneRealBaseUrl = 'http://192.168.100.20:5123';
+  static const String phoneRealBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://192.168.100.20:5123',
+  );
 
   /// Default backend base URL inferred from the current platform.
   static String get defaultBaseUrl => phoneRealBaseUrl;
@@ -247,6 +250,26 @@ class ApiClient {
         bool auth = true,
       }) async {
     final response = await _send(() async => http.put(
+          _buildUri(path),
+          headers: await _headers(auth: auth),
+          body: jsonEncode(payload),
+        ));
+    _ensureSuccess(response);
+    final body = _decodeBody(response);
+    if (body == null) return <String, dynamic>{};
+    if (body is Map<String, dynamic>) return body;
+    throw ApiException(
+      statusCode: response.statusCode,
+      message: 'Réponse inattendue : objet JSON attendu.',
+    );
+  }
+
+  Future<Map<String, dynamic>> patchJson(
+      String path,
+      Map<String, dynamic> payload, {
+        bool auth = true,
+      }) async {
+    final response = await _send(() async => http.patch(
           _buildUri(path),
           headers: await _headers(auth: auth),
           body: jsonEncode(payload),

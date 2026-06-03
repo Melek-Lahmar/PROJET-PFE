@@ -1,0 +1,57 @@
+@startuml
+title Diagramme de séquence — Export Excel / PDF (QuestPDF + ClosedXML)
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+actor "Administrateur" as A
+participant "AdminSummaryPage\n(React)" as R
+participant "AdminSummary\nController" as ASC
+participant "ExportService" as ES
+database  "SQL Server" as DB
+
+A -> R : Clic « Exporter »\n(type, période, format)
+R -> ASC : GET /api/admin/orders/export\n?format=xlsx&period=30d
+ASC -> ASC : ParsePeriod(period) → (from, to)
+ASC -> DB : SELECT F_DOCENTETES\nWHERE cbCreation ∈ [from, to[\n.Take(MaxRows = 10 000)
+DB --> ASC : Lignes (DO_Piece, DO_Tiers,\nDO_Valide, DO_Date, ville, DO_NetAPayer)
+
+alt format == "xlsx"
+  ASC -> ES : ExportToExcel(headers, rows)
+  ES -> ES : XLWorkbook (ClosedXML) :\nentêtes gras, AdjustToContents
+  ES --> ASC : byte[] (.xlsx)
+  ASC --> R : 200 + Content-Disposition\napplication/vnd…spreadsheetml
+else format == "pdf"
+  ASC -> ES : ExportToPdf(title, period, headers, rows)
+  ES -> ES : Document.Create (QuestPDF) :\nA4, en-tête, table, pagination
+  ES --> ASC : byte[] (.pdf)
+  ASC --> R : 200 + application/pdf
+end
+R --> A : Téléchargement direct du fichier
+
+note over ES
+  Plafond **MaxRows = 10 000** lignes par export
+  (avertissement utilisateur au-delà). Service
+  générique réutilisé par /reclamations/export
+  et toute future ressource via (headers, rows).
+end note
+@enduml

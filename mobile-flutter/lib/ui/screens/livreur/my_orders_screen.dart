@@ -7,6 +7,8 @@ import '../../../core/constants.dart';
 import '../../../core/theme/app_status_palette.dart';
 import '../../../models/delivery.dart';
 import '../../../state/deliveries_provider.dart';
+import '../../widgets/livreur/heure_souhaitee_badge.dart';
+import '../../widgets/livreur/heure_souhaitee_sheet.dart';
 import '../../widgets/premium/animated_entry.dart';
 import '../../widgets/premium/empty_view.dart';
 import '../../widgets/premium/premium_card.dart';
@@ -53,8 +55,22 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
   final Set<String> _selectedIds = <String>{};
   bool _launching = false;
 
+  // Re-render périodique : permet aux cards « bloquées » (report partiel)
+  // de basculer automatiquement dans la section « Actives » quand l'heure
+  // souhaitée est atteinte, sans attendre un refresh réseau.
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   void dispose() {
+    _tick?.cancel();
     _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
@@ -181,13 +197,12 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
     });
   }
 
-  void _selectAllReady(List<Delivery> visible) {
-    final ready = visible.where(_isDepotReady).map((d) => d.doPiece);
+  void _selectAllVisible(List<Delivery> visible) {
     setState(() {
       _selectionMode = true;
       _selectedIds
         ..clear()
-        ..addAll(ready);
+        ..addAll(visible.map((d) => d.doPiece));
     });
   }
 
@@ -217,11 +232,44 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
     }
   }
 
+  /// Batch : passe toutes les sélections DEPOT (plain) à
+  /// DEPOT_EN_COURS_DE_PREPARATION. Appelé par le FAB quand la sélection
+  /// contient des commandes au dépôt non encore en préparation.
+  Future<void> _startPreparationBatch() async {
+    if (_launching) return;
+    final provider = context.read<DeliveriesProvider>();
+    final pieces = provider.myOrders
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotPlain)
+        .map((d) => d.doPiece)
+        .toList();
+    if (pieces.isEmpty) return;
+    setState(() => _launching = true);
+    try {
+      final result = await provider.setStatusBatch(
+        doPieces: pieces,
+        statut: Statut.depot,
+        apiStatusOverride: 'DEPOT_EN_COURS_DE_PREPARATION',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.amber.shade800,
+        content: Text('${result.updated} commande${result.updated > 1 ? "s" : ""} en préparation.'),
+      ));
+      _exitSelection();
+      setState(() => _filter = _StatusFilter.depotInPrep);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Échec : $e')));
+    } finally {
+      if (mounted) setState(() => _launching = false);
+    }
+  }
+
   /// Batch : passe toutes les sélections DEPOT_EN_COURS_DE_PREPARATION
   /// à DEPOT_PRET. Appelé par le FAB quand la sélection contient des
   /// commandes "en préparation".
-  // ignore: unused_element
-  Future<void> _markSelectedAsReady() async {
+  Future<void> _markSelectedReadyBatch() async {
     if (_launching) return;
     final provider = context.read<DeliveriesProvider>();
     final inPrep = provider.myOrders
@@ -255,6 +303,51 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
     } finally {
       if (mounted) setState(() => _launching = false);
     }
+  }
+
+  /// Ouvre le bottom sheet de report partiel (même journée).
+  /// Si le livreur valide → PATCH heure-souhaitee, la commande passe dans la
+  /// section « Bloquées ». Si elle est déjà bloquée → option « Débloquer
+  /// maintenant » qui efface le champ.
+  Future<void> _openHeureSouhaiteeSheet(Delivery d) async {
+    final result = await showHeureSouhaiteeSheet(
+      context,
+      doPiece: d.doPiece,
+      current: d.heureSouhaitee,
+    );
+    if (result == null || !mounted) return;
+
+    final provider = context.read<DeliveriesProvider>();
+    try {
+      await provider.setHeureSouhaitee(
+        doPiece: d.doPiece,
+        heureSouhaitee: result.clearNow ? null : result.heureSouhaitee,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: result.clearNow
+              ? const Color(0xFF16A34A)
+              : const Color(0xFFEA580C),
+          content: Text(
+            result.clearNow
+                ? '${d.doPiece} débloquée — livraison immédiate.'
+                : '${d.doPiece} reportée à ${_formatHour(result.heureSouhaitee!)}.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec : $e')),
+      );
+    }
+  }
+
+  String _formatHour(DateTime t) {
+    final hh = t.hour.toString().padLeft(2, '0');
+    final mm = t.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 
   Future<void> _launchSelected() async {
@@ -373,16 +466,45 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
         .where(_isDepotReady)
         .length;
 
-    final showFab = _selectionMode && selectedReadyCount > 0;
+    final selectedDepotPlainCount = base
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotPlain)
+        .length;
+
+    final selectedInPrepCount = base
+        .where((d) => _selectedIds.contains(d.doPiece))
+        .where(_isDepotInPrep)
+        .length;
+
+    final showFab = _selectionMode &&
+        (selectedDepotPlainCount > 0 ||
+            selectedInPrepCount > 0 ||
+            selectedReadyCount > 0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: showFab
-          ? _GoLivraisonFab(
-              count: selectedReadyCount,
-              loading: _launching,
-              onPressed: _launchSelected,
-            )
+          ? selectedDepotPlainCount > 0
+              ? _BatchFab(
+                  label: 'En préparation ($selectedDepotPlainCount)',
+                  icon: Icons.inventory_2_rounded,
+                  colors: const [Color(0xFFB45309), Color(0xFFF59E0B)],
+                  loading: _launching,
+                  onPressed: _startPreparationBatch,
+                )
+              : selectedInPrepCount > 0
+                  ? _BatchFab(
+                      label: 'Marquer prêt ($selectedInPrepCount)',
+                      icon: Icons.task_alt_rounded,
+                      colors: const [Color(0xFF059669), Color(0xFF34D399)],
+                      loading: _launching,
+                      onPressed: _markSelectedReadyBatch,
+                    )
+                  : _GoLivraisonFab(
+                      count: selectedReadyCount,
+                      loading: _launching,
+                      onPressed: _launchSelected,
+                    )
           : null,
       body: RefreshIndicator(
         onRefresh: () => provider.refresh(),
@@ -393,9 +515,11 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
               child: _selectionMode
                   ? _SelectionHeader(
                       count: _selectedIds.length,
+                      depotPlainCount: selectedDepotPlainCount,
+                      inPrepCount: selectedInPrepCount,
                       readyCount: selectedReadyCount,
                       onCancel: _exitSelection,
-                      onSelectAll: () => _selectAllReady(filtered),
+                      onSelectAll: () => _selectAllVisible(filtered),
                     )
                   : _Header(total: counts[_StatusFilter.all] ?? 0),
             ),
@@ -502,7 +626,7 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                   icon: Icons.check_circle_outline_rounded,
                   title: 'Aucune livraison en cours',
                   subtitle:
-                      'Accepte une commande depuis l\'onglet Nouvelles commandes.',
+                      'Les nouvelles commandes apparaissent automatiquement ici.',
                   ctaLabel: 'Actualiser',
                   onCta: () => provider.refresh(),
                 ),
@@ -526,48 +650,162 @@ class _LivreurMyOrdersScreenState extends State<LivreurMyOrdersScreen> {
                 ),
               )
             else
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, showFab ? 96 : 24),
-                sliver: SliverList.separated(
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (_, idx) {
-                    final d = filtered[idx];
-                    final selected = _selectedIds.contains(d.doPiece);
-                    final isReady = _isDepotReady(d);
-                    final isInPrep = _isDepotInPrep(d);
-
-                    return EntryAnimation(
-                      duration: const Duration(milliseconds: 320),
-                      delay: Duration(milliseconds: 40 + idx * 35),
-                      slide: 12,
-                      child: _MyOrderCard(
-                        delivery: d,
-                        isReady: isReady,
-                        isInPrep: isInPrep,
-                        selectionMode: _selectionMode,
-                        selected: selected,
-                        onTap: () {
-                          if (_selectionMode) {
-                            _toggleSelected(d);
-                          } else {
-                            _openDetails(d);
-                          }
-                        },
-                        onLongPress: isReady && !_selectionMode
-                            ? () => _enterSelection(d)
-                            : null,
-                        onMarkReady:
-                            isInPrep ? () => _markAsReady(d) : null,
-                      ),
-                    );
-                  },
-                ),
+              ..._buildOrderSlivers(
+                filtered,
+                bottomPadding: showFab ? 96.0 : 24.0,
               ),
           ],
         ),
       ),
     );
+  }
+
+  /// Construit les slivers de cartes commandes — avec séparation premium en 2
+  /// sections (« Bloquées » au-dessus, « Actives » en-dessous) quand le
+  /// filtre courant inclut des commandes EN_LIVRAISON. Les autres filtres
+  /// rendent la liste plate inchangée.
+  List<Widget> _buildOrderSlivers(
+    List<Delivery> filtered, {
+    required double bottomPadding,
+  }) {
+    final showSections = _filter == _StatusFilter.all ||
+        _filter == _StatusFilter.inDelivery;
+
+    if (!showSections) {
+      return [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+          sliver: SliverList.separated(
+            itemCount: filtered.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, idx) => _buildAnimatedCard(filtered[idx], idx),
+          ),
+        ),
+      ];
+    }
+
+    final blocked = filtered.where((d) => d.isPartiallyDeferred).toList();
+    final actives = filtered.where((d) => !d.isPartiallyDeferred).toList();
+
+    final slivers = <Widget>[];
+
+    if (blocked.isNotEmpty) {
+      slivers.add(SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: _SectionHeader(
+            icon: Icons.lock_clock_rounded,
+            label: 'Bloquées',
+            count: blocked.length,
+            tone: const Color(0xFFEA580C),
+            subtitle:
+                'En attente d\'heure souhaitée. Auto-déblocage à l\'heure dite.',
+          ),
+        ),
+      ));
+      slivers.add(SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        sliver: SliverList.separated(
+          itemCount: blocked.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (_, idx) => _buildAnimatedCard(blocked[idx], idx),
+        ),
+      ));
+    }
+
+    if (actives.isNotEmpty) {
+      if (blocked.isNotEmpty) {
+        slivers.add(SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: _SectionHeader(
+              icon: Icons.local_shipping_rounded,
+              label: 'Actives',
+              count: actives.length,
+              tone: const Color(0xFF6366F1),
+            ),
+          ),
+        ));
+      }
+      slivers.add(SliverPadding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+        sliver: SliverList.separated(
+          itemCount: actives.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (_, idx) => _buildAnimatedCard(actives[idx], idx),
+        ),
+      ));
+    }
+
+    return slivers;
+  }
+
+  Widget _buildAnimatedCard(Delivery d, int idx) {
+    final selected = _selectedIds.contains(d.doPiece);
+    final isReady = _isDepotReady(d);
+    final isInPrep = _isDepotInPrep(d);
+    final isDepotPlain = _isDepotPlain(d);
+    final isNewOrder = isDepotPlain &&
+        (d.depotPassageNumber == null || d.depotPassageNumber! <= 1);
+    final isReportedOrder = d.isReported;
+    final canDeferPartially = d.statut == Statut.enLivraison;
+
+    return EntryAnimation(
+      duration: const Duration(milliseconds: 320),
+      delay: Duration(milliseconds: 40 + idx * 35),
+      slide: 12,
+      child: _MyOrderCard(
+        delivery: d,
+        isReady: isReady,
+        isInPrep: isInPrep,
+        isDepotPlain: isDepotPlain,
+        isNewOrder: isNewOrder,
+        isReportedOrder: isReportedOrder,
+        selectionMode: _selectionMode,
+        selected: selected,
+        onTap: () {
+          if (_selectionMode) {
+            _toggleSelected(d);
+          } else {
+            _openDetails(d);
+          }
+        },
+        onLongPress: (isReady || isInPrep || isDepotPlain) && !_selectionMode
+            ? () => _enterSelection(d)
+            : null,
+        onMarkReady: isInPrep ? () => _markAsReady(d) : null,
+        onSetHeureSouhaitee:
+            canDeferPartially ? () => _openHeureSouhaiteeSheet(d) : null,
+        onEditHeureSouhaitee: d.heureSouhaitee != null
+            ? () => _openHeureSouhaiteeSheet(d)
+            : null,
+        onClearHeureSouhaitee: d.isPartiallyDeferred
+            ? () => _clearHeureSouhaitee(d)
+            : null,
+      ),
+    );
+  }
+
+  Future<void> _clearHeureSouhaitee(Delivery d) async {
+    final provider = context.read<DeliveriesProvider>();
+    try {
+      await provider.setHeureSouhaitee(
+        doPiece: d.doPiece,
+        heureSouhaitee: null,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF16A34A),
+          content: Text('${d.doPiece} débloquée.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec : $e')),
+      );
+    }
   }
 
   // Section 2.4 — couleur progressive selon le nombre de retours dépôt.
@@ -713,6 +951,94 @@ class _DepotFilterChip extends StatelessWidget {
   }
 }
 
+/// En-tête léger pour séparer visuellement les sections « Bloquées » et
+/// « Actives » à l'intérieur de l'onglet « En livraison ». Affiche un point
+/// de couleur, le label, le compteur, et un sous-titre optionnel.
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int count;
+  final Color tone;
+  final String? subtitle;
+
+  const _SectionHeader({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.tone,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: tone),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: tone,
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: tone.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: TextStyle(
+                          color: tone,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   final int total;
   const _Header({required this.total});
@@ -760,12 +1086,16 @@ class _Header extends StatelessWidget {
 
 class _SelectionHeader extends StatelessWidget {
   final int count;
+  final int depotPlainCount;
+  final int inPrepCount;
   final int readyCount;
   final VoidCallback onCancel;
   final VoidCallback onSelectAll;
 
   const _SelectionHeader({
     required this.count,
+    required this.depotPlainCount,
+    required this.inPrepCount,
     required this.readyCount,
     required this.onCancel,
     required this.onSelectAll,
@@ -822,9 +1152,11 @@ class _SelectionHeader extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      readyCount == count
-                          ? '$readyCount prêtes à partir'
-                          : '$readyCount prêtes / ${count - readyCount} non éligibles',
+                      [
+                        if (depotPlainCount > 0) '$depotPlainCount au dépôt',
+                        if (inPrepCount > 0) '$inPrepCount en prép.',
+                        if (readyCount > 0) '$readyCount prêtes',
+                      ].join(' · '),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.86),
                         fontSize: 12,
@@ -840,7 +1172,7 @@ class _SelectionHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
                 icon: const Icon(Icons.select_all_rounded, size: 18),
-                label: const Text('Toutes prêtes'),
+                label: const Text('Tout sélectionner'),
               ),
               IconButton(
                 tooltip: 'Annuler',
@@ -859,28 +1191,52 @@ class _MyOrderCard extends StatelessWidget {
   final Delivery delivery;
   final bool isReady;
   final bool isInPrep;
+  final bool isDepotPlain;
+  final bool isNewOrder;
+  final bool isReportedOrder;
   final bool selectionMode;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onMarkReady;
 
+  /// Ouvre le sheet de report partiel (même journée). Visible uniquement
+  /// sur les commandes EN_LIVRAISON sans heure souhaitée active.
+  final VoidCallback? onSetHeureSouhaitee;
+
+  /// Édition rapide de l'heure souhaitée — affichée sur une card déjà
+  /// bloquée pour éviter d'avoir à entrer dans l'écran détail.
+  final VoidCallback? onEditHeureSouhaitee;
+
+  /// Glisser-débloquer immédiat : affiche un slide premium quand la commande
+  /// est en attente d'heure souhaitée.
+  final VoidCallback? onClearHeureSouhaitee;
+
   const _MyOrderCard({
     required this.delivery,
     required this.isReady,
     required this.isInPrep,
+    required this.isDepotPlain,
+    required this.isNewOrder,
+    required this.isReportedOrder,
     required this.selectionMode,
     required this.selected,
     required this.onTap,
     required this.onLongPress,
     this.onMarkReady,
+    this.onSetHeureSouhaitee,
+    this.onEditHeureSouhaitee,
+    this.onClearHeureSouhaitee,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final d = delivery;
-    final tone = isReady ? const Color(0xFF0EA5E9) : scheme.outlineVariant;
+    final isBlocked = d.isPartiallyDeferred;
+    final tone = isBlocked
+        ? const Color(0xFFEA580C)
+        : (isReady ? const Color(0xFF0EA5E9) : scheme.outlineVariant);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -888,8 +1244,12 @@ class _MyOrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(PremiumTokens.rLg),
         border: Border.all(
-          color: selected ? const Color(0xFF6366F1) : tone.withValues(alpha: 0.0),
-          width: selected ? 2 : 0,
+          color: selected
+              ? const Color(0xFF6366F1)
+              : (isBlocked
+                  ? const Color(0xFFEA580C).withValues(alpha: 0.4)
+                  : tone.withValues(alpha: 0.0)),
+          width: selected ? 2 : (isBlocked ? 1 : 0),
         ),
         boxShadow: selected
             ? [
@@ -948,6 +1308,20 @@ class _MyOrderCard extends StatelessWidget {
                 if ((d.depotPassageNumber ?? 0) > 0) ...[
                   const SizedBox(width: 6),
                   _DepotBadge(n: d.depotPassageNumber!),
+                ],
+                if (isNewOrder) ...[
+                  const SizedBox(width: 6),
+                  const _NewBadge(),
+                ] else if (isReportedOrder) ...[
+                  const SizedBox(width: 6),
+                  const _ReportedBadge(),
+                ],
+                if (d.heureSouhaitee != null) ...[
+                  const SizedBox(width: 6),
+                  HeureSouhaiteeBadge(
+                    heureSouhaitee: d.heureSouhaitee!,
+                    compact: true,
+                  ),
                 ],
               ],
             ),
@@ -1026,6 +1400,49 @@ class _MyOrderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+            // Card en report partiel actif — panneau premium qui réplique
+            // l'écran détail : affichage du blocage + bouton « Modifier
+            // l'heure » + slider de débloquage immédiat. Permet au livreur
+            // de tout faire depuis la liste sans entrer dans la card détail.
+            if (isBlocked && !selectionMode && onClearHeureSouhaitee != null) ...[
+              const SizedBox(height: 12),
+              _BlockedPanel(
+                heureSouhaitee: d.heureSouhaitee!,
+                onEdit: onEditHeureSouhaitee,
+                onClear: onClearHeureSouhaitee!,
+              ),
+            ],
+            // Petit bouton outline pour ouvrir le sheet d'édition de l'heure
+            // — visible aussi sur les commandes non bloquées EN_LIVRAISON
+            // pour faciliter la pose d'un nouveau report partiel.
+            if (!selectionMode &&
+                !isBlocked &&
+                onSetHeureSouhaitee != null &&
+                d.statut == Statut.enLivraison) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onSetHeureSouhaitee,
+                  icon: const Icon(Icons.schedule_rounded, size: 16),
+                  label: const Text(
+                    'Reporter dans la journée',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFEA580C),
+                    side: const BorderSide(
+                      color: Color(0xFFEA580C),
+                      width: 1,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
@@ -1171,6 +1588,420 @@ class _GoLivraisonFab extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BatchFab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final List<Color> colors;
+  final bool loading;
+  final VoidCallback onPressed;
+
+  const _BatchFab({
+    required this.label,
+    required this.icon,
+    required this.colors,
+    required this.loading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return EntryScale(
+      duration: const Duration(milliseconds: 320),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withValues(alpha: 0.45),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: loading ? null : onPressed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (loading)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.4, color: Colors.white),
+                    )
+                  else
+                    Icon(icon, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    loading ? 'Mise à jour…' : label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NewBadge extends StatelessWidget {
+  const _NewBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.40),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.fiber_new_rounded, color: Colors.white, size: 13),
+          SizedBox(width: 3),
+          Text(
+            'Nouvelle',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportedBadge extends StatelessWidget {
+  const _ReportedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEA580C), Color(0xFFF97316)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEA580C).withValues(alpha: 0.38),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_repeat_rounded, color: Colors.white, size: 13),
+          SizedBox(width: 3),
+          Text(
+            'Reportée',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Panneau premium affiché sur une card bloquée (heure souhaitée future).
+/// Réplique en miniature le `_HeureSouhaiteePanel` de l'écran détail pour
+/// que le livreur puisse modifier l'heure ou débloquer sans changer
+/// d'écran. La hiérarchie visuelle est :
+///   1. Bandeau orange contenant l'icône + libellé + badge compte à rebours
+///   2. Bouton outline « Modifier l'heure » (édition rapide, faible risque)
+///   3. Slider de débloquage immédiat (geste explicite, évite les accidents
+///      pendant la conduite / le scan)
+class _BlockedPanel extends StatelessWidget {
+  final DateTime heureSouhaitee;
+  final VoidCallback? onEdit;
+  final VoidCallback onClear;
+
+  const _BlockedPanel({
+    required this.heureSouhaitee,
+    required this.onEdit,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const tone = Color(0xFFEA580C);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tone.withValues(alpha: 0.28), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.lock_clock_rounded,
+                    size: 15, color: tone),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Reportée dans la journée',
+                  style: TextStyle(
+                    color: tone,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+              HeureSouhaiteeBadge(heureSouhaitee: heureSouhaitee),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Débloquage auto à l\'heure dite, ou geste rapide ci-dessous.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+          ),
+          if (onEdit != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_calendar_rounded, size: 15),
+                label: const Text(
+                  'Modifier l\'heure',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tone,
+                  side: const BorderSide(color: tone, width: 1),
+                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          _UnblockSlider(onConfirmed: onClear),
+        ],
+      ),
+    );
+  }
+}
+
+/// Slide-to-confirm premium qui débloque une commande en report partiel.
+/// Le livreur doit glisser le pouce jusqu'au bout pour confirmer — évite
+/// les déclenchements accidentels pendant qu'il conduit / scanne.
+class _UnblockSlider extends StatefulWidget {
+  final VoidCallback onConfirmed;
+
+  const _UnblockSlider({required this.onConfirmed});
+
+  @override
+  State<_UnblockSlider> createState() => _UnblockSliderState();
+}
+
+class _UnblockSliderState extends State<_UnblockSlider> {
+  double _dragX = 0;
+  bool _fired = false;
+
+  static const double _trackHeight = 44;
+  static const double _thumbSize = 38;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (ctx, c) {
+        final maxX = c.maxWidth - _thumbSize - 4;
+        final progress = maxX <= 0 ? 0.0 : (_dragX / maxX).clamp(0.0, 1.0);
+
+        return Container(
+          height: _trackHeight,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              colors: [
+                Color.lerp(
+                  const Color(0xFFEA580C).withValues(alpha: 0.18),
+                  const Color(0xFF16A34A).withValues(alpha: 0.20),
+                  progress,
+                )!,
+                Color.lerp(
+                  const Color(0xFFEA580C).withValues(alpha: 0.10),
+                  const Color(0xFF16A34A).withValues(alpha: 0.14),
+                  progress,
+                )!,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            border: Border.all(
+              color: Color.lerp(
+                const Color(0xFFEA580C).withValues(alpha: 0.45),
+                const Color(0xFF16A34A).withValues(alpha: 0.5),
+                progress,
+              )!,
+              width: 1,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Center(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: 1 - progress * 0.9,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lock_open_rounded,
+                          color: Color.lerp(
+                            const Color(0xFFEA580C),
+                            const Color(0xFF16A34A),
+                            progress,
+                          ),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          progress > 0.85
+                              ? 'Relâcher pour débloquer'
+                              : 'Glisser pour débloquer',
+                          style: TextStyle(
+                            color: Color.lerp(
+                              const Color(0xFFEA580C),
+                              const Color(0xFF16A34A),
+                              progress,
+                            ),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 2 + _dragX,
+                top: 2,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (det) {
+                    setState(() {
+                      _dragX = (_dragX + det.delta.dx).clamp(0.0, maxX);
+                    });
+                  },
+                  onHorizontalDragEnd: (_) {
+                    if (_dragX >= maxX * 0.92 && !_fired) {
+                      _fired = true;
+                      widget.onConfirmed();
+                    } else {
+                      setState(() => _dragX = 0);
+                    }
+                  },
+                  child: Container(
+                    width: _thumbSize,
+                    height: _thumbSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          Color.lerp(
+                            const Color(0xFFEA580C),
+                            const Color(0xFF16A34A),
+                            progress,
+                          )!,
+                          Color.lerp(
+                            const Color(0xFFEA580C).withValues(alpha: 0.78),
+                            const Color(0xFF16A34A).withValues(alpha: 0.85),
+                            progress,
+                          )!,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color.lerp(
+                            const Color(0xFFEA580C),
+                            const Color(0xFF16A34A),
+                            progress,
+                          )!
+                              .withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

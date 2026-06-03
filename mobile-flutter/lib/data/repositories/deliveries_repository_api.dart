@@ -126,6 +126,9 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
       dateReplanification: _toDate(
         _pick(m, ['replannedAt', 'dateReplanification']),
       ),
+      heureSouhaitee: _toDate(
+        _pick(m, ['heureSouhaitee', 'HeureSouhaitee', 'LI_HeureSouhaitee']),
+      ),
       noteLivreur: _nullableString(
         _pick(m, ['note', 'noteLivreur', 'driverNote', 'LI_Commentaire']),
       ),
@@ -176,6 +179,11 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
 
   @override
   Future<List<Delivery>> fetchNewOrders() async {
+    // `/api/livreur/orders/available` ne retourne que les BL CONFIRME NON
+    // assignées à un livreur (pool ouvert). Depuis l'auto-assignation à la
+    // création du BL côté backend, les BL auto-assignées ne remontent pas ici
+    // et arrivent directement dans `fetchMyOrders` → onglet « Mes livraisons ».
+    // Le filtre `shouldAppearInNewOrders` reste utile en défense (CONFIRME).
     final list = await api.getList('/api/livreur/orders/available');
     return list
         .map((e) => _mapDelivery(e as Map<String, dynamic>))
@@ -185,6 +193,11 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
 
   @override
   Future<List<Delivery>> fetchMyOrders() async {
+    // `/api/livreur/orders/mine` retourne toutes les BL dont
+    // `AssignedLivreurId == currentUser` quel que soit le statut. Les BL
+    // auto-assignées (statut CONFIRME) tombent donc bien ici, dans la liste
+    // « Mes livraisons » — aucun bouton « Prendre » n'est rendu sur cet écran
+    // (cf. `LivreurMyOrdersScreen`), seul « Lancer la livraison » apparaît.
     final list = await api.getList('/api/livreur/orders/mine');
     return list
         .map((e) => _mapDelivery(e as Map<String, dynamic>))
@@ -266,5 +279,18 @@ class DeliveriesRepositoryApi implements DeliveriesRepository {
       skippedPieces: readList('skippedPieces'),
       notFoundPieces: readList('notFoundPieces'),
     );
+  }
+
+  @override
+  Future<void> setHeureSouhaitee({
+    required String doPiece,
+    required DateTime? heureSouhaitee,
+    String? noteLivreur,
+  }) async {
+    final body = <String, dynamic>{
+      'heureSouhaitee': heureSouhaitee?.toUtc().toIso8601String(),
+      'note': noteLivreur,
+    };
+    await api.patchJson('/api/livreur/orders/$doPiece/heure-souhaitee', body);
   }
 }

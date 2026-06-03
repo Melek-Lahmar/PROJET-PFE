@@ -94,6 +94,7 @@ export type CreateBonCommandeRequestDto = {
   postalCode?: string;
   latitude?: number | null;
   longitude?: number | null;
+  gouvernorat?: string;
 
   lines: CreateBonCommandeLineRequestDto[];
 };

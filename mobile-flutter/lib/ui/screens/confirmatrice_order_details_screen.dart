@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../data/services/confirmatrice_order_history_service.dart';
+import '../../data/services/confirmatrice_orders_service.dart';
 import '../../models/confirmatrice_order.dart';
 import '../../models/livreur_order_details.dart' show LivreurOrderHistoryItem;
 import '../../state/confirmatrice_orders_provider.dart';
@@ -44,6 +45,15 @@ class _ConfirmatriceOrderDetailsScreenState
   /// aucune donnée, fallback synthèse si erreur réseau / 404.
   List<LivreurOrderHistoryItem>? _history;
 
+  /// Couverture de zone livreur (chargée en parallèle). `null` = pas encore
+  /// chargé, sinon contient `hasCoverage`, `gouvernorat`, `delegation`,
+  /// `livreurCount` et éventuellement `message`.
+  Map<String, dynamic>? _coverage;
+  bool _coverageLoading = false;
+
+  /// Liste des superviseurs (chargée seulement si la couverture est rouge).
+  List<Map<String, dynamic>>? _supervisors;
+
   static const _gradientStart = Color(0xFF6E3CE9);
   static const _gradientEnd = Color(0xFF8E5FF8);
   static const _accentYellow = Color(0xFFFFE066);
@@ -70,16 +80,56 @@ class _ConfirmatriceOrderDetailsScreenState
       setState(() {
         _order = data;
         _loading = false;
+        // Initialise le compteur de tentatives depuis la commande réelle.
+        _tentativeCount = (data?.status == 2) ? 1 : 1;
       });
 
       // Charge la timeline réelle en parallèle (non bloquant).
       unawaited(_loadHistory());
+      // Charge la couverture de zone livreur (non bloquant).
+      unawaited(_loadCoverage());
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadCoverage() async {
+    if (_coverageLoading) return;
+    setState(() {
+      _coverageLoading = true;
+      _coverage = null; // efface l'ancien résultat pour éviter affichage périmé
+    });
+    try {
+      final api = context.read<ApiClient>();
+      final svc = ConfirmatriceOrdersService(api);
+      final data = await svc.getZoneCoverage(widget.piece);
+      if (!mounted) return;
+      setState(() => _coverage = data);
+      final has = data['hasCoverage'] == true;
+      if (!has) {
+        // Charge la liste des superviseurs uniquement si pas de couverture.
+        unawaited(_loadSupervisors());
+      }
+    } catch (_) {
+      // Silencieux : la bannière restera neutre / absente.
+    } finally {
+      if (mounted) setState(() => _coverageLoading = false);
+    }
+  }
+
+  Future<void> _loadSupervisors() async {
+    try {
+      final api = context.read<ApiClient>();
+      final svc = ConfirmatriceOrdersService(api);
+      final data = await svc.getSupervisors();
+      if (!mounted) return;
+      setState(() => _supervisors = data);
+    } catch (_) {
+      // Silencieux : la liste restera vide.
     }
   }
 
@@ -141,8 +191,14 @@ class _ConfirmatriceOrderDetailsScreenState
       _snack('Commande confirmée. BL créé : $blPiece');
       Navigator.of(context).pop(true);
     } else {
+      // Le backend renvoie 409 si aucune couverture livreur — le message est
+      // déjà extrait par l'ApiClient (champ `message`) et stocké dans
+      // `provider.error`. On l'affiche tel quel pour que la confirmatrice
+      // sache qu'il faut appeler un superviseur.
       final error = context.read<ConfirmatriceOrdersProvider>().error;
       _snack(error ?? 'Impossible de confirmer la commande.');
+      // Recharge la couverture au cas où ça a évolué côté backend.
+      unawaited(_loadCoverage());
     }
   }
 
@@ -150,8 +206,14 @@ class _ConfirmatriceOrderDetailsScreenState
     final order = _order;
     if (order == null) return;
 
-    // Cas spécial : "CONFIRME" passe par transform-to-bl (BC → BL).
+    // Cas spécial : "CONFIRME" passe par transform-to-bl (BC → BL). Si la
+    // zone du client n'a aucun livreur, on bloque côté UI avant l'appel HTTP.
     if (statusKey == 'CONFIRME' && order.isPending) {
+      final cov = _coverage;
+      if (cov != null && cov['hasCoverage'] == false) {
+        _snack('Zone non couverte : contactez un superviseur avant de confirmer.');
+        return;
+      }
       return _confirmOrder();
     }
 
@@ -442,6 +504,8 @@ class _ConfirmatriceOrderDetailsScreenState
                           _cartCard(order),
                           const SizedBox(height: 14),
                         ],
+                        _coverageBanner(order),
+                        if (_coverage != null) const SizedBox(height: 14),
                         _statusDropdownCard(order),
                         const SizedBox(height: 14),
                         OrderTimelineList(
@@ -861,6 +925,184 @@ class _ConfirmatriceOrderDetailsScreenState
               )),
         ],
       ),
+    );
+  }
+
+  // ───────────────────────────── COVERAGE ─────────────────────────────
+  /// Bannière colorée affichant la couverture livreur de la zone du client.
+  /// - Vert si `hasCoverage == true`
+  /// - Rouge si `hasCoverage == false` + liste de superviseurs (tel:)
+  /// - Orange pendant le chargement
+  Widget _coverageBanner(ConfirmatriceOrder o) {
+    final cov = _coverage;
+    if (cov == null) {
+      if (!_coverageLoading) return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(
+          children: const [
+            SizedBox(
+              height: 18,
+              width: 18,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            ),
+            SizedBox(width: 12),
+            Text(
+              'Vérification de la couverture livreur…',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final has = cov['hasCoverage'] == true;
+    final gouv = (cov['gouvernorat'] ?? '').toString();
+    final dele = (cov['delegation'] ?? '').toString();
+    final count = (cov['livreurCount'] is num)
+        ? (cov['livreurCount'] as num).toInt()
+        : int.tryParse('${cov['livreurCount'] ?? 0}') ?? 0;
+    final zoneLabel = [
+      if (dele.isNotEmpty) dele,
+      if (gouv.isNotEmpty) gouv,
+    ].join(' • ');
+
+    final bg = has ? Colors.green.shade50 : Colors.red.shade50;
+    final border = has ? Colors.green.shade300 : Colors.red.shade300;
+    final fg = has ? Colors.green.shade800 : Colors.red.shade800;
+    final icon = has ? Icons.check_circle_rounded : Icons.error_rounded;
+    final title = has
+        ? 'Zone couverte ($count livreur${count > 1 ? "s" : ""})'
+        : 'Aucun livreur disponible pour cette zone';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: fg),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: fg,
+                      ),
+                    ),
+                    if (zoneLabel.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          zoneLabel,
+                          style: TextStyle(
+                            color: fg.withValues(alpha: 0.85),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Rafraîchir la couverture',
+                onPressed: _coverageLoading ? null : _loadCoverage,
+                icon: Icon(Icons.refresh_rounded, color: fg, size: 20),
+              ),
+            ],
+          ),
+          if (!has) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Contactez un superviseur pour réaffecter un livreur :',
+              style: TextStyle(
+                color: fg,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _supervisorsBlock(fg),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _supervisorsBlock(Color fg) {
+    final list = _supervisors;
+    if (list == null) {
+      return Row(
+        children: const [
+          SizedBox(
+            height: 14,
+            width: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 8),
+          Text('Chargement des superviseurs…',
+              style: TextStyle(fontSize: 12.5)),
+        ],
+      );
+    }
+    if (list.isEmpty) {
+      return const Text(
+        'Aucun superviseur enregistré.',
+        style: TextStyle(fontSize: 12.5, fontStyle: FontStyle.italic),
+      );
+    }
+    return Column(
+      children: list.map((s) {
+        final name = (s['name'] ?? s['displayName'] ?? s['fullName'] ?? '—')
+            .toString();
+        final phone = (s['phone'] ?? s['telephone'] ?? s['tel'] ?? '')
+            .toString()
+            .trim();
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              Icon(Icons.supervisor_account_rounded, color: fg, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (phone.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => _call(phone),
+                  icon: const Icon(Icons.phone_rounded, size: 16),
+                  label: Text(
+                    phone,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  style: TextButton.styleFrom(foregroundColor: fg),
+                )
+              else
+                const Text('—',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 

@@ -889,6 +889,26 @@ namespace Web_Api.Services.Reclamations
             var users = await _db.Users.AsNoTracking()
                 .Where(x => userIds.Contains(x.Id)).ToListAsync(ct);
 
+            // Lookup ArDesignation depuis F_DOCLIGNES pour les couples (DoPiece, ArRef) connus.
+            var pieces = items.Where(x => !string.IsNullOrWhiteSpace(x.DoPiece) && !string.IsNullOrWhiteSpace(x.ArRef))
+                .Select(x => x.DoPiece!).Distinct().ToList();
+            var refs = items.Where(x => !string.IsNullOrWhiteSpace(x.ArRef))
+                .Select(x => x.ArRef!.Trim()).Distinct().ToList();
+            var designByKey = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            if (pieces.Count > 0 && refs.Count > 0)
+            {
+                var docLignes = await _db.F_DOCLIGNES.AsNoTracking()
+                    .Where(l => l.DO_Piece != null && pieces.Contains(l.DO_Piece)
+                        && l.AR_Ref != null && refs.Contains(l.AR_Ref))
+                    .Select(l => new { l.DO_Piece, l.AR_Ref, l.DL_Design })
+                    .ToListAsync(ct);
+                foreach (var l in docLignes)
+                {
+                    var key = $"{l.DO_Piece}|{(l.AR_Ref ?? string.Empty).Trim()}";
+                    if (!designByKey.ContainsKey(key)) designByKey[key] = l.DL_Design;
+                }
+            }
+
             var photoCounts = await _db.F_RECLAMATION_PHOTOS.AsNoTracking()
                 .Where(p => ids.Contains(p.ReclamationId))
                 .GroupBy(p => p.ReclamationId)
@@ -902,12 +922,17 @@ namespace Web_Api.Services.Reclamations
 
                 var (hasAddr, hasPhone) = ParseCorrectionFlags(x.CorrectionProposee);
 
+                var arDesignation = (!string.IsNullOrWhiteSpace(x.DoPiece) && !string.IsNullOrWhiteSpace(x.ArRef))
+                    ? designByKey.TryGetValue($"{x.DoPiece}|{x.ArRef!.Trim()}", out var d) ? d : null
+                    : null;
+
                 return new ReclamationListItemDto
                 {
                     Id = x.Id,
                     CodeReclamation = x.CodeReclamation,
                     DoPiece = x.DoPiece,
                     ArRef = x.ArRef,
+                    ArDesignation = arDesignation,
                     IsGlobal = x.IsGlobal,
                     VisibleClient = x.VisibleClient,
                     Motif = x.Motif,
@@ -917,6 +942,7 @@ namespace Web_Api.Services.Reclamations
                     Statut = x.Statut,
                     Source = x.Source,
                     TypeReclamation = x.TypeReclamation,
+                    TypeCas = x.TypeCas,
                     Priorite = x.Priorite,
                     ClientDisplay = ResolveClientDisplay(profile),
                     ClientPhone = profile?.Telephone,
@@ -928,7 +954,8 @@ namespace Web_Api.Services.Reclamations
                     HasAddressChange = hasAddr,
                     HasPhoneChange = hasPhone,
                     CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt
+                    UpdatedAt = x.UpdatedAt,
+                    ClosedAt = x.ClosedAt,
                 };
             }).ToList();
         }

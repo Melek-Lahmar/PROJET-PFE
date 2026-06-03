@@ -36,7 +36,7 @@ interface GuestCheckoutLocationSectionProps {
   delegations: string[];
   delegationsLoading?: boolean;
   // erreurs de validation passees par le parent
-  errors?: { gouvernorat?: string; delegation?: string; address?: string };
+  errors?: { gouvernorat?: string; delegation?: string; address?: string; gps?: string };
 }
 
 const roundCoordinate = (coord: number) => Math.round(coord * 1000000) / 1000000;
@@ -97,7 +97,7 @@ export function GuestCheckoutLocationSection({
   const coverage = coverageQuery.data;
   const noCoverage = coverage && !coverage.hasCoverage;
 
-  async function handleMapPick(lat: number, lng: number) {
+  const handleMapPick = useCallback(async (lat: number, lng: number) => {
     const latR = roundCoordinate(lat);
     const lngR = roundCoordinate(lng);
     setLatitude(latR);
@@ -129,11 +129,11 @@ export function GuestCheckoutLocationSection({
       if (cp) setPostalCode(cp);
 
       const govLabel = govId !== null ? (TUNISIA_GOUVERNORATS[govId] ?? "") : "";
-      setMapSyncMsg(govLabel ? `Position detectee : ${govLabel}` : "Position enregistree");
+      setMapSyncMsg(govLabel ? `Position détectée : ${govLabel}` : "Position enregistrée");
     } catch {
-      setMapSyncMsg("Position enregistree — verifiez le gouvernorat.");
+      setMapSyncMsg("Position enregistrée — vérifiez le gouvernorat.");
     }
-  }
+  }, [gouvernorat, delegations, setGouvernorat, setDelegation, setAddress, setPostalCode]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     setLocatingGps(true);
@@ -145,14 +145,14 @@ export function GuestCheckoutLocationSection({
       await handleMapPick(pos.coords.latitude, pos.coords.longitude);
       setMapSource("gps");
     } catch {
-      setMapSyncMsg("Impossible d'acceder a votre position GPS.");
+      setMapSyncMsg("Impossible d'accéder à votre position GPS.");
     } finally {
       setLocatingGps(false);
     }
-  }, []);
+  }, [handleMapPick]);
 
   // Règle d'interdépendance :
-  // Gouvernorat manuel → reset délégation + position GPS (cohérence obligatoire)
+  // Gouvernorat manuel → reset délégation + position GPS + recherche Mapbox
   const handleGouvernoratChange = (value: string) => {
     setGouvernorat(value ? Number(value) : 0);
     setDelegation("");
@@ -160,6 +160,9 @@ export function GuestCheckoutLocationSection({
     setLongitude(null);
     setMapSource(null);
     setMapSyncMsg("");
+    setSearchQuery("");
+    mapboxClear();
+    setShowSuggestions(false);
   };
 
   // Délégation manuelle → reset position GPS uniquement (gouvernorat conservé)
@@ -215,7 +218,7 @@ export function GuestCheckoutLocationSection({
             onChange={(e) => handleGouvernoratChange(e.target.value)}
             className={fieldClass(errors?.gouvernorat)}
           >
-            <option value="">Selectionnez un gouvernorat</option>
+            <option value="">Sélectionnez un gouvernorat</option>
             {gouvernorats.map((gov) => (
               <option key={gov.id} value={gov.id}>{gov.name}</option>
             ))}
@@ -227,15 +230,19 @@ export function GuestCheckoutLocationSection({
 
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-card-foreground">
-            Delegation <span className="text-danger">*</span>
+            Délégation <span className="text-danger">*</span>
           </label>
           <select
             value={delegation}
             onChange={(e) => handleDelegationChange(e.target.value)}
-            disabled={delegations.length === 0}
+            disabled={delegations.length === 0 && !delegation}
             className={fieldClass(errors?.delegation)}
           >
-            <option value="">Selectionnez une delegation</option>
+            <option value="">Sélectionnez une délégation</option>
+            {/* Fallback : si la délégation détectée n'est pas (encore) dans la liste, on l'ajoute */}
+            {delegation && !delegations.includes(delegation) && (
+              <option value={delegation}>{delegation}</option>
+            )}
             {delegations.map((d) => (
               <option key={d} value={d}>{d}</option>
             ))}
@@ -252,12 +259,12 @@ export function GuestCheckoutLocationSection({
           <span className="mt-0.5 text-xl">⚠️</span>
           <div>
             <div className="font-bold text-amber-800">
-              Service non disponible dans {coverage.gouvernorat}
+              Service non disponible dans {coverage?.gouvernorat ?? "votre gouvernorat"}
             </div>
             <div className="mt-0.5 text-amber-700">
-              Nous n'avons pas encore de depot dans votre gouvernorat ({coverage.gouvernorat}).
-              Nous travaillons a etendre notre couverture prochainement.
-              Vous pouvez choisir un autre gouvernorat ou passer en retrait depot.
+              Nous n'avons pas encore de dépôt dans votre gouvernorat ({coverage?.gouvernorat ?? "sélectionné"}).
+              Nous travaillons à étendre notre couverture prochainement.
+              Vous pouvez choisir un autre gouvernorat ou passer en retrait dépôt.
             </div>
           </div>
         </div>
@@ -291,8 +298,16 @@ export function GuestCheckoutLocationSection({
         />
       </div>
 
+      {/* Erreur GPS si manquant */}
+      {errors?.gps && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700">
+          <span className="text-base leading-none">📍</span>
+          <span>{errors.gps}</span>
+        </div>
+      )}
+
       {/* Carte interactive */}
-      <div className="overflow-hidden rounded-2xl border border-border/70 shadow-sm">
+      <div className={`overflow-hidden rounded-2xl border ${errors?.gps ? "border-red-300" : "border-border/70"} shadow-sm`}>
         {/* Barre de recherche Mapbox */}
         <div ref={searchContainerRef} className="relative border-b border-border/60 bg-muted/15 px-4 py-3">
           <div className="relative">
@@ -377,7 +392,7 @@ export function GuestCheckoutLocationSection({
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                 <circle cx="12" cy="9" r="2.5"/>
               </svg>
-              Epingler sur la carte
+              Épingler sur la carte
             </button>
           </div>
         </div>
@@ -385,7 +400,7 @@ export function GuestCheckoutLocationSection({
         {/* Message sync */}
         {mapSyncMsg && (
           <div className={`border-b border-border/40 px-4 py-2 text-xs font-medium ${
-            mapSyncMsg.startsWith("Position detectee") ? "bg-green-50 text-green-700" : "bg-muted/40 text-muted-foreground"
+            mapSyncMsg.startsWith("Position détectée") ? "bg-green-50 text-green-700" : "bg-muted/40 text-muted-foreground"
           }`}>
             {mapSource === "gps" ? "📍 GPS — " : mapSource ? "🗺 Carte — " : ""}
             {mapSyncMsg}

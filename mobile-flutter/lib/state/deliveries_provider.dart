@@ -120,6 +120,7 @@ class DeliveriesProvider extends ChangeNotifier {
         dateReplanification:
         statut == Statut.reporte ? dateReplanification : null,
         clearDateReplanification: statut != Statut.reporte,
+        clearHeureSouhaitee: true,
         dateLivree: statut == Statut.livre ? DateTime.now() : d.dateLivree,
       ),
     );
@@ -151,6 +152,7 @@ class DeliveriesProvider extends ChangeNotifier {
           statut: statut,
           noteLivreur: _buildStoredComment(motif: motif, note: noteLivreur),
           clearDateReplanification: statut != Statut.reporte,
+          clearHeureSouhaitee: true,
           dateLivree: statut == Statut.livre ? DateTime.now() : d.dateLivree,
         ),
       );
@@ -159,6 +161,31 @@ class DeliveriesProvider extends ChangeNotifier {
     if (updated.isNotEmpty) notifyListeners();
 
     return result;
+  }
+
+  /// Report partiel (même journée). Passer [heureSouhaitee] = null pour
+  /// débloquer manuellement (la commande redevient livrable immédiatement).
+  Future<void> setHeureSouhaitee({
+    required String doPiece,
+    required DateTime? heureSouhaitee,
+    String? noteLivreur,
+  }) async {
+    await _repo.setHeureSouhaitee(
+      doPiece: doPiece,
+      heureSouhaitee: heureSouhaitee,
+      noteLivreur: noteLivreur,
+    );
+
+    _patchLocal(
+      doPiece,
+      (d) => d.copyWith(
+        heureSouhaitee: heureSouhaitee,
+        clearHeureSouhaitee: heureSouhaitee == null,
+        noteLivreur: noteLivreur ?? d.noteLivreur,
+      ),
+    );
+
+    notifyListeners();
   }
 
   Future<bool> _activateDueReportedOrders() async {

@@ -1,0 +1,71 @@
+@startuml
+title Diagramme de séquence — Livraison active, GPS temps réel et encaissement COD
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam roundCorner 4
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam TitleFontStyle bold
+skinparam TitleFontSize 14
+skinparam ArrowColor #355070
+skinparam ActorBorderColor #355070
+skinparam ActorBackgroundColor #EAF1F8
+skinparam UsecaseBorderColor #355070
+skinparam UsecaseBackgroundColor #F4F9FD
+skinparam RectangleBorderColor #355070
+skinparam RectangleBackgroundColor #FBFCFE
+skinparam ParticipantBorderColor #355070
+skinparam ParticipantBackgroundColor #EAF1F8
+skinparam SequenceLifeLineBorderColor #6C7A93
+skinparam SequenceMessageAlign center
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #B8860B
+
+actor "Livreur" as L
+participant "App Flutter\n(LivreurStatsScreen)" as F
+participant "LivreurActive\nDeliveryController" as LADC
+participant "LivreurController" as LC
+participant "ReclamationHub\n(SignalR)" as SR
+participant "Client" as CL
+database  "SQL Server\nF_LIVRAISON\nF_LIVREUR_POSITION" as DB
+
+== Démarrage de la livraison active ==
+L -> F : Démarre la livraison
+F -> LADC : POST /api/livreur/orders/{piece}/start-heading
+LADC -> DB : UPDATE F_LIVRAISON\nSET IsActiveDelivery = true, IsBroadcasting = true
+LADC -> SR : DeliveryStarted → groupe client-{userId}
+SR -> CL : État → HEADING_TO_YOU
+LADC --> F : 200 OK
+
+== Diffusion GPS (toutes les 10 s) ==
+loop Geolocator Flutter
+  F -> F : getCurrentPosition()
+  F -> LADC : POST /api/livreur/location/ping\n{lat, lng, accuracy, ts, clientActionId}
+  LADC -> DB : UPSERT F_LIVREUR_POSITION\n(UpdatedAt = now)
+  LADC -> DB : INSERT F_LIVREUR_POSITION_HISTORY
+  LADC -> LADC : Distance Haversine livreur→client
+  LADC -> SR : LivreurPositionUpdate(lat,lng,etaMin,distKm)\n→ client-{userId}
+  SR -> CL : MAJ TrackingStateCard\n(GPS + ETA + indicateur de fraîcheur)
+  opt distance < 0.5 km
+    LADC -> SR : ProximityAlert → client-{userId}
+  end
+end
+
+note over F
+  Si le réseau est coupé, les positions
+  sont mises en file locale puis envoyées
+  via POST /location/ping-batch avec un
+  ClientActionId garantissant l'idempotence.
+end note
+
+== Encaissement COD à la livraison ==
+L -> F : Marquer « Livré »
+F -> LC : PUT /api/livreur/orders/{piece}/status\n{LI_Statut = 2 (Livre)}
+LC -> DB : UPDATE F_LIVRAISON\nEncaisse = true, MontantEncaisse = DO_NetAPayer,\nEncaisseAt = UtcNow
+LC -> SR : StatutCommandeChange → client + livreur
+LC -> LADC : POST /stop-heading (broadcast OFF)
+LC --> F : 200 OK
+F --> L : Confirmation
+@enduml

@@ -43,8 +43,10 @@ type Props = {
   setPostalCode: (v: string) => void;
   setLatitude: (v: number | null) => void;
   setLongitude: (v: number | null) => void;
+  setGouvernorat?: (v: string) => void;
   onTouched: (f: "address" | "city" | "postalCode" | "latitude" | "longitude") => void;
   onCoverageBlocked?: (blocked: boolean) => void;
+  onValidityChange?: (valid: boolean) => void;
 };
 
 type SyncStatus = "idle" | "loading" | "ok" | "mismatch" | "error";
@@ -84,8 +86,10 @@ export function DeliveryAddressSelector({
   setPostalCode,
   setLatitude,
   setLongitude,
+  setGouvernorat,
   onTouched,
   onCoverageBlocked,
+  onValidityChange,
 }: Props) {
   const { data: savedAddresses = [], isPending: addrPending } = useAddresses();
 
@@ -143,16 +147,12 @@ export function DeliveryAddressSelector({
     onCoverageBlocked?.(!!noCoverage);
   }, [noCoverage, onCoverageBlocked]);
 
-  // Reset délégation si le gouvernorat change
-  useEffect(() => {
-    setDelegation("");
-  }, [gouvernoratId]);
-
-  // Synchronise city → parent quand délégation change
+  // Synchronise city + gouvernorat → parent quand délégation/gouvernorat changent
   useEffect(() => {
     if (mode !== "temp") return;
     onTouched("city");
     setCity(delegation || TUNISIA_GOUVERNORATS[gouvernoratId] || "");
+    setGouvernorat?.(TUNISIA_GOUVERNORATS[gouvernoratId] || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [delegation, gouvernoratId, mode]);
 
@@ -172,6 +172,7 @@ export function DeliveryAddressSelector({
     setSelectedId(a.id);
     setAddress(a.adresse);
     setCity(a.ville ?? "");
+    setGouvernorat?.(a.gouvernorat ?? "");
     setPostalCode(a.codePostal ?? "");
     setLatitude(a.latitude ?? null);
     setLongitude(a.longitude ?? null);
@@ -312,6 +313,22 @@ export function DeliveryAddressSelector({
   const hasGps = typeof latitude === "number" && typeof longitude === "number";
   void getCenterForTunisia(gouvernoratId);
 
+  // ── Validité globale : tous les champs obligatoires remplis ─────────────────
+  const isValid = useMemo(() => {
+    if (noCoverage) return false;
+    if (mode === "saved") {
+      return Boolean(selectedAddress?.adresse?.trim());
+    }
+    return (
+      delegation.trim().length > 0 &&
+      adresseText.trim().length > 0
+    );
+  }, [mode, selectedAddress, delegation, adresseText, noCoverage]);
+
+  useEffect(() => {
+    onValidityChange?.(isValid);
+  }, [isValid, onValidityChange]);
+
   // ─── Rendu ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4 pt-2">
@@ -450,7 +467,14 @@ export function DeliveryAddressSelector({
                 setGouvernoratId(Number(e.target.value));
                 setSyncStatus("idle");
                 setSyncMessage("");
-                // FIX : gouvernorat changé manuellement → coordonnées GPS invalides
+                // Reset complet : gouvernorat changé → adresse/CP/délégation/GPS invalides
+                setDelegation("");
+                setAdresseText("");
+                setAddress("");
+                setCodePostalLocal("");
+                setPostalCode("");
+                onTouched("address");
+                onTouched("postalCode");
                 clearGpsIfPresent();
               }}
             >

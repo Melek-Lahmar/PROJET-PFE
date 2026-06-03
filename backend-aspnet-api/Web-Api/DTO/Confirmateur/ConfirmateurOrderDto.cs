@@ -59,5 +59,42 @@ namespace Web_Api.DTO.Confirmateur
 
         [JsonPropertyName("lignes")]
         public List<ConfirmateurOrderLineDto> Lignes { get; set; } = new();
+
+        // Champs livraison (passager / commande invitée)
+        [JsonPropertyName("dO_PassagerGouvernorat")]
+        public string? DO_PassagerGouvernorat { get; set; }
+
+        [JsonPropertyName("dO_PassagerDelegation")]
+        public string? DO_PassagerDelegation { get; set; }
+
+        [JsonPropertyName("dO_LatitudeLivraison")]
+        public string? DO_LatitudeLivraison { get; set; }
+
+        [JsonPropertyName("dO_LongitudeLivraison")]
+        public string? DO_LongitudeLivraison { get; set; }
+
+        [JsonPropertyName("dO_ModeLivraison")]
+        public string? DO_ModeLivraison { get; set; }
+
+        [JsonPropertyName("dO_ModePaiement")]
+        public string? DO_ModePaiement { get; set; }
+
+        [JsonPropertyName("dO_FraisLivraison")]
+        public decimal? DO_FraisLivraison { get; set; }
+
+        [JsonPropertyName("dO_TimbreFiscal")]
+        public decimal? DO_TimbreFiscal { get; set; }
+
+        [JsonPropertyName("dO_AdresseLivraison")]
+        public string? DO_AdresseLivraison { get; set; }
+
+        [JsonPropertyName("dO_VilleLivraison")]
+        public string? DO_VilleLivraison { get; set; }
+
+        [JsonPropertyName("dO_CodePostalLivraison")]
+        public string? DO_CodePostalLivraison { get; set; }
+
+        [JsonPropertyName("dO_TelephoneLivraison")]
+        public string? DO_TelephoneLivraison { get; set; }
     }
 }

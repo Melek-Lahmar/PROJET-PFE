@@ -209,6 +209,7 @@ export function CheckoutPage() {
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [postalCode, setPostalCode] = useState<string>("");
+  const [gouvernorat, setGouvernorat] = useState<string>("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -222,6 +223,7 @@ export function CheckoutPage() {
   });
 
   const [coverageBlocked, setCoverageBlocked] = useState(false);
+  const [addressValid, setAddressValid] = useState(false);
 
   // ── NOUVEAU : callback transmis à DeliveryAddressSelector ─────────────────
   const handleTouched = (
@@ -261,11 +263,12 @@ export function CheckoutPage() {
       address: isHome ? address.trim() : undefined,
       city: isHome ? city.trim() : undefined,
       postalCode: isHome ? postalCode.trim() : undefined,
+      gouvernorat: isHome ? gouvernorat.trim() : undefined,
       latitude: isHome ? latitude : null,
       longitude: isHome ? longitude : null,
       lines,
     }),
-    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, latitude, longitude, lines],
+    [isHome, effectiveDepotNo, paymentMethod, address, city, postalCode, gouvernorat, latitude, longitude, lines],
   );
 
   const canSubmit = useMemo(() => {
@@ -273,10 +276,11 @@ export function CheckoutPage() {
     if (isHome && coverageBlocked) return false;
     if (!isHome && effectiveDepotNo <= 0) return false;
     if (isHome) {
-      if (!address.trim() || !city.trim() || !postalCode.trim()) return false;
+      if (!addressValid) return false;
+      if (!address.trim() || !city.trim()) return false;
     }
     return true;
-  }, [items.length, isHome, coverageBlocked, effectiveDepotNo, address, city, postalCode]);
+  }, [items.length, isHome, coverageBlocked, effectiveDepotNo, addressValid, address, city]);
 
   const codMutation = useMutation({
     mutationFn: async () => {
@@ -420,10 +424,12 @@ export function CheckoutPage() {
                 setAddress={setAddress}
                 setCity={setCity}
                 setPostalCode={setPostalCode}
+                setGouvernorat={setGouvernorat}
                 setLatitude={setLatitude}
                 setLongitude={setLongitude}
                 onTouched={handleTouched}
                 onCoverageBlocked={setCoverageBlocked}
+                onValidityChange={setAddressValid}
               />
             ) : null}
 

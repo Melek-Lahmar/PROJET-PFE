@@ -14,16 +14,14 @@ import 'screens/livreur/delivery_details_screen.dart';
 import 'screens/livreur/livreur_profile_screen.dart';
 import 'screens/livreur/livreur_stats_screen.dart';
 import 'screens/livreur/my_orders_screen.dart';
-import 'screens/livreur/new_orders_screen.dart';
 import 'screens/map_screen.dart' as map_screen;
 import 'widgets/connection_banner.dart';
 
-/// Home livreur — 5 onglets métier :
-/// 1. Nouvelles commandes — celles qui peuvent être prises
-/// 2. Mes livraisons — celles déjà acceptées
-/// 3. Carte — tournée OSRM
-/// 4. Statistiques — dashboard
-/// 5. Profil — identité + paramètres
+/// Home livreur — 4 onglets métier :
+/// 1. Mes livraisons — celles déjà acceptées
+/// 2. Carte — tournée OSRM
+/// 3. Statistiques — dashboard
+/// 4. Profil — identité + paramètres
 ///
 /// Refonte premium : AppBar minimaliste, bottom nav M3 arrondie, transitions
 /// douces entre onglets, titre contextuel qui se lit comme une conversation.
@@ -38,7 +36,6 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   StreamSubscription<String>? _notifSub;
 
   static const _titles = [
-    'Nouvelles commandes',
     'Mes livraisons',
     'Carte',
     'Statistiques',
@@ -46,7 +43,6 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   ];
 
   List<Widget> _buildPages() => const [
-        LivreurNewOrdersScreen(),
         LivreurMyOrdersScreen(),
         map_screen.MapScreen(),
         // Section 2.1 — onglet Stats refondu (sélecteur date, hero, cashbox, etc.).
@@ -112,8 +108,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 
     // L'arrivée à un stop amène sur la carte + ouvre la page détail
     // premium, plus cohérent avec le reste de la nouvelle expérience.
-    nav.setIndex(2); // Carte
-    await _saveLastTab(2);
+    nav.setIndex(1); // Carte
+    await _saveLastTab(1);
     await del.refresh();
 
     final found = _findDelivery(del, doPiece);
@@ -189,7 +185,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     // Carte et Profil gèrent leur propre header visuel ; on masque l'AppBar
     // pour laisser la respiration. Les autres onglets ont leur propre titre
     // dans le body (hero), donc l'AppBar est minimaliste.
-    if (idx == 2 || idx == 4) return null;
+    if (idx == 1 || idx == 3) return null;
     return AppBar(
       title: AnimatedSwitcher(
         duration: const Duration(milliseconds: 240),
@@ -225,7 +221,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 }
 
 /// Bottom nav M3 premium avec animation douce de l'indicateur
-/// (scale+opacity). 5 destinations.
+/// (scale+opacity). 4 destinations.
 class _PremiumNavBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -256,11 +252,6 @@ class _PremiumNavBar extends StatelessWidget {
           animationDuration: PremiumTokens.normal,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.inbox_outlined),
-              selectedIcon: Icon(Icons.inbox_rounded),
-              label: 'Nouvelles',
-            ),
             NavigationDestination(
               icon: Icon(Icons.local_shipping_outlined),
               selectedIcon: Icon(Icons.local_shipping_rounded),

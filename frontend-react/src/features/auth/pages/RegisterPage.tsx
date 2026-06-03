@@ -16,6 +16,7 @@ import { AuthSplitShell, BrandMark } from "../components/AuthSplitShell";
 import { Input } from "../../../shared/components/Input";
 import { Button } from "../../../shared/components/Button";
 import { PasswordInput } from "../../../shared/components/PasswordInput";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 
 function IconTarget(props: SVGProps<SVGSVGElement>) {
   return (
@@ -141,6 +142,14 @@ export function RegisterPage() {
     e.preventDefault();
     if (password !== confirmPassword) {
       setPwError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    if (gouvernorat === null) {
+      setPwError("Veuillez sélectionner un gouvernorat.");
+      return;
+    }
+    if (!delegation) {
+      setPwError("Veuillez sélectionner une délégation.");
       return;
     }
     setPwError("");
@@ -364,7 +373,7 @@ export function RegisterPage() {
 
             {mutation.isError ? (
               <div className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
-                Une erreur est survenue lors de l'inscription. Veuillez réessayer.
+                {getApiErrorMessage(mutation.error)}
               </div>
             ) : null}
 
