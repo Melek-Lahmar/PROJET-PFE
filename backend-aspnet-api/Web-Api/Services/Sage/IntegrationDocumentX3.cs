@@ -49,6 +49,12 @@ namespace Web_Api.Services.Sage
         // le wrapper Sage X3, c'est juste l'adresse du wrapper lui-même.
         [JsonIgnore]
         public string AdresseIP_API { get; set; } = "localhost";
+
+        // Numéro de dépôt Sage X3 utilisé par défaut quand le BL local n'en a
+        // pas (DE_No null ou 0). Pas envoyé au wrapper directement, il est
+        // appliqué côté Document.
+        [JsonIgnore]
+        public int DefaultDepotNo { get; set; } = 1;
     }
 
     public class DOCUMENT

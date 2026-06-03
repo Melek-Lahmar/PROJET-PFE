@@ -18,6 +18,7 @@ type ParamConnexionX3 = {
   Dossier: string;
   Service_Web_BC: string;
   Type_BC: string;
+  DefaultDepotNo: number;
 };
 
 const DEFAULTS: ParamConnexionX3 = {
@@ -29,6 +30,7 @@ const DEFAULTS: ParamConnexionX3 = {
   Dossier: "SEED",
   Service_Web_BC: "SOH",
   Type_BC: "WEB",
+  DefaultDepotNo: 1,
 };
 
 function parseStored(valueJson: string | undefined): ParamConnexionX3 {
@@ -201,6 +203,14 @@ export function AdminSageX3SettingsPage() {
                   value={form.Type_BC}
                   onChange={(e) => update("Type_BC", e.target.value)}
                   placeholder="WEB"
+                />
+              </Field>
+              <Field label="Dépôt par défaut (DE_No)" hint="Numéro de dépôt Sage X3 utilisé quand le BL n'en a pas (ex : 1, 26)">
+                <Input
+                  type="number"
+                  value={form.DefaultDepotNo}
+                  onChange={(e) => update("DefaultDepotNo", Number(e.target.value) || 0)}
+                  placeholder="1"
                 />
               </Field>
             </div>

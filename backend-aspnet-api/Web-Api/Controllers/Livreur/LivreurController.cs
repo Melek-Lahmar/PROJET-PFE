@@ -38,7 +38,7 @@ namespace Web_Api.Controllers
         }
 
         // ── Construction du DOCUMENT Sage X3 à partir du F_DOCENTETE local ──
-        private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, CancellationToken ct)
+        private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, int defaultDepotNo, CancellationToken ct)
         {
             var entete = await _db.F_DOCENTETES
                 .AsNoTracking()
@@ -61,12 +61,18 @@ namespace Web_Api.Controllers
                 })
                 .ToListAsync(ct);
 
+            // Si le BL n'a pas de dépôt valide, on retombe sur le dépôt par
+            // défaut configuré dans la page admin Sage X3.
+            var deNo = entete.DE_No.HasValue && entete.DE_No.Value > 0
+                ? entete.DE_No.Value
+                : defaultDepotNo;
+
             return new DOCUMENT
             {
                 DO_NumDocument = entete.DO_Piece ?? piece,
                 DO_Date = entete.DO_Date ?? DateTime.Now,
                 CT_Num = entete.DO_Tiers ?? string.Empty,
-                DE_No = entete.DE_No ?? 0,
+                DE_No = deNo,
                 DO_Ref = entete.DO_Ref ?? string.Empty,
                 DO_TotalTTC = entete.DO_TotalTTC,
                 LIGNEDOCUMENTs = lignes,
@@ -78,14 +84,14 @@ namespace Web_Api.Controllers
         {
             try
             {
-                var doc = await BuildSageDocumentAsync(piece, ct);
+                var param = await _sageX3Config.GetAsync(ct);
+
+                var doc = await BuildSageDocumentAsync(piece, param.DefaultDepotNo, ct);
                 if (doc == null)
                 {
                     _logger.LogWarning("Sage X3 POST ignoré : BL {Piece} introuvable.", piece);
                     return;
                 }
-
-                var param = await _sageX3Config.GetAsync(ct);
 
                 // Branche le logger interne de DataService pour tracer l'appel HTTP.
                 DataService.Logger = _logger;
