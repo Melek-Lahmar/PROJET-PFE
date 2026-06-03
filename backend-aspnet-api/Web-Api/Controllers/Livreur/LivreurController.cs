@@ -86,6 +86,15 @@ namespace Web_Api.Controllers
                 }
 
                 var param = await _sageX3Config.GetAsync(ct);
+
+                // Branche le logger interne de DataService pour tracer l'appel HTTP.
+                DataService.Logger = _logger;
+
+                _logger.LogInformation(
+                    "Sage X3 PREPARE POST {Piece} | client={CtNum} | totalTTC={Total} | lignes={Count} | http={Http} ip={Ip} dossier={Dossier} service={Service} type={Type}",
+                    piece, doc.CT_Num, doc.DO_TotalTTC, doc.LIGNEDOCUMENTs?.Count ?? 0,
+                    param.Http, param.AdresseIP_API, param.Dossier, param.Service_Web_BC, param.Type_BC);
+
                 var rep = await INTEGRATION_DOCUMENT_X3.Integration_Document(doc, param);
 
                 if (rep == null)
