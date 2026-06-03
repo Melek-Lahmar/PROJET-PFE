@@ -34,9 +34,6 @@ namespace Web_Api.Services.Sage
     {
         public short Http { get; set; }
 
-        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
-        public string AdresseIP_API { get; set; } = "localhost";
-
         public string AdresseIP_X3 { get; set; } = "localhost:8124";
         public string Login { get; set; } = "admin";
         public string Password { get; set; } = "@Zerty1234";
@@ -46,6 +43,12 @@ namespace Web_Api.Services.Sage
         public string Service_Web_BC { get; set; } = "SOH";
 
         public string Type_BC { get; set; } = "WEB";
+
+        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
+        // Volontairement non sérialisé : ce n'est PAS un paramètre attendu par
+        // le wrapper Sage X3, c'est juste l'adresse du wrapper lui-même.
+        [JsonIgnore]
+        public string AdresseIP_API { get; set; } = "localhost";
     }
 
     public class DOCUMENT
