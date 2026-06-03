@@ -1,0 +1,75 @@
+@startuml s4_seq_transit
+title Sequence - Transit inter-depots double scan (Sprint 4)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Livreur Transit" as LT
+participant "Flutter\n(transit_mission\n_details_screen)" as FL
+participant "mobile_scanner\n(barcode_scanner)" as SC
+participant "Transit\nController" as TC
+participant "Supervisor\nHub" as HUB
+actor "Superviseur" as SUP
+database "SQL Server\n(F_TRANSFERT,\nF_TRANSFERT\n_AUDIT_LOG)" as DB
+
+LT -> FL : Ouvrir mission
+FL -> TC : GET /my-missions/{id}
+TC -> DB : SELECT F_TRANSFERT lignes
+DB --> TC : lignes
+TC --> FL : missions
+
+== Scan PICKUP ==
+LT -> SC : Scan code-barres
+SC --> FL : barcode
+FL -> TC : POST /scan-pickup\n{missionId, barcode, gps}
+TC -> DB : SELECT ligne\n(ArRef <-> barcode\n+ SourceDepotNo)
+alt Ligne trouvee
+  TC -> DB : UPDATE statut=EN_TRANSIT,\nPickedUpAt, PickupGps
+  TC -> DB : INSERT AUDIT_LOG (PICKUP)
+  TC --> FL : 200 OK + son OK
+else Mismatch
+  TC --> FL : 400 + son erreur
+end
+
+note right of TC
+  Fenetre revert :
+  RevertWindowMinutes = 10
+  via POST /revert-pickup
+  + audit log
+end note
+
+== Scan DELIVERY ==
+LT -> SC : Scan a destination
+SC --> FL : barcode
+FL -> TC : POST /scan-delivery\n{missionId, barcode, gps}
+alt Reception complete
+  TC -> DB : UPDATE statut=RECU_DEPOT_DESTINE,\nDeliveredAt, DeliveryGps
+  TC -> DB : INSERT AUDIT_LOG (DELIVERY)
+  TC --> FL : 200 OK
+else Reception partielle
+  FL -> TC : POST /scan-partial\n{receivedQty < quantite}
+  TC -> DB : UPDATE statut=TRANSIT\n_PARTIELLEMENT_RECU
+  TC ->> HUB : NouvelleAlerte
+  HUB ->> SUP : groupe superviseurs
+end
+
+opt Toutes lignes RECU
+  TC -> DB : UPDATE mission statut=TRANSIT_TERMINE
+end
+
+@enduml

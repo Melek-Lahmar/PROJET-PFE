@@ -1,0 +1,88 @@
+@startuml s5_usecase
+title Diagramme de cas d'utilisation - Sprint 5
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ActorBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam UsecaseBorderColor #000000
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam PackageBorderColor #000000
+skinparam PackageBackgroundColor #FAFAFA
+skinparam PackageStyle rectangle
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+left to right direction
+
+actor "Administrateur" as ADM
+actor "n8n Workflow" as N8N
+
+package "Tableaux de bord" {
+    usecase "Overview" as D1
+    usecase "Sales" as D2
+    usecase "Orders" as D3
+    usecase "Products" as D4
+    usecase "Stock" as D5
+    usecase "Depots" as D6
+    usecase "Logistics" as D7
+    usecase "Drivers" as D8
+    usecase "Clients" as D9
+    usecase "Reclamations" as D10
+    usecase "Sync (Sage)" as D11
+    usecase "Insights" as D12
+    usecase "Strategic insights" as D13
+    usecase "Confirmateur" as D14
+  }
+
+  package "Exports PDF / Excel" {
+    usecase "Export /orders/export\n(xlsx, pdf)" as E1
+    usecase "Export /reclamations/export\n(xlsx, pdf)" as E2
+  }
+
+  package "Chatbot intelligent" {
+    usecase "/ask (synchrone)" as C1
+    usecase "/ask-stream (SSE)" as C2
+    usecase "/query (SQL guide)" as C3
+    usecase "/analyze" as C4
+    usecase "/predict (ML.NET)" as C5
+    usecase "Historique conversations" as C6
+    usecase "/insights/pending" as C7
+    usecase "/kb/refresh" as C8
+  }
+
+  package "Pilotage avance" {
+    usecase "Alertes par severite" as P1
+    usecase "Insights proactifs\n(Hangfire 30 min)" as P2
+  }
+
+actor "Groq LLM\n(llama-3.3-70b)" as GR
+actor "Sage X3" as SG
+actor "ML.NET" as ML
+
+ADM --> D1
+ADM --> D2
+ADM --> D7
+ADM --> D11
+ADM --> D13
+ADM --> E1
+ADM --> E2
+ADM --> C1
+ADM --> C2
+ADM --> C6
+ADM --> P1
+
+N8N --> C1 : orchestre
+C1 ..> GR : <<formate>>
+C5 ..> ML : <<predict>>
+D11 ..> SG : <<source>>
+P2 ..> C7 : <<alimente\nF_CHATBOT_INSIGHTS>>
+C1 ..> C7 : <<merge\ninsights>>
+
+@enduml

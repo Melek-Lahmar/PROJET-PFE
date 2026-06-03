@@ -1,0 +1,75 @@
+@startuml s5_seq_chatbot
+title Sequence - Chatbot administrateur (n8n + Groq + ML.NET) (Sprint 5)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Administrateur" as ADM
+participant "Chatbot\nSandboxPage\n(React)" as UI
+participant "n8n Webhook\n/admin-chat-v3" as N8N
+participant "AdminChat\nController" as CT
+participant "AdminChat\nOrchestrator\nService" as ORC
+participant "GroqClient\n(llama-3.3-70b)" as GR
+participant "ML.NET\nPredictionService" as ML
+database "SQL Server\n(F_CHATBOT_MESSAGE,\nF_CHATBOT_INSIGHTS)" as DB
+
+ADM -> UI : Pose une question
+UI -> N8N : POST /admin-chat-v3\n{question, sessionId, locale}
+N8N -> N8N : Detecter langue\n(FR / AR / Tounsi)
+N8N -> CT : POST /api/admin/chat/ask\nBearer JWT + X-Chat-Api-Key
+
+CT -> ORC : AskAsync(question, ctx)
+ORC -> GR : Router prompt
+GR --> ORC : action in\n{KB, QUERY, ANALYZE, PREDICT, CHITCHAT}
+
+alt action = QUERY
+  ORC -> DB : SELECT (SQL guide)
+  DB --> ORC : rows
+else action = PREDICT
+  ORC -> ML : Predict(features)
+  ML --> ORC : prediction
+else action = KB
+  ORC -> ORC : KB lookup
+else action = ANALYZE
+  ORC -> DB : SELECT agregats
+  DB --> ORC : data
+end
+
+ORC -> GR : Formatter\n(message + tableau)
+GR --> ORC : {message, rows, chart, suggestions}
+ORC -> DB : INSERT F_CHATBOT_MESSAGE
+ORC --> CT : reponse formatee
+CT --> N8N : 200 reponse
+
+N8N -> CT : GET /insights/pending
+CT -> DB : SELECT F_CHATBOT_INSIGHTS
+DB --> CT : insights
+CT --> N8N : insights
+N8N -> N8N : Merge reponse + insights
+N8N --> UI : payload final
+
+UI --> ADM : Affichage (texte +\nRecharts)
+
+note right of CT
+  Variante SSE :
+  POST /ask-stream
+  phases : routing -> data
+  -> chunks -> done
+end note
+
+@enduml
