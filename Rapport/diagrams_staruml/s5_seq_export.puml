@@ -1,0 +1,56 @@
+@startuml s5_seq_export
+title Sequence - Export PDF / Excel des donnees admin (Sprint 5)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Administrateur" as ADM
+participant "AdminSummary\nPage (React)" as UI
+participant "AdminSummary\nController" as CT
+participant "ExportService\n(QuestPDF +\nClosedXML)" as EX
+database "SQL Server\n(F_DOCENTETES,\nF_RECLAMATION)" as DB
+
+ADM -> UI : Choix periode + format
+UI -> CT : GET /api/admin/orders/export\n?format=xlsx&period=30d
+
+CT -> CT : ParsePeriod(period)\n-> from, to
+CT -> DB : SELECT F_DOCENTETES\nWHERE cbCreation IN [from, to[\n.Take(MaxRows=10000)
+DB --> CT : lignes (<=10000)
+
+alt format = xlsx
+  CT -> EX : ExportToExcel(lignes)
+  EX -> EX : XLWorkbook ClosedXML\n(en-tetes gras,\nAdjustToContents)
+  EX --> CT : bytes .xlsx
+  CT --> UI : 200 + Content-Disposition\nattachment .xlsx
+else format = pdf
+  CT -> EX : ExportToPdf(lignes)
+  EX -> EX : Document.Create\nQuestPDF (A4,\nen-tete, table,\npagination)
+  EX --> CT : bytes .pdf
+  CT --> UI : 200 + Content-Disposition\nattachment .pdf
+end
+
+UI --> ADM : Telechargement fichier
+
+note right of CT
+  Plafond MaxRows = 10000.
+  Service ExportService reutilise
+  par /reclamations/export
+  (xlsx, pdf).
+end note
+
+@enduml
