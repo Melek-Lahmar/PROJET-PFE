@@ -49,6 +49,11 @@ namespace Web_Api.Services.Sage
             Service_Web_BC = "SOH",
             Type_BC = "WEB",
             DefaultDepotNo = 1,
+            DemoMode = false,
+            DemoCtNum = "FR004",
+            DemoDeNo = 26,
+            DemoArRef1 = "DIS007",
+            DemoArRef2 = "DIS009",
         };
     }
 }
