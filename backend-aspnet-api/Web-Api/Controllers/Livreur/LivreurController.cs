@@ -76,31 +76,29 @@ namespace Web_Api.Controllers
                 };
             }
 
-            // ── MODE NORMAL avec validation + substitution intelligente ──
+            // ── MODE NORMAL ──
+            //
+            // CT_Num : on force TOUJOURS le code client fallback configuré
+            //   (ex: FR004). Les codes clients générés par l'app
+            //   (CL+userId, PS+guid) n'existent pas dans F_COMPTET Sage.
+            //   On utilise donc un client générique "web" pour toutes les
+            //   commandes. La traçabilité du vrai client reste dans le BL
+            //   local (DO_PassagerNomComplet, DO_AdresseLivraison...).
+            //
+            // DE_No : on prend celui du BL si rempli (issus de la synchro
+            //   F_DEPOT), sinon le défaut configuré.
+            //
+            // Articles : on envoie les AR_Ref locaux tels quels — ils
+            //   proviennent de F_ARTICLE synchronisée depuis Sage.
 
-            // 1) CT_Num : on vérifie si le code client local existe dans
-            //    F_COMPTET (table maître Sage). Si non → on substitue par le
-            //    code client fallback configuré.
-            var ctNumLocal = (entete.DO_Tiers ?? string.Empty).Trim();
-            var ctNumFinal = ctNumLocal;
-            var ctExists = !string.IsNullOrWhiteSpace(ctNumLocal) && await ClientExistsInSageAsync(ctNumLocal, ct);
-            if (!ctExists)
-            {
-                _logger.LogWarning(
-                    "Sage X3 : CT_Num '{Local}' introuvable dans F_COMPTET → substitution par '{Fallback}'.",
-                    ctNumLocal, param.DemoCtNum);
-                ctNumFinal = param.DemoCtNum;
-            }
-
-            // 2) DE_No : on prend celui du BL si rempli, sinon le fallback.
             var deNo = entete.DE_No.HasValue && entete.DE_No.Value > 0
                 ? entete.DE_No.Value
                 : param.DefaultDepotNo;
 
-            // 3) Lignes : on construit le DOCUMENT avec les AR_Ref locaux.
-            //    Sage X3 validera la dispo sur le site (DE_No). Si une ligne
-            //    pose problème on logue mais on n'altère pas (l'erreur Sage
-            //    sera explicite côté logs).
+            _logger.LogInformation(
+                "Sage X3 : CT_Num local='{Local}' → forcé à '{Forced}' (client web par défaut). DE_No={DeNo}.",
+                entete.DO_Tiers, param.DemoCtNum, deNo);
+
             var lignes = localLignes.Select(l => new LIGNE_DOCUMENT
             {
                 AR_Ref = l.AR_Ref ?? string.Empty,
@@ -115,39 +113,12 @@ namespace Web_Api.Controllers
             {
                 DO_NumDocument = entete.DO_Piece ?? piece,
                 DO_Date = entete.DO_Date ?? DateTime.Now,
-                CT_Num = ctNumFinal,
+                CT_Num = param.DemoCtNum,
                 DE_No = deNo,
                 DO_Ref = entete.DO_Ref ?? string.Empty,
                 DO_TotalTTC = entete.DO_TotalTTC,
                 LIGNEDOCUMENTs = lignes,
             };
-        }
-
-        // Vérifie en SQL brut si un code client existe dans F_COMPTET (Sage).
-        // F_COMPTET n'est pas mappé en EF — on passe par Database.SqlQuery.
-        private async Task<bool> ClientExistsInSageAsync(string ctNum, CancellationToken ct)
-        {
-            try
-            {
-                var conn = _db.Database.GetDbConnection();
-                if (conn.State != System.Data.ConnectionState.Open)
-                    await conn.OpenAsync(ct);
-
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT TOP 1 1 FROM F_COMPTET WHERE CT_Num = @p0";
-                var p = cmd.CreateParameter();
-                p.ParameterName = "@p0";
-                p.Value = ctNum;
-                cmd.Parameters.Add(p);
-
-                var result = await cmd.ExecuteScalarAsync(ct);
-                return result != null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Sage X3 : impossible de valider CT_Num='{Ct}' dans F_COMPTET.", ctNum);
-                return false;
-            }
         }
 
         // ── POST vers Sage X3 (best-effort, non bloquant) ──

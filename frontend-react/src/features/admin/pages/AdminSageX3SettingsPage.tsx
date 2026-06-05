@@ -226,16 +226,17 @@ export function AdminSageX3SettingsPage() {
             </div>
           </section>
 
-          {/* ── Fallback & Mode démo ───────────────────────────────────── */}
+          {/* ── Client web par défaut & Mode démo ──────────────────────── */}
           <section className="app-surface p-6 space-y-4">
             <header>
               <div className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-                Fallback & Mode démo
+                Client web par défaut & Mode démo
               </div>
               <p className="mt-1 text-xs text-muted-foreground/80">
-                Si le code client local n'existe pas dans la table maître Sage <code>F_COMPTET</code>,
-                le système substitue automatiquement par le code fallback. Le mode démo force toutes
-                les valeurs aux données statiques de validation.
+                Les utilisateurs de l'app ne sont pas des clients Sage individuels — toutes les
+                commandes passent sous un même code client générique (ex&nbsp;: FR004). Ce code
+                doit exister dans <code>F_COMPTET</code>. Le mode démo force aussi le dépôt et
+                les articles aux valeurs statiques.
               </p>
             </header>
 
