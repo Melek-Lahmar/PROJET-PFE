@@ -19,6 +19,11 @@ type ParamConnexionX3 = {
   Service_Web_BC: string;
   Type_BC: string;
   DefaultDepotNo: number;
+  DemoMode: boolean;
+  DemoCtNum: string;
+  DemoDeNo: number;
+  DemoArRef1: string;
+  DemoArRef2: string;
 };
 
 const DEFAULTS: ParamConnexionX3 = {
@@ -31,6 +36,11 @@ const DEFAULTS: ParamConnexionX3 = {
   Service_Web_BC: "SOH",
   Type_BC: "WEB",
   DefaultDepotNo: 1,
+  DemoMode: false,
+  DemoCtNum: "FR004",
+  DemoDeNo: 26,
+  DemoArRef1: "DIS007",
+  DemoArRef2: "DIS009",
 };
 
 function parseStored(valueJson: string | undefined): ParamConnexionX3 {
@@ -211,6 +221,69 @@ export function AdminSageX3SettingsPage() {
                   value={form.DefaultDepotNo}
                   onChange={(e) => update("DefaultDepotNo", Number(e.target.value) || 0)}
                   placeholder="1"
+                />
+              </Field>
+            </div>
+          </section>
+
+          {/* ── Client web par défaut & Mode démo ──────────────────────── */}
+          <section className="app-surface p-6 space-y-4">
+            <header>
+              <div className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+                Client web par défaut & Mode démo
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground/80">
+                Les utilisateurs de l'app ne sont pas des clients Sage individuels — toutes les
+                commandes passent sous un même code client générique (ex&nbsp;: FR004). Ce code
+                doit exister dans <code>F_COMPTET</code>. Le mode démo force aussi le dépôt et
+                les articles aux valeurs statiques.
+              </p>
+            </header>
+
+            <label className="flex items-start gap-3 rounded-md border border-border bg-background p-3">
+              <input
+                type="checkbox"
+                checked={form.DemoMode}
+                onChange={(e) => update("DemoMode", e.target.checked)}
+                className="mt-1 h-4 w-4"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-semibold">Mode démo (forcer données statiques)</div>
+                <div className="text-[11px] text-muted-foreground/70">
+                  Quand activé, chaque BL livré est envoyé à Sage avec les valeurs ci-dessous au lieu
+                  des vraies données. Utile pour valider la chaîne d'intégration de bout en bout.
+                </div>
+              </div>
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Code client fallback (CT_Num)" hint="Ex : FR004 (doit exister dans F_COMPTET Sage)">
+                <Input
+                  value={form.DemoCtNum}
+                  onChange={(e) => update("DemoCtNum", e.target.value)}
+                  placeholder="FR004"
+                />
+              </Field>
+              <Field label="Dépôt démo (DE_No)" hint="Ex : 26">
+                <Input
+                  type="number"
+                  value={form.DemoDeNo}
+                  onChange={(e) => update("DemoDeNo", Number(e.target.value) || 0)}
+                  placeholder="26"
+                />
+              </Field>
+              <Field label="Article démo 1 (AR_Ref)" hint="Ex : DIS007">
+                <Input
+                  value={form.DemoArRef1}
+                  onChange={(e) => update("DemoArRef1", e.target.value)}
+                  placeholder="DIS007"
+                />
+              </Field>
+              <Field label="Article démo 2 (AR_Ref)" hint="Ex : DIS009">
+                <Input
+                  value={form.DemoArRef2}
+                  onChange={(e) => update("DemoArRef2", e.target.value)}
+                  placeholder="DIS009"
                 />
               </Field>
             </div>

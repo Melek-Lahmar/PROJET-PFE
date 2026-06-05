@@ -38,7 +38,7 @@ namespace Web_Api.Controllers
         }
 
         // ── Construction du DOCUMENT Sage X3 à partir du F_DOCENTETE local ──
-        private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, int defaultDepotNo, CancellationToken ct)
+        private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, Param_Connexion_X3 param, CancellationToken ct)
         {
             var entete = await _db.F_DOCENTETES
                 .AsNoTracking()
@@ -47,31 +47,73 @@ namespace Web_Api.Controllers
 
             if (entete == null) return null;
 
-            var lignes = await _db.F_DOCLIGNES
+            var localLignes = await _db.F_DOCLIGNES
                 .AsNoTracking()
                 .Where(l => l.DO_Piece == piece && l.DO_Domaine == 0 && l.DO_Type == BL_TYPE)
-                .Select(l => new LIGNE_DOCUMENT
-                {
-                    AR_Ref = l.AR_Ref ?? string.Empty,
-                    LP_QteMvt = l.DL_Qte,
-                    LP_PrixUnitaire = l.DL_PrixUnitaire,
-                    LP_ValeurRemise = 0,
-                    LP_PUTTC = l.DL_PrixUnitaire,
-                    LP_MontantTTC = l.DL_MontantTTC ?? 0m,
-                })
                 .ToListAsync(ct);
 
-            // Si le BL n'a pas de dépôt valide, on retombe sur le dépôt par
-            // défaut configuré dans la page admin Sage X3.
+            // ── MODE DÉMO TOTAL ──
+            // Remplace tout par les valeurs statiques de l'encadrant.
+            if (param.DemoMode)
+            {
+                _logger.LogInformation(
+                    "Sage X3 DEMO MODE actif pour {Piece} : CT_Num={Ct}, DE_No={De}, articles={A1}/{A2}",
+                    piece, param.DemoCtNum, param.DemoDeNo, param.DemoArRef1, param.DemoArRef2);
+
+                return new DOCUMENT
+                {
+                    DO_NumDocument = entete.DO_Piece ?? piece,
+                    DO_Date = entete.DO_Date ?? DateTime.Now,
+                    CT_Num = param.DemoCtNum,
+                    DE_No = param.DemoDeNo,
+                    DO_Ref = entete.DO_Ref ?? string.Empty,
+                    DO_TotalTTC = 520m,
+                    LIGNEDOCUMENTs = new List<LIGNE_DOCUMENT>
+                    {
+                        new LIGNE_DOCUMENT { AR_Ref = param.DemoArRef1, LP_QteMvt = 2, LP_PrixUnitaire = 200, LP_ValeurRemise = 0, LP_PUTTC = 220, LP_MontantTTC = 440 },
+                        new LIGNE_DOCUMENT { AR_Ref = param.DemoArRef2, LP_QteMvt = 1, LP_PrixUnitaire = 20,  LP_ValeurRemise = 0, LP_PUTTC = 25,  LP_MontantTTC = 25  },
+                    },
+                };
+            }
+
+            // ── MODE NORMAL ──
+            //
+            // CT_Num : on force TOUJOURS le code client fallback configuré
+            //   (ex: FR004). Les codes clients générés par l'app
+            //   (CL+userId, PS+guid) n'existent pas dans F_COMPTET Sage.
+            //   On utilise donc un client générique "web" pour toutes les
+            //   commandes. La traçabilité du vrai client reste dans le BL
+            //   local (DO_PassagerNomComplet, DO_AdresseLivraison...).
+            //
+            // DE_No : on prend celui du BL si rempli (issus de la synchro
+            //   F_DEPOT), sinon le défaut configuré.
+            //
+            // Articles : on envoie les AR_Ref locaux tels quels — ils
+            //   proviennent de F_ARTICLE synchronisée depuis Sage.
+
             var deNo = entete.DE_No.HasValue && entete.DE_No.Value > 0
                 ? entete.DE_No.Value
-                : defaultDepotNo;
+                : param.DefaultDepotNo;
+
+            _logger.LogInformation(
+                "Sage X3 : CT_Num local='{Local}' → forcé à '{Forced}' (client web par défaut). DE_No={DeNo}.",
+                entete.DO_Tiers, param.DemoCtNum, deNo);
+
+            var lignes = localLignes.Select(l => new LIGNE_DOCUMENT
+            {
+                AR_Ref = l.AR_Ref ?? string.Empty,
+                LP_QteMvt = l.DL_Qte,
+                LP_PrixUnitaire = l.DL_PrixUnitaire,
+                LP_ValeurRemise = 0,
+                LP_PUTTC = l.DL_PrixUnitaire,
+                LP_MontantTTC = l.DL_MontantTTC ?? 0m,
+            }).ToList();
 
             return new DOCUMENT
             {
                 DO_NumDocument = entete.DO_Piece ?? piece,
                 DO_Date = entete.DO_Date ?? DateTime.Now,
-                CT_Num = entete.DO_Tiers ?? string.Empty,
+                CT_Num = param.DemoCtNum,
                 DE_No = deNo,
                 DO_Ref = entete.DO_Ref ?? string.Empty,
                 DO_TotalTTC = entete.DO_TotalTTC,
@@ -86,7 +128,7 @@ namespace Web_Api.Controllers
             {
                 var param = await _sageX3Config.GetAsync(ct);
 
-                var doc = await BuildSageDocumentAsync(piece, param.DefaultDepotNo, ct);
+                var doc = await BuildSageDocumentAsync(piece, param, ct);
                 if (doc == null)
                 {
                     _logger.LogWarning("Sage X3 POST ignoré : BL {Piece} introuvable.", piece);
