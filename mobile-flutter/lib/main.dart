@@ -78,7 +78,12 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool enableBackgroundServices;
+
+  const MyApp({
+    super.key,
+    this.enableBackgroundServices = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,17 +100,26 @@ class MyApp extends StatelessWidget {
     // LoginScreen au prochain build du _Root).
 
     // Refonte 2026-05-10 — Section 1.7 + 2.15 : services hors ligne globaux.
-    final health = BackendHealthService()..startHeartbeat();
+    final health = BackendHealthService();
+    if (enableBackgroundServices) {
+      health.startHeartbeat();
+    }
     final offline = OfflineQueueService(api, health);
-    // ignore: discarded_futures
-    offline.init();
+    if (enableBackgroundServices) {
+      // ignore: discarded_futures
+      offline.init();
+    }
     // V2-2 — queue dédiée aux photos (multipart binaire, fichier persisté).
     final photosQueue = OfflinePhotosQueueService(api, health);
-    // ignore: discarded_futures
-    photosQueue.init();
+    if (enableBackgroundServices) {
+      // ignore: discarded_futures
+      photosQueue.init();
+    }
     final livreurLoc = LivreurLocationService(LivreurActiveDeliveryService(api), health);
-    // ignore: discarded_futures
-    livreurLoc.init();
+    if (enableBackgroundServices) {
+      // ignore: discarded_futures
+      livreurLoc.init();
+    }
 
     // Section 2.24 — RealtimeService unique partagé par tous les rôles.
     // Permet à ThemeChanged d'atteindre les 4 apps (admin/livreur/conf/client)
