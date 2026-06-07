@@ -19,6 +19,7 @@ const icons = {
   commandes: (props: IconProps) => <Icon {...props}><path d="M7 3h10l2 4v14H5V7z" /><path d="M7 7h10" /><path d="M9 12h6" /><path d="M9 16h4" /></Icon>,
   bl: (props: IconProps) => <Icon {...props}><path d="M3 7h11v10H3z" /><path d="M14 10h4l3 3v4h-7z" /><circle cx="7" cy="19" r="2" /><circle cx="18" cy="19" r="2" /></Icon>,
   devis: (props: IconProps) => <Icon {...props}><path d="M6 2h9l5 5v15H6z" /><path d="M14 2v6h6" /><path d="M9 13h6" /><path d="M9 17h8" /></Icon>,
+  reclamations: (props: IconProps) => <Icon {...props}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /><path d="M12 7v5" /><path d="M12 16h.01" /></Icon>,
   history: (props: IconProps) => <Icon {...props}><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /><path d="M12 7v5l3 2" /></Icon>,
   settings: (props: IconProps) => <Icon {...props}><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></Icon>,
 };
@@ -31,6 +32,7 @@ const groups = [
       { label: "Bons de commande (BC)", href: "/confirmateur/commandes", icon: icons.commandes },
       { label: "Bons de livraison (BL)", href: "/confirmateur/bl", icon: icons.bl },
       { label: "Devis B2B", href: "/confirmateur/devis", icon: icons.devis },
+      { label: "Réclamations", href: "/confirmateur/reclamations", icon: icons.reclamations },
     ],
   },
   {
@@ -39,6 +41,7 @@ const groups = [
       { label: "BC confirmés", href: "/confirmateur/commandes?status=1", icon: icons.history },
       { label: "BL confirmés", href: "/confirmateur/bl?status=1", icon: icons.history },
       { label: "Devis traités", href: "/confirmateur/devis?status=CONVERTED", icon: icons.history },
+      { label: "Réclamations traitées", href: "/confirmateur/reclamations?tab=historique", icon: icons.history },
     ],
   },
   {
@@ -116,7 +119,7 @@ export function ConfirmateurWorkspace() {
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="text-xs font-bold text-primary">Accueil / Centre de contrôle</div>
-              <div className="mt-1 truncate text-sm text-muted-foreground">Espace confirmateur séparé pour BC, BL et Devis B2B.</div>
+              <div className="mt-1 truncate text-sm text-muted-foreground">Espace confirmateur séparé pour BC, BL, Devis B2B et Réclamations.</div>
             </div>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />

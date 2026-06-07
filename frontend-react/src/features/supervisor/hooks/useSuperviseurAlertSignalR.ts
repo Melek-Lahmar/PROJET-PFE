@@ -19,7 +19,10 @@ export function useSuperviseurAlertSignalR(
 ) {
   const token = useAuthStore((s) => s.token);
   const onAlertRef = useRef(onAlert);
-  onAlertRef.current = onAlert;
+
+  useEffect(() => {
+    onAlertRef.current = onAlert;
+  }, [onAlert]);
 
   useEffect(() => {
     if (!token) return;

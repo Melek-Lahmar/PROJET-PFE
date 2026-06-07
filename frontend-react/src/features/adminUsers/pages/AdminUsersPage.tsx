@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SVGProps } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
@@ -145,6 +146,7 @@ function getInitials(user: UserAdminResponseDto) {
 }
 
 export function AdminUsersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [skip, setSkip] = useState(0);
   const [take, setTake] = useState(20);
   const [role, setRole] = useState<RoleFilter>("ALL");
@@ -152,6 +154,21 @@ export function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editRolesOpen, setEditRolesOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserAdminResponseDto | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      queueMicrotask(() => setCreateOpen(true));
+    }
+  }, [searchParams]);
+
+  const closeCreateModal = () => {
+    setCreateOpen(false);
+    if (searchParams.has("create")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("create");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   const activeRole = role === "ALL" ? undefined : role;
 
@@ -437,7 +454,7 @@ export function AdminUsersPage() {
         </div>
       </section>
 
-      <AdminCreateUserModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <AdminCreateUserModal open={createOpen} onClose={closeCreateModal} />
 
       <AdminEditRolesModal
         open={editRolesOpen}

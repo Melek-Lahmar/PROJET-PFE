@@ -7,6 +7,7 @@ using Web_Api.Auth.Entities;
 using Web_Api.data;
 using Web_Api.Geo;
 using Web_Api.Model;
+using Web_Api.Services;
 using Web_Api.Services.DevTest;
 
 namespace Web_Api.Controllers.Admin
@@ -25,19 +26,22 @@ namespace Web_Api.Controllers.Admin
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly RealisticFullDatabaseSeeder _realisticSeeder;
+        private readonly AppSettingsService _appSettings;
 
         public AdminDevController(
             AppDbContext db,
             IWebHostEnvironment env,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole<Guid>> roleManager,
-            RealisticFullDatabaseSeeder realisticSeeder)
+            RealisticFullDatabaseSeeder realisticSeeder,
+            AppSettingsService appSettings)
         {
             _db = db;
             _env = env;
             _userManager = userManager;
             _roleManager = roleManager;
             _realisticSeeder = realisticSeeder;
+            _appSettings = appSettings;
         }
 
         [AllowAnonymous]
@@ -434,7 +438,10 @@ SET IDENTITY_INSERT [F_APP_CONFIG] OFF;", ct);
                 new CommandePlan("BL00004", 1, BuildLines(articles, rng, lineCount: 3, maxQty: 1)),
             };
 
-            const decimal fraisLivraison = 8m;
+            var fraisLivraison = await _appSettings.GetDecimalAsync(
+                AppSettingsService.DeliveryFeeHomeKey,
+                AppSettingsService.DefaultDeliveryFeeHome,
+                ct);
             const decimal timbreFiscal = 1m;
 
             foreach (var plan in commandePlans)
@@ -628,7 +635,10 @@ SET IDENTITY_INSERT [F_APP_CONFIG] OFF;", ct);
                 return BadRequest(new { message = "Catalogue F_ARTICLE vide." });
             }
 
-            const decimal fraisLivraison = 8m;
+            var fraisLivraison = await _appSettings.GetDecimalAsync(
+                AppSettingsService.DeliveryFeeHomeKey,
+                AppSettingsService.DefaultDeliveryFeeHome,
+                ct);
             const decimal timbreFiscal = 1m;
             var rng = new Random(20260515);
 

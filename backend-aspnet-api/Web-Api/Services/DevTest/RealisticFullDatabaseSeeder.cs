@@ -11,6 +11,7 @@ using Web_Api.Constants;
 using Web_Api.data;
 using Web_Api.Geo;
 using Web_Api.Model;
+using Web_Api.Services;
 
 namespace Web_Api.Services.DevTest
 {
@@ -920,7 +921,7 @@ namespace Web_Api.Services.DevTest
                 var discountAmount = Math.Round(totalHt * discountRate / 100m, 3);
                 var totalHtNet = totalHt - discountAmount;
                 var totalTtc = Math.Round(totalHtNet * (1 + TvaRate), 3);
-                var deliveryFee = i % 6 == 0 ? 0 : 8m + (i % 5);
+                var deliveryFee = i % 6 == 0 ? 0 : AppSettingsService.DefaultDeliveryFeeHome + (i % 5);
                 var stamp = 1m;
                 var status = (short)(i % 11 switch
                 {

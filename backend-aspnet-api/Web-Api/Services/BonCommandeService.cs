@@ -16,8 +16,8 @@ namespace Web_Api.Services
         private readonly SageService? _sage;
         private readonly ITransitOrchestrationService? _transit;
         private readonly OrderCalculatorService _calculator;
+        private readonly AppSettingsService? _appSettings;
 
-        private const decimal FRAIS_LIVRAISON_HOME = 8m;
         private const decimal TIMBRE_FISCAL = 1m;
 
         public const string CustomerModeExisting = "EXISTING";
@@ -52,12 +52,14 @@ namespace Web_Api.Services
             AppDbContext db,
             OrderCalculatorService calculator,
             SageService? sage = null,
-            ITransitOrchestrationService? transit = null)
+            ITransitOrchestrationService? transit = null,
+            AppSettingsService? appSettings = null)
         {
             _db = db;
             _calculator = calculator;
             _sage = sage;
             _transit = transit;
+            _appSettings = appSettings;
         }
 
         public async Task<BonCommandeCreateResult> CreateForAuthenticatedClientAsync(
@@ -564,7 +566,7 @@ namespace Web_Api.Services
                 });
             }
 
-            var fraisLivraison = deliveryType == DeliveryTypeHome ? FRAIS_LIVRAISON_HOME : 0m;
+            var fraisLivraison = await ResolveDeliveryFeeSnapshotAsync(deliveryType, ct);
             var timbre = TIMBRE_FISCAL;
             var totals = _calculator.Compute(totalTTC, req.DiscountProfile);
             var netAPayer = totals.Total + fraisLivraison + timbre;
@@ -678,6 +680,20 @@ namespace Web_Api.Services
                 Email = user.Email ?? string.Empty,
                 Profile = profile
             };
+        }
+
+        private async Task<decimal> ResolveDeliveryFeeSnapshotAsync(string deliveryType, CancellationToken ct)
+        {
+            if (!string.Equals(deliveryType, DeliveryTypeHome, StringComparison.OrdinalIgnoreCase))
+                return 0m;
+
+            if (_appSettings == null)
+                return AppSettingsService.DefaultDeliveryFeeHome;
+
+            return await _appSettings.GetDecimalAsync(
+                AppSettingsService.DeliveryFeeHomeKey,
+                AppSettingsService.DefaultDeliveryFeeHome,
+                ct);
         }
 
         private async Task<F_DEPOT?> ResolveDepotFromProfileCodeAsync(string rawCodeDepot, CancellationToken ct)

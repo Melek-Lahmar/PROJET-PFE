@@ -28,9 +28,53 @@ namespace Web_Api.Controllers.Admin
         [HttpPost]
         public async Task<ActionResult<UserAdminResponseDto>> CreateUser([FromBody] CreateUserRequestDto dto)
         {
+            if (dto == null)
+                return BadRequest(new { message = "Body manquant." });
+
             var role = dto.Role?.Trim().ToUpperInvariant();
             if (string.IsNullOrWhiteSpace(role) || !AppRoles.All.Contains(role))
                 return BadRequest(new { message = "Role invalide." });
+
+            var email = dto.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest(new { message = "Email obligatoire." });
+
+            var existingUser = await _userManager.FindByEmailAsync(email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Un utilisateur avec cet email existe déjà." });
+
+            var isClient = role == AppRoles.CLIENT;
+            var typeProfil = isClient ? TypeProfil.Client : TypeProfil.Employe;
+            var typeClient = isClient ? dto.TypeClient : null;
+
+            if (isClient && typeClient == null)
+                return BadRequest(new { message = "TypeClient est obligatoire pour un client." });
+
+            if (typeClient == Web_Api.Auth.Entities.TypeClient.B2B)
+            {
+                if (string.IsNullOrWhiteSpace(dto.NomSociete))
+                    return BadRequest(new { message = "NomSociete est obligatoire pour un client B2B." });
+                if (string.IsNullOrWhiteSpace(dto.MatriculeFiscal))
+                    return BadRequest(new { message = "MatriculeFiscal est obligatoire pour un client B2B." });
+            }
+
+            if (isClient && typeClient == Web_Api.Auth.Entities.TypeClient.B2C)
+            {
+                if (string.IsNullOrWhiteSpace(dto.NomComplet))
+                    return BadRequest(new { message = "NomComplet est obligatoire pour un client B2C." });
+                if (string.IsNullOrWhiteSpace(dto.Telephone))
+                    return BadRequest(new { message = "Telephone est obligatoire pour un client B2C." });
+                if (string.IsNullOrWhiteSpace(dto.Adresse))
+                    return BadRequest(new { message = "Adresse est obligatoire pour un client B2C." });
+                if (string.IsNullOrWhiteSpace(dto.CodePostal))
+                    return BadRequest(new { message = "CodePostal est obligatoire pour un client B2C." });
+            }
+
+            if (dto.IsTransit && role != AppRoles.LIVREUR)
+                return BadRequest(new { message = "IsTransit=true est autorisé uniquement pour le rôle LIVREUR." });
+
+            if (dto.IsTransit && (!dto.DepotRattacheNo.HasValue || dto.DepotRattacheNo.Value <= 0))
+                return BadRequest(new { message = "DepotRattacheNo est obligatoire pour un livreur de transit." });
 
             // ✅ validation gouvernorat/délégation
             if (!TunisieDecoupage.IsDelegationValide(dto.Gouvernorat, dto.Delegation))
@@ -42,8 +86,9 @@ namespace Web_Api.Controllers.Admin
             // ✅ create identity user
             var user = new ApplicationUser
             {
-                UserName = dto.Email,
-                Email = dto.Email
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true
             };
 
             var created = await _userManager.CreateAsync(user, dto.Password);
@@ -52,47 +97,86 @@ namespace Web_Api.Controllers.Admin
 
             var roleResult = await _userManager.AddToRoleAsync(user, role);
             if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
                 return BadRequest(new { message = "Assign role échoué.", errors = roleResult.Errors });
+            }
 
-            // ✅ create profile
-            var profile = new ProfilUtilisateur
+            try
             {
-                UtilisateurId = user.Id,
+                var now = DateTime.UtcNow;
+                var normalizedDelegation = TunisieDecoupage.NormalizeDelegation(dto.Delegation);
+                var isTransit = role == AppRoles.LIVREUR && dto.IsTransit;
+                var depotRattacheNo = dto.DepotRattacheNo.HasValue && dto.DepotRattacheNo.Value > 0
+                    ? dto.DepotRattacheNo.Value
+                    : (int?)null;
 
-                TypeProfil = dto.TypeProfil,
-                TypeClient = dto.TypeClient,
+                // ✅ create profile
+                var profile = new ProfilUtilisateur
+                {
+                    UtilisateurId = user.Id,
 
-                NomComplet = dto.NomComplet,
-                Telephone = dto.Telephone,
+                    TypeProfil = typeProfil,
+                    TypeClient = typeClient,
 
-                CIN = dto.CIN,
-                DateNaissance = dto.DateNaissance,
+                    NomComplet = TrimOrNull(dto.NomComplet),
+                    Telephone = TrimOrNull(dto.Telephone),
 
-                Gouvernorat = dto.Gouvernorat,
-                Delegation = TunisieDecoupage.NormalizeDelegation(dto.Delegation),
+                    CIN = TrimOrNull(dto.CIN),
+                    DateNaissance = dto.DateNaissance,
 
-                NomSociete = dto.NomSociete,
-                MatriculeFiscal = dto.MatriculeFiscal,
+                    Gouvernorat = dto.Gouvernorat,
+                    Delegation = normalizedDelegation,
 
-                Latitude = dto.Latitude,
-                Longitude = dto.Longitude,
+                    Adresse = TrimOrNull(dto.Adresse) ?? "Non renseignée",
+                    AdresseComplementaire = TrimOrNull(dto.AdresseComplementaire),
+                    CodePostal = TrimOrNull(dto.CodePostal),
+                    Pays = TrimOrNull(dto.Pays) ?? "Tunisie",
 
-                DateCreation = DateTime.UtcNow,
-                DateModification = DateTime.UtcNow
-            };
+                    NomSociete = isClient ? TrimOrNull(dto.NomSociete) : null,
+                    MatriculeFiscal = isClient ? TrimOrNull(dto.MatriculeFiscal) : null,
+                    RegistreCommerce = isClient ? TrimOrNull(dto.RegistreCommerce) : null,
+                    NumeroTVA = isClient ? TrimOrNull(dto.NumeroTVA) : null,
+                    PlafondCredit = isClient ? dto.PlafondCredit : null,
+                    DiscountPercent = typeClient == Web_Api.Auth.Entities.TypeClient.B2B ? dto.DiscountPercent : null,
 
-            _db.ProfilsUtilisateurs.Add(profile);
-            await _db.SaveChangesAsync();
+                    Poste = ResolvePoste(role, isTransit, dto.Poste),
+                    Departement = ResolveDepartement(role, dto.Departement),
+                    CodeEmploye = TrimOrNull(dto.CodeEmploye),
+                    CodeDepot = isTransit && depotRattacheNo.HasValue
+                        ? depotRattacheNo.Value.ToString()
+                        : TrimOrNull(dto.CodeDepot) ?? depotRattacheNo?.ToString(),
+                    ZoneLivraison = role == AppRoles.LIVREUR
+                        ? (isTransit ? "TRANSIT" : TrimOrNull(dto.ZoneLivraison) ?? "ZONE")
+                        : TrimOrNull(dto.ZoneLivraison),
+                    IsTransit = isTransit,
+                    DepotRattacheNo = depotRattacheNo,
 
-            var roles = await _userManager.GetRolesAsync(user);
+                    Latitude = dto.Latitude,
+                    Longitude = dto.Longitude,
 
-            return Ok(new UserAdminResponseDto
+                    DateCreation = now,
+                    DateModification = now
+                };
+
+                _db.ProfilsUtilisateurs.Add(profile);
+                await _db.SaveChangesAsync();
+
+                var roles = await _userManager.GetRolesAsync(user);
+
+                return Ok(new UserAdminResponseDto
+                {
+                    UserId = user.Id,
+                    Email = user.Email ?? "",
+                    Roles = roles.ToList(),
+                    Profile = profile
+                });
+            }
+            catch
             {
-                UserId = user.Id,
-                Email = user.Email ?? "",
-                Roles = roles.ToList(),
-                Profile = profile
-            });
+                await _userManager.DeleteAsync(user);
+                throw;
+            }
         }
 
         // GET /api/admin/users?role=CLIENT&skip=0&take=20
@@ -274,6 +358,44 @@ namespace Web_Api.Controllers.Admin
                 return BadRequest(new { message = "Suppression échouée.", errors = deleted.Errors });
 
             return NoContent();
+        }
+
+        private static string? TrimOrNull(string? value)
+        {
+            var trimmed = value?.Trim();
+            return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+        }
+
+        private static string? ResolvePoste(string role, bool isTransit, string? supplied)
+        {
+            var explicitValue = TrimOrNull(supplied);
+            if (explicitValue != null) return explicitValue;
+
+            return role switch
+            {
+                AppRoles.VENDEUR => "Vendeur",
+                AppRoles.CONFIRMATEUR => "Confirmateur",
+                AppRoles.LIVREUR => isTransit ? "Livreur Transit" : "Livreur",
+                AppRoles.SUPERVISEUR => "Superviseur",
+                AppRoles.ADMIN => "Administrateur",
+                _ => null
+            };
+        }
+
+        private static string? ResolveDepartement(string role, string? supplied)
+        {
+            var explicitValue = TrimOrNull(supplied);
+            if (explicitValue != null) return explicitValue;
+
+            return role switch
+            {
+                AppRoles.VENDEUR => "Commerce",
+                AppRoles.CONFIRMATEUR => "Service commandes",
+                AppRoles.LIVREUR => "Logistique",
+                AppRoles.SUPERVISEUR => "Logistique",
+                AppRoles.ADMIN => "Administration",
+                _ => null
+            };
         }
     }
 }

@@ -105,3 +105,110 @@ export function statusLabelFromValide(val?: number | null): string {
   if (val === 1) return "TRANSFORME"; // historique BC transformé vers BL
   return "INCONNU";
 }
+
+export type ReclamationStatus = "ENVOYEE" | "EN_COURS_DE_TRAITEMENT" | "CLOTUREE" | "REFUSEE";
+
+export type ReclamationTab = "a-traiter" | "en-attente-client" | "historique";
+
+export type ReclamationListItem = {
+  id: number;
+  codeReclamation: string;
+  doPiece: string;
+  arRef?: string | null;
+  arDesignation?: string | null;
+  isGlobal: boolean;
+  visibleClient: boolean;
+  motif: string;
+  descriptionPreview: string;
+  statut: ReclamationStatus | string;
+  source: string;
+  typeCas?: string | null;
+  typeReclamation?: string | null;
+  priorite?: string | null;
+  clientDisplay?: string | null;
+  clientPhone?: string | null;
+  clientGouvernorat?: string | null;
+  assignedToDisplay?: string | null;
+  tentativesCount: number;
+  photosCount: number;
+  hasCorrectionProposee: boolean;
+  hasAddressChange: boolean;
+  hasPhoneChange: boolean;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string | null;
+};
+
+export type ReclamationOrderLine = {
+  arRef: string;
+  designation?: string | null;
+  qty: number;
+  unitPrice: number;
+  amountTTC: number;
+};
+
+export type ReclamationTentative = {
+  id: number;
+  commandePiece: string;
+  dateJour: string;
+  motif: string;
+  livreurUserId: string;
+  livreurDisplay?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  photoUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReclamationPhoto = {
+  id: number;
+  url: string;
+  fileName?: string | null;
+  contentType?: string | null;
+  size?: number | null;
+  uploadedByUserId?: string | null;
+  createdAt: string;
+};
+
+export type ReclamationDetails = ReclamationListItem & {
+  description: string;
+  correctionProposee?: string | null;
+  correctionAppliquee: boolean;
+  motifRefus?: string | null;
+  echangeDemandeText?: string | null;
+  noteInterne?: string | null;
+  firstAttemptAt?: string | null;
+  lastAttemptAt?: string | null;
+  clientEmail?: string | null;
+  clientAddress?: string | null;
+  clientDelegation?: string | null;
+  clientCodeSage?: string | null;
+  clientCommandesCount: number;
+  clientReclamationsCount: number;
+  clientUserId?: string | null;
+  livreurDisplay?: string | null;
+  livreurPhone?: string | null;
+  livreurUserId?: string | null;
+  orderStatut?: string | null;
+  orderDate?: string | null;
+  orderNetAPayer?: number | null;
+  orderPaymentMethod?: string | null;
+  orderDeliveryMode?: string | null;
+  orderLines: ReclamationOrderLine[];
+  tentatives: ReclamationTentative[];
+  photos: ReclamationPhoto[];
+  resolvedAt?: string | null;
+};
+
+export type ReclamationFilters = {
+  tab?: ReclamationTab;
+  crossGouvernorat?: boolean;
+  statut?: string | null;
+  source?: string | null;
+  typeCas?: string | null;
+  motif?: string | null;
+  doPiece?: string | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+};

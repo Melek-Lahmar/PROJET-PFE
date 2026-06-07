@@ -34,6 +34,7 @@ export function CartPage() {
 
   const subtotal = useCartStore((s) => s.subtotal());
   const shipping = useCartStore((s) => s.shipping());
+  const shippingHomeFee = useCartStore((s) => s.shippingHomeFee);
   const stamp = useCartStore((s) => s.stamp());
   const total = useCartStore((s) => s.total());
 
@@ -106,7 +107,7 @@ export function CartPage() {
         />
         <EmptyView
           title="Votre panier est vide"
-          description="Livraison domicile : 8 TND • Timbre fiscal : 1 TND"
+          description={`Livraison domicile : ${formatTnd(shippingHomeFee)} TND • Timbre fiscal : 1 TND`}
           iconPath="M3 3h2l.4 2 M7 13h10l4-8H5.4 M7 13 5.4 5 M7 13l-2 7h13 M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z M19 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
           action={
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -246,7 +247,7 @@ export function CartPage() {
                       Disponible
                     </div>
                     <div className="font-semibold text-card-foreground/75">
-                      Livraison domicile : 8 TND • Timbre fiscal : 1 TND
+                      Livraison domicile : {formatTnd(shippingHomeFee)} TND • Timbre fiscal : 1 TND
                     </div>
                   </div>
                 </div>
@@ -285,10 +286,10 @@ export function CartPage() {
                       </div>
                       <div className="flex-1">
                         <div className="font-bold text-card-foreground">Livraison à domicile</div>
-                        <div className="text-xs text-muted-foreground">Frais fixes : 8 TND</div>
+                        <div className="text-xs text-muted-foreground">Frais fixes : {formatTnd(shippingHomeFee)} TND</div>
                       </div>
                       <div className="text-sm font-black text-card-foreground">
-                        + {formatTnd(8)} <span className="text-xs font-semibold text-muted-foreground">TND</span>
+                        + {formatTnd(shippingHomeFee)} <span className="text-xs font-semibold text-muted-foreground">TND</span>
                       </div>
                     </button>
 

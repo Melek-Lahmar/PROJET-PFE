@@ -1,10 +1,10 @@
 ﻿using System.Text.Json.Serialization;
-using System.Text.Json.Serialization;
 namespace Web_Api.DTO.Homepage
 {
     public static class HomepageSectionIds
     {
         public const string Hero = "hero";
+        public const string Carousel = "carousel";
         public const string FeaturedProducts = "featuredProducts";
         public const string FeaturedCatalogues = "featuredCatalogues";
         public const string Audiences = "audiences";
@@ -15,6 +15,7 @@ namespace Web_Api.DTO.Homepage
         public static readonly string[] All =
         {
             Hero,
+            Carousel,
             FeaturedProducts,
             FeaturedCatalogues,
             Audiences,
@@ -30,6 +31,7 @@ namespace Web_Api.DTO.Homepage
         public string? PageSubtitle { get; set; }
         public List<string> SectionOrder { get; set; } = HomepageSectionIds.All.ToList();
         public HomepageHeroSectionDto Hero { get; set; } = new();
+        public HomepageCarouselSectionDto Carousel { get; set; } = new();
         public HomepageFeaturedProductsSectionDto FeaturedProducts { get; set; } = new();
         public HomepageFeaturedCataloguesSectionDto FeaturedCatalogues { get; set; } = new();
         public HomepageAudiencesSectionDto Audiences { get; set; } = new();
@@ -55,6 +57,37 @@ namespace Web_Api.DTO.Homepage
         public string? SecondaryCtaText { get; set; }
         public string? SecondaryCtaHref { get; set; }
         public string? ReassuranceText { get; set; }
+    }
+
+    public class HomepageCarouselSlideDto
+    {
+        public string? BadgeText { get; set; }
+        public string? Title { get; set; }
+        public string? Subtitle { get; set; }
+        public string? Description { get; set; }
+        public string? PrimaryCtaText { get; set; }
+        public string? PrimaryCtaHref { get; set; }
+        public string? SecondaryCtaText { get; set; }
+        public string? SecondaryCtaHref { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? MobileImageUrl { get; set; }
+        public string? ReassuranceText { get; set; }
+        public string? TextAlignment { get; set; }
+        public string? ContentPosition { get; set; }
+        public decimal? OverlayOpacity { get; set; }
+        public bool IsActive { get; set; } = true;
+        public int DisplayOrder { get; set; }
+        public DateTime? StartAt { get; set; }
+        public DateTime? EndAt { get; set; }
+    }
+
+    public class HomepageCarouselSectionDto : HomepageSectionBaseDto
+    {
+        public bool Autoplay { get; set; } = true;
+        public int AutoplayDelayMs { get; set; } = 5000;
+        public bool ShowDots { get; set; } = true;
+        public bool ShowArrows { get; set; } = true;
+        public List<HomepageCarouselSlideDto> Slides { get; set; } = new();
     }
 
     public class HomepageFeaturedProductsSectionDto : HomepageSectionBaseDto

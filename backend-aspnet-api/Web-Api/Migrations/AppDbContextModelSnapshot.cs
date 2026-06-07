@@ -1795,6 +1795,10 @@ namespace Web_Api.Migrations
                     b.Property<decimal?>("DO_NetAPayer")
                         .HasColumnType("decimal(24,13)");
 
+                    b.Property<string>("DO_NumeroSageX3")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<string>("DO_PassagerAdresse")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
@@ -1884,6 +1888,9 @@ namespace Web_Api.Migrations
 
                     b.Property<short?>("DO_Valide")
                         .HasColumnType("smallint");
+
+                    b.Property<bool>("DO_ValiderSageX3")
+                        .HasColumnType("bit");
 
                     b.Property<Guid?>("DO_VendeurUserId")
                         .HasColumnType("uniqueidentifier");

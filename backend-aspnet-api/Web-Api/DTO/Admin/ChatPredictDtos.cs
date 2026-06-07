@@ -8,7 +8,7 @@ namespace Web_Api.DTO.Admin
     /// </summary>
     public class ChatPredictRequestDto
     {
-        /// <summary>return_risk | delivery_first_attempt | volume_forecast</summary>
+        /// <summary>return_risk | delivery_first_attempt | volume_forecast | revenue_forecast | claims_forecast</summary>
         public string Task { get; set; } = "return_risk";
 
         public ChatPredictInputDto Input { get; set; } = new();
@@ -26,8 +26,12 @@ namespace Web_Api.DTO.Admin
         public string? DayOfWeek { get; set; }       // Monday..Sunday
         public int? PriorReturns { get; set; }
 
-        // volume_forecast
+        // volume_forecast / revenue_forecast / claims_forecast
         public int? HorizonDays { get; set; }
+        /// <summary>orders | bl — cible de la prévision de volume.</summary>
+        public string? TargetEntity { get; set; }
+        /// <summary>next_week | next_month | next_year — période demandée en langage naturel.</summary>
+        public string? Period { get; set; }
     }
 
     public class ChatPredictResponseDto

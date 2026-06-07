@@ -67,6 +67,7 @@ import { ConfirmateurBlDetailsPage } from "../features/confirmateur/pages/Confir
 import { ConfirmateurWorkspace } from "../features/confirmateur/components/ConfirmateurWorkspace";
 import { ConfirmateurDevisPage } from "../features/confirmateur/pages/ConfirmateurDevisPage";
 import { ConfirmateurDevisDetailsPage } from "../features/confirmateur/pages/ConfirmateurDevisDetailsPage";
+import { ConfirmateurReclamationsPage } from "../features/confirmateur/pages/ConfirmateurReclamationsPage";
 import { LivreurBlListPage, LivreurBlDetailsPage } from "../features/bl/pages/LivreurBlPages";
 
 import { AdminOverviewDashboardPage } from "../features/dashboard/pages/AdminOverviewDashboardPage";
@@ -243,6 +244,7 @@ export const router = createBrowserRouter([
                   { path: "confirmateur/commandes/:piece", element: <ConfirmateurOrderDetailsPage /> },
                   { path: "confirmateur/devis", element: <ConfirmateurDevisPage /> },
                   { path: "confirmateur/devis/:piece", element: <ConfirmateurDevisDetailsPage /> },
+                  { path: "confirmateur/reclamations", element: <ConfirmateurReclamationsPage /> },
                   { path: "confirmateur/bl", element: <ConfirmateurBlPage /> },
                   { path: "confirmateur/bl/:piece", element: <ConfirmateurBlDetailsPage /> },
                 ],

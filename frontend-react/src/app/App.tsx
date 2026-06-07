@@ -4,8 +4,9 @@ import { RouterProvider } from "./providers/RouterProvider";
 import { HomepageThemeProvider } from "../features/homepage/providers/HomepageThemeProvider";
 import { useAuthBootstrap } from "../features/auth/hooks/useAuthBootstrap";
 import { useLayoutStore } from "../shared/store/layoutStore";
-import { CursorEffect, ToastProvider } from "../shared/components/premium";
+import { ToastProvider } from "../shared/components/premium";
 import { ChatbotFab } from "../features/admin/chatbot/components/ChatbotFab";
+import { PublicSettingsBootstrapper } from "../features/settings/components/PublicSettingsBootstrapper";
 
 function AuthBootstrapper() {
   useAuthBootstrap();
@@ -32,13 +33,13 @@ export function App() {
       <ToastProvider>
         <AuthBootstrapper />
         <ThemeBootstrapper />
-        <CursorEffect />
-        
+        <PublicSettingsBootstrapper />
+
         {/* HomepageThemeProvider wraps RouterProvider */}
         <HomepageThemeProvider initialThemeId="minimaliste">
           <RouterProvider />
         </HomepageThemeProvider>
-        
+
         <ChatbotFab />
       </ToastProvider>
     </QueryProvider>

@@ -177,13 +177,13 @@ namespace Web_Api.Controllers.Confirmateur
                 B2BDiscountAmount = x.B2BDiscountAmount,
                 DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
-                StatusLabel = x.DocumentStatus,
                 Lignes = new List<ConfirmateurOrderLineDto>()
             }).ToListAsync(ct);
 
             // ✅ enrichir pour afficher Nom client dans la table
             foreach (var o in list)
             {
+                o.StatusLabel = F_DOCENTETE.ToStatusLabel(o.DO_Valide);
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
                 o.ClientType = c?.TypeClient;
                 o.ClientDisplay = ComputeDisplay(c);
@@ -731,12 +731,12 @@ namespace Web_Api.Controllers.Confirmateur
                 B2BDiscountAmount = x.B2BDiscountAmount,
                 DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
-                StatusLabel = x.DocumentStatus,
                 Lignes = new List<ConfirmateurOrderLineDto>()
             }).ToListAsync(ct);
 
             foreach (var o in list)
             {
+                o.StatusLabel = F_DOCENTETE.ToStatusLabel(o.DO_Valide);
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
                 o.ClientType = c?.TypeClient;
                 o.ClientDisplay = ComputeDisplay(c);

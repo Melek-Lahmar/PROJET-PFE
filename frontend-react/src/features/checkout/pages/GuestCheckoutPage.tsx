@@ -38,6 +38,7 @@ export function GuestCheckoutPage() {
   const setDeliveryMode = useCartStore((s) => s.setDeliveryMode);
   const subtotal = useCartStore((s) => s.subtotal());
   const shipping = useCartStore((s) => s.shipping());
+  const shippingHomeFee = useCartStore((s) => s.shippingHomeFee);
   const stamp = useCartStore((s) => s.stamp());
   const total = useCartStore((s) => s.total());
   const clearCart = useCartStore((s) => s.clear);
@@ -429,7 +430,7 @@ export function GuestCheckoutPage() {
                 >
                   <div className="mb-1 text-2xl">🚚</div>
                   <div className="font-bold text-card-foreground">Livraison à domicile</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">+ 8.000 TND</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">+ {shippingHomeFee.toFixed(3)} TND</div>
                 </button>
 
                 <button

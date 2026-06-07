@@ -345,15 +345,6 @@ function VendeurProfilePanel({
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div className="space-y-1">
-      <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-sm font-medium text-card-foreground">{value ?? "—"}</div>
-    </div>
-  );
-}
-
 export function ProfilePage() {
   const navigate = useNavigate();
   const setMe = useAuthStore((s) => s.setMe);

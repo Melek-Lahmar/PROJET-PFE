@@ -13,6 +13,7 @@ using Web_Api.Auth.Entities;
 using Web_Api.data;
 using Web_Api.Geo;
 using Web_Api.Model;
+using Web_Api.Services;
 
 namespace Web_Api.Services.DevTest
 {
@@ -456,7 +457,7 @@ namespace Web_Api.Services.DevTest
                 DO_NetAPayer = 119m,
                 DO_ModeLivraison = "HOME",
                 DO_ModePaiement = "CASH",
-                DO_FraisLivraison = 8m,
+                DO_FraisLivraison = AppSettingsService.DefaultDeliveryFeeHome,
                 DO_TimbreFiscal = 1m,
                 DO_AdresseLivraison = ClientAdresse,
                 DO_VilleLivraison = ClientVille,
