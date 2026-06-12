@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Globalization;
 using Web_Api.data;
 using Web_Api.Model;
 
@@ -11,6 +12,9 @@ namespace Web_Api.Services
     /// </summary>
     public sealed class AppSettingsService
     {
+        public const string DeliveryFeeHomeKey = "checkout.deliveryFee.home";
+        public const decimal DefaultDeliveryFeeHome = 8.000m;
+
         public static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
         private const string CACHE_KEY_ALL = "appsettings:all";
         private const string CACHE_KEY_PUBLIC = "appsettings:public";
@@ -46,6 +50,30 @@ namespace Web_Api.Services
 
         public async Task<AppSetting?> GetAsync(string key, CancellationToken ct = default)
             => await _db.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key, ct);
+
+        public async Task<decimal> GetDecimalAsync(string key, decimal defaultValue, CancellationToken ct = default)
+        {
+            var row = await GetAsync(key, ct);
+            if (row == null || string.IsNullOrWhiteSpace(row.ValueJson))
+                return defaultValue;
+
+            var raw = row.ValueJson.Trim().Trim('"');
+            return decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out var value)
+                ? value
+                : defaultValue;
+        }
+
+        public async Task<AppSetting> SetDecimalAsync(
+            string key,
+            decimal value,
+            string? description,
+            bool isPublic,
+            Guid? adminId,
+            CancellationToken ct = default)
+        {
+            var jsonNumber = value.ToString("0.000", CultureInfo.InvariantCulture);
+            return await SetAsync(key, jsonNumber, description, isPublic, adminId, ct);
+        }
 
         public async Task<AppSetting> SetAsync(string key, string valueJson, string? description, bool isPublic, Guid? adminId, CancellationToken ct = default)
         {

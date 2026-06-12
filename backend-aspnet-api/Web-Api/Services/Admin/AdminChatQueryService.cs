@@ -67,6 +67,7 @@ namespace Web_Api.Services.Admin
             return entity switch
             {
                 "orders" => await QueryOrdersAsync(req.Filters, metric, groupBy, limit, orderBy, from, to, applied, ct),
+                "bl" or "delivery_notes" => await QueryBlAsync(req.Filters, metric, groupBy, limit, orderBy, from, to, applied, ct),
                 "claims" => await QueryClaimsAsync(req.Filters, metric, groupBy, limit, orderBy, from, to, applied, "RECLAMATION", ct),
                 "demandes" => await QueryClaimsAsync(req.Filters, metric, groupBy, limit, orderBy, from, to, applied, "DEMANDE", ct),
                 "cases" => await QueryClaimsAsync(req.Filters, metric, groupBy, limit, orderBy, from, to, applied, null, ct),
@@ -379,6 +380,156 @@ namespace Web_Api.Services.Admin
                     ["amount"] = amount
                 }
             };
+        }
+
+        // ====================================================================
+        // BL — count / list / groupBy depuis F_DOCENTETE (DO_Type = BL)
+        // ====================================================================
+        private async Task<ChatQueryResponseDto> QueryBlAsync(
+            ChatQueryFiltersDto filters, string metric, string? groupBy,
+            int limit, string orderBy, DateTime from, DateTime to,
+            ChatQueryAppliedDto applied, CancellationToken ct)
+        {
+            var rows = await _db.F_DOCENTETES.AsNoTracking()
+                .Where(x => x.DO_Domaine == DomainVente
+                    && x.DO_Type == F_DOCENTETE.DOC_TYPE_BL
+                    && x.DO_Date.HasValue
+                    && x.DO_Date >= from
+                    && x.DO_Date < to
+                    && x.DO_Piece != null
+                    && x.DO_Piece.StartsWith("BL"))
+                .ToListAsync(ct);
+
+            var search = (filters.OrderNumber ?? filters.Search ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var q = search.ToUpperInvariant();
+                rows = rows.Where(x =>
+                    (x.DO_Piece ?? string.Empty).ToUpperInvariant().Contains(q)
+                    || (x.DO_Tiers ?? string.Empty).ToUpperInvariant().Contains(q)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Status))
+            {
+                var status = filters.Status.Trim();
+                rows = rows.Where(x =>
+                    string.Equals(F_DOCENTETE.ToStatusLabel(x.DO_Valide), status, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(x.DO_Valide?.ToString(), status, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (groupBy != null)
+            {
+                var series = BuildBlSeries(rows, groupBy);
+                series = ApplyOrderingAndLimit(series, orderBy, limit);
+                return new ChatQueryResponseDto
+                {
+                    Label = LabelBl(filters, from, to, rows.Count),
+                    Value = series.Sum(s => s.Value),
+                    Series = series,
+                    Applied = applied
+                };
+            }
+
+            if (metric == "list" || metric == "top")
+            {
+                var ordered = orderBy switch
+                {
+                    "amount_desc" => rows.OrderByDescending(x => x.DO_TotalTTC ?? x.DO_NetAPayer ?? 0m).ToList(),
+                    "amount_asc" => rows.OrderBy(x => x.DO_TotalTTC ?? x.DO_NetAPayer ?? 0m).ToList(),
+                    "date_asc" => rows.OrderBy(x => x.DO_Date).ToList(),
+                    _ => rows.OrderByDescending(x => x.DO_Date).ToList()
+                };
+
+                return new ChatQueryResponseDto
+                {
+                    Label = LabelBl(filters, from, to, rows.Count),
+                    Value = rows.Count,
+                    Rows = ordered.Take(limit).Select(BlToRow).ToList(),
+                    Applied = applied
+                };
+            }
+
+            return new ChatQueryResponseDto
+            {
+                Label = LabelBl(filters, from, to, rows.Count),
+                Value = rows.Count,
+                Applied = applied
+            };
+        }
+
+        private static List<ChatQuerySeriesPointDto> BuildBlSeries(
+            IEnumerable<F_DOCENTETE> rows, string groupBy)
+        {
+            return groupBy switch
+            {
+                "status" => rows.GroupBy(x => F_DOCENTETE.ToStatusLabel(x.DO_Valide))
+                    .Select(g => new ChatQuerySeriesPointDto { Bucket = g.Key, Value = g.Count() })
+                    .ToList(),
+                "day" => rows.Where(x => x.DO_Date.HasValue)
+                    .GroupBy(x => x.DO_Date!.Value.Date)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new ChatQuerySeriesPointDto
+                    {
+                        Bucket = g.Key.ToString("yyyy-MM-dd"),
+                        Value = g.Count()
+                    })
+                    .ToList(),
+                "week" => rows.Where(x => x.DO_Date.HasValue)
+                    .GroupBy(x => StartOfWeek(x.DO_Date!.Value))
+                    .OrderBy(g => g.Key)
+                    .Select(g => new ChatQuerySeriesPointDto
+                    {
+                        Bucket = g.Key.ToString("yyyy-'W'ww", CultureInfo.InvariantCulture),
+                        Value = g.Count()
+                    })
+                    .ToList(),
+                "month" => rows.Where(x => x.DO_Date.HasValue)
+                    .GroupBy(x => new DateTime(x.DO_Date!.Value.Year, x.DO_Date!.Value.Month, 1))
+                    .OrderBy(g => g.Key)
+                    .Select(g => new ChatQuerySeriesPointDto
+                    {
+                        Bucket = g.Key.ToString("yyyy-MM"),
+                        Value = g.Count()
+                    })
+                    .ToList(),
+                _ => new List<ChatQuerySeriesPointDto>()
+            };
+        }
+
+        private static ChatQueryRowDto BlToRow(F_DOCENTETE row)
+        {
+            var amount = row.DO_TotalTTC ?? row.DO_NetAPayer;
+            return new ChatQueryRowDto
+            {
+                Key = row.DO_Piece,
+                Label = $"{row.DO_Piece} — {row.DO_Tiers ?? "client inconnu"}",
+                Value = amount,
+                Fields = new Dictionary<string, object?>
+                {
+                    ["piece"] = row.DO_Piece,
+                    ["date"] = row.DO_Date,
+                    ["client"] = row.DO_Tiers,
+                    ["status"] = F_DOCENTETE.ToStatusLabel(row.DO_Valide),
+                    ["amount"] = amount,
+                    ["sourceBcPiece"] = BuildSourceBcPiece(row.DO_Piece)
+                }
+            };
+        }
+
+        private static string LabelBl(ChatQueryFiltersDto filters, DateTime from, DateTime to, int count)
+        {
+            var label = $"{count} BL du {from:yyyy-MM-dd} au {to.AddDays(-1):yyyy-MM-dd}";
+            if (!string.IsNullOrWhiteSpace(filters.Status))
+                label += $" ({filters.Status})";
+            return label;
+        }
+
+        private static string? BuildSourceBcPiece(string? blPiece)
+        {
+            if (string.IsNullOrWhiteSpace(blPiece)) return null;
+            return blPiece.StartsWith("BL", StringComparison.OrdinalIgnoreCase)
+                ? "BC" + blPiece.Substring(2)
+                : null;
         }
 
         // ====================================================================

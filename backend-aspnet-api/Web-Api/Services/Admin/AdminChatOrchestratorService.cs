@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -74,16 +75,6 @@ namespace Web_Api.Services.Admin
                     Success = false,
                     Action = "error",
                     Message = "Question vide."
-                };
-            }
-
-            if (!_groq.IsConfigured)
-            {
-                return new ChatAskResponseDto
-                {
-                    Success = false,
-                    Action = "error",
-                    Message = "Le service LLM n'est pas configuré (Groq:ApiKey manquante)."
                 };
             }
 
@@ -168,24 +159,40 @@ namespace Web_Api.Services.Admin
             // 1) Routing par Groq (avec contexte historique)
             var historyPreamble = BuildHistoryPreamble(history);
 
+            var deterministicRoute = BuildDeterministicDecision(question);
             RouterDecision routed;
-            try
+            if (ShouldUseDeterministicDecision(question, deterministicRoute))
             {
-                var systemWithHistory = string.IsNullOrEmpty(historyPreamble)
-                    ? RouterSystemPrompt
-                    : RouterSystemPrompt + "\n\n" + historyPreamble;
-                var raw = await _groq.CompleteAsync(
-                    systemPrompt: systemWithHistory,
-                    userMessage: question,
-                    jsonResponse: true,
-                    temperature: 0f,
-                    ct: ct);
-                routed = ParseRouterDecision(raw);
+                routed = deterministicRoute;
             }
-            catch (Exception ex)
+            else if (_groq.IsConfigured)
             {
-                _logger.LogWarning(ex, "Groq router failed, fallback chitchat");
-                routed = new RouterDecision { Action = "chitchat", Payload = new() };
+                try
+                {
+                    var systemWithHistory = string.IsNullOrEmpty(historyPreamble)
+                        ? RouterSystemPrompt
+                        : RouterSystemPrompt + "\n\n" + historyPreamble;
+                    var raw = await _groq.CompleteAsync(
+                        systemPrompt: systemWithHistory,
+                        userMessage: question,
+                        jsonResponse: true,
+                        temperature: 0f,
+                        ct: ct);
+                    routed = ParseRouterDecision(raw);
+                    if (routed.Action == "chitchat" && deterministicRoute.Action != "chitchat")
+                    {
+                        routed = deterministicRoute;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Groq router failed, fallback deterministic route");
+                    routed = deterministicRoute;
+                }
+            }
+            else
+            {
+                routed = deterministicRoute;
             }
 
             // 2) Exécution selon l'action.
@@ -193,117 +200,141 @@ namespace Web_Api.Services.Admin
             ChatAskChartDto? chart = null;
             List<ChatAskRowDto>? rows = null;
             var label = routed.Action;
+            var success = true;
 
-            switch (routed.Action)
+            try
             {
-                case "query":
+                switch (routed.Action)
                 {
-                    var req = ParseQueryRequest(routed.Payload);
-                    var resp = await _query.ExecuteAsync(req, ct);
-                    data = resp;
-                    label = resp.Label;
-                    rows = MapRows(resp.Rows);
-                    chart = ResolveChartFromQuery(resp);
-                    break;
-                }
-                case "analyze":
-                {
-                    var req = ParseAnalyzeRequest(routed.Payload);
-                    var resp = await _analyze.ExecuteAsync(req, ct);
-                    data = resp;
-                    label = resp.Label;
-                    chart = ResolveChartFromAnalyze(resp);
-                    break;
-                }
-                case "predict":
-                {
-                    var req = ParsePredictRequest(routed.Payload);
-                    var resp = await _predict.PredictAsync(req, ct);
-                    data = resp;
-                    label = resp.Label;
-                    chart = ResolveChartFromPredict(resp);
-                    break;
-                }
-                case "kb":
-                {
-                    var kbContent = await _kb.GetFullKbAsync();
-                    data = new { source = "knowledge_base", kb = kbContent };
-                    label = "Question conceptuelle (KB).";
-                    break;
-                }
-                case "action":
-                {
-                    var (actionType, parameters, summary) = ExtractAction(routed.Payload);
-                    if (string.IsNullOrEmpty(actionType) || !IsAllowedAction(actionType))
+                    case "query":
                     {
-                        data = new { error = "Action non autorisée." };
-                        label = "Action refusée.";
+                        var req = ParseQueryRequest(routed.Payload);
+                        var resp = await _query.ExecuteAsync(req, ct);
+                        data = resp;
+                        label = resp.Label;
+                        rows = MapRows(resp.Rows);
+                        chart = ResolveChartFromQuery(resp);
+                        break;
                     }
-                    else if (userId.HasValue && session != null)
+                    case "analyze":
                     {
-                        // Création d'une PendingAction TTL 2 min
-                        var pa = new F_CHATBOT_PENDING_ACTION
+                        var req = ParseAnalyzeRequest(routed.Payload);
+                        var resp = await _analyze.ExecuteAsync(req, ct);
+                        data = resp;
+                        label = resp.Label;
+                        chart = ResolveChartFromAnalyze(resp);
+                        break;
+                    }
+                    case "predict":
+                    {
+                        var req = ParsePredictRequest(routed.Payload);
+                        var resp = await _predict.PredictAsync(req, ct);
+                        data = resp;
+                        label = resp.Label;
+                        chart = ResolveChartFromPredict(resp);
+                        break;
+                    }
+                    case "kb":
+                    {
+                        var kbContent = await _kb.GetFullKbAsync();
+                        data = new { source = "knowledge_base", kb = kbContent };
+                        label = "Question conceptuelle (KB).";
+                        break;
+                    }
+                    case "action":
+                    {
+                        var (actionType, parameters, summary) = ExtractAction(routed.Payload);
+                        if (string.IsNullOrEmpty(actionType) || !IsAllowedAction(actionType))
                         {
-                            UserId = userId.Value,
-                            SessionId = session.Id,
-                            ActionType = actionType,
-                            ParamsJson = JsonSerializer.Serialize(parameters),
-                            CreatedAt = DateTime.UtcNow,
-                            ExpiresAt = DateTime.UtcNow.AddMinutes(2),
-                        };
-                        _db.F_CHATBOT_PENDING_ACTIONS.Add(pa);
-                        await _db.SaveChangesAsync(ct);
-
-                        await PersistMessagesAsync(session, question, $"Action en attente : {actionType}.\n{summary}", "action", null, ct);
-
-                        return new ChatAskResponseDto
+                            data = new { error = "Action non autorisée." };
+                            label = "Action refusée.";
+                        }
+                        else if (userId.HasValue && session != null)
                         {
-                            Success = true,
-                            Action = "action",
-                            Message = $"Vous voulez exécuter : {actionType}.\n{summary}\n\nTapez OUI pour confirmer, ANNULER pour annuler.",
-                            SessionId = session.Id.ToString(),
-                            Language = session.Language,
-                            PendingAction = new PendingActionDto
+                            // Création d'une PendingAction TTL 2 min
+                            var pa = new F_CHATBOT_PENDING_ACTION
                             {
+                                UserId = userId.Value,
+                                SessionId = session.Id,
                                 ActionType = actionType,
-                                Summary = summary,
-                                PendingId = pa.Id.ToString(),
-                            },
-                            Suggestions = new List<string> { "OUI", "ANNULER" },
-                        };
+                                ParamsJson = JsonSerializer.Serialize(parameters),
+                                CreatedAt = DateTime.UtcNow,
+                                ExpiresAt = DateTime.UtcNow.AddMinutes(2),
+                            };
+                            _db.F_CHATBOT_PENDING_ACTIONS.Add(pa);
+                            await _db.SaveChangesAsync(ct);
+
+                            await PersistMessagesAsync(session, question, $"Action en attente : {actionType}.\n{summary}", "action", null, ct);
+
+                            return new ChatAskResponseDto
+                            {
+                                Success = true,
+                                Action = "action",
+                                Message = $"Vous voulez exécuter : {actionType}.\n{summary}\n\nTapez OUI pour confirmer, ANNULER pour annuler.",
+                                SessionId = session.Id.ToString(),
+                                Language = session.Language,
+                                PendingAction = new PendingActionDto
+                                {
+                                    ActionType = actionType,
+                                    Summary = summary,
+                                    PendingId = pa.Id.ToString(),
+                                },
+                                Suggestions = new List<string> { "OUI", "ANNULER" },
+                            };
+                        }
+                        else
+                        {
+                            data = new { error = "Authentification requise pour les actions." };
+                            label = "Connexion requise.";
+                        }
+                        break;
                     }
-                    else
-                    {
-                        data = new { error = "Authentification requise pour les actions." };
-                        label = "Connexion requise.";
-                    }
-                    break;
+                    case "chitchat":
+                    default:
+                        var customMessage = GetString(routed.Payload, "message");
+                        data = new { source = string.IsNullOrWhiteSpace(customMessage) ? "chitchat" : "clarification" };
+                        label = string.IsNullOrWhiteSpace(customMessage)
+                            ? "Je suis prêt. Demande-moi une tendance, une comparaison, une anomalie, un top métier ou une prédiction de retour/volume."
+                            : customMessage;
+                        break;
                 }
-                case "chitchat":
-                default:
-                    data = new { source = "chitchat" };
-                    label = "Conversation libre.";
-                    break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Chatbot action execution failed for action {action}", routed.Action);
+                success = false;
+                data = new { error = ex.Message, action = routed.Action };
+                chart = null;
+                rows = null;
+                routed = new RouterDecision { Action = "error", Payload = new() };
+                label = "Je n'ai pas pu traiter cette demande avec les données disponibles. Reformule en précisant la période, le type de document (BC/BL) ou la métrique attendue.";
             }
 
             // 3) Reformulation par Groq (avec prompt selon langue détectée)
             string finalMessage;
-            try
+            if (_groq.IsConfigured && !ShouldUseLocalFormatter(routed.Action))
             {
-                var formatPrompt = BuildFormatterPrompt(question, routed.Action, data);
-                var systemPrompt = ResolveFormatterPrompt(detected);
-                finalMessage = await _groq.CompleteAsync(
-                    systemPrompt: systemPrompt,
-                    userMessage: formatPrompt,
-                    temperature: 0.3f,
-                    ct: ct);
-                finalMessage = (finalMessage ?? string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(finalMessage)) finalMessage = label;
+                try
+                {
+                    var formatPrompt = BuildFormatterPrompt(question, routed.Action, data);
+                    var systemPrompt = ResolveFormatterPrompt(detected);
+                    finalMessage = await _groq.CompleteAsync(
+                        systemPrompt: systemPrompt,
+                        userMessage: formatPrompt,
+                        temperature: 0.3f,
+                        ct: ct);
+                    finalMessage = (finalMessage ?? string.Empty).Trim();
+                    if (string.IsNullOrWhiteSpace(finalMessage)) finalMessage = BuildDeterministicMessage(routed.Action, data, label);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Groq formatter failed, fallback deterministic message");
+                    finalMessage = BuildDeterministicMessage(routed.Action, data, label);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogWarning(ex, "Groq formatter failed, fallback to label");
-                finalMessage = label;
+                finalMessage = BuildDeterministicMessage(routed.Action, data, label);
             }
 
             // 4) Quick-replies (fallback hardcodés par action si Groq n'en retourne pas)
@@ -317,7 +348,7 @@ namespace Web_Api.Services.Admin
 
             return new ChatAskResponseDto
             {
-                Success = true,
+                Success = success,
                 Action = routed.Action,
                 Message = finalMessage,
                 Data = data,
@@ -513,6 +544,532 @@ namespace Web_Api.Services.Admin
             };
         }
 
+        private static bool ShouldUseDeterministicDecision(string question, RouterDecision decision)
+            => decision.Action != "chitchat"
+               || decision.Payload.ContainsKey("message")
+               || LooksLikeChitchat(NormalizeQuestion(question));
+
+        private static bool ShouldUseLocalFormatter(string action)
+            => action is "query" or "analyze" or "predict" or "kb" or "chitchat" or "error";
+
+        private static RouterDecision BuildDeterministicDecision(string question)
+        {
+            var q = NormalizeQuestion(question);
+
+            if (NeedsPredictionClarification(q))
+                return Clarify("Je peux faire plusieurs prédictions : risque de retour, livraison au premier essai, volume commandes/BL, réclamations ou chiffre d'affaires. Précise la cible et la période.");
+
+            if (NeedsAnalysisClarification(q))
+                return Clarify("Je peux analyser une tendance, une comparaison, une anomalie, une corrélation ou une distribution. Précise la métrique et la période.");
+
+            if (LooksLikeFutureVolumeQuestion(q)
+                || LooksLikeRevenueForecastQuestion(q)
+                || LooksLikeClaimsForecastQuestion(q)
+                || ContainsAny(q, "prediction", "predire", "prevoir", "probabilite", "risque", "forecast", "prevu", "prevision", "estimer"))
+                return BuildPredictDecision(question, q);
+
+            if (ContainsAny(q, "analyse", "analyser", "tendance", "courbe", "evolution", "compare", "comparaison",
+                    "anomalie", "correlation", "distribution"))
+                return BuildAnalyzeDecision(q);
+
+            if (ContainsAny(q, "c est quoi", "comment", "difference", "role", "procedure", "regle", "sage x3",
+                    "explique", "definition", "cycle"))
+                return new RouterDecision { Action = "kb", Payload = new() };
+
+            if (ContainsAny(q, "combien", "nombre", "nb", "nbr", "statistique", "stats", "top", "liste", "total", "ca",
+                    "chiffre", "revenu", "produit", "commande", "cmd", "bc", "bl", "reclamation", "demande"))
+                return BuildQueryDecision(q);
+
+            if (ContainsAny(q, "bc", "bl", "confirmatrice", "livreur", "reclamation", "demande"))
+                return new RouterDecision { Action = "kb", Payload = new() };
+
+            return new RouterDecision { Action = "chitchat", Payload = new() };
+        }
+
+        private static RouterDecision BuildAnalyzeDecision(string q)
+        {
+            var operation = "trend";
+            if (ContainsAny(q, "compare", "comparaison", "classement", "par gouvernorat", "par statut", "par livreur", "par motif"))
+                operation = "compare";
+            if (ContainsAny(q, "anomalie", "anomalies", "alerte", "ecart"))
+                operation = "anomaly";
+            if (ContainsAny(q, "correlation", "relation entre"))
+                operation = "correlation";
+            if (ContainsAny(q, "distribution", "repartition", "percentile", "mediane"))
+                operation = "distribution";
+
+            var entity = ResolveEntity(q);
+            var metric = ResolveAnalyzeMetric(q, entity, operation);
+            var period = ResolvePeriodFromText(q);
+            var options = new Dictionary<string, object?>
+            {
+                ["granularity"] = ResolveGranularity(q, period)
+            };
+
+            if (operation == "compare")
+            {
+                options["groupBy"] = ResolveGroupBy(q, entity);
+                options["topN"] = ResolveTopN(q);
+            }
+            else if (operation == "anomaly")
+            {
+                options["baselineWindow"] = 30;
+            }
+            else if (operation == "correlation")
+            {
+                options["secondMetric"] = metric == "count" ? "sum_amount" : "count";
+            }
+
+            return new RouterDecision
+            {
+                Action = "analyze",
+                Payload = new Dictionary<string, object?>
+                {
+                    ["operation"] = operation,
+                    ["subject"] = new Dictionary<string, object?>
+                    {
+                        ["entity"] = entity,
+                        ["metric"] = metric,
+                        ["filters"] = new Dictionary<string, object?>
+                        {
+                            ["period"] = period
+                        }
+                    },
+                    ["options"] = options
+                }
+            };
+        }
+
+        private static RouterDecision BuildPredictDecision(string originalQuestion, string q)
+        {
+            var task = "return_risk";
+            if (LooksLikeRevenueForecastQuestion(q))
+                task = "revenue_forecast";
+            else if (LooksLikeClaimsForecastQuestion(q))
+                task = "claims_forecast";
+            else if (LooksLikeVolumeForecastQuestion(q))
+                task = "volume_forecast";
+            else if (ContainsAny(q, "livraison", "premier essai", "1er essai", "first attempt"))
+                task = "delivery_first_attempt";
+            else if (ContainsAny(q, "risque", "retour"))
+                task = "return_risk";
+
+            var input = new Dictionary<string, object?>();
+            var piece = ExtractPiece(originalQuestion);
+            if (!string.IsNullOrWhiteSpace(piece)) input["doPiece"] = piece;
+
+            var governorate = ExtractGovernorate(q);
+            if (!string.IsNullOrWhiteSpace(governorate)) input["governorate"] = governorate;
+
+            var amount = ExtractAmount(q);
+            if (amount.HasValue) input["amount"] = amount.Value;
+
+            if (task == "volume_forecast")
+            {
+                input["horizonDays"] = ResolveHorizonDays(q);
+                input["targetEntity"] = ResolveVolumeTarget(q);
+                input["period"] = ResolveForecastPeriod(q);
+            }
+            else if (task is "revenue_forecast" or "claims_forecast")
+            {
+                input["horizonDays"] = ResolveHorizonDays(q);
+                input["period"] = ResolveForecastPeriod(q);
+            }
+
+            return new RouterDecision
+            {
+                Action = "predict",
+                Payload = new Dictionary<string, object?>
+                {
+                    ["task"] = task,
+                    ["input"] = input
+                }
+            };
+        }
+
+        private static RouterDecision BuildQueryDecision(string q)
+        {
+            var entity = ResolveQueryEntity(q);
+            var metric = ResolveQueryMetric(q, entity);
+            var payload = new Dictionary<string, object?>
+            {
+                ["entity"] = entity,
+                ["metric"] = metric,
+                ["filters"] = new Dictionary<string, object?>
+                {
+                    ["period"] = ResolvePeriodFromText(q)
+                },
+                ["limit"] = ResolveTopN(q)
+            };
+
+            var groupBy = ResolveQueryGroupBy(q);
+            if (!string.IsNullOrWhiteSpace(groupBy)) payload["groupBy"] = groupBy;
+            if (metric is "top" or "list") payload["orderBy"] = entity == "products" ? "quantity_desc" : "date_desc";
+
+            return new RouterDecision { Action = "query", Payload = payload };
+        }
+
+        private static string ResolveEntity(string q)
+        {
+            if (ContainsAny(q, "reclamation", "reclamations", "claim", "claims")) return "claims";
+            if (ContainsAny(q, "demande", "demandes")) return "demandes";
+            if (ContainsAny(q, "bl", "bon livraison", "bon de livraison", "bons de livraison")) return "bl";
+            return "orders";
+        }
+
+        private static string ResolveQueryEntity(string q)
+        {
+            if (ContainsAny(q, "bl", "bon livraison", "bon de livraison", "bons de livraison")) return "bl";
+            if (ContainsAny(q, "bc", "bon commande", "bon de commande", "bons de commande", "commande", "cmd")) return "orders";
+            if (ContainsAny(q, "produit", "produits", "article", "articles")) return "products";
+            if (ContainsAny(q, "reclamation", "reclamations", "claim", "claims")) return "claims";
+            if (ContainsAny(q, "demande", "demandes")) return "demandes";
+            if (ContainsAny(q, "livreur", "livreurs")) return "drivers";
+            if (ContainsAny(q, "confirmatrice", "confirmatrices")) return "confirmatrices";
+            if (ContainsAny(q, "gouvernorat", "gouvernorats", "region", "regions")) return "governorates";
+            return "orders";
+        }
+
+        private static string ResolveAnalyzeMetric(string q, string entity, string operation)
+        {
+            if (operation == "distribution")
+                return entity == "orders" ? "amount" : "tentatives";
+            if (ContainsAny(q, "chiffre", "ca", "revenu", "vente", "montant", "ttc"))
+                return "sum_amount";
+            if (ContainsAny(q, "taux retour", "retour rate", "retours", "retour"))
+                return "return_rate";
+            if (ContainsAny(q, "taux livraison", "livraison rate", "livre", "livraison"))
+                return "delivery_rate";
+            return "count";
+        }
+
+        private static string ResolveQueryMetric(string q, string entity)
+        {
+            if (ContainsAny(q, "liste", "affiche", "dernieres", "derniers")) return "list";
+            if (ContainsAny(q, "top", "meilleur", "meilleurs", "classement")) return "top";
+            if (entity == "products") return "top";
+            if (ContainsAny(q, "chiffre", "ca", "revenu", "vente", "montant", "total ttc")) return "sum";
+            return "count";
+        }
+
+        private static string ResolvePeriodFromText(string q)
+        {
+            if (ContainsAny(q, "aujourd hui", "today")) return "today";
+            if (ContainsAny(q, "7j", "7 jours", "semaine", "week")) return "7d";
+            if (ContainsAny(q, "3m", "3 mois", "trimestre")) return "3m";
+            if (ContainsAny(q, "6m", "6 mois", "semestre")) return "6m";
+            if (ContainsAny(q, "12m", "12 mois", "annee", "un an", "1 an")) return "12m";
+            return "30d";
+        }
+
+        private static string ResolveGranularity(string q, string period)
+        {
+            if (ContainsAny(q, "par mois", "mensuel", "mois") || period is "6m" or "12m") return "month";
+            if (ContainsAny(q, "par semaine", "hebdo", "semaine") || period == "3m") return "week";
+            return "day";
+        }
+
+        private static string ResolveGroupBy(string q, string entity)
+        {
+            if (ContainsAny(q, "statut", "status", "etat")) return "status";
+            if (ContainsAny(q, "livreur", "driver")) return "driver";
+            if (ContainsAny(q, "confirmatrice")) return "confirmatrice";
+            if (ContainsAny(q, "motif")) return "motif";
+            if (entity is "claims" or "demandes") return "status";
+            return "governorate";
+        }
+
+        private static string? ResolveQueryGroupBy(string q)
+        {
+            if (ContainsAny(q, "par statut", "par status", "par etat")) return "status";
+            if (ContainsAny(q, "par gouvernorat", "par region")) return "governorate";
+            if (ContainsAny(q, "par livreur")) return "driver";
+            if (ContainsAny(q, "par jour")) return "day";
+            if (ContainsAny(q, "par semaine")) return "week";
+            if (ContainsAny(q, "par mois")) return "month";
+            if (ContainsAny(q, "par motif")) return "motif";
+            return null;
+        }
+
+        private static int ResolveTopN(string q)
+        {
+            foreach (var token in q.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(token, out var n) && n > 0 && n <= 50) return n;
+            }
+            return 10;
+        }
+
+        private static int ResolveHorizonDays(string q)
+        {
+            foreach (var token in q.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(token, out var n) && n > 0 && n <= 365) return n;
+            }
+            if (ContainsAny(q, "annee prochaine", "l annee prochaine", "annee", "12m", "12 mois")) return 365;
+            if (ContainsAny(q, "mois", "30j")) return 30;
+            return 7;
+        }
+
+        private static string ResolveForecastPeriod(string q)
+        {
+            var nextYear = (DateTime.UtcNow.Year + 1).ToString(CultureInfo.InvariantCulture);
+            if (ContainsAny(q, "annee prochaine", "l annee prochaine", "12m", "12 mois", "prochaine annee", nextYear))
+                return "next_year";
+            if (ContainsAny(q, "mois prochain", "prochain mois", "30j", "30 jours"))
+                return "next_month";
+            if (ContainsAny(q, "semaine prochaine", "prochaine semaine", "7j", "7 jours"))
+                return "next_week";
+            return string.Empty;
+        }
+
+        private static string ResolveVolumeTarget(string q)
+            => ContainsAny(q, "bl", "bon livraison", "bon de livraison", "bons de livraison", "livraisons")
+                ? "bl"
+                : "orders";
+
+        private static bool LooksLikeFutureVolumeQuestion(string q)
+            => ContainsAny(q, "prochain", "prochaine", "futur", "future", "demain", "prevu", "prevision", "estimer")
+               && ContainsAny(q, "volume", "nombre", "nb", "nbr", "combien", "commande", "commandes", "bc", "bl", "livraison", "livraisons");
+
+        private static bool LooksLikeVolumeForecastQuestion(string q)
+            => ContainsAny(q, "volume", "forecast", "prevision", "prevu", "prevoir", "estimer", "prochain", "prochaine")
+               || (ContainsAny(q, "nombre", "nb", "nbr", "combien")
+                   && ContainsAny(q, "commande", "commandes", "bc", "bl", "livraison", "livraisons"));
+
+        private static bool LooksLikeRevenueForecastQuestion(string q)
+            => ContainsAny(q, "prochain", "prochaine", "prevoir", "prevision", "forecast", "estimer", "prevu")
+               && ContainsAny(q, "ca", "chiffre", "chiffre affaires", "revenu", "recette", "vente", "ventes");
+
+        private static bool LooksLikeClaimsForecastQuestion(string q)
+            => ContainsAny(q, "prochain", "prochaine", "prevoir", "prevision", "forecast", "estimer", "prevu")
+               && ContainsAny(q, "reclamation", "reclamations", "claim", "claims", "ticket", "tickets");
+
+        private static bool NeedsPredictionClarification(string q)
+            => IsShortIntentOnly(q, "prediction", "prevision", "predict", "predire", "prevoir");
+
+        private static bool NeedsAnalysisClarification(string q)
+            => IsShortIntentOnly(q, "analyse", "analyser", "analytics", "statistique", "stats");
+
+        private static bool IsShortIntentOnly(string q, params string[] terms)
+        {
+            var tokens = q.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return tokens.Length <= 2 && ContainsAny(q, terms);
+        }
+
+        private static RouterDecision Clarify(string message)
+            => new()
+            {
+                Action = "chitchat",
+                Payload = new Dictionary<string, object?> { ["message"] = message }
+            };
+
+        private static string? ExtractPiece(string question)
+        {
+            var cleaned = new string((question ?? string.Empty)
+                .Select(c => char.IsLetterOrDigit(c) || c == '-' ? char.ToUpperInvariant(c) : ' ')
+                .ToArray());
+            foreach (var token in cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var value = token.Trim('-');
+                if (value.Length >= 4 && (value.StartsWith("BC") || value.StartsWith("BL")) && value.Any(char.IsDigit))
+                    return value;
+            }
+            return null;
+        }
+
+        private static decimal? ExtractAmount(string q)
+        {
+            var tokens = q.Replace(",", ".").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                if (decimal.TryParse(token, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount)
+                    && amount > 0
+                    && ContainsAny(q, "dt", "tnd", "montant", "panier", "ttc"))
+                {
+                    return amount;
+                }
+            }
+            return null;
+        }
+
+        private static string? ExtractGovernorate(string q)
+        {
+            var governorates = new Dictionary<string, string>
+            {
+                ["tunis"] = "Tunis",
+                ["ariana"] = "Ariana",
+                ["ben arous"] = "Ben Arous",
+                ["manouba"] = "Manouba",
+                ["nabeul"] = "Nabeul",
+                ["bizerte"] = "Bizerte",
+                ["sfax"] = "Sfax",
+                ["sousse"] = "Sousse",
+                ["monastir"] = "Monastir",
+                ["mahdia"] = "Mahdia",
+                ["kairouan"] = "Kairouan",
+                ["gafsa"] = "Gafsa",
+                ["gabes"] = "Gabes",
+                ["medenine"] = "Medenine",
+                ["tataouine"] = "Tataouine",
+                ["kasserine"] = "Kasserine",
+                ["sidi bouzid"] = "Sidi Bouzid",
+                ["beja"] = "Beja",
+                ["jendouba"] = "Jendouba",
+                ["kef"] = "Kef",
+                ["siliana"] = "Siliana",
+                ["zaghouan"] = "Zaghouan",
+                ["tozeur"] = "Tozeur",
+                ["kebili"] = "Kebili"
+            };
+            foreach (var item in governorates)
+            {
+                if (q.Contains(item.Key, StringComparison.OrdinalIgnoreCase)) return item.Value;
+            }
+            return null;
+        }
+
+        private static bool LooksLikeChitchat(string q)
+            => ContainsAny(q, "bonjour", "salut", "hello", "merci", "qui es tu", "aide", "help");
+
+        private static bool ContainsAny(string value, params string[] terms)
+        {
+            var tokens = value.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var term in terms)
+            {
+                var normalizedTerm = NormalizeQuestion(term);
+                if (string.IsNullOrWhiteSpace(normalizedTerm)) continue;
+                if (normalizedTerm.Length <= 3 && !normalizedTerm.Contains(' '))
+                {
+                    if (tokens.Contains(normalizedTerm)) return true;
+                    continue;
+                }
+                if (value.Contains(normalizedTerm, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
+        private static string NormalizeQuestion(string question)
+        {
+            var q = (question ?? string.Empty).Trim().ToLowerInvariant();
+            q = q
+                .Replace("'", " ")
+                .Replace("’", " ")
+                .Replace("-", " ")
+                .Replace("é", "e")
+                .Replace("è", "e")
+                .Replace("ê", "e")
+                .Replace("ë", "e")
+                .Replace("à", "a")
+                .Replace("â", "a")
+                .Replace("î", "i")
+                .Replace("ï", "i")
+                .Replace("ô", "o")
+                .Replace("ù", "u")
+                .Replace("û", "u")
+                .Replace("ç", "c");
+            var cleaned = new string(q.Select(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) ? c : ' ').ToArray());
+            return string.Join(" ", cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        private static string BuildDeterministicMessage(string action, object? data, string label)
+        {
+            return action switch
+            {
+                "query" => FormatQueryMessage(data, label),
+                "analyze" => FormatAnalyzeMessage(data, label),
+                "predict" => FormatPredictMessage(data, label),
+                "kb" => FormatKbMessage(),
+                "chitchat" => label,
+                _ => label
+            };
+        }
+
+        private static string FormatQueryMessage(object? data, string label)
+        {
+            if (data is not ChatQueryResponseDto resp) return label;
+            var displayLabel = HumanizeLabel(resp.Label);
+            if (resp.Value.HasValue)
+                return $"{displayLabel} Résultat : {FormatDecimal(resp.Value.Value)}.";
+            if (resp.Series != null && resp.Series.Count > 0)
+            {
+                var top = string.Join(", ", resp.Series.Take(3).Select(s => $"{s.Bucket}: {FormatDecimal(s.Value)}"));
+                return $"{displayLabel} Principaux points : {top}.";
+            }
+            if (resp.Rows != null && resp.Rows.Count > 0)
+                return $"{displayLabel} {resp.Rows.Count} ligne(s) prêtes à consulter.";
+            return string.IsNullOrWhiteSpace(resp.Label) ? label : displayLabel;
+        }
+
+        private static string FormatAnalyzeMessage(object? data, string label)
+        {
+            if (data is not ChatAnalyzeResponseDto resp) return label;
+            var displayLabel = HumanizeLabel(resp.Label);
+            if (resp.Trend != null)
+            {
+                var direction = resp.Trend.ChangePct switch
+                {
+                    > 0 => "en hausse",
+                    < 0 => "en baisse",
+                    _ => resp.Trend.Direction switch
+                    {
+                        "up" => "en hausse",
+                        "down" => "en baisse",
+                        _ => "stable"
+                    }
+                };
+                var slopeDirection = resp.Trend.Direction switch
+                {
+                    "up" => "en hausse",
+                    "down" => "en baisse",
+                    _ => "stable"
+                };
+                return $"{displayLabel} : évolution {direction} ({FormatDecimal(resp.Trend.ChangePct)}% entre début et fin), pente {slopeDirection}, {resp.Trend.Samples} point(s) analysés.";
+            }
+            if (resp.Compare != null && resp.Compare.Count > 0)
+            {
+                var top = string.Join(", ", resp.Compare.Take(3).Select(x => $"{x.Label}: {FormatDecimal(x.Value)}"));
+                return $"{displayLabel}. Top résultats : {top}.";
+            }
+            if (resp.Anomalies != null)
+                return resp.Anomalies.Count == 0
+                    ? displayLabel
+                    : $"{displayLabel} Première anomalie : {resp.Anomalies[0].Bucket} ({resp.Anomalies[0].Severity}, z={FormatDecimal(resp.Anomalies[0].ZScore)}).";
+            if (resp.Correlation != null)
+                return $"{displayLabel}. Échantillon : {resp.Correlation.Samples} point(s).";
+            if (resp.Distribution != null)
+                return $"{displayLabel}. Moyenne {FormatDecimal(resp.Distribution.Mean)}, médiane {FormatDecimal(resp.Distribution.P50)}, échantillon {resp.Distribution.Samples}.";
+            if (resp.Warnings.Count > 0)
+                return $"{displayLabel} Avertissement : {resp.Warnings[0]}";
+            return string.IsNullOrWhiteSpace(resp.Label) ? label : displayLabel;
+        }
+
+        private static string FormatPredictMessage(object? data, string label)
+        {
+            if (data is not ChatPredictResponseDto resp) return label;
+            var parts = new List<string> { string.IsNullOrWhiteSpace(resp.Label) ? label : resp.Label };
+            if (resp.Confidence.HasValue) parts.Add($"Confiance : {Math.Round(resp.Confidence.Value * 100, 0)}%.");
+            if (!string.IsNullOrWhiteSpace(resp.Explanation)) parts.Add(resp.Explanation);
+            if (resp.Warnings.Count > 0) parts.Add($"Avertissement : {resp.Warnings[0]}");
+            return string.Join(" ", parts);
+        }
+
+        private static string FormatKbMessage()
+            => "Je peux expliquer les règles BC/BL, réclamations, demandes livreur, attribution confirmatrice/livreur et synchronisation Sage X3. Pose une question métier précise pour obtenir la procédure.";
+
+        private static string FormatDecimal(decimal value)
+            => Math.Round(value, 2).ToString("0.##", CultureInfo.InvariantCulture);
+
+        private static string HumanizeLabel(string value)
+            => (value ?? string.Empty)
+                .Replace("orders", "commandes", StringComparison.OrdinalIgnoreCase)
+                .Replace("claims", "réclamations", StringComparison.OrdinalIgnoreCase)
+                .Replace("demandes", "demandes", StringComparison.OrdinalIgnoreCase)
+                .Replace("day(s)", "jour(s)", StringComparison.OrdinalIgnoreCase)
+                .Replace("week(s)", "semaine(s)", StringComparison.OrdinalIgnoreCase)
+                .Replace("month(s)", "mois", StringComparison.OrdinalIgnoreCase);
+
         private static object? JsonElementToObject(JsonElement el) => el.ValueKind switch
         {
             JsonValueKind.String => el.GetString(),
@@ -603,7 +1160,9 @@ namespace Web_Api.Services.Admin
                     ClientType = GetString(input, "clientType") ?? GetString(input, "client_type"),
                     DayOfWeek = GetString(input, "dayOfWeek") ?? GetString(input, "day_of_week"),
                     PriorReturns = GetInt(input, "priorReturns") ?? GetInt(input, "prior_returns"),
-                    HorizonDays = GetInt(input, "horizonDays") ?? GetInt(input, "horizon_days")
+                    HorizonDays = GetInt(input, "horizonDays") ?? GetInt(input, "horizon_days"),
+                    TargetEntity = GetString(input, "targetEntity") ?? GetString(input, "target_entity"),
+                    Period = GetString(input, "period")
                 }
             };
         }

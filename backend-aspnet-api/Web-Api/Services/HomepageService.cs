@@ -129,6 +129,19 @@ namespace Web_Api.Services
                 ReassuranceText = TrimOrNull(content.Hero?.ReassuranceText, 220)
             };
 
+            normalized.Carousel = new HomepageCarouselSectionDto
+            {
+                Enabled = content.Carousel?.Enabled ?? true,
+                Title = TrimOrNull(content.Carousel?.Title, 160),
+                Subtitle = TrimOrNull(content.Carousel?.Subtitle, 220),
+                Description = TrimOrNull(content.Carousel?.Description, 1200),
+                Autoplay = content.Carousel?.Autoplay ?? true,
+                AutoplayDelayMs = NormalizeAutoplayDelay(content.Carousel?.AutoplayDelayMs),
+                ShowDots = content.Carousel?.ShowDots ?? true,
+                ShowArrows = content.Carousel?.ShowArrows ?? true,
+                Slides = NormalizeCarouselSlides(content.Carousel?.Slides)
+            };
+
             normalized.FeaturedProducts = new HomepageFeaturedProductsSectionDto
             {
                 Enabled = content.FeaturedProducts?.Enabled ?? true,
@@ -486,6 +499,82 @@ namespace Web_Api.Services
             };
         }
 
+        private static List<HomepageCarouselSlideDto> NormalizeCarouselSlides(List<HomepageCarouselSlideDto>? slides)
+        {
+            var normalized = (slides ?? new List<HomepageCarouselSlideDto>())
+                .Select((slide, index) => NormalizeCarouselSlide(slide, index))
+                .Where(slide =>
+                    !string.IsNullOrWhiteSpace(slide.Title) ||
+                    !string.IsNullOrWhiteSpace(slide.Subtitle) ||
+                    !string.IsNullOrWhiteSpace(slide.Description) ||
+                    !string.IsNullOrWhiteSpace(slide.ImageUrl))
+                .Take(8)
+                .ToList();
+
+            if (normalized.Count == 0)
+            {
+                normalized.Add(CreateDefaultCarouselSlide());
+            }
+
+            for (var i = 0; i < normalized.Count; i++)
+            {
+                normalized[i].DisplayOrder = i + 1;
+            }
+
+            return normalized;
+        }
+
+        private static HomepageCarouselSlideDto NormalizeCarouselSlide(HomepageCarouselSlideDto? slide, int index)
+        {
+            return new HomepageCarouselSlideDto
+            {
+                BadgeText = TrimOrNull(slide?.BadgeText, 80),
+                Title = TrimOrNull(slide?.Title, 160),
+                Subtitle = TrimOrNull(slide?.Subtitle, 220),
+                Description = TrimOrNull(slide?.Description, 1200),
+                PrimaryCtaText = TrimOrNull(slide?.PrimaryCtaText, 80),
+                PrimaryCtaHref = NormalizeHref(slide?.PrimaryCtaHref),
+                SecondaryCtaText = TrimOrNull(slide?.SecondaryCtaText, 80),
+                SecondaryCtaHref = NormalizeHref(slide?.SecondaryCtaHref),
+                ImageUrl = TrimOrNull(slide?.ImageUrl, 1000),
+                MobileImageUrl = TrimOrNull(slide?.MobileImageUrl, 1000),
+                ReassuranceText = TrimOrNull(slide?.ReassuranceText, 220),
+                TextAlignment = NormalizeTextAlignment(slide?.TextAlignment),
+                ContentPosition = NormalizeContentPosition(slide?.ContentPosition),
+                OverlayOpacity = NormalizeOverlayOpacity(slide?.OverlayOpacity),
+                IsActive = slide?.IsActive ?? true,
+                DisplayOrder = index + 1,
+                StartAt = slide?.StartAt,
+                EndAt = slide?.EndAt
+            };
+        }
+
+        private static int NormalizeAutoplayDelay(int? value)
+        {
+            var delay = value ?? 5000;
+            return Math.Min(15000, Math.Max(1500, delay));
+        }
+
+        private static decimal NormalizeOverlayOpacity(decimal? value)
+        {
+            var safe = value ?? 0.28m;
+            if (safe < 0m) return 0m;
+            if (safe > 0.82m) return 0.82m;
+            return safe;
+        }
+
+        private static string NormalizeTextAlignment(string? value)
+        {
+            var normalized = (value ?? "left").Trim().ToLowerInvariant();
+            return normalized is "center" or "right" ? normalized : "left";
+        }
+
+        private static string NormalizeContentPosition(string? value)
+        {
+            var normalized = (value ?? "left").Trim().ToLowerInvariant();
+            return normalized is "center" or "right" ? normalized : "left";
+        }
+
         private static List<string> NormalizeArticleRefs(List<string>? refs)
         {
             return (refs ?? new List<string>())
@@ -530,6 +619,27 @@ namespace Web_Api.Services
             return null;
         }
 
+        private static HomepageCarouselSlideDto CreateDefaultCarouselSlide()
+        {
+            return new HomepageCarouselSlideDto
+            {
+                BadgeText = "Sélection pro",
+                Title = "Un carrousel premium piloté par l’admin",
+                Subtitle = "Produits, catalogues et dépôts mis en scène dans une vitrine plus vivante.",
+                Description = "Ajoutez vos visuels, gérez vos slides et publiez une première impression nettement plus commerciale.",
+                PrimaryCtaText = "Voir le catalogue",
+                PrimaryCtaHref = "/articles",
+                SecondaryCtaText = "Nous contacter",
+                SecondaryCtaHref = "/contact",
+                ReassuranceText = "Cloudinary ou URL directe • Brouillon séparé • Publication maîtrisée",
+                TextAlignment = "left",
+                ContentPosition = "left",
+                OverlayOpacity = 0.32m,
+                IsActive = true,
+                DisplayOrder = 1
+            };
+        }
+
         private static class HomepageContentDtoFactory
         {
             public static HomepageContentDto CreateDefault()
@@ -551,6 +661,20 @@ namespace Web_Api.Services
                         SecondaryCtaText = "Nous contacter",
                         SecondaryCtaHref = "/contact",
                         ReassuranceText = "Catalogue synchronisé • Parcours B2B/B2C • Architecture maintenable"
+                    },
+                    Carousel = new HomepageCarouselSectionDto
+                    {
+                        Enabled = true,
+                        Title = "Carrousel principal",
+                        Subtitle = "Visuels commerciaux pilotés par l’administration",
+                        Autoplay = true,
+                        AutoplayDelayMs = 5200,
+                        ShowDots = true,
+                        ShowArrows = true,
+                        Slides = new List<HomepageCarouselSlideDto>
+                        {
+                            CreateDefaultCarouselSlide()
+                        }
                     },
                     FeaturedProducts = new HomepageFeaturedProductsSectionDto
                     {

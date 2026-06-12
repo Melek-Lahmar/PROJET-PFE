@@ -14,13 +14,18 @@ import {
 } from "../api/homepageApi";
 import {
   cloneHomepageDocument,
+  createSectionByType,
   createLocalHomepageView,
   sortHomepageSections,
   type HomepageDocument,
+  type HomepageHeroPayload,
+  type HomepageSection,
   type HomepageStoresPayload,
   type HomepageStoreItem,
   createLocalId,
 } from "../types/homepage";
+import { HomepageHeroCarouselEditor } from "../components/admin/HomepageHeroCarouselEditor";
+import { HomepagePreviewPanel } from "../components/admin/HomepagePreviewPanel";
 import { HomepageTemplatePreviewModal } from "../components/admin/HomepageTemplatePreviewModal";
 import { HomepageTemplateApplyConfirmModal } from "../components/admin/HomepageTemplateApplyConfirmModal";
 import {
@@ -116,6 +121,62 @@ function buildLocalPreview(
   });
 
   return view;
+}
+
+function seedCarouselFromHero(heroSection?: HomepageSection | null): HomepageSection {
+  const carouselSection = createSectionByType("carousel", 1);
+  const carouselPayload = carouselSection.payload as {
+    title?: string | null;
+    subtitle?: string | null;
+    slides: Array<Record<string, unknown>>;
+  };
+  const heroPayload = heroSection?.payload as HomepageHeroPayload | undefined;
+
+  if (!heroPayload || carouselPayload.slides.length === 0) {
+    return carouselSection;
+  }
+
+  const firstSlide = carouselPayload.slides[0];
+  carouselPayload.title = heroPayload.title ?? carouselPayload.title;
+  carouselPayload.subtitle = heroPayload.subtitle ?? carouselPayload.subtitle;
+  carouselPayload.slides[0] = {
+    ...firstSlide,
+    badgeText: heroPayload.badgeText ?? firstSlide.badgeText,
+    title: heroPayload.title ?? firstSlide.title,
+    subtitle: heroPayload.subtitle ?? firstSlide.subtitle,
+    description: heroPayload.description ?? firstSlide.description,
+    primaryCta: heroPayload.primaryCta ?? firstSlide.primaryCta,
+    secondaryCta: heroPayload.secondaryCta ?? firstSlide.secondaryCta,
+    image: heroPayload.image ?? firstSlide.image,
+    mobileImage: heroPayload.mobileImage ?? firstSlide.mobileImage,
+    textAlignment: heroPayload.textAlignment ?? firstSlide.textAlignment,
+    contentPosition: heroPayload.contentPosition ?? firstSlide.contentPosition,
+    overlayOpacity: heroPayload.overlayOpacity ?? firstSlide.overlayOpacity,
+    reassuranceText: heroPayload.reassuranceText ?? firstSlide.reassuranceText,
+  };
+
+  return carouselSection;
+}
+
+function ensureCarouselSection(document: HomepageDocument): HomepageDocument {
+  const sortedSections = sortHomepageSections(document.sections ?? []);
+  const carouselIndex = sortedSections.findIndex((section) => section.type === "carousel");
+
+  if (carouselIndex >= 0) {
+    return { ...document, sections: sortedSections };
+  }
+
+  const heroSection = sortedSections.find((section) => section.type === "hero") ?? null;
+  const carouselSection = seedCarouselFromHero(heroSection);
+  const heroIndex = sortedSections.findIndex((section) => section.type === "hero");
+  const insertAt = heroIndex >= 0 ? heroIndex : 0;
+  const nextSections = [...sortedSections];
+  nextSections.splice(insertAt, 0, carouselSection);
+
+  return {
+    ...document,
+    sections: sortHomepageSections(nextSections),
+  };
 }
 
 function TemplateMiniPreview({ theme }: { theme: ReturnType<typeof getTheme> }) {
@@ -269,7 +330,7 @@ export function AdminHomepagePage() {
 
   useEffect(() => {
     if (adminQuery.data?.draft) {
-      setDraft(cloneHomepageDocument(adminQuery.data.draft));
+      setDraft(ensureCarouselSection(cloneHomepageDocument(adminQuery.data.draft)));
     }
   }, [adminQuery.data?.draft, adminQuery.data?.updatedAt]);
 
@@ -327,8 +388,33 @@ export function AdminHomepagePage() {
     catch { return null; }
   }, [templatePreviewDocument, availableArticles, availableCatalogues, availableDepots]);
 
+  const previewView = useMemo(() => {
+    try {
+      return buildLocalPreview(ensureCarouselSection(draft), availableArticles, availableCatalogues, availableDepots);
+    } catch {
+      return null;
+    }
+  }, [draft, availableArticles, availableCatalogues, availableDepots]);
+
+  const carouselSection = useMemo(
+    () => ensureCarouselSection(draft).sections.find((section) => section.type === "carousel") ?? null,
+    [draft],
+  );
+
+  const handleCarouselChange = (nextSection: HomepageSection) => {
+    setDraft((current) => {
+      const safeDraft = ensureCarouselSection(current);
+      return {
+        ...safeDraft,
+        sections: sortHomepageSections(
+          safeDraft.sections.map((section) => section.id === nextSection.id ? nextSection : section),
+        ),
+      };
+    });
+  };
+
   const applyTemplateToDraft = (template: HomepageTemplateDefinition) => {
-    const nextDraft = template.createDocument(templateContext);
+    const nextDraft = ensureCarouselSection(template.createDocument(templateContext));
     const sortedDraft = { ...nextDraft, sections: sortHomepageSections(nextDraft.sections) };
     setDraft(sortedDraft);
     setTheme(template.themeId);
@@ -381,7 +467,7 @@ export function AdminHomepagePage() {
             type="button"
             variant="secondary"
             isLoading={saveMutation.isPending && !pendingPublish}
-            onClick={() => saveMutation.mutate({ content: draft })}
+            onClick={() => saveMutation.mutate({ content: ensureCarouselSection(draft) })}
           >
             Enregistrer brouillon
           </Button>
@@ -391,7 +477,7 @@ export function AdminHomepagePage() {
             isLoading={publishMutation.isPending || (saveMutation.isPending && pendingPublish)}
             onClick={() => {
               setPendingPublish(true);
-              saveMutation.mutate({ content: draft });
+              saveMutation.mutate({ content: ensureCarouselSection(draft) });
             }}
             className="shadow-md"
           >
@@ -466,12 +552,47 @@ export function AdminHomepagePage() {
         </div>
       </div>
 
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hero premium</div>
+              <h2 className="mt-0.5 text-lg font-black text-card-foreground">Carrousel d'accueil administrable</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ajoutez vos visuels Cloudinary ou vos URLs, ajustez le nombre de slides, et pilotez la première impression publique depuis l'admin.
+              </p>
+            </div>
+            <div className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
+              Contrôle admin uniquement
+            </div>
+          </div>
+
+          {carouselSection ? (
+            <HomepageHeroCarouselEditor
+              section={carouselSection}
+              onChange={handleCarouselChange}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+              Le carrousel principal est en cours d'initialisation.
+            </div>
+          )}
+        </div>
+
+        <HomepagePreviewPanel
+          title="Aperçu du rendu public"
+          description="Le thème appliqué reste actif, et ce panneau vous montre la homepage telle qu'elle sera publiée avec le carrousel."
+          view={previewView}
+          preview
+        />
+      </div>
+
       {/* Workflow guide */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
           { step: "1", title: "Choisissez un modèle", desc: "Prévisualisez et appliquez le style qui correspond à votre activité." },
-          { step: "2", title: "Personnalisez", desc: "Modifiez le titre et le sous-titre de votre page d'accueil." },
-          { step: "3", title: "Publiez", desc: "Cliquez sur « Publier en ligne » pour rendre la page visible aux visiteurs." },
+          { step: "2", title: "Pilotez le carrousel", desc: "Définissez le nombre de slides, les visuels et les CTA sans casser le thème actif." },
+          { step: "3", title: "Publiez", desc: "Enregistrez le brouillon puis publiez la version visible sur la page publique." },
         ].map(({ step, title, desc }) => (
           <div key={step} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-black text-primary">

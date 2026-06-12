@@ -20,10 +20,12 @@ using Web_Api.Model;
 namespace Web_Api.Services.Admin.Prediction
 {
     /// <summary>
-    /// Couche C — Service de prédiction ML.NET. Trois tâches :
+    /// Couche C — Service de prédiction ML.NET. Cinq tâches :
     ///   - return_risk           : probabilité qu'une commande soit retournée
     ///   - delivery_first_attempt : probabilité qu'une livraison réussisse au 1er essai
     ///   - volume_forecast        : prévision de volume sur N jours (SSA time series)
+    ///   - revenue_forecast       : prévision du chiffre d'affaires sur N jours
+    ///   - claims_forecast        : prévision du volume de réclamations sur N jours
     ///
     /// Les modèles sont entraînés une fois au premier appel (lazy) et mis en cache
     /// en mémoire. Si les données réelles sont insuffisantes (commandes < 50, ou
@@ -76,6 +78,8 @@ namespace Web_Api.Services.Admin.Prediction
                 "return_risk" => await PredictReturnRiskAsync(req, ct),
                 "delivery_first_attempt" => await PredictDeliveryFirstAsync(req, ct),
                 "volume_forecast" => await PredictVolumeForecastAsync(req, ct),
+                "revenue_forecast" => await PredictRevenueForecastAsync(req, ct),
+                "claims_forecast" => await PredictClaimsForecastAsync(req, ct),
                 _ => Unsupported($"Tâche inconnue : {task}")
             };
         }
@@ -390,17 +394,22 @@ namespace Web_Api.Services.Admin.Prediction
         private async Task<ChatPredictResponseDto> PredictVolumeForecastAsync(
             ChatPredictRequestDto req, CancellationToken ct)
         {
-            var horizon = req.Input.HorizonDays.GetValueOrDefault(7);
-            if (horizon <= 0 || horizon > 30) horizon = 7;
+            var targetEntity = NormalizeVolumeTarget(req.Input.TargetEntity);
+            var targetLabel = targetEntity == "bl" ? "BL" : "commandes";
+            var period = NormalizeForecastPeriod(req.Input.Period);
+            var requestedHorizon = ResolveVolumeHorizon(req.Input.HorizonDays, period);
+            var modelHorizon = period == "next_year" || requestedHorizon > 90
+                ? 30
+                : Math.Min(requestedHorizon, 90);
 
-            var (series, trainedFrom, trueDates) = await BuildVolumeSeriesAsync(ct);
+            var (series, trainedFrom, trueDates) = await BuildVolumeSeriesAsync(targetEntity, ct);
 
             if (series.Count < 14)
             {
                 return new ChatPredictResponseDto
                 {
                     Task = "volume_forecast",
-                    Label = "Données insuffisantes pour prévoir un volume fiable.",
+                    Label = $"Données insuffisantes pour prévoir le volume de {targetLabel}.",
                     Warnings = new List<string>
                     {
                         $"Minimum 14 jours requis (actuel : {series.Count})."
@@ -421,7 +430,7 @@ namespace Web_Api.Services.Admin.Prediction
                 windowSize: 7,
                 seriesLength: Math.Min(series.Count, 90),
                 trainSize: series.Count,
-                horizon: horizon,
+                horizon: modelHorizon,
                 confidenceLevel: 0.95f,
                 confidenceLowerBoundColumn: nameof(VolumeForecast.LowerBound),
                 confidenceUpperBoundColumn: nameof(VolumeForecast.UpperBound));
@@ -443,15 +452,20 @@ namespace Web_Api.Services.Admin.Prediction
                 });
             }
 
+            if (period == "next_year" || requestedHorizon > 90)
+            {
+                return BuildAnnualVolumeForecast(points, series, trainedFrom, targetLabel);
+            }
+
             var totalForecast = forecast.ForecastedOrders.Sum();
             return new ChatPredictResponseDto
             {
                 Task = "volume_forecast",
-                Label = $"Volume prévu sur {horizon} jour(s) : ~{Math.Round(totalForecast, 0)} commandes",
+                Label = $"Volume prévu sur {modelHorizon} jour(s) : ~{Math.Round(totalForecast, 0)} {targetLabel}",
                 Prediction = Math.Round(totalForecast, 1),
-                Confidence = 0.95,
+                Confidence = trainedFrom == "real_sparse" ? 0.70 : 0.95,
                 Explanation = $"Modèle SSA entraîné sur {series.Count} jours d'historique " +
-                              $"(source : {trainedFrom}, fenêtre 7j, horizon {horizon}j, IC 95%).",
+                              $"(cible : {targetLabel}, source : {trainedFrom}, fenêtre 7j, horizon {modelHorizon}j, IC 95%).",
                 Forecast = points,
                 Meta = new ChatPredictMetaDto
                 {
@@ -463,32 +477,47 @@ namespace Web_Api.Services.Admin.Prediction
         }
 
         private async Task<(List<VolumeInput> series, string trainedFrom, List<DateTime> dates)>
-            BuildVolumeSeriesAsync(CancellationToken ct)
+            BuildVolumeSeriesAsync(string targetEntity, CancellationToken ct)
         {
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var orders = await db.F_DOCENTETES.AsNoTracking()
-                .Where(o => o.DO_Domaine == 0 && o.DO_Type == 0 && o.DO_Date.HasValue)
-                .Select(o => o.DO_Date!.Value.Date)
-                .ToListAsync(ct);
+            var orders = targetEntity == "bl"
+                ? await db.F_DOCENTETES.AsNoTracking()
+                    .Where(o => o.DO_Domaine == 0
+                        && o.DO_Type == 1
+                        && o.DO_Date.HasValue
+                        && o.DO_Piece != null
+                        && o.DO_Piece.StartsWith("BL"))
+                    .Select(o => o.DO_Date!.Value.Date)
+                    .ToListAsync(ct)
+                : await db.F_DOCENTETES.AsNoTracking()
+                    .Where(o => o.DO_Domaine == 0 && o.DO_Type == 0 && o.DO_Date.HasValue)
+                    .Select(o => o.DO_Date!.Value.Date)
+                    .ToListAsync(ct);
+
+            if (targetEntity == "bl" && orders.Count < MinRealVolumeDays)
+            {
+                var livraisonDates = await db.F_LIVRAISONS.AsNoTracking()
+                    .Where(l => l.DO_Piece != null && l.DO_Piece.StartsWith("BL"))
+                    .Select(l => l.LI_DateCreation.Date)
+                    .ToListAsync(ct);
+                if (livraisonDates.Count > orders.Count)
+                    orders = livraisonDates;
+            }
 
             if (orders.Count >= MinRealVolumeDays)
             {
-                var grouped = orders.GroupBy(d => d).OrderBy(g => g.Key).ToList();
-                // Fill missing days with 0 entre min et max date.
-                var min = grouped.First().Key;
-                var max = grouped.Last().Key;
-                var dict = grouped.ToDictionary(g => g.Key, g => g.Count());
-                var series = new List<VolumeInput>();
-                var dates = new List<DateTime>();
-                for (var d = min; d <= max; d = d.AddDays(1))
-                {
-                    series.Add(new VolumeInput { Orders = dict.TryGetValue(d, out var c) ? c : 0 });
-                    dates.Add(d);
-                }
-                if (series.Count >= MinRealVolumeDays)
-                    return (series, "real_data", dates);
+                var dense = BuildDenseVolumeSeries(orders, MinRealVolumeDays);
+                if (dense.series.Count >= MinRealVolumeDays)
+                    return (dense.series, "real_data", dense.dates);
+            }
+
+            if (targetEntity == "bl" && orders.Count > 0)
+            {
+                var sparse = BuildDenseVolumeSeries(orders, 30);
+                if (sparse.series.Count >= 14)
+                    return (sparse.series, "real_sparse", sparse.dates);
             }
 
             // Fallback synthétique.
@@ -496,6 +525,448 @@ namespace Web_Api.Services.Admin.Prediction
             var startDate = DateTime.UtcNow.Date.AddDays(-synth.Count);
             var fakeDates = Enumerable.Range(0, synth.Count).Select(i => startDate.AddDays(i)).ToList();
             return (synth, "synthetic", fakeDates);
+        }
+
+        private static (List<VolumeInput> series, List<DateTime> dates) BuildDenseVolumeSeries(
+            List<DateTime> sourceDates,
+            int minimumDays)
+        {
+            var grouped = sourceDates.GroupBy(d => d.Date).OrderBy(g => g.Key).ToList();
+            var min = grouped.First().Key;
+            var max = grouped.Last().Key;
+            var requiredMin = max.AddDays(-(minimumDays - 1));
+            if (min > requiredMin) min = requiredMin;
+
+            var dict = grouped.ToDictionary(g => g.Key, g => g.Count());
+            var series = new List<VolumeInput>();
+            var dates = new List<DateTime>();
+            for (var d = min; d <= max; d = d.AddDays(1))
+            {
+                series.Add(new VolumeInput { Orders = dict.TryGetValue(d, out var c) ? c : 0 });
+                dates.Add(d);
+            }
+            return (series, dates);
+        }
+
+        private static ChatPredictResponseDto BuildAnnualVolumeForecast(
+            List<ChatPredictForecastPointDto> dailyForecast,
+            List<VolumeInput> trainingSeries,
+            string trainedFrom,
+            string targetLabel)
+        {
+            var nextYear = DateTime.UtcNow.Year + 1;
+            var trainSamples = trainingSeries.Count;
+            var historicalAvg = trainingSeries.Count == 0 ? 0d : trainingSeries.Average(p => p.Orders);
+            var forecastAvg = dailyForecast.Count == 0 ? historicalAvg : dailyForecast.Average(p => p.Value);
+            var avg = trainedFrom == "real_sparse" ? historicalAvg : forecastAvg;
+            var avgLower = trainedFrom == "real_sparse"
+                ? avg * 0.70
+                : dailyForecast.Count == 0 ? avg * 0.70 : dailyForecast.Average(p => p.LowerBound);
+            var avgUpper = trainedFrom == "real_sparse"
+                ? avg * 1.30
+                : dailyForecast.Count == 0 ? avg * 1.30 : dailyForecast.Average(p => p.UpperBound);
+            var confidence = trainedFrom == "real_sparse" ? 0.60 : 0.80;
+
+            var monthly = new List<ChatPredictForecastPointDto>();
+            for (var month = 1; month <= 12; month++)
+            {
+                var days = DateTime.DaysInMonth(nextYear, month);
+                monthly.Add(new ChatPredictForecastPointDto
+                {
+                    Date = $"{nextYear}-{month:00}",
+                    Value = Math.Round(Math.Max(0, avg * days), 0),
+                    LowerBound = Math.Round(Math.Max(0, avgLower * days), 0),
+                    UpperBound = Math.Round(Math.Max(0, avgUpper * days), 0)
+                });
+            }
+
+            var total = monthly.Sum(p => p.Value);
+            return new ChatPredictResponseDto
+            {
+                Task = "volume_forecast",
+                Label = $"Nombre de {targetLabel} prévu pour {nextYear} : ~{Math.Round(total, 0)} {targetLabel}",
+                Prediction = Math.Round(total, 1),
+                Confidence = confidence,
+                Explanation = $"Projection annuelle par extrapolation du modèle SSA court terme, entraîné sur {trainSamples} jours d'historique " +
+                              $"(cible : {targetLabel}, source : {trainedFrom}, base 30j, agrégation mensuelle).",
+                Forecast = monthly,
+                Meta = new ChatPredictMetaDto
+                {
+                    ModelType = "SSA Time Series Forecasting + annual extrapolation",
+                    TrainedFrom = trainedFrom,
+                    TrainSamples = trainSamples
+                },
+                Warnings = new List<string>
+                {
+                    trainedFrom == "real_sparse"
+                        ? "Historique réel limité : estimation long terme à vérifier dès que plus de BL sont disponibles."
+                        : "Prévision long terme extrapolée : à utiliser comme estimation, pas comme certitude opérationnelle."
+                }
+            };
+        }
+
+        // ====================================================================
+        // REVENUE / CLAIMS FORECAST — SSA time series générique
+        // ====================================================================
+        private async Task<ChatPredictResponseDto> PredictRevenueForecastAsync(
+            ChatPredictRequestDto req, CancellationToken ct)
+        {
+            var measures = await LoadRevenueDailyMeasuresAsync(ct);
+            return PredictMeasureForecast(
+                req,
+                task: "revenue_forecast",
+                targetLabel: "chiffre d'affaires",
+                unit: "TND",
+                sourceMeasures: measures);
+        }
+
+        private async Task<ChatPredictResponseDto> PredictClaimsForecastAsync(
+            ChatPredictRequestDto req, CancellationToken ct)
+        {
+            var measures = await LoadClaimsDailyMeasuresAsync(ct);
+            return PredictMeasureForecast(
+                req,
+                task: "claims_forecast",
+                targetLabel: "réclamations",
+                unit: "réclamations",
+                sourceMeasures: measures);
+        }
+
+        private ChatPredictResponseDto PredictMeasureForecast(
+            ChatPredictRequestDto req,
+            string task,
+            string targetLabel,
+            string unit,
+            List<DailyMeasure> sourceMeasures)
+        {
+            var period = NormalizeForecastPeriod(req.Input.Period);
+            var requestedHorizon = ResolveVolumeHorizon(req.Input.HorizonDays, period);
+            var modelHorizon = period == "next_year" || requestedHorizon > 90
+                ? 30
+                : Math.Min(requestedHorizon, 90);
+
+            var (series, trainedFrom, trueDates) = BuildMeasureSeries(sourceMeasures, task);
+            if (series.Count < 14)
+            {
+                return new ChatPredictResponseDto
+                {
+                    Task = task,
+                    Label = $"Données insuffisantes pour prévoir {targetLabel}.",
+                    Warnings = new List<string>
+                    {
+                        $"Minimum 14 jours requis (actuel : {series.Count})."
+                    },
+                    Meta = new ChatPredictMetaDto
+                    {
+                        ModelType = "SSA Time Series",
+                        TrainedFrom = trainedFrom,
+                        TrainSamples = series.Count
+                    }
+                };
+            }
+
+            var dataView = _ml.Data.LoadFromEnumerable(series);
+            var pipeline = _ml.Forecasting.ForecastBySsa(
+                outputColumnName: nameof(VolumeForecast.ForecastedOrders),
+                inputColumnName: nameof(VolumeInput.Orders),
+                windowSize: 7,
+                seriesLength: Math.Min(series.Count, 90),
+                trainSize: series.Count,
+                horizon: modelHorizon,
+                confidenceLevel: 0.95f,
+                confidenceLowerBoundColumn: nameof(VolumeForecast.LowerBound),
+                confidenceUpperBoundColumn: nameof(VolumeForecast.UpperBound));
+
+            var model = pipeline.Fit(dataView);
+            var engine = model.CreateTimeSeriesEngine<VolumeInput, VolumeForecast>(_ml);
+            var forecast = engine.Predict();
+
+            var startDate = trueDates.Count > 0 ? trueDates.Max().AddDays(1) : DateTime.UtcNow.Date.AddDays(1);
+            var points = new List<ChatPredictForecastPointDto>();
+            for (var i = 0; i < forecast.ForecastedOrders.Length; i++)
+            {
+                points.Add(new ChatPredictForecastPointDto
+                {
+                    Date = startDate.AddDays(i).ToString("yyyy-MM-dd"),
+                    Value = Math.Round(Math.Max(0, forecast.ForecastedOrders[i]), unit == "TND" ? 3 : 1),
+                    LowerBound = Math.Round(Math.Max(0, forecast.LowerBound[i]), unit == "TND" ? 3 : 1),
+                    UpperBound = Math.Round(Math.Max(0, forecast.UpperBound[i]), unit == "TND" ? 3 : 1)
+                });
+            }
+
+            if (period == "next_year" || requestedHorizon > 90)
+            {
+                return BuildAnnualMeasureForecast(points, series, trainedFrom, task, targetLabel, unit);
+            }
+
+            var totalForecast = forecast.ForecastedOrders.Sum();
+            var warnings = BuildForecastWarnings(trainedFrom, targetLabel);
+            return new ChatPredictResponseDto
+            {
+                Task = task,
+                Label = $"{HumanizeForecastTarget(targetLabel)} {ForecastAgreement(targetLabel)} sur {modelHorizon} jour(s) : ~{FormatForecastValue(totalForecast, unit)}",
+                Prediction = Math.Round(totalForecast, unit == "TND" ? 3 : 1),
+                Confidence = trainedFrom == "real_sparse" ? 0.70 : 0.95,
+                Explanation = $"Modèle SSA entraîné sur {series.Count} jours d'historique " +
+                              $"(cible : {targetLabel}, source : {trainedFrom}, fenêtre 7j, horizon {modelHorizon}j, IC 95%).",
+                Forecast = points,
+                Meta = new ChatPredictMetaDto
+                {
+                    ModelType = "SSA Time Series Forecasting",
+                    TrainedFrom = trainedFrom,
+                    TrainSamples = series.Count
+                },
+                Warnings = warnings
+            };
+        }
+
+        private async Task<List<DailyMeasure>> LoadRevenueDailyMeasuresAsync(CancellationToken ct)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var rows = await db.F_DOCENTETES.AsNoTracking()
+                .Where(o => o.DO_Domaine == 0 && o.DO_Type == F_DOCENTETE.DOC_TYPE_BC && o.DO_Date.HasValue)
+                .Select(o => new
+                {
+                    o.DO_Date,
+                    o.DO_TotalTTC,
+                    o.DO_NetAPayer
+                })
+                .ToListAsync(ct);
+
+            return rows
+                .Select(o => new
+                {
+                    Date = o.DO_Date!.Value.Date,
+                    Value = (float)(o.DO_TotalTTC ?? o.DO_NetAPayer ?? 0m)
+                })
+                .Where(o => o.Value >= 0)
+                .GroupBy(o => o.Date)
+                .Select(g => new DailyMeasure { Date = g.Key, Value = g.Sum(x => x.Value) })
+                .OrderBy(x => x.Date)
+                .ToList();
+        }
+
+        private async Task<List<DailyMeasure>> LoadClaimsDailyMeasuresAsync(CancellationToken ct)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var dates = await db.F_RECLAMATIONS.AsNoTracking()
+                .Where(r => r.TypeCas == "RECLAMATION")
+                .Select(r => r.CreatedAt.Date)
+                .ToListAsync(ct);
+
+            return dates
+                .GroupBy(d => d.Date)
+                .Select(g => new DailyMeasure { Date = g.Key, Value = g.Count() })
+                .OrderBy(x => x.Date)
+                .ToList();
+        }
+
+        private static (List<VolumeInput> series, string trainedFrom, List<DateTime> dates)
+            BuildMeasureSeries(List<DailyMeasure> sourceMeasures, string task)
+        {
+            if (sourceMeasures.Count >= MinRealVolumeDays)
+            {
+                var dense = BuildDenseMeasureSeries(sourceMeasures, MinRealVolumeDays);
+                if (dense.series.Count >= MinRealVolumeDays)
+                    return (dense.series, "real_data", dense.dates);
+            }
+
+            if (sourceMeasures.Count > 0)
+            {
+                var sparse = BuildDenseMeasureSeries(sourceMeasures, 30);
+                if (sparse.series.Count >= 14)
+                    return (sparse.series, "real_sparse", sparse.dates);
+            }
+
+            var synth = task == "revenue_forecast"
+                ? GenerateSyntheticMeasureSeries(days: 120, baseLevel: 1800, seed: 45, weekdayAmplitude: 420)
+                : GenerateSyntheticMeasureSeries(days: 120, baseLevel: 3.5, seed: 46, weekdayAmplitude: 1.2);
+            var startDate = DateTime.UtcNow.Date.AddDays(-synth.Count);
+            var fakeDates = Enumerable.Range(0, synth.Count).Select(i => startDate.AddDays(i)).ToList();
+            return (synth, "synthetic", fakeDates);
+        }
+
+        private static (List<VolumeInput> series, List<DateTime> dates) BuildDenseMeasureSeries(
+            List<DailyMeasure> sourceMeasures,
+            int minimumDays)
+        {
+            var grouped = sourceMeasures
+                .GroupBy(x => x.Date.Date)
+                .Select(g => new DailyMeasure { Date = g.Key, Value = g.Sum(x => x.Value) })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            var min = grouped.First().Date;
+            var max = grouped.Last().Date;
+            var requiredMin = max.AddDays(-(minimumDays - 1));
+            if (min > requiredMin) min = requiredMin;
+
+            var dict = grouped.ToDictionary(g => g.Date, g => g.Value);
+            var series = new List<VolumeInput>();
+            var dates = new List<DateTime>();
+            for (var d = min; d <= max; d = d.AddDays(1))
+            {
+                series.Add(new VolumeInput { Orders = dict.TryGetValue(d, out var value) ? value : 0 });
+                dates.Add(d);
+            }
+            return (series, dates);
+        }
+
+        private static ChatPredictResponseDto BuildAnnualMeasureForecast(
+            List<ChatPredictForecastPointDto> dailyForecast,
+            List<VolumeInput> trainingSeries,
+            string trainedFrom,
+            string task,
+            string targetLabel,
+            string unit)
+        {
+            var nextYear = DateTime.UtcNow.Year + 1;
+            var trainSamples = trainingSeries.Count;
+            var historicalAvg = trainingSeries.Count == 0 ? 0d : trainingSeries.Average(p => p.Orders);
+            var forecastAvg = dailyForecast.Count == 0 ? historicalAvg : dailyForecast.Average(p => p.Value);
+            var avg = trainedFrom == "real_sparse" ? historicalAvg : forecastAvg;
+            var avgLower = trainedFrom == "real_sparse"
+                ? avg * 0.70
+                : dailyForecast.Count == 0 ? avg * 0.70 : dailyForecast.Average(p => p.LowerBound);
+            var avgUpper = trainedFrom == "real_sparse"
+                ? avg * 1.30
+                : dailyForecast.Count == 0 ? avg * 1.30 : dailyForecast.Average(p => p.UpperBound);
+            var confidence = trainedFrom == "real_sparse" ? 0.60 : 0.80;
+
+            var monthly = new List<ChatPredictForecastPointDto>();
+            for (var month = 1; month <= 12; month++)
+            {
+                var days = DateTime.DaysInMonth(nextYear, month);
+                monthly.Add(new ChatPredictForecastPointDto
+                {
+                    Date = $"{nextYear}-{month:00}",
+                    Value = Math.Round(Math.Max(0, avg * days), unit == "TND" ? 3 : 0),
+                    LowerBound = Math.Round(Math.Max(0, avgLower * days), unit == "TND" ? 3 : 0),
+                    UpperBound = Math.Round(Math.Max(0, avgUpper * days), unit == "TND" ? 3 : 0)
+                });
+            }
+
+            var total = monthly.Sum(p => p.Value);
+            return new ChatPredictResponseDto
+            {
+                Task = task,
+                Label = $"{HumanizeForecastTarget(targetLabel)} {ForecastAgreement(targetLabel)} pour {nextYear} : ~{FormatForecastValue(total, unit)}",
+                Prediction = Math.Round(total, unit == "TND" ? 3 : 1),
+                Confidence = confidence,
+                Explanation = $"Projection annuelle par extrapolation du modèle SSA court terme, entraîné sur {trainSamples} jours d'historique " +
+                              $"(cible : {targetLabel}, source : {trainedFrom}, base 30j, agrégation mensuelle).",
+                Forecast = monthly,
+                Meta = new ChatPredictMetaDto
+                {
+                    ModelType = "SSA Time Series Forecasting + annual extrapolation",
+                    TrainedFrom = trainedFrom,
+                    TrainSamples = trainSamples
+                },
+                Warnings = BuildForecastWarnings(trainedFrom, targetLabel, annual: true)
+            };
+        }
+
+        private static List<VolumeInput> GenerateSyntheticMeasureSeries(
+            int days,
+            double baseLevel,
+            int seed,
+            double weekdayAmplitude)
+        {
+            var rng = new Random(seed);
+            var result = new List<VolumeInput>(days);
+            for (var i = 0; i < days; i++)
+            {
+                var trend = i * baseLevel * 0.002;
+                var dow = i % 7;
+                var seasonal = dow switch
+                {
+                    0 => -weekdayAmplitude,
+                    1 => weekdayAmplitude * 0.5,
+                    2 => weekdayAmplitude,
+                    3 => weekdayAmplitude * 0.8,
+                    4 => weekdayAmplitude * 0.6,
+                    5 => weekdayAmplitude * 0.2,
+                    _ => -weekdayAmplitude * 0.4
+                };
+                var noise = (rng.NextDouble() - 0.5) * weekdayAmplitude;
+                var value = Math.Max(0, baseLevel + trend + seasonal + noise);
+                result.Add(new VolumeInput { Orders = (float)Math.Round(value, 3) });
+            }
+            return result;
+        }
+
+        private static List<string> BuildForecastWarnings(string trainedFrom, string targetLabel, bool annual = false)
+        {
+            if (trainedFrom == "real_sparse")
+            {
+                return new List<string>
+                {
+                    $"Historique réel limité : estimation de {targetLabel} à vérifier dès que plus de données sont disponibles."
+                };
+            }
+
+            if (annual)
+            {
+                return new List<string>
+                {
+                    "Prévision long terme extrapolée : à utiliser comme estimation, pas comme certitude opérationnelle."
+                };
+            }
+
+            return new List<string>();
+        }
+
+        private static string HumanizeForecastTarget(string targetLabel)
+            => targetLabel == "réclamations" ? "Réclamations" : "Chiffre d'affaires";
+
+        private static string ForecastAgreement(string targetLabel)
+            => targetLabel == "réclamations" ? "prévues" : "prévu";
+
+        private static string FormatForecastValue(double value, string unit)
+        {
+            var decimals = unit == "TND" ? 3 : 0;
+            var rounded = Math.Round(Math.Max(0, value), decimals);
+            return $"{rounded.ToString(decimals == 0 ? "0" : "0.###", CultureInfo.InvariantCulture)} {unit}";
+        }
+
+        private sealed class DailyMeasure
+        {
+            public DateTime Date { get; set; }
+            public float Value { get; set; }
+        }
+
+        private static string NormalizeVolumeTarget(string? raw)
+        {
+            var value = (raw ?? "orders").Trim().ToLowerInvariant();
+            return value is "bl" or "delivery_note" or "delivery_notes" or "bon_livraison" or "bons_livraison"
+                ? "bl"
+                : "orders";
+        }
+
+        private static string NormalizeForecastPeriod(string? raw)
+        {
+            var value = (raw ?? string.Empty).Trim().ToLowerInvariant();
+            return value switch
+            {
+                "next_year" or "year" or "12m" => "next_year",
+                "next_month" or "month" or "30d" => "next_month",
+                "next_week" or "week" or "7d" => "next_week",
+                _ => string.Empty
+            };
+        }
+
+        private static int ResolveVolumeHorizon(int? requested, string period)
+        {
+            if (period == "next_year") return 365;
+            if (period == "next_month") return 30;
+            if (period == "next_week") return 7;
+            var horizon = requested.GetValueOrDefault(7);
+            if (horizon <= 0) return 7;
+            return Math.Min(horizon, 365);
         }
 
         // ====================================================================

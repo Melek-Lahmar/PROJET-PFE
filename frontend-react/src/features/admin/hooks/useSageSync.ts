@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
   syncArticles,
@@ -8,27 +8,29 @@ import {
   syncAll
 } from "../api/syncApi"
 
-export const useSyncArticles = () =>
-  useMutation({
-    mutationFn: syncArticles
+function useSyncMutation<T>(mutationFn: () => Promise<T>) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["pro-dashboard"] })
+      void queryClient.invalidateQueries({ queryKey: ["sync-all-status"] })
+    }
   })
+}
+
+export const useSyncArticles = () =>
+  useSyncMutation(syncArticles)
 
 export const useSyncCatalogues = () =>
-  useMutation({
-    mutationFn: syncCatalogues
-  })
+  useSyncMutation(syncCatalogues)
 
 export const useSyncDepots = () =>
-  useMutation({
-    mutationFn: syncDepots
-  })
+  useSyncMutation(syncDepots)
 
 export const useSyncStocks = () =>
-  useMutation({
-    mutationFn: syncStocks
-  })
+  useSyncMutation(syncStocks)
 
 export const useSyncAll = () =>
-  useMutation({
-    mutationFn: syncAll
-  })
+  useSyncMutation(syncAll)

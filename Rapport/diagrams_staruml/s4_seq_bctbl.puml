@@ -1,0 +1,65 @@
+@startuml s4_seq_bctbl
+title Sequence - Transformation BC vers BL (Sprint 4)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Confirmatrice" as CF
+participant "ConfirmateurOrders\nDetailsPage (React)" as UI
+participant "Confirmateur\nController" as CT
+participant "Assignment\nService" as AS
+participant "SageX3Client" as SG
+database "SQL Server\n(F_DOCENTETE,\nF_DOCLIGNE,\nF_LIVRAISON)" as DB
+
+CF -> UI : Clic "Transformer en BL"
+UI -> CT : POST /api/confirmateur/commandes/{piece}/transform-to-bl
+CT -> DB : SELECT F_DOCENTETE\nWHERE DO_Piece=piece AND DO_Type=0
+
+alt BC introuvable
+  DB --> CT : 0 ligne
+  CT --> UI : 404 Not Found
+else BL deja existant
+  DB --> CT : alreadyExists=true
+  CT --> UI : 200 {alreadyExists:true}
+else Creation BL
+  DB --> CT : BC trouve
+  CT -> DB : BEGIN TRANSACTION
+  CT -> DB : INSERT F_DOCENTETE\n(DO_Type=1, DO_Piece="BL"+yyMMddHHmm+n)
+  CT -> DB : INSERT F_DOCLIGNE (lignes)
+  CT -> DB : INSERT F_LIVRAISON\n(LI_Statut=0)
+  CT -> DB : UPDATE BC\nDO_Valide=CONFIRME
+  CT -> AS : ChoisirLivreur(zone, codeArticle)
+  AS -> DB : SELECT livreurs zone\n+ filtre Haversine
+  AS -> AS : Tri par charge croissante
+  AS --> CT : livreurId
+  CT -> DB : UPDATE F_LIVRAISON SET livreurId
+  CT -> DB : COMMIT
+  CT ->> UI : SignalR\n"NouvelleLivraisonAffectee"\n-> user-{livreurId}
+  CT -> SG : POST Sage X3 (BL)
+  note right of SG
+    Envoi NON bloquant :
+    BL cree localement
+    meme si Sage indisponible
+  end note
+  SG --> CT : sageSuccess, sageHttpStatus
+  CT --> UI : 200 {piece BL, sageSuccess}
+end
+
+UI --> CF : Affiche numero BL
+
+@enduml

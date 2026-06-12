@@ -467,12 +467,18 @@ namespace Web_Api.Services.Dashboard
                 clientsWithoutAddress > 0 ? "CLIENT_ADDRESS_INCOMPLETE" : "CLIENT_ADDRESS_OK"
             });
 
+            response.PrimaryTrend = BuildSyncVolumeTrend(scope, filter);
+            response.SecondaryTrend = BuildSyncQualityTrend(scope, filter);
+            response.TopEntities = BuildSyncTopEntities(scope, filter.Top, productsWithoutImage, productsWithoutCatalogue, negativeStocks, clientsWithoutAddress);
+            response.SecondaryTopEntities = BuildSyncQualityItems(productsWithoutImage, productsWithoutCatalogue, negativeStocks, clientsWithoutAddress);
             response.Alerts = BuildSyncAlerts(productsWithoutImage, productsWithoutCatalogue, negativeStocks, clientsWithoutAddress);
             response.Insights = new List<ProDashboardInsightDto>
             {
-                Insight("sync-quality", "Qualité des données", "Les anomalies sont calculées à partir des champs présents dans la base locale.", "Data quality", "Traiter les anomalies avant reporting final.", "info")
+                Insight("sync-quality", "Qualité des données", "Les anomalies sont recalculées à chaque rafraîchissement à partir de la base locale.", "Data quality", "Traiter les anomalies avant reporting final.", "info"),
+                Insight("sync-realtime", "Lecture temps réel", "Les courbes de synchronisation sont générées à partir des dernières écritures locales Sage X3.", "Synchronisation", "Relancer une sync puis suivre les variations sans changer de page.", "success")
             };
-            response.Table = BuildTopEntitiesTable(GetCriticalStock(scope, filter.Top), "Anomalies stock");
+            response.Table = BuildTopEntitiesTable(response.TopEntities, "Anomalies stock");
+            response.DataCompletenessNote = "Les tendances sont recalculées en temps réel depuis les documents, lignes, clients et images présents en base locale.";
 
             return response;
         }
@@ -769,6 +775,51 @@ namespace Web_Api.Services.Dashboard
                 .ToList();
         }
 
+        private static List<ProChartPointDto> BuildSyncVolumeTrend(DashboardScope scope, DashboardFilter filter)
+        {
+            return BuildBuckets(filter)
+                .Select(bucket =>
+                {
+                    var documents = scope.Documents.Count(x => GetDocumentDate(x) >= bucket.From && GetDocumentDate(x) < bucket.To);
+                    var lines = scope.Lines.Count(x => GetLineDate(x) >= bucket.From && GetLineDate(x) < bucket.To);
+                    var deliveries = scope.Livraisons.Count(x => x.LI_DateCreation >= bucket.From && x.LI_DateCreation < bucket.To);
+                    var claims = scope.Reclamations.Count(x => x.CreatedAt >= bucket.From && x.CreatedAt < bucket.To);
+
+                    return new ProChartPointDto
+                    {
+                        Key = bucket.Key,
+                        Label = bucket.Label,
+                        Value = documents + lines,
+                        SecondaryValue = deliveries + claims
+                    };
+                })
+                .ToList();
+        }
+
+        private static List<ProChartPointDto> BuildSyncQualityTrend(DashboardScope scope, DashboardFilter filter)
+        {
+            return BuildBuckets(filter)
+                .Select(bucket =>
+                {
+                    var clientSyncs = scope.Clients.Count(x =>
+                    {
+                        var syncDate = x.DateDerniereSynchronisation ?? x.DateModification ?? x.DateCreation;
+                        return syncDate.HasValue && syncDate.Value >= bucket.From && syncDate.Value < bucket.To;
+                    });
+
+                    var imageSyncs = scope.Images.Count(x => x.CreatedAt.HasValue && x.CreatedAt.Value >= bucket.From && x.CreatedAt.Value < bucket.To);
+
+                    return new ProChartPointDto
+                    {
+                        Key = bucket.Key,
+                        Label = bucket.Label,
+                        Value = clientSyncs,
+                        SecondaryValue = imageSyncs
+                    };
+                })
+                .ToList();
+        }
+
         private static List<DateBucket> BuildBuckets(DashboardFilter filter)
         {
             var buckets = new List<DateBucket>();
@@ -974,6 +1025,51 @@ namespace Web_Api.Services.Dashboard
                     Severity = x.Available < 0 ? "critical" : "warning"
                 })
                 .ToList();
+        }
+
+        private static List<ProTopEntityItemDto> BuildSyncTopEntities(
+            DashboardScope scope,
+            int top,
+            int productsWithoutImage,
+            int productsWithoutCatalogue,
+            int negativeStocks,
+            int clientsWithoutAddress)
+        {
+            var criticalStock = GetCriticalStock(scope, top);
+            return criticalStock.Count > 0
+                ? criticalStock
+                : BuildSyncQualityItems(productsWithoutImage, productsWithoutCatalogue, negativeStocks, clientsWithoutAddress);
+        }
+
+        private static List<ProTopEntityItemDto> BuildSyncQualityItems(
+            int productsWithoutImage,
+            int productsWithoutCatalogue,
+            int negativeStocks,
+            int clientsWithoutAddress)
+        {
+            return new List<ProTopEntityItemDto>
+            {
+                QualityItem("products-without-image", "Produits sans image", productsWithoutImage, "Catalogue", "warning"),
+                QualityItem("products-without-catalogue", "Produits sans catalogue", productsWithoutCatalogue, "Catalogue", "warning"),
+                QualityItem("negative-stocks", "Stocks négatifs", negativeStocks, "Stock", "critical"),
+                QualityItem("clients-without-address", "Clients sans adresse", clientsWithoutAddress, "Clients", "warning")
+            }
+            .OrderByDescending(x => x.Value)
+            .ToList();
+        }
+
+        private static ProTopEntityItemDto QualityItem(string key, string label, int value, string module, string severity)
+        {
+            return new ProTopEntityItemDto
+            {
+                Key = key,
+                Label = label,
+                SecondaryLabel = module,
+                Value = value,
+                FormattedValue = value.ToString(CultureInfo.InvariantCulture),
+                Meta = value > 0 ? "Action requise" : "OK",
+                Severity = value > 0 ? severity : "success"
+            };
         }
 
         private static List<ProTopEntityItemDto> BuildTopStatusItems(IEnumerable<string?> values, int top)

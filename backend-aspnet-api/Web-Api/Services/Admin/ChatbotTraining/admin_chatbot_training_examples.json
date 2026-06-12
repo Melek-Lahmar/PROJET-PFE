@@ -1,0 +1,158 @@
+{
+  "version": "2026-06-07",
+  "language": "fr-TN",
+  "purpose": "Exemples metier pour entrainer ou valider le chatbot admin PFE.",
+  "examples": [
+    {
+      "message": "combien de commandes aujourd hui",
+      "intent": "query",
+      "task": "orders_count",
+      "expected": { "entity": "orders", "metric": "count", "period": "today" }
+    },
+    {
+      "message": "nb bc cette semaine",
+      "intent": "query",
+      "task": "orders_count",
+      "expected": { "entity": "orders", "metric": "count", "period": "7d" }
+    },
+    {
+      "message": "nombre de bl ce mois",
+      "intent": "query",
+      "task": "delivery_notes_count",
+      "expected": { "entity": "bl", "metric": "count", "period": "30d" }
+    },
+    {
+      "message": "liste les derniers bl",
+      "intent": "query",
+      "task": "delivery_notes_list",
+      "expected": { "entity": "bl", "metric": "list", "period": "30d" }
+    },
+    {
+      "message": "top produits vendus",
+      "intent": "query",
+      "task": "products_top",
+      "expected": { "entity": "products", "metric": "top", "limit": 10 }
+    },
+    {
+      "message": "chiffre affaires du mois",
+      "intent": "query",
+      "task": "revenue_sum",
+      "expected": { "entity": "orders", "metric": "sum", "period": "30d" }
+    },
+    {
+      "message": "analyse tendance des commandes sur 30 jours",
+      "intent": "analyze",
+      "task": "orders_trend",
+      "expected": { "entity": "orders", "operation": "trend", "period": "30d", "granularity": "day" }
+    },
+    {
+      "message": "courbe des ventes par mois",
+      "intent": "analyze",
+      "task": "revenue_trend",
+      "expected": { "entity": "orders", "operation": "trend", "metric": "sum_amount", "granularity": "month" }
+    },
+    {
+      "message": "compare les commandes par gouvernorat",
+      "intent": "analyze",
+      "task": "orders_compare",
+      "expected": { "entity": "orders", "operation": "compare", "groupBy": "governorate" }
+    },
+    {
+      "message": "detecte anomalies commandes cette semaine",
+      "intent": "analyze",
+      "task": "orders_anomaly",
+      "expected": { "entity": "orders", "operation": "anomaly", "period": "7d" }
+    },
+    {
+      "message": "distribution montants commandes mois dernier",
+      "intent": "analyze",
+      "task": "amount_distribution",
+      "expected": { "entity": "orders", "operation": "distribution", "metric": "amount" }
+    },
+    {
+      "message": "correlation montant et retour",
+      "intent": "analyze",
+      "task": "amount_return_correlation",
+      "expected": { "entity": "orders", "operation": "correlation" }
+    },
+    {
+      "message": "predire le risque de retour pour sfax montant 100 dt client b2c",
+      "intent": "predict",
+      "task": "return_risk",
+      "expected": { "task": "return_risk", "governorate": "Sfax", "amount": 100, "clientType": "B2C" }
+    },
+    {
+      "message": "probabilite livraison premier essai a tunis",
+      "intent": "predict",
+      "task": "delivery_first_attempt",
+      "expected": { "task": "delivery_first_attempt", "governorate": "Tunis" }
+    },
+    {
+      "message": "prevoir volume commandes sur 7 jours",
+      "intent": "predict",
+      "task": "volume_forecast",
+      "expected": { "task": "volume_forecast", "targetEntity": "orders", "period": "next_week" }
+    },
+    {
+      "message": "je veux le nb de bl pour l annee prochaine",
+      "intent": "predict",
+      "task": "volume_forecast",
+      "expected": { "task": "volume_forecast", "targetEntity": "bl", "period": "next_year" }
+    },
+    {
+      "message": "prevoir chiffre affaires mois prochain",
+      "intent": "predict",
+      "task": "revenue_forecast",
+      "expected": { "task": "revenue_forecast", "period": "next_month" }
+    },
+    {
+      "message": "estimer le ca de 2027",
+      "intent": "predict",
+      "task": "revenue_forecast",
+      "expected": { "task": "revenue_forecast", "period": "next_year" }
+    },
+    {
+      "message": "prevoir reclamations mois prochain",
+      "intent": "predict",
+      "task": "claims_forecast",
+      "expected": { "task": "claims_forecast", "period": "next_month" }
+    },
+    {
+      "message": "combien de tickets reclamation l annee prochaine",
+      "intent": "predict",
+      "task": "claims_forecast",
+      "expected": { "task": "claims_forecast", "period": "next_year" }
+    },
+    {
+      "message": "prediction",
+      "intent": "clarification",
+      "task": "predict_clarification",
+      "expected": { "action": "chitchat", "needsDetails": true }
+    },
+    {
+      "message": "analyse",
+      "intent": "clarification",
+      "task": "analysis_clarification",
+      "expected": { "action": "chitchat", "needsDetails": true }
+    },
+    {
+      "message": "c est quoi difference entre bc et bl",
+      "intent": "kb",
+      "task": "bc_bl_explanation",
+      "expected": { "topic": "BC_BL" }
+    },
+    {
+      "message": "comment fonctionne la sync sage x3",
+      "intent": "kb",
+      "task": "sage_x3_sync",
+      "expected": { "topic": "SAGE_X3_SYNC" }
+    }
+  ],
+  "recommended_methods": [
+    "Ajouter les nouveaux messages utilisateurs dans ce fichier avec intent, task et expected.",
+    "Rejouer les exemples via /api/admin/chatbot/sandbox apres chaque modification du routeur.",
+    "Comparer intent/action attendu avec action retournee par l API.",
+    "Ajouter les erreurs reelles du jury comme nouveaux exemples au lieu de modifier les prompts a l aveugle.",
+    "Garder des exemples courts, longs, avec fautes, et avec synonymes tunisiens/francais."
+  ]
+}

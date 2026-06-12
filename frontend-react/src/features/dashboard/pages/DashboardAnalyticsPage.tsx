@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useSyncAll, useSyncArticles, useSyncCatalogues, useSyncDepots, useSyncStocks } from "../../admin/hooks/useSageSync";
 import { dashboardApiByPage } from "../api/dashboardApi";
 import { AlertPanel } from "../components/AlertPanel";
 import { ChartCard } from "../components/ChartCard";
@@ -68,12 +69,43 @@ function Donut({ data }: { data: DashboardPageResponse["statusDistribution"] }) 
   );
 }
 
+function SyncRealtimePanel({ isRefreshing, onSynced }: { isRefreshing?: boolean; onSynced: () => void }) {
+  const articles = useSyncArticles();
+  const catalogues = useSyncCatalogues();
+  const depots = useSyncDepots();
+  const stocks = useSyncStocks();
+  const all = useSyncAll();
+  const isSyncing = articles.isPending || catalogues.isPending || depots.isPending || stocks.isPending || all.isPending;
+
+  return (
+    <section className="pro-sync-live">
+      <div className="pro-sync-live__status">
+        <span className={isSyncing || isRefreshing ? "is-active" : ""} />
+        <div>
+          <strong>{isSyncing ? "Synchronisation en cours" : "Temps réel actif"}</strong>
+          <p>{isRefreshing ? "Recalcul des courbes en cours." : "Lecture automatique des dernières données Sage X3 locales."}</p>
+        </div>
+      </div>
+      <div className="pro-sync-live__actions">
+        <button type="button" onClick={() => articles.mutate(undefined, { onSuccess: onSynced })} disabled={isSyncing}>Articles</button>
+        <button type="button" onClick={() => catalogues.mutate(undefined, { onSuccess: onSynced })} disabled={isSyncing}>Catalogues</button>
+        <button type="button" onClick={() => depots.mutate(undefined, { onSuccess: onSynced })} disabled={isSyncing}>Dépôts</button>
+        <button type="button" onClick={() => stocks.mutate(undefined, { onSuccess: onSynced })} disabled={isSyncing}>Stocks</button>
+        <button type="button" className="is-primary" onClick={() => all.mutate(undefined, { onSuccess: onSynced })} disabled={isSyncing}>Synchroniser tout</button>
+      </div>
+    </section>
+  );
+}
+
 export function DashboardAnalyticsPage({ pageKey }: { pageKey: DashboardPageKey }) {
   const { t } = useTranslation("admin");
   const { filters, patchFilters, queryKey } = useDashboardFilters();
   const query = useQuery({
     queryKey: ["pro-dashboard", pageKey, queryKey],
     queryFn: () => dashboardApiByPage[pageKey](filters),
+    refetchInterval: pageKey === "sync" ? 5000 : undefined,
+    refetchIntervalInBackground: pageKey === "sync",
+    staleTime: pageKey === "sync" ? 0 : 30_000,
   });
   const data = query.data;
 
@@ -99,6 +131,7 @@ export function DashboardAnalyticsPage({ pageKey }: { pageKey: DashboardPageKey 
             </section>
           ) : null}
           {data.warnings.length ? <div className="pro-warning-strip">{data.warnings.map((w) => <span key={w}>{w}</span>)}</div> : null}
+          {pageKey === "sync" ? <SyncRealtimePanel isRefreshing={query.isFetching} onSynced={() => void query.refetch()} /> : null}
           <section className="pro-section">
             <div className="pro-section-heading">
               <span>01</span>

@@ -99,3 +99,4 @@ PFE_TEST_ACCOUNTS.txt
 tmp/
 temp/
 .cache/
+.codex-artifacts/runtime/

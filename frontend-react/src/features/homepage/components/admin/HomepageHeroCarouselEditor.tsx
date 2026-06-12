@@ -14,9 +14,9 @@ import {
   AdminTextarea,
   AdminToggle,
   CtaFieldsEditor,
-  ImageFieldsEditor,
   ItemToolbar,
 } from "./HomepageAdminPrimitives";
+import { HomepageImageField } from "./HomepageImageField";
 
 function createSlide(order: number): HomepageCarouselSlide {
   return {
@@ -128,15 +128,17 @@ export function HomepageHeroCarouselEditor({
           </div>
         </AdminSectionShell>
 
-        <ImageFieldsEditor
+        <HomepageImageField
           label="Image principale"
           value={payload.image}
           onChange={(image) => onChange({ ...section, payload: { ...payload, image } })}
+          helperText="URL directe ou téléversement Cloudinary."
         />
-        <ImageFieldsEditor
+        <HomepageImageField
           label="Image mobile"
           value={payload.mobileImage ?? createDefaultHomepageImage()}
           onChange={(mobileImage) => onChange({ ...section, payload: { ...payload, mobileImage } })}
+          helperText="Version mobile optionnelle du hero."
         />
         <div className="grid gap-4 xl:grid-cols-2">
           <CtaFieldsEditor
@@ -180,6 +182,33 @@ export function HomepageHeroCarouselEditor({
       payload: {
         ...payload,
         slides: next.map((slide, index) => ({ ...slide, displayOrder: index + 1 })),
+      },
+    });
+  };
+
+  const resizeSlides = (nextCount: number) => {
+    const target = Math.min(8, Math.max(1, nextCount));
+    if (target === payload.slides.length) return;
+
+    if (target > payload.slides.length) {
+      const additions = Array.from({ length: target - payload.slides.length }, (_, index) =>
+        createSlide(payload.slides.length + index + 1),
+      );
+      onChange({
+        ...section,
+        payload: {
+          ...payload,
+          slides: [...payload.slides, ...additions],
+        },
+      });
+      return;
+    }
+
+    onChange({
+      ...section,
+      payload: {
+        ...payload,
+        slides: payload.slides.slice(0, target).map((slide, index) => ({ ...slide, displayOrder: index + 1 })),
       },
     });
   };
@@ -228,6 +257,15 @@ export function HomepageHeroCarouselEditor({
               step="100"
               value={payload.autoplayDelayMs}
               onChange={(e) => onChange({ ...section, payload: { ...payload, autoplayDelayMs: Number(e.target.value || 5000) } })}
+            />
+          </AdminField>
+          <AdminField label="Nombre de visuels" hint="1 à 8">
+            <Input
+              type="number"
+              min="1"
+              max="8"
+              value={payload.slides.length}
+              onChange={(e) => resizeSlides(Number(e.target.value || 1))}
             />
           </AdminField>
         </div>
@@ -369,15 +407,17 @@ export function HomepageHeroCarouselEditor({
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <ImageFieldsEditor
+              <HomepageImageField
                 label="Image grand écran"
                 value={slide.image}
                 onChange={(image) => updateSlide(slide.id, (current) => ({ ...current, image }))}
+                helperText="Téléversez dans Cloudinary ou collez une URL directe."
               />
-              <ImageFieldsEditor
+              <HomepageImageField
                 label="Image mobile"
                 value={slide.mobileImage ?? createDefaultHomepageImage()}
                 onChange={(mobileImage) => updateSlide(slide.id, (current) => ({ ...current, mobileImage }))}
+                helperText="Optionnel pour optimiser le rendu mobile."
               />
             </div>
 

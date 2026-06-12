@@ -4,6 +4,7 @@ import type {
   HomepageAdminDocument,
   HomepageAdvantagesPayload,
   HomepageAudiencesPayload,
+  HomepageCarouselPayload,
   HomepageCataloguesPayload,
   HomepageDocument,
   HomepageFeaturedProductsPayload,
@@ -29,17 +30,18 @@ import type {
  * `payload` typé, et des CTA imbriqués `{ text, href }`.
  *
  * Sections supportées des DEUX côtés (round-trip safe) :
- *   hero, featuredProducts, featuredCatalogues (alias "catalogues"),
+ *   hero, carousel, featuredProducts, featuredCatalogues (alias "catalogues"),
  *   audiences, advantages, stats, finalCta.
  *
- * Les autres types (carousel, brands, contact, stores, promoBanner,
- * featuredCategories) n'ont pas de représentation backend pour l'instant :
+ * Les autres types (brands, contact, stores, promoBanner, featuredCategories)
+ * n'ont pas de représentation backend pour l'instant :
  * en lecture ils ne sont jamais retournés, en écriture ils sont silencieusement
  * ignorés (TODO si on ajoute leurs DTO côté backend).
  * ========================================================================= */
 
 const BACKEND_SECTION_TYPES = new Set([
   'hero',
+  'carousel',
   'featuredProducts',
   'featuredCatalogues',
   'audiences',
@@ -147,6 +149,53 @@ function buildSectionFromLegacy(
           overlayOpacity: 0.28,
           reassuranceText: s('reassuranceText'),
         } satisfies HomepageHeroPayload,
+      };
+
+    case 'carousel':
+      return {
+        ...base,
+        type: 'carousel',
+        payload: {
+          title: s('title'),
+          subtitle: s('subtitle'),
+          autoplay: raw.autoplay !== false,
+          autoplayDelayMs: Number(raw.autoplayDelayMs ?? 5000) || 5000,
+          showDots: raw.showDots !== false,
+          showArrows: raw.showArrows !== false,
+          slides: a<Record<string, unknown>>('slides').map((slide, i) => ({
+            id: `legacy-slide-${idx}-${i}`,
+            badgeText: (slide.badgeText as string | null) ?? null,
+            title: (slide.title as string | null) ?? null,
+            subtitle: (slide.subtitle as string | null) ?? null,
+            description: (slide.description as string | null) ?? null,
+            primaryCta: {
+              text: (slide.primaryCtaText as string | null) ?? null,
+              href: (slide.primaryCtaHref as string | null) ?? null,
+            },
+            secondaryCta: {
+              text: (slide.secondaryCtaText as string | null) ?? null,
+              href: (slide.secondaryCtaHref as string | null) ?? null,
+            },
+            image: {
+              sourceType: 'url',
+              url: (slide.imageUrl as string | null) ?? '',
+              alt: (slide.title as string | null) ?? null,
+            },
+            mobileImage: {
+              sourceType: 'url',
+              url: (slide.mobileImageUrl as string | null) ?? '',
+              alt: (slide.title as string | null) ?? null,
+            },
+            reassuranceText: (slide.reassuranceText as string | null) ?? null,
+            textAlignment: ((slide.textAlignment as string | null) ?? 'left') as 'left' | 'center' | 'right',
+            contentPosition: ((slide.contentPosition as string | null) ?? 'left') as 'left' | 'center' | 'right',
+            overlayOpacity: Number(slide.overlayOpacity ?? 0.28),
+            isActive: slide.isActive !== false,
+            displayOrder: (slide.displayOrder as number | undefined) ?? i + 1,
+            startAt: (slide.startAt as string | null) ?? null,
+            endAt: (slide.endAt as string | null) ?? null,
+          })),
+        } satisfies HomepageCarouselPayload,
       };
 
     case 'featuredProducts':
@@ -324,6 +373,37 @@ function sectionToLegacy(section: HomepageSection): Record<string, unknown> | nu
         secondaryCtaText: p.secondaryCta?.text ?? null,
         secondaryCtaHref: p.secondaryCta?.href ?? null,
         reassuranceText: p.reassuranceText ?? null,
+      };
+    }
+    case 'carousel': {
+      const p = section.payload as HomepageCarouselPayload;
+      return {
+        title: p.title ?? null,
+        subtitle: p.subtitle ?? null,
+        autoplay: p.autoplay !== false,
+        autoplayDelayMs: p.autoplayDelayMs ?? 5000,
+        showDots: p.showDots !== false,
+        showArrows: p.showArrows !== false,
+        slides: (p.slides ?? []).map((slide) => ({
+          badgeText: slide.badgeText ?? null,
+          title: slide.title ?? null,
+          subtitle: slide.subtitle ?? null,
+          description: slide.description ?? null,
+          primaryCtaText: slide.primaryCta?.text ?? null,
+          primaryCtaHref: slide.primaryCta?.href ?? null,
+          secondaryCtaText: slide.secondaryCta?.text ?? null,
+          secondaryCtaHref: slide.secondaryCta?.href ?? null,
+          imageUrl: slide.image?.url ?? null,
+          mobileImageUrl: slide.mobileImage?.url ?? null,
+          reassuranceText: slide.reassuranceText ?? null,
+          textAlignment: slide.textAlignment ?? 'left',
+          contentPosition: slide.contentPosition ?? 'left',
+          overlayOpacity: slide.overlayOpacity ?? 0.28,
+          isActive: slide.isActive !== false,
+          displayOrder: slide.displayOrder ?? 0,
+          startAt: slide.startAt ?? null,
+          endAt: slide.endAt ?? null,
+        })),
       };
     }
     case 'featuredProducts': {

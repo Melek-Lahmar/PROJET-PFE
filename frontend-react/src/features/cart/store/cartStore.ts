@@ -13,12 +13,14 @@ export type CartItem = {
 type CartState = {
   items: CartItem[];
   deliveryMode: DeliveryMode;
+  shippingHomeFee: number;
 
   addItem: (item: Omit<CartItem, "qty">, qty?: number) => void;
   removeItem: (arRef: string) => void;
   setQty: (arRef: string, qty: number) => void;
   clear: () => void;
   setDeliveryMode: (mode: DeliveryMode) => void;
+  setShippingHomeFee: (value: number) => void;
 
   subtotal: () => number;
   shipping: () => number;
@@ -28,7 +30,7 @@ type CartState = {
   totalQty: () => number;
 };
 
-const SHIPPING_HOME = 8; // TND
+export const DEFAULT_SHIPPING_HOME = 8; // TND
 const STAMP = 1; // TND
 
 export const useCartStore = create<CartState>()(
@@ -36,6 +38,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       deliveryMode: "HOME",
+      shippingHomeFee: DEFAULT_SHIPPING_HOME,
 
       addItem: (item, qty = 1) => {
         const safeQty = Math.max(1, qty);
@@ -73,6 +76,8 @@ export const useCartStore = create<CartState>()(
       clear: () => set({ items: [] }),
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
+      setShippingHomeFee: (value) =>
+        set({ shippingHomeFee: Number.isFinite(value) && value >= 0 ? value : DEFAULT_SHIPPING_HOME }),
 
       subtotal: () => {
         const { items } = get();
@@ -80,9 +85,9 @@ export const useCartStore = create<CartState>()(
       },
 
       shipping: () => {
-        const { deliveryMode, items } = get();
+        const { deliveryMode, items, shippingHomeFee } = get();
         if (items.length === 0) return 0; // ✅ panier vide => pas de frais
-        return deliveryMode === "HOME" ? SHIPPING_HOME : 0;
+        return deliveryMode === "HOME" ? shippingHomeFee : 0;
       },
 
       stamp: () => {
@@ -103,6 +108,10 @@ export const useCartStore = create<CartState>()(
     {
       name: "melek-cart", // ✅ exactement comme dans CartPage.tsx
       version: 1,
+      partialize: (state) => ({
+        items: state.items,
+        deliveryMode: state.deliveryMode,
+      }),
     }
   )
 );

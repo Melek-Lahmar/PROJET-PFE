@@ -6,6 +6,7 @@ type AdminIconName =
   | "analytics"
   | "orders"
   | "users"
+  | "addUser"
   | "clients"
   | "staff"
   | "b2b"
@@ -91,6 +92,17 @@ function AdminIcon({
           <circle cx="25" cy="29" r="5" fill="currentColor" opacity="0.75" />
           <circle cx="40" cy="29" r="5" fill="currentColor" opacity="0.75" />
           <path d="M17 45c2-7 7-10 15-10s13 3 15 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+      );
+
+    case "addUser":
+      return (
+        <svg {...props}>
+          <circle cx="28" cy="21" r="10" fill="currentColor" opacity="0.16" />
+          <circle cx="28" cy="21" r="10" stroke="currentColor" strokeWidth="4" />
+          <path d="M10 55c3-14 9-21 18-21 6 0 11 3 15 9" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="48" cy="46" r="10" fill="currentColor" opacity="0.18" />
+          <path d="M48 38v16M40 46h16" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
         </svg>
       );
 
@@ -291,6 +303,16 @@ const groups: AdminGroup[] = [
         descKey: "admin.control.staff.desc",
         descFallback: "Vendeurs, confirmateurs, livreurs et superviseurs.",
         tone: "text-info",
+      },
+      {
+        key: "add-user",
+        to: "/admin/users?create=1",
+        icon: "addUser",
+        titleKey: "admin.control.addUser.title",
+        titleFallback: "Ajouter un utilisateur",
+        descKey: "admin.control.addUser.desc",
+        descFallback: "Créer un client, un employé, un livreur, un superviseur ou un administrateur.",
+        tone: "text-success",
       },
       {
         key: "b2b",

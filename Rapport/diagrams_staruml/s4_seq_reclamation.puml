@@ -1,0 +1,81 @@
+@startuml s4_seq_reclamation
+title Sequence - Reclamation temps reel avec grace 5 s SignalR (Sprint 4)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Client" as CL
+participant "App Flutter" as FL
+participant "Reclamations\nController" as RC
+participant "Reclamation\nHub" as HUB
+actor "Confirmatrice" as CF
+database "SQL Server\n(F_RECLAMATION,\nF_CONFIRMATRICE_SESSION)" as DB
+
+CL -> FL : Creer reclamation
+FL -> RC : POST /api/reclamations\n{motif, piece, message}
+RC -> DB : INSERT F_RECLAMATION\n(Statut=ENVOYEE,\nTypeCas=RECLAMATION,\nVisibleClient=true)
+RC ->> HUB : NouveauCas
+HUB ->> CF : groupe "confirmateurs"
+
+== Prise en charge ==
+CF -> RC : POST /prendre-en-charge
+RC -> DB : UPDATE confirmateurId,\nStatut=EN_COURS
+RC -> DB : INSERT F_CONFIRMATRICE_SESSION
+RC ->> HUB : CommandePriseEnCharge + CasAssigne
+HUB ->> CL : MAJ statut
+HUB ->> CF : MAJ liste
+
+== Chat temps reel ==
+loop messages
+  CL -> HUB : NouveauMessage
+  HUB ->> CF : groupe confirmateurs
+  CF -> HUB : NouveauMessage
+  HUB ->> CL : client-{userId}
+end
+
+== Deconnexion avec grace 5 s ==
+CF -> HUB : OnDisconnectedAsync
+HUB -> HUB : Decremente connexions
+alt derniere connexion
+  HUB -> HUB : Arme timer\nGracePeriod = 5 s
+  alt Reconnexion <= 5 s
+    CF -> HUB : Reconnect
+    HUB -> HUB : Annule timer\n(verrou maintenu)
+  else Pas de reconnexion
+    HUB -> DB : UPDATE Statut=ENVOYEE,\nconfirmateurId=null
+    HUB -> DB : Ferme session
+    HUB ->> CF : CommandeLiberee
+  end
+end
+
+== Escalade (seuil 3) ==
+opt TentativesCount++
+  RC -> DB : UPDATE TentativesCount
+  alt TentativesCount = 3
+    RC ->> HUB : SeuilTentativesAtteint
+    HUB ->> CF : groupe superviseurs
+  end
+end
+
+== Cloture ==
+CF -> RC : PUT /status (CLOTUREE)
+RC -> DB : UPDATE Statut=CLOTUREE
+RC ->> HUB : StatutCasChange
+HUB ->> CL : Cas cloture
+
+@enduml

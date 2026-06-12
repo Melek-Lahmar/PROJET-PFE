@@ -157,6 +157,13 @@ function combineAddress(store: HomepageResolvedStore) {
   return parts.join(', ');
 }
 
+type HomepageCarouselMetrics = {
+  productCount: number;
+  catalogueCount: number;
+  depotCount: number;
+  slideCount: number;
+};
+
 function catalogueCardHref(item?: { targetHref?: string | null; catalogueNo: number }) {
   return item?.targetHref?.trim() || `/articles?catalogueNo=${item?.catalogueNo}`;
 }
@@ -289,10 +296,12 @@ function HomepageCarouselSection({
   section,
   payload,
   preview,
+  metrics,
 }: {
   section: HomepageSection;
   payload: HomepageCarouselPayload;
   preview: boolean;
+  metrics: HomepageCarouselMetrics;
 }) {
   const slides = useMemo(
     () => [...(payload.slides ?? [])].filter((slide) => isSlideVisible(slide, preview)).sort((a, b) => a.displayOrder - b.displayOrder),
@@ -337,8 +346,9 @@ function HomepageCarouselSection({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_left_center,rgba(255,255,255,0.14),transparent_34%)]" />
 
         <div className={`relative z-10 flex min-h-[520px] px-6 py-8 md:px-10 lg:min-h-[620px] lg:px-14 ${contentPositionClass}`}>
-          <div className={`flex w-full max-w-2xl flex-col justify-center gap-6 ${itemAlignmentClass} ${textAlignmentClass}`}>
-            <div className="space-y-4">
+          <div className="w-full">
+            <div className={`flex max-w-2xl flex-col justify-center gap-6 ${itemAlignmentClass} ${textAlignmentClass}`}>
+              <div className="space-y-4">
               {payload.subtitle ? <div className="app-kicker text-white/70">{payload.subtitle}</div> : null}
               {activeSlide.badgeText ? (
                 <div className="inline-flex rounded-full border border-white/20 bg-white/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_14px_28px_-20px_rgba(255,255,255,0.5)] backdrop-blur-sm">
@@ -348,24 +358,60 @@ function HomepageCarouselSection({
               {activeSlide.title ? <h1 className="text-balance text-4xl font-black tracking-tight text-white md:text-6xl xl:text-7xl">{activeSlide.title}</h1> : null}
               {activeSlide.subtitle ? <p className="text-lg font-semibold text-white/88 md:text-2xl">{activeSlide.subtitle}</p> : null}
               {activeSlide.description ? <p className="max-w-2xl text-sm leading-7 text-white/74 md:text-base">{activeSlide.description}</p> : null}
-            </div>
-
-            <div className={`flex flex-wrap gap-3 ${textAlignmentClass === 'text-center' ? 'justify-center' : textAlignmentClass === 'text-right' ? 'justify-end' : 'justify-start'}`}>
-              <ActionLink href={activeSlide.primaryCta?.href} className="h-12 px-6 text-base">
-                {activeSlide.primaryCta?.text ?? 'Découvrir'}
-              </ActionLink>
-              {activeSlide.secondaryCta?.href ? (
-                <ActionLink href={activeSlide.secondaryCta?.href} variant="outline" className="h-12 border-white/20 bg-white/10 px-6 text-base text-white hover:bg-white/16 hover:text-white">
-                  {activeSlide.secondaryCta?.text ?? 'En savoir plus'}
-                </ActionLink>
-              ) : null}
-            </div>
-
-            {activeSlide.reassuranceText ? (
-              <div className="inline-flex max-w-full rounded-[24px] border border-white/14 bg-white/10 px-4 py-3 text-sm font-semibold text-white/84 shadow-[0_18px_36px_-28px_rgba(2,6,23,0.76)] backdrop-blur-sm">
-                {activeSlide.reassuranceText}
               </div>
-            ) : null}
+
+              <div className={`flex flex-wrap gap-3 ${textAlignmentClass === 'text-center' ? 'justify-center' : textAlignmentClass === 'text-right' ? 'justify-end' : 'justify-start'}`}>
+                <ActionLink href={activeSlide.primaryCta?.href} className="h-12 px-6 text-base">
+                  {activeSlide.primaryCta?.text ?? 'Découvrir'}
+                </ActionLink>
+                {activeSlide.secondaryCta?.href ? (
+                  <ActionLink href={activeSlide.secondaryCta?.href} variant="outline" className="h-12 border-white/20 bg-white/10 px-6 text-base text-white hover:bg-white/16 hover:text-white">
+                    {activeSlide.secondaryCta?.text ?? 'En savoir plus'}
+                  </ActionLink>
+                ) : null}
+              </div>
+
+              {activeSlide.reassuranceText ? (
+                <div className="inline-flex max-w-full rounded-[24px] border border-white/14 bg-white/10 px-4 py-3 text-sm font-semibold text-white/84 shadow-[0_18px_36px_-28px_rgba(2,6,23,0.76)] backdrop-blur-sm">
+                  {activeSlide.reassuranceText}
+                </div>
+              ) : null}
+
+              <div className={`flex flex-wrap gap-3 ${textAlignmentClass === 'text-center' ? 'justify-center' : textAlignmentClass === 'text-right' ? 'justify-end' : 'justify-start'}`}>
+                {[
+                  { label: 'Produits', value: metrics.productCount },
+                  { label: 'Catalogues', value: metrics.catalogueCount },
+                  { label: 'Dépôts', value: metrics.depotCount },
+                ].map((metric) => (
+                  <div key={metric.label} className="min-w-[124px] rounded-[24px] border border-white/12 bg-slate-950/24 px-4 py-3 text-white shadow-[0_18px_42px_-30px_rgba(2,6,23,0.8)] backdrop-blur-sm">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/62">{metric.label}</div>
+                    <div className="mt-1 text-2xl font-black">{metric.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden xl:block">
+              <div className="absolute right-8 top-8 z-10 w-[320px] rounded-[30px] border border-white/12 bg-slate-950/36 p-5 text-white shadow-[0_28px_80px_-44px_rgba(2,6,23,0.92)] backdrop-blur-md">
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/60">Pilotage commercial</div>
+                <div className="mt-3 text-2xl font-black leading-tight">Une homepage connectée à vos produits, catalogues et dépôts.</div>
+                <div className="mt-3 text-sm leading-6 text-white/72">
+                  Le carrousel reste administrable slide par slide, tandis que le thème actif continue de porter la palette et les composants.
+                </div>
+                <div className="mt-5 grid gap-3">
+                  <div className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-3">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/56">Slides actives</div>
+                    <div className="mt-1 text-lg font-black">{metrics.slideCount}</div>
+                  </div>
+                  <div className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-3">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/56">Sélections visibles</div>
+                    <div className="mt-1 text-sm font-semibold text-white/86">
+                      {metrics.productCount} produits · {metrics.catalogueCount} catalogues · {metrics.depotCount} dépôts
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -950,14 +996,14 @@ function renderFinalCta(section: HomepageSection) {
   );
 }
 
-function renderSection(section: HomepageSection, preview: boolean) {
+function renderSection(section: HomepageSection, preview: boolean, carouselMetrics: HomepageCarouselMetrics) {
   if (!isSectionVisible(section, preview)) return null;
 
   switch (section.type) {
     case 'hero':
       return renderHero(section);
     case 'carousel':
-      return <HomepageCarouselSection key={section.id} section={section} payload={section.payload as HomepageCarouselPayload} preview={preview} />;
+      return <HomepageCarouselSection key={section.id} section={section} payload={section.payload as HomepageCarouselPayload} preview={preview} metrics={carouselMetrics} />;
     case 'featuredCategories':
       return renderFeaturedCategories(section);
     case 'featuredProducts':
@@ -985,7 +1031,17 @@ function renderSection(section: HomepageSection, preview: boolean) {
   }
 }
 
-export function HomepageRenderer({ view, preview = false, themeId: themeIdProp }: { view: HomepageView; preview?: boolean; themeId?: HomepageThemeId }) {
+export function HomepageRenderer({
+  view,
+  preview = false,
+  themeId: themeIdProp,
+  depotCount = 0,
+}: {
+  view: HomepageView;
+  preview?: boolean;
+  themeId?: HomepageThemeId;
+  depotCount?: number;
+}) {
   const themeContext = useOptionalHomepageTheme();
   const theme = useMemo(
     () => themeIdProp ? getTheme(themeIdProp) : (themeContext?.activeTheme ?? getTheme('minimaliste')),
@@ -1014,8 +1070,40 @@ export function HomepageRenderer({ view, preview = false, themeId: themeIdProp }
 
   const sections = [...(view.content.sections ?? [])].sort((a, b) => a.displayOrder - b.displayOrder);
   const visibleSections = sections.filter((section) => isSectionVisible(section, preview));
+  const hasCarouselVisible = visibleSections.some(
+    (section) =>
+      section.type === 'carousel' &&
+      ((section.payload as HomepageCarouselPayload).slides ?? []).some((slide) => isSlideVisible(slide, preview)),
+  );
+  const renderableSections = hasCarouselVisible
+    ? visibleSections.filter((section) => section.type !== 'hero')
+    : visibleSections;
+  const featuredProductsSection = visibleSections.find((section) => section.type === 'featuredProducts');
+  const cataloguesSection = visibleSections.find((section) => section.type === 'catalogues');
+  const storesSection = visibleSections.find((section) => section.type === 'stores');
+  const carouselSection = visibleSections.find((section) => section.type === 'carousel');
+  const carouselMetrics: HomepageCarouselMetrics = {
+    productCount: featuredProductsSection
+      ? ((featuredProductsSection.payload as HomepageFeaturedProductsPayload).resolvedProducts?.length
+        ?? (featuredProductsSection.payload as HomepageFeaturedProductsPayload).articleRefs?.length
+        ?? 0)
+      : 0,
+    catalogueCount: cataloguesSection
+      ? ((cataloguesSection.payload as HomepageCataloguesPayload).resolvedCatalogues?.length
+        ?? (cataloguesSection.payload as HomepageCataloguesPayload).catalogueNos?.length
+        ?? 0)
+      : 0,
+    depotCount: storesSection
+      ? ((storesSection.payload as HomepageStoresPayload).items?.filter((item) => item.isActive).length
+        ?? depotCount)
+      : depotCount,
+    slideCount: carouselSection
+      ? ((carouselSection.payload as HomepageCarouselPayload).slides?.filter((slide) => slide.isActive).length
+        ?? 0)
+      : 0,
+  };
 
-  if (visibleSections.length === 0) {
+  if (renderableSections.length === 0) {
     return (
       <div style={themeVars} className="app-surface p-8 text-center">
         <div className="app-kicker">Page d’accueil</div>
@@ -1036,8 +1124,8 @@ export function HomepageRenderer({ view, preview = false, themeId: themeIdProp }
   return (
     <div style={themeVars}>
       <div className="space-y-10 md:space-y-14">
-        {visibleSections.map((section) => renderSection(section, preview))}
+          {renderableSections.map((section) => renderSection(section, preview, carouselMetrics))}
+        </div>
       </div>
-    </div>
   );
 }

@@ -18,6 +18,7 @@ namespace Web_Api.Model
         [Required]
         [StringLength(100)]
         public string Login { get; set; } = "admin";
+        
 
         [Required]
         [StringLength(100)]

@@ -1,5 +1,15 @@
 export type AdminRole = "CLIENT" | "VENDEUR" | "CONFIRMATEUR" | "LIVREUR" | "SUPERVISEUR" | "ADMIN";
 
+export type UserCreationKind =
+  | "CLIENT_B2C"
+  | "CLIENT_B2B"
+  | "VENDEUR"
+  | "CONFIRMATEUR"
+  | "LIVREUR"
+  | "LIVREUR_TRANSIT"
+  | "SUPERVISEUR"
+  | "ADMIN";
+
 export type ProfilUtilisateur = {
   cbMarq: number;
   utilisateurId: string;
@@ -13,9 +23,25 @@ export type ProfilUtilisateur = {
 
   nomSociete: string | null;
   matriculeFiscal: string | null;
+  registreCommerce?: string | null;
+  numeroTVA?: string | null;
 
   gouvernorat: number | null;
   delegation: string | null;
+  adresse?: string | null;
+  adresseComplementaire?: string | null;
+  codePostal?: string | null;
+  pays?: string | null;
+
+  poste?: string | null;
+  departement?: string | null;
+  codeEmploye?: string | null;
+  codeDepot?: string | null;
+  zoneLivraison?: string | null;
+  isTransit?: boolean;
+  depotRattacheNo?: number | null;
+  plafondCredit?: number | null;
+  discountPercent?: number | null;
 
   latitude: number | null;
   longitude: number | null;
@@ -62,6 +88,23 @@ export type CreateUserRequestDto = {
 
   nomSociete?: string | null;
   matriculeFiscal?: string | null;
+  registreCommerce?: string | null;
+  numeroTVA?: string | null;
+
+  adresse?: string | null;
+  adresseComplementaire?: string | null;
+  codePostal?: string | null;
+  pays?: string | null;
+
+  poste?: string | null;
+  departement?: string | null;
+  codeEmploye?: string | null;
+  codeDepot?: string | null;
+  zoneLivraison?: string | null;
+  isTransit?: boolean;
+  depotRattacheNo?: number | null;
+  plafondCredit?: number | null;
+  discountPercent?: number | null;
 
   latitude?: number | null;
   longitude?: number | null;

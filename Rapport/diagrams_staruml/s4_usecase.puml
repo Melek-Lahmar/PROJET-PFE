@@ -1,0 +1,116 @@
+@startuml s4_usecase
+title Diagramme de cas d'utilisation - Sprint 4
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam handwritten false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ActorBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam UsecaseBorderColor #000000
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam PackageBorderColor #000000
+skinparam PackageBackgroundColor #FAFAFA
+skinparam PackageStyle rectangle
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+left to right direction
+
+actor "Confirmatrice" as CF
+actor "Livreur COD" as LCOD
+actor "Livreur Transit" as LTR
+actor "Client" as CL
+actor "Superviseur" as SUP
+
+package "Confirmation (Sage X3)" {
+    usecase "Consulter BC en attente" as UC1
+    usecase "Modifier statut DO_Valide" as UC2
+    usecase "Transformer BC -> BL" as UC3
+    usecase "Affecter livreur (Haversine)" as UC4
+    usecase "Traiter devis B2B" as UC5
+    usecase "Exporter BL vers Sage X3\n(non bloquant)" as UC6
+  }
+
+  package "Livraison COD / GPS" {
+    usecase "Consulter pool par zone" as UC10
+    usecase "Prendre en charge\n(409 si conflit)" as UC11
+    usecase "Demarrer livraison GPS" as UC12
+    usecase "Ping GPS toutes 10 s" as UC13
+    usecase "Ping-batch offline\n(idempotent)" as UC14
+    usecase "Mettre a jour statut\n(8 codes)" as UC15
+    usecase "Encaisser COD automatique\n(statut 2)" as UC16
+    usecase "Gerer caisse" as UC17
+    usecase "Optimiser tournee\n(plus proche voisin)" as UC18
+  }
+
+  package "Transit inter-depots" {
+    usecase "Consulter missions" as UC20
+    usecase "Scan pickup\n(EN_TRANSIT)" as UC21
+    usecase "Scan delivery\n(RECU_DEPOT_DESTINE)" as UC22
+    usecase "Scan partiel + alerte" as UC23
+    usecase "Revert sous 10 min\n(audit log)" as UC24
+  }
+
+  package "Reclamations temps reel" {
+    usecase "Creer reclamation\n(5 motifs)" as UC30
+    usecase "Suivre TrackingStateCard\n(4 etats)" as UC31
+    usecase "Prendre en charge\n(verrou + grace 5 s)" as UC32
+    usecase "Chatter (NouveauMessage)" as UC33
+    usecase "Escalader\n(seuil 3 tentatives)" as UC34
+    usecase "Reprogrammer\n(MATIN/APM/SOIR)" as UC35
+  }
+
+  package "Supervision" {
+    usecase "Voir livreurs sur carte" as UC40
+    usecase "Consulter heatmap 90 j" as UC41
+    usecase "CRUD livreurs" as UC42
+    usecase "Reaffecter mission transit" as UC43
+    usecase "Gerer alertes (severite)" as UC44
+  }
+
+CF --> UC1
+CF --> UC2
+CF --> UC3
+CF --> UC5
+CF --> UC32
+CF --> UC33
+CF --> UC35
+
+UC3 ..> UC4 : <<include>>
+UC3 ..> UC6 : <<include>>
+UC5 ..> UC3 : <<extend>>
+
+LCOD --> UC10
+LCOD --> UC11
+LCOD --> UC12
+LCOD --> UC15
+LCOD --> UC17
+LCOD --> UC18
+UC12 ..> UC13 : <<include>>
+UC13 ..> UC14 : <<extend>>
+UC15 ..> UC16 : <<include>>
+
+LTR --> UC20
+LTR --> UC21
+LTR --> UC22
+LTR --> UC23
+LTR --> UC24
+
+CL --> UC30
+CL --> UC31
+CL --> UC33
+
+SUP --> UC40
+SUP --> UC41
+SUP --> UC42
+SUP --> UC43
+SUP --> UC44
+UC34 ..> UC44 : <<include>>
+
+@enduml

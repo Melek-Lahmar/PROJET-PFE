@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader } from '../../../shared/components/Loader';
 import { getHomepage } from '../api/homepageApi';
 import { HomepageRenderer } from '../components/HomepageRenderer';
+import { getDepots } from '../../catalog/api/depotsApi';
 import {
   EmptyView,
   PremiumHero,
@@ -11,6 +12,12 @@ export function HomepagePage() {
   const query = useQuery({
     queryKey: ['homepage', 'public'],
     queryFn: getHomepage,
+  });
+
+  const depotsQuery = useQuery({
+    queryKey: ['homepage', 'public', 'depots'],
+    queryFn: () => getDepots(false),
+    staleTime: 5 * 60 * 1000,
   });
 
   if (query.isLoading) return <Loader />;
@@ -28,5 +35,5 @@ export function HomepagePage() {
     );
   }
 
-  return <HomepageRenderer view={query.data} />;
+  return <HomepageRenderer view={query.data} depotCount={depotsQuery.data?.length ?? 0} />;
 }

@@ -43,6 +43,47 @@ namespace Web_Api.DTO.Admin
         [MaxLength(50)]
         public string? MatriculeFiscal { get; set; }
 
+        [MaxLength(300)]
+        public string? Adresse { get; set; }
+
+        [MaxLength(300)]
+        public string? AdresseComplementaire { get; set; }
+
+        [MaxLength(20)]
+        public string? CodePostal { get; set; }
+
+        [MaxLength(100)]
+        public string? Pays { get; set; }
+
+        [MaxLength(50)]
+        public string? RegistreCommerce { get; set; }
+
+        [MaxLength(50)]
+        public string? NumeroTVA { get; set; }
+
+        [MaxLength(100)]
+        public string? Poste { get; set; }
+
+        [MaxLength(100)]
+        public string? Departement { get; set; }
+
+        [MaxLength(50)]
+        public string? CodeEmploye { get; set; }
+
+        [MaxLength(50)]
+        public string? CodeDepot { get; set; }
+
+        [MaxLength(100)]
+        public string? ZoneLivraison { get; set; }
+
+        public bool IsTransit { get; set; }
+
+        public int? DepotRattacheNo { get; set; }
+
+        public decimal? PlafondCredit { get; set; }
+
+        public decimal? DiscountPercent { get; set; }
+
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
     }

@@ -1,0 +1,66 @@
+@startuml s4_seq_gps
+title Sequence - Livraison active, GPS temps reel et encaissement COD (Sprint 4)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 0
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam TitleFontSize 13
+skinparam TitleFontStyle bold
+skinparam ArrowColor #000000
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam SequenceLifeLineBorderColor #888888
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #000000
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam NoteBorderColor #B0860B
+skinparam NoteBackgroundColor #FFF8DC
+
+actor "Livreur" as LV
+participant "App Flutter\n(LivreurStatsScreen)" as FL
+participant "LivreurActive\nDeliveryController" as ADC
+participant "Livreur\nController" as LC
+participant "ReclamationHub\n(SignalR)" as HUB
+actor "Client" as CL
+database "SQL Server" as DB
+
+== Phase 1 : Demarrage livraison ==
+LV -> FL : "Demarrer" sur commande
+FL -> ADC : POST /start-heading {piece}
+ADC -> DB : UPDATE F_LIVRAISON\nIsActiveDelivery=true
+ADC -> HUB : DeliveryStarted
+HUB ->> CL : groupe client-{userId}
+ADC --> FL : 200 OK
+
+== Phase 2 : Diffusion GPS (boucle 10 s) ==
+loop toutes les 10 s
+  FL -> FL : Geolocator.getCurrentPosition()
+  FL -> LC : POST /location/ping\n{lat,lng,accuracy,ts,clientActionId}
+  LC -> DB : UPSERT F_LIVREUR_POSITION
+  LC -> DB : INSERT F_LIVREUR_POSITION_HISTORY
+  LC -> LC : Calcul Haversine\n+ ETA
+  LC ->> HUB : LivreurPositionUpdate
+  HUB ->> CL : MAJ TrackingStateCard
+  alt distance < 0.5 km
+    HUB ->> CL : ProximityAlert
+  end
+end
+
+note right of FL
+  Si offline : file Hive locale,
+  puis POST /location/ping-batch
+  avec ClientActionId idempotent
+end note
+
+== Phase 3 : Encaissement COD ==
+LV -> FL : Marquer Livre (statut 2)
+FL -> LC : PUT /orders/{piece}/status {LI_Statut=2}
+LC -> DB : UPDATE Encaisse=true,\nMontantEncaisse=DO_NetAPayer,\nEncaisseAt=UtcNow
+LC ->> HUB : StatutCommandeChange
+HUB ->> CL : Notification livraison
+LC --> FL : 200 OK
+
+@enduml

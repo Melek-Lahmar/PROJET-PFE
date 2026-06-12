@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { PremiumHero } from "../../../shared/components/premium";
+import { useCartStore } from "../../cart/store/cartStore";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-[24px] border border-border/70 bg-card p-6 shadow-sm">
       <h2 className="mb-4 text-lg font-extrabold text-card-foreground">{title}</h2>
@@ -10,6 +12,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function TermsPage() {
+  const shippingHomeFee = useCartStore((s) => s.shippingHomeFee);
+
   return (
     <div className="w-full space-y-6 pb-10">
       <PremiumHero
@@ -54,7 +58,7 @@ export function TermsPage() {
 
         <Section title="5. Livraison">
           <p>
-            Deux modes de livraison sont disponibles : domicile (8 TND) ou retrait en dépôt.
+            Deux modes de livraison sont disponibles : domicile ({shippingHomeFee.toFixed(3)} TND) ou retrait en dépôt.
             Les délais de livraison sont indicatifs et peuvent varier en fonction de la disponibilité du livreur et de la zone géographique.
           </p>
         </Section>

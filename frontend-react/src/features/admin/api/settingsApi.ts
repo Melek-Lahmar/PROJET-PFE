@@ -10,6 +10,14 @@ export type AppSetting = {
   updatedByAdminId?: string | null;
 };
 
+export type DeliveryFeeSetting = {
+  key: string;
+  value: number;
+  isPublic: boolean;
+  updatedAt?: string | null;
+  updatedByAdminId?: string | null;
+};
+
 function normalize(raw: any): AppSetting {
   return {
     key: raw.key ?? raw.Key,
@@ -47,4 +55,26 @@ export async function getSettingByKey(key: string): Promise<AppSetting | null> {
 export async function putSetting(key: string, valueJson: string, isPublic: boolean, description?: string) {
   const { data } = await axiosClient.put(endpoints.adminSettingByKey(key), { valueJson, isPublic, description });
   return normalize(data);
+}
+
+export async function getDeliveryFee(): Promise<DeliveryFeeSetting> {
+  const { data } = await axiosClient.get<any>(endpoints.adminDeliveryFee);
+  return {
+    key: data.key ?? data.Key ?? "checkout.deliveryFee.home",
+    value: Number(data.value ?? data.Value ?? 8),
+    isPublic: Boolean(data.isPublic ?? data.IsPublic ?? true),
+    updatedAt: data.updatedAt ?? data.UpdatedAt ?? null,
+    updatedByAdminId: data.updatedByAdminId ?? data.UpdatedByAdminId ?? null,
+  };
+}
+
+export async function putDeliveryFee(value: number): Promise<DeliveryFeeSetting> {
+  const { data } = await axiosClient.put<any>(endpoints.adminDeliveryFee, { value });
+  return {
+    key: data.key ?? data.Key ?? "checkout.deliveryFee.home",
+    value: Number(data.value ?? data.Value ?? value),
+    isPublic: Boolean(data.isPublic ?? data.IsPublic ?? true),
+    updatedAt: data.updatedAt ?? data.UpdatedAt ?? null,
+    updatedByAdminId: data.updatedByAdminId ?? data.UpdatedByAdminId ?? null,
+  };
 }

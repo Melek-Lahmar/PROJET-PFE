@@ -1,5 +1,17 @@
 import { axiosClient } from "../../../core/http/axiosClient";
-import type { ConfirmateurClient, ConfirmateurOrder, ConfirmateurOrderLine, ZoneCoverageDto, SupervisorDto } from "../types/confirmateur";
+import type {
+  ConfirmateurClient,
+  ConfirmateurOrder,
+  ConfirmateurOrderLine,
+  ReclamationDetails,
+  ReclamationFilters,
+  ReclamationListItem,
+  ReclamationOrderLine,
+  ReclamationPhoto,
+  ReclamationTentative,
+  SupervisorDto,
+  ZoneCoverageDto,
+} from "../types/confirmateur";
 import type { AddQuoteCommentPayload, ConvertQuoteToOrderResult, QuoteDetailDto, QuoteListItemDto, UpdateQuoteLinesPayload } from "../../b2bQuotes/types/b2bQuotes";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -28,6 +40,17 @@ function asNumber(value: unknown): number | null {
     if (Number.isFinite(parsed)) return parsed;
   }
   return null;
+}
+
+function asBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") return value.toLowerCase() === "true" || value === "1";
+  return false;
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
 }
 
 function normalizeClient(raw: unknown): ConfirmateurClient | null {
@@ -110,6 +133,113 @@ function normalizeOrder(raw: unknown): ConfirmateurOrder {
     dO_VilleLivraison: asString(pick(source, ["dO_VilleLivraison", "DO_VilleLivraison"])),
     dO_CodePostalLivraison: asString(pick(source, ["dO_CodePostalLivraison", "DO_CodePostalLivraison"])),
     dO_TelephoneLivraison: asString(pick(source, ["dO_TelephoneLivraison", "DO_TelephoneLivraison"])),
+  };
+}
+
+function normalizeReclamationOrderLine(raw: unknown): ReclamationOrderLine {
+  const source = isRecord(raw) ? raw : {};
+  return {
+    arRef: asString(pick(source, ["arRef", "ArRef"])) ?? "",
+    designation: asString(pick(source, ["designation", "Designation"])),
+    qty: asNumber(pick(source, ["qty", "Qty"])) ?? 0,
+    unitPrice: asNumber(pick(source, ["unitPrice", "UnitPrice"])) ?? 0,
+    amountTTC: asNumber(pick(source, ["amountTTC", "AmountTTC"])) ?? 0,
+  };
+}
+
+function normalizeReclamationTentative(raw: unknown): ReclamationTentative {
+  const source = isRecord(raw) ? raw : {};
+  return {
+    id: asNumber(pick(source, ["id", "Id"])) ?? 0,
+    commandePiece: asString(pick(source, ["commandePiece", "CommandePiece"])) ?? "",
+    dateJour: asString(pick(source, ["dateJour", "DateJour"])) ?? "",
+    motif: asString(pick(source, ["motif", "Motif"])) ?? "",
+    livreurUserId: asString(pick(source, ["livreurUserId", "LivreurUserId"])) ?? "",
+    livreurDisplay: asString(pick(source, ["livreurDisplay", "LivreurDisplay"])),
+    latitude: asNumber(pick(source, ["latitude", "Latitude"])),
+    longitude: asNumber(pick(source, ["longitude", "Longitude"])),
+    photoUrl: asString(pick(source, ["photoUrl", "PhotoUrl"])),
+    createdAt: asString(pick(source, ["createdAt", "CreatedAt"])) ?? "",
+    updatedAt: asString(pick(source, ["updatedAt", "UpdatedAt"])) ?? "",
+  };
+}
+
+function normalizeReclamationPhoto(raw: unknown): ReclamationPhoto {
+  const source = isRecord(raw) ? raw : {};
+  return {
+    id: asNumber(pick(source, ["id", "Id"])) ?? 0,
+    url: asString(pick(source, ["url", "Url"])) ?? "",
+    fileName: asString(pick(source, ["fileName", "FileName"])),
+    contentType: asString(pick(source, ["contentType", "ContentType"])),
+    size: asNumber(pick(source, ["size", "Size"])),
+    uploadedByUserId: asString(pick(source, ["uploadedByUserId", "UploadedByUserId"])),
+    createdAt: asString(pick(source, ["createdAt", "CreatedAt"])) ?? "",
+  };
+}
+
+function normalizeReclamation(raw: unknown): ReclamationListItem {
+  const source = isRecord(raw) ? raw : {};
+  return {
+    id: asNumber(pick(source, ["id", "Id"])) ?? 0,
+    codeReclamation: asString(pick(source, ["codeReclamation", "CodeReclamation"])) ?? "",
+    doPiece: asString(pick(source, ["doPiece", "DoPiece"])) ?? "",
+    arRef: asString(pick(source, ["arRef", "ArRef"])),
+    arDesignation: asString(pick(source, ["arDesignation", "ArDesignation"])),
+    isGlobal: asBoolean(pick(source, ["isGlobal", "IsGlobal"])),
+    visibleClient: asBoolean(pick(source, ["visibleClient", "VisibleClient"])),
+    motif: asString(pick(source, ["motif", "Motif"])) ?? "",
+    descriptionPreview: asString(pick(source, ["descriptionPreview", "DescriptionPreview"])) ?? "",
+    statut: asString(pick(source, ["statut", "Statut"])) ?? "ENVOYEE",
+    source: asString(pick(source, ["source", "Source"])) ?? "CLIENT",
+    typeCas: asString(pick(source, ["typeCas", "TypeCas"])),
+    typeReclamation: asString(pick(source, ["typeReclamation", "TypeReclamation"])),
+    priorite: asString(pick(source, ["priorite", "Priorite"])),
+    clientDisplay: asString(pick(source, ["clientDisplay", "ClientDisplay"])),
+    clientPhone: asString(pick(source, ["clientPhone", "ClientPhone"])),
+    clientGouvernorat: asString(pick(source, ["clientGouvernorat", "ClientGouvernorat"])),
+    assignedToDisplay: asString(pick(source, ["assignedToDisplay", "AssignedToDisplay"])),
+    tentativesCount: asNumber(pick(source, ["tentativesCount", "TentativesCount"])) ?? 0,
+    photosCount: asNumber(pick(source, ["photosCount", "PhotosCount"])) ?? 0,
+    hasCorrectionProposee: asBoolean(pick(source, ["hasCorrectionProposee", "HasCorrectionProposee"])),
+    hasAddressChange: asBoolean(pick(source, ["hasAddressChange", "HasAddressChange"])),
+    hasPhoneChange: asBoolean(pick(source, ["hasPhoneChange", "HasPhoneChange"])),
+    createdAt: asString(pick(source, ["createdAt", "CreatedAt"])) ?? "",
+    updatedAt: asString(pick(source, ["updatedAt", "UpdatedAt"])) ?? "",
+    closedAt: asString(pick(source, ["closedAt", "ClosedAt"])),
+  };
+}
+
+function normalizeReclamationDetails(raw: unknown): ReclamationDetails {
+  const source = isRecord(raw) ? raw : {};
+  return {
+    ...normalizeReclamation(raw),
+    description: asString(pick(source, ["description", "Description"])) ?? "",
+    correctionProposee: asString(pick(source, ["correctionProposee", "CorrectionProposee"])),
+    correctionAppliquee: asBoolean(pick(source, ["correctionAppliquee", "CorrectionAppliquee"])),
+    motifRefus: asString(pick(source, ["motifRefus", "MotifRefus"])),
+    echangeDemandeText: asString(pick(source, ["echangeDemandeText", "EchangeDemandeText"])),
+    noteInterne: asString(pick(source, ["noteInterne", "NoteInterne"])),
+    firstAttemptAt: asString(pick(source, ["firstAttemptAt", "FirstAttemptAt"])),
+    lastAttemptAt: asString(pick(source, ["lastAttemptAt", "LastAttemptAt"])),
+    clientEmail: asString(pick(source, ["clientEmail", "ClientEmail"])),
+    clientAddress: asString(pick(source, ["clientAddress", "ClientAddress"])),
+    clientDelegation: asString(pick(source, ["clientDelegation", "ClientDelegation"])),
+    clientCodeSage: asString(pick(source, ["clientCodeSage", "ClientCodeSage"])),
+    clientCommandesCount: asNumber(pick(source, ["clientCommandesCount", "ClientCommandesCount"])) ?? 0,
+    clientReclamationsCount: asNumber(pick(source, ["clientReclamationsCount", "ClientReclamationsCount"])) ?? 0,
+    clientUserId: asString(pick(source, ["clientUserId", "ClientUserId"])),
+    livreurDisplay: asString(pick(source, ["livreurDisplay", "LivreurDisplay"])),
+    livreurPhone: asString(pick(source, ["livreurPhone", "LivreurPhone"])),
+    livreurUserId: asString(pick(source, ["livreurUserId", "LivreurUserId"])),
+    orderStatut: asString(pick(source, ["orderStatut", "OrderStatut"])),
+    orderDate: asString(pick(source, ["orderDate", "OrderDate"])),
+    orderNetAPayer: asNumber(pick(source, ["orderNetAPayer", "OrderNetAPayer"])),
+    orderPaymentMethod: asString(pick(source, ["orderPaymentMethod", "OrderPaymentMethod"])),
+    orderDeliveryMode: asString(pick(source, ["orderDeliveryMode", "OrderDeliveryMode"])),
+    orderLines: asArray(pick(source, ["orderLines", "OrderLines"])).map(normalizeReclamationOrderLine),
+    tentatives: asArray(pick(source, ["tentatives", "Tentatives"])).map(normalizeReclamationTentative),
+    photos: asArray(pick(source, ["photos", "Photos"])).map(normalizeReclamationPhoto),
+    resolvedAt: asString(pick(source, ["resolvedAt", "ResolvedAt"])),
   };
 }
 
@@ -279,4 +409,46 @@ export async function getConfirmateurClientHistory(clientId: string): Promise<Cl
     `/api/confirmatrice/clients/${encodeURIComponent(clientId)}/orders-history`,
   );
   return data;
+}
+
+export async function getConfirmateurReclamations(filters: ReclamationFilters = {}) {
+  const { data } = await axiosClient.get<unknown>("/api/confirmateur/reclamations", {
+    params: {
+      tab: filters.tab,
+      crossGouvernorat: filters.crossGouvernorat || undefined,
+      statut: filters.statut || undefined,
+      source: filters.source || undefined,
+      typeCas: filters.typeCas || undefined,
+      motif: filters.motif || undefined,
+      doPiece: filters.doPiece || undefined,
+      fromDate: filters.fromDate || undefined,
+      toDate: filters.toDate || undefined,
+    },
+  });
+  return Array.isArray(data) ? data.map(normalizeReclamation) : [];
+}
+
+export async function getConfirmateurReclamationDetails(id: number) {
+  const { data } = await axiosClient.get<unknown>(`/api/confirmateur/reclamations/${id}`);
+  return normalizeReclamationDetails(data);
+}
+
+export async function reprendreConfirmateurReclamation(id: number) {
+  const { data } = await axiosClient.post<unknown>(`/api/confirmateur/reclamations/${id}/reprendre`, {});
+  return normalizeReclamationDetails(data);
+}
+
+export async function updateConfirmateurReclamationStatus(id: number, statut: string, motifRefus?: string | null) {
+  const { data } = await axiosClient.put<unknown>(`/api/confirmateur/reclamations/${id}/status`, {
+    statut,
+    motifRefus,
+  });
+  return normalizeReclamationDetails(data);
+}
+
+export async function updateConfirmateurReclamationNote(id: number, noteInterne?: string | null) {
+  const { data } = await axiosClient.put<unknown>(`/api/confirmateur/reclamations/${id}/note`, {
+    noteInterne,
+  });
+  return normalizeReclamationDetails(data);
 }

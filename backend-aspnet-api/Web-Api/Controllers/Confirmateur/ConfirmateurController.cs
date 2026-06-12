@@ -189,6 +189,7 @@ namespace Web_Api.Controllers.Confirmateur
             // ✅ enrichir pour afficher Nom client + téléphone dans la table (recherche)
             foreach (var o in list)
             {
+                o.StatusLabel = F_DOCENTETE.ToStatusLabel(o.DO_Valide);
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
                 if (c == null) continue;
                 o.ClientType = c.TypeClient;
@@ -902,6 +903,7 @@ namespace Web_Api.Controllers.Confirmateur
 
             foreach (var o in list)
             {
+                o.StatusLabel = F_DOCENTETE.ToStatusLabel(o.DO_Valide);
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
                 if (c == null) continue;
                 o.ClientType = c.TypeClient;

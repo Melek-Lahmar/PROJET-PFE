@@ -26,6 +26,61 @@ namespace Web_Api.Controllers.Admin
             return Ok(rows);
         }
 
+        [HttpGet("delivery-fee")]
+        public async Task<IActionResult> GetDeliveryFee(CancellationToken ct)
+        {
+            var row = await _service.GetAsync(AppSettingsService.DeliveryFeeHomeKey, ct);
+            var value = row == null
+                ? AppSettingsService.DefaultDeliveryFeeHome
+                : await _service.GetDecimalAsync(AppSettingsService.DeliveryFeeHomeKey, AppSettingsService.DefaultDeliveryFeeHome, ct);
+
+            return Ok(new DeliveryFeeResponseDto
+            {
+                Key = AppSettingsService.DeliveryFeeHomeKey,
+                Value = value,
+                IsPublic = row?.IsPublic ?? true,
+                UpdatedAt = row?.UpdatedAt,
+                UpdatedByAdminId = row?.UpdatedByAdminId
+            });
+        }
+
+        [HttpPut("delivery-fee")]
+        public async Task<IActionResult> PutDeliveryFee([FromBody] DeliveryFeePutDto? dto, CancellationToken ct)
+        {
+            if (dto?.Value == null)
+                return BadRequest(new { message = "La valeur du frais de livraison est obligatoire." });
+
+            var value = dto.Value.Value;
+            if (value < 0m)
+                return BadRequest(new { message = "Le frais de livraison doit être supérieur ou égal à 0." });
+
+            if (value > 999.999m)
+                return BadRequest(new { message = "Le frais de livraison doit être inférieur ou égal à 999.999 TND." });
+
+            if (decimal.GetBits(value)[3] >> 16 is var scale && scale > 3)
+                return BadRequest(new { message = "Le frais de livraison accepte au maximum 3 décimales." });
+
+            Guid? adminId = null;
+            if (Guid.TryParse(User?.FindFirstValue(ClaimTypes.NameIdentifier), out var g)) adminId = g;
+
+            var saved = await _service.SetDecimalAsync(
+                AppSettingsService.DeliveryFeeHomeKey,
+                value,
+                "Frais fixe appliqué aux nouvelles commandes livrées à domicile.",
+                true,
+                adminId,
+                ct);
+
+            return Ok(new DeliveryFeeResponseDto
+            {
+                Key = saved.Key,
+                Value = value,
+                IsPublic = saved.IsPublic,
+                UpdatedAt = saved.UpdatedAt,
+                UpdatedByAdminId = saved.UpdatedByAdminId
+            });
+        }
+
         [HttpGet("{key}")]
         public async Task<IActionResult> Get(string key, CancellationToken ct)
         {
@@ -41,7 +96,7 @@ namespace Web_Api.Controllers.Admin
             if (dto == null) return BadRequest(new { message = "Body manquant." });
 
             Guid? adminId = null;
-            if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var g)) adminId = g;
+            if (Guid.TryParse(User?.FindFirstValue(ClaimTypes.NameIdentifier), out var g)) adminId = g;
 
             var saved = await _service.SetAsync(key, dto.ValueJson ?? "null", dto.Description, dto.IsPublic, adminId, ct);
             return Ok(saved);
@@ -52,6 +107,20 @@ namespace Web_Api.Controllers.Admin
             public string? ValueJson { get; set; }
             public string? Description { get; set; }
             public bool IsPublic { get; set; }
+        }
+
+        public class DeliveryFeePutDto
+        {
+            public decimal? Value { get; set; }
+        }
+
+        public class DeliveryFeeResponseDto
+        {
+            public string Key { get; set; } = AppSettingsService.DeliveryFeeHomeKey;
+            public decimal Value { get; set; }
+            public bool IsPublic { get; set; }
+            public DateTime? UpdatedAt { get; set; }
+            public Guid? UpdatedByAdminId { get; set; }
         }
     }
 

@@ -156,6 +156,7 @@ export const endpoints = {
   // Module 10 — App settings
   adminSettings: "/api/admin/settings",
   adminSettingByKey: (key: string) => `/api/admin/settings/${encodeURIComponent(key)}`,
+  adminDeliveryFee: "/api/admin/settings/delivery-fee",
   publicSettings: "/api/settings/public",
 
   // Module 12 — Chatbot admin (intégration API existante)
