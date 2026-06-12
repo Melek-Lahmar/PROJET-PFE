@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -59,7 +60,7 @@ class AdminDriversProvider extends ChangeNotifier {
         search: _search,
       );
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
       if (isFirst) _data = null;
     } finally {
       _loading = false;
@@ -93,7 +94,7 @@ class AdminDriversProvider extends ChangeNotifier {
         period: _lastPeriod == null ? '30d' : _periodCode(_lastPeriod!),
       );
     } catch (e) {
-      _detailError = e.toString();
+      _detailError = friendlyError(e);
     } finally {
       _detailLoading = false;
       notifyListeners();

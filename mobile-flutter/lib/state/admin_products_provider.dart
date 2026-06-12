@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/admin_products_service.dart';
@@ -41,7 +42,7 @@ class AdminProductsProvider extends ChangeNotifier {
         period: _periodCode(period),
       );
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
       _data = null;
     } finally {
       _loading = false;

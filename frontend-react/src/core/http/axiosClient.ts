@@ -4,6 +4,10 @@ import { env } from "../config/env";
 
 export const axiosClient = axios.create({
   baseURL: env.apiBaseUrl,
+  // Évite les requêtes qui pendent indéfiniment : au-delà, l'erreur est
+  // traduite en « Le serveur met trop de temps à répondre » par
+  // getApiErrorMessage (code ECONNABORTED).
+  timeout: 30000,
 });
 
 axiosClient.interceptors.request.use((config) => {

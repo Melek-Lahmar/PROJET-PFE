@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/customer_orders_service.dart';
@@ -37,7 +38,7 @@ class CustomerOrdersProvider extends ChangeNotifier {
         _detailsCache[order.piece] = order;
       }
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
     } finally {
       _loading = false;
       notifyListeners();

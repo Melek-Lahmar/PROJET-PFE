@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -108,7 +109,7 @@ class AdminOrdersProvider extends ChangeNotifier {
         pageSize: _pageSize,
       );
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
       if (isFirst) _data = null;
     } finally {
       _loading = false;
@@ -196,7 +197,7 @@ class AdminOrdersProvider extends ChangeNotifier {
     try {
       _detail = await _service.getDetail(piece);
     } catch (e) {
-      _detailError = e.toString();
+      _detailError = friendlyError(e);
     } finally {
       _detailLoading = false;
       notifyListeners();

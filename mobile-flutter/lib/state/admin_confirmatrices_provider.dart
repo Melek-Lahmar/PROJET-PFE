@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
@@ -47,7 +48,7 @@ class AdminConfirmatricesProvider extends ChangeNotifier {
     try {
       _data = await _service.getPage(period: _periodCode(period), search: _search);
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
       if (isFirst) _data = null;
     } finally {
       _loading = false;
@@ -78,7 +79,7 @@ class AdminConfirmatricesProvider extends ChangeNotifier {
       _detail = await _service.getDetail(userId,
           period: _lastPeriod == null ? '30d' : _periodCode(_lastPeriod!));
     } catch (e) {
-      _detailError = e.toString();
+      _detailError = friendlyError(e);
     } finally {
       _detailLoading = false;
       notifyListeners();

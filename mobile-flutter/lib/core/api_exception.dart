@@ -48,3 +48,19 @@ class ApiException implements Exception {
   @override
   String toString() => 'ApiException($statusCode): $message';
 }
+
+/// Convertit **n'importe quelle** erreur en message clair et lisible pour
+/// l'utilisateur final (français, sans préfixe technique).
+///
+/// - `ApiException` → son `displayMessage` (réseau/timeout/401/403/5xx…).
+/// - `Exception` générique → texte nettoyé du préfixe « Exception: ».
+/// - Tout le reste → `toString()` nettoyé.
+///
+/// À utiliser dans tous les `catch` des providers et dans les SnackBars :
+/// `error = friendlyError(e);`
+String friendlyError(Object? error) {
+  if (error is ApiException) return error.displayMessage;
+  final raw = error?.toString() ?? 'Une erreur est survenue.';
+  final cleaned = raw.replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+  return cleaned.isEmpty ? 'Une erreur est survenue.' : cleaned;
+}

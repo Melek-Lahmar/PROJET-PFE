@@ -1,3 +1,4 @@
+import '../../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data/services/admin_chat_service.dart';
@@ -79,7 +80,7 @@ class AdminChatProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorCount++;
-      _lastError = e.toString();
+      _lastError = friendlyError(e);
       _messages.add(ChatMessage(
         id: _newId(),
         role: ChatMessageRole.assistant,

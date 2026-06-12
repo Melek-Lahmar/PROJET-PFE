@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/confirmatrice_status_service.dart';
@@ -35,7 +36,7 @@ class ConfirmatriceStatusProvider extends ChangeNotifier {
       status = results[0] as ConfirmatriceStatus;
       stats = results[1] as ConfirmatriceStats;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -58,7 +59,7 @@ class ConfirmatriceStatusProvider extends ChangeNotifier {
       }
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return false;
     } finally {
       saving = false;
@@ -78,7 +79,7 @@ class ConfirmatriceStatusProvider extends ChangeNotifier {
       } catch (_) {}
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return false;
     } finally {
       saving = false;

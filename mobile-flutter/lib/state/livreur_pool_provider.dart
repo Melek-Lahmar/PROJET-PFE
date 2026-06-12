@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/livreur_pool_service.dart';
@@ -22,7 +23,7 @@ class LivreurPoolProvider extends ChangeNotifier {
     try {
       pool = await service.fetchDisponibles();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loadingPool = false;
       notifyListeners();
@@ -36,7 +37,7 @@ class LivreurPoolProvider extends ChangeNotifier {
     try {
       mine = await service.fetchMesLivraisons();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loadingMine = false;
       notifyListeners();
@@ -54,7 +55,7 @@ class LivreurPoolProvider extends ChangeNotifier {
       }
       return ok;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return false;
     } finally {
       saving = false;
@@ -66,7 +67,7 @@ class LivreurPoolProvider extends ChangeNotifier {
     try {
       return await service.fetchDetail(doPiece);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }
@@ -81,7 +82,7 @@ class LivreurPoolProvider extends ChangeNotifier {
       await refreshMine();
       return result;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;

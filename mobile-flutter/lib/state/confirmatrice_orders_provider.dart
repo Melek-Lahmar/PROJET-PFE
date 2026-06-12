@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -120,7 +121,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       // Recharge les verrous pour les pièces visibles (non bloquant).
       await _refreshLocksForItems();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -151,7 +152,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       notifyListeners();
       return await service.fetchOrderDetails(piece);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }
@@ -167,7 +168,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       await _fetch();
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return false;
     } finally {
       saving = false;
@@ -198,7 +199,27 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       await _fetch();
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
+      return false;
+    } finally {
+      saving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Ajuste le compteur de tentatives (+1 / -1). Chaque +1 journalise
+  /// (qui + quand) côté backend, visible par les autres confirmatrices.
+  Future<bool> adjustTentative(String piece, int delta) async {
+    saving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await service.adjustTentative(piece, delta);
+      await _fetch();
+      return true;
+    } catch (e) {
+      error = friendlyError(e);
       return false;
     } finally {
       saving = false;
@@ -219,7 +240,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       await _fetch();
       return blPiece;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -245,7 +266,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       }
       return result;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       rethrow;
     }
@@ -263,7 +284,7 @@ class ConfirmatriceOrdersProvider extends ChangeNotifier {
       }
       return released;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return false;
     }

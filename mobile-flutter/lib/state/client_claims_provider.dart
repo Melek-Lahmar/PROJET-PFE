@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -21,7 +22,7 @@ class ClientClaimsProvider extends ChangeNotifier {
     try {
       items = await service.fetchMine();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -35,7 +36,7 @@ class ClientClaimsProvider extends ChangeNotifier {
     try {
       return await service.fetchDetails(id);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       loading = false;
@@ -55,7 +56,7 @@ class ClientClaimsProvider extends ChangeNotifier {
       notifyListeners();
       return updated;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }
@@ -65,7 +66,7 @@ class ClientClaimsProvider extends ChangeNotifier {
     try {
       return await service.fetchRepeatOrderLines(reclamationId);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return const [];
     }
@@ -117,7 +118,7 @@ class ClientClaimsProvider extends ChangeNotifier {
       notifyListeners();
       return created;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }

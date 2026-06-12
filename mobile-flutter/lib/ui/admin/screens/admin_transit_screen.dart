@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/api_exception.dart';
 import '../../../data/services/refonte/supervisor_service.dart';
 import '../../widgets/premium/empty_view.dart';
 import '../../widgets/premium/premium_card.dart';
@@ -72,9 +73,7 @@ class _AdminTransitScreenState extends State<AdminTransitScreen> {
                   child: EmptyView(
                     icon: Icons.cloud_off_rounded,
                     title: 'Impossible de charger le transit',
-                    subtitle: snap.error
-                        .toString()
-                        .replaceFirst('Exception: ', ''),
+                    subtitle: friendlyError(snap.error),
                     ctaLabel: 'Réessayer',
                     onCta: _refresh,
                   ),

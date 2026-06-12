@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/api_exception.dart';
 import '../../../data/services/admin_users_service.dart';
 import '../../../models/admin_dashboard_overview.dart' show AdminKpi;
 import '../../../models/admin_driver.dart';
@@ -206,7 +207,7 @@ Future<void> _deleteDriver(
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Suppression échouée : ${e.toString().replaceFirst('Exception: ', '')}'),
+        content: Text('Suppression échouée : ${friendlyError(e)}'),
         backgroundColor: const Color(0xFFEF4444),
       ),
     );

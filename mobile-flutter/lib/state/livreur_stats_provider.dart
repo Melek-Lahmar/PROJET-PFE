@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/livreur_stats_service.dart';
@@ -43,7 +44,7 @@ class LivreurStatsProvider extends ChangeNotifier {
       };
       _data = result;
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
     } finally {
       _loading = false;
       notifyListeners();
@@ -60,7 +61,7 @@ class LivreurStatsProvider extends ChangeNotifier {
       await load();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = friendlyError(e);
       notifyListeners();
       return false;
     }

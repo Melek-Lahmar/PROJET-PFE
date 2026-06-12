@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/avis_service.dart';
@@ -21,7 +22,7 @@ class AvisProvider extends ChangeNotifier {
     try {
       pending = await service.fetchPending();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -50,7 +51,7 @@ class AvisProvider extends ChangeNotifier {
       _recentlyPrompted.add(commandePiece);
       notifyListeners();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
     }
   }
@@ -72,7 +73,7 @@ class AvisProvider extends ChangeNotifier {
       _recentlyPrompted.add(commandePiece);
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return false;
     } finally {
       submitting = false;

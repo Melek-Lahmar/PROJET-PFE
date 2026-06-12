@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 import '../data/services/auth_service.dart';
 
@@ -26,7 +27,7 @@ class AuthProvider extends ChangeNotifier {
       session = await auth.restoreSession();
     } catch (e) {
       session = null;
-      error = e.toString();
+      error = friendlyError(e);
       await auth.logout();
     } finally {
       loading = false;
@@ -43,7 +44,7 @@ class AuthProvider extends ChangeNotifier {
       session = await auth.login(email: email, password: password);
     } catch (e) {
       session = null;
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();

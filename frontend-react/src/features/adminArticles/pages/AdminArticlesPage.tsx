@@ -7,6 +7,7 @@ import { getMainImagesMap } from "../../catalog/api/articleImagesApi";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
 import { env } from "../../../core/config/env";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 import { resolveImageUrl } from "../../../shared/utils/image";
 import { StockBadge } from "../../catalog/components/StockBadge";
 import {
@@ -133,7 +134,7 @@ export function AdminArticlesPage() {
               {isPending ? (
                 <tr><td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">Chargement des articles...</td></tr>
               ) : isError ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center"><div className="text-sm font-semibold text-rose-700">Erreur lors du chargement des articles.</div><div className="mt-2 text-xs text-muted-foreground">{error instanceof Error ? error.message : "Erreur inconnue"}</div><div className="mt-1 text-xs text-muted-foreground">API utilisée : {apiBaseUrl}/api/articles</div></td></tr>
+                <tr><td colSpan={7} className="px-5 py-10 text-center"><div className="text-sm font-semibold text-rose-700">Erreur lors du chargement des articles.</div><div className="mt-2 text-xs text-muted-foreground">{getApiErrorMessage(error)}</div><div className="mt-1 text-xs text-muted-foreground">API utilisée : {apiBaseUrl}/api/articles</div></td></tr>
               ) : items.length === 0 ? (
                 <tr><td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">Aucun article trouvé.</td></tr>
               ) : (

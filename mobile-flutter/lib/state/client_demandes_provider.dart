@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/services/client_claims_service.dart';
@@ -23,7 +24,7 @@ class ClientDemandesProvider extends ChangeNotifier {
     try {
       items = await service.fetchMyDemandes();
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -34,7 +35,7 @@ class ClientDemandesProvider extends ChangeNotifier {
     try {
       return await service.fetchDemandeDetails(id);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }
@@ -70,7 +71,7 @@ class ClientDemandesProvider extends ChangeNotifier {
       }
       return updated;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;

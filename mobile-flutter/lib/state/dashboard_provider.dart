@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'package:flutter/foundation.dart';
 import '../data/services/dashboard_service.dart';
 import '../models/dashboard_models.dart';
@@ -21,7 +22,7 @@ class DashboardProvider extends ChangeNotifier {
     try {
       data = await service.fetch(range);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();

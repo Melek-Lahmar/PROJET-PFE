@@ -1,5 +1,6 @@
 import { isRouteErrorResponse, useRouteError, Link } from "react-router-dom";
 import { Button } from "../components/Button";
+import { getApiErrorMessage } from "../../core/http/getApiErrorMessage";
 
 export function RouteErrorPage() {
   const err = useRouteError();
@@ -23,8 +24,8 @@ export function RouteErrorPage() {
       title = `Erreur serveur`;
       message = err.statusText || message;
     }
-  } else if (err instanceof Error) {
-    message = err.message;
+  } else if (err) {
+    message = getApiErrorMessage(err);
   }
 
   return (

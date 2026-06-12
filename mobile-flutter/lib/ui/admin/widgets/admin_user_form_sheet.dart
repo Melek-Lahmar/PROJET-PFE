@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/api_exception.dart';
 import '../../../data/services/admin_users_service.dart';
 
 /// Liste minimale des 24 gouvernorats — alignée avec l'enum backend
@@ -151,7 +152,7 @@ class _AdminUserFormSheetState extends State<AdminUserFormSheet> {
       Navigator.of(context).pop(true);
     } catch (e) {
       setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
+        _error = friendlyError(e);
         _saving = false;
       });
     }

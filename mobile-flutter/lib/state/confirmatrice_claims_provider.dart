@@ -1,3 +1,4 @@
+import '../core/api_exception.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -152,7 +153,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       );
       items = _prioritize(fetched, forTypeCas: filter.typeCas);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -190,7 +191,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
         demandes = sorted;
       }
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
@@ -234,7 +235,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -256,7 +257,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
         note: note,
       );
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -268,7 +269,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
     try {
       return await service.fetchOriginalLinesForEchange(reclamationId);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return const [];
     }
@@ -278,7 +279,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
     try {
       return await service.fetchDetails(id);
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return null;
     }
@@ -292,7 +293,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -308,7 +309,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -336,7 +337,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -352,7 +353,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -368,7 +369,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       _replaceInAllLists(claim);
       return claim;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       return null;
     } finally {
       saving = false;
@@ -381,7 +382,7 @@ class ConfirmatriceClaimsProvider extends ChangeNotifier {
       await service.uploadPhoto(id, file);
       return true;
     } catch (e) {
-      error = e.toString();
+      error = friendlyError(e);
       notifyListeners();
       return false;
     }
