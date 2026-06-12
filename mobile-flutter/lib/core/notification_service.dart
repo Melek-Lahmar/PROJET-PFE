@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Notification payload format:
-///   ARRIVAL|<doPiece>        → livreur arrivé (existant)
-///   CAS|<id>                 → un cas (Réclamation / Demande)
-///   ORDER|<doPiece>          → une commande (tracking)
+///   `ARRIVAL|<doPiece>`        → livreur arrivé (existant)
+///   `CAS|<id>`                 → un cas (Réclamation / Demande)
+///   `ORDER|<doPiece>`          → une commande (tracking)
 class NotificationService {
   NotificationService._();
   static final NotificationService I = NotificationService._();

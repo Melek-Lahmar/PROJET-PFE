@@ -95,7 +95,7 @@ class CommandeDetail {
   bool get isEchange => typeCommande.toUpperCase() == 'ECHANGE';
 
   factory CommandeDetail.fromMap(Map<String, dynamic> m) {
-    List<CommandeLigne> _list(dynamic raw) {
+    List<CommandeLigne> parseLignes(dynamic raw) {
       if (raw is! List) return const [];
       return raw.whereType<Map<String, dynamic>>().map(CommandeLigne.fromMap).toList();
     }
@@ -109,9 +109,9 @@ class CommandeDetail {
       clientPhone: m['clientPhone']?.toString(),
       adresseLivraison: m['adresseLivraison']?.toString(),
       villeLivraison: m['villeLivraison']?.toString(),
-      lignesStandard: _list(m['lignesStandard']),
-      lignesRetour: _list(m['lignesRetour']),
-      lignesLivraison: _list(m['lignesLivraison']),
+      lignesStandard: parseLignes(m['lignesStandard']),
+      lignesRetour: parseLignes(m['lignesRetour']),
+      lignesLivraison: parseLignes(m['lignesLivraison']),
     );
   }
 }

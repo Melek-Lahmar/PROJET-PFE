@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/api_exception.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme/app_status_palette.dart';
 import '../../../data/services/avis_service.dart';
@@ -234,20 +238,21 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen>
   Future<void> _toggleActiveDelivery(Delivery d, bool start) async {
     try {
       final api = context.read<ApiClient>();
+      final locationService = context.read<LivreurLocationService?>();
       final svc = LivreurActiveDeliveryService(api);
       if (start) {
         await svc.startHeading(d.doPiece);
-        await context.read<LivreurLocationService?>()?.start();
+        await locationService?.start();
         if (mounted) {
           _snack('Livraison active. Le client voit votre position.');
         }
       } else {
         await svc.stopHeading(d.doPiece);
-        await context.read<LivreurLocationService?>()?.stop();
+        await locationService?.stop();
         if (mounted) _snack('Livraison désactivée.');
       }
     } catch (e) {
-      if (mounted) _snack(e.toString());
+      if (mounted) _snack(friendlyError(e));
     }
   }
 
@@ -279,9 +284,13 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen>
     String? note,
     DateTime? replannedAt,
     bool recordAttempt = false,
+    File? photo,
   }) async {
+    // Providers captés avant tout await (évite l'usage de context post-async).
+    final deliveriesProvider = context.read<DeliveriesProvider>();
+    final api = context.read<ApiClient>();
     try {
-      await context.read<DeliveriesProvider>().setStatus(
+      await deliveriesProvider.setStatus(
             doPiece: d.doPiece,
             statut: newStatut,
             motif: motif,
@@ -290,14 +299,15 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen>
           );
       // Si motif tentative / injoignable / absent / tel éteint, enregistrer
       // la tentative côté backend pour déclencher la logique d'escalade.
+      // La photo (si fournie) est obligatoire pour COLIS_ENDOMMAGE_DEPOT.
       if (recordAttempt && motif != null && motif.isNotEmpty) {
         try {
-          final api = context.read<ApiClient>();
           final signalSvc = LivreurSignalService(api);
           await signalSvc.recordAttempt(
             doPiece: d.doPiece,
             motif: motif,
             description: note,
+            photo: photo,
           );
         } catch (_) {
           // La màj statut a déjà abouti ; l'absence de tentative
@@ -815,6 +825,7 @@ class _StatusSheetState extends State<_StatusSheet> {
   _StatusOption? _option;
   final TextEditingController _noteCtrl = TextEditingController();
   DateTime? _replannedAt;
+  XFile? _photo;
 
   @override
   void dispose() {
@@ -887,6 +898,9 @@ class _StatusSheetState extends State<_StatusSheet> {
     final o = _option!;
     final needsDate = o.requiresReplannedAt;
     final needsNote = o.needsNote;
+    final descTooShort = o.needsDescription && _noteCtrl.text.trim().length < 10;
+    final photoMissing = o.needsPhoto && _photo == null;
+    final blocked = (needsDate && _replannedAt == null) || descTooShort || photoMissing;
 
     return [
       PremiumCard(
@@ -932,12 +946,19 @@ class _StatusSheetState extends State<_StatusSheet> {
           controller: _noteCtrl,
           maxLines: 3,
           maxLength: 400,
-          decoration: const InputDecoration(
-            labelText: 'Note / précisions (optionnel)',
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: o.needsDescription
+                ? 'Description (obligatoire, min. 10 caractères)'
+                : 'Note / précisions (optionnel)',
             hintText: 'Ex : sonnette cassée, voisin informé…',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
         ),
+        const SizedBox(height: 12),
+      ],
+      if (o.needsPhoto) ...[
+        _photoField(o),
         const SizedBox(height: 12),
       ],
       Row(
@@ -951,7 +972,7 @@ class _StatusSheetState extends State<_StatusSheet> {
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton(
-              onPressed: needsDate && _replannedAt == null
+              onPressed: blocked
                   ? null
                   : () {
                       widget.parent._applyStatus(
@@ -963,6 +984,7 @@ class _StatusSheetState extends State<_StatusSheet> {
                             : _noteCtrl.text.trim(),
                         replannedAt: _replannedAt,
                         recordAttempt: o.recordAttempt,
+                        photo: _photo == null ? null : File(_photo!.path),
                       );
                     },
               style: FilledButton.styleFrom(
@@ -1038,6 +1060,63 @@ class _StatusSheetState extends State<_StatusSheet> {
         time.minute,
       );
     });
+  }
+
+  Widget _photoField(_StatusOption o) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.photo_camera_rounded, size: 18, color: o.color),
+            const SizedBox(width: 6),
+            Text(
+              'Photo du colis (obligatoire)',
+              style: TextStyle(fontWeight: FontWeight.w800, color: scheme.onSurface),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_photo != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(
+              File(_photo!.path),
+              height: 160,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          onPressed: _pickPhoto,
+          icon: Icon(
+            _photo == null ? Icons.photo_camera_outlined : Icons.refresh_rounded,
+          ),
+          label: Text(_photo == null ? 'Prendre une photo' : 'Reprendre la photo'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final picker = ImagePicker();
+      final img = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+        maxWidth: 1600,
+      );
+      if (img == null || !mounted) return;
+      setState(() => _photo = img);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d\'ouvrir l\'appareil photo.')),
+      );
+    }
   }
 
   String _formatDateTime(DateTime v) {
@@ -1116,6 +1195,8 @@ class _StatusOption {
   final bool needsNote;
   final bool requiresReplannedAt;
   final bool recordAttempt;
+  final bool needsPhoto;       // photo obligatoire (ex. COLIS_ENDOMMAGE_DEPOT)
+  final bool needsDescription; // description ≥ 10 caractères (ex. AUTRE)
 
   const _StatusOption({
     required this.label,
@@ -1129,6 +1210,8 @@ class _StatusOption {
     this.needsNote = false,
     this.requiresReplannedAt = false,
     this.recordAttempt = false,
+    this.needsPhoto = false,
+    this.needsDescription = false,
   });
 }
 
@@ -1466,19 +1549,33 @@ final List<_StatusOption> _options = [
     requiresReplannedAt: true,
   ),
   _StatusOption(
-    label: 'Colis endommagé',
-    description: 'Le produit est abîmé avant livraison.',
-    confirmLabel: 'Signaler',
+    label: 'Refus client',
+    description: 'Le client refuse de réceptionner le colis.',
+    confirmLabel: 'Signaler le refus',
+    icon: Icons.do_not_disturb_on_outlined,
+    color: Colors.red.shade700,
+    bg: Colors.red.shade50,
+    newStatut: Statut.retourne,
+    motif: 'CLIENT_REFUSE',
+    needsNote: true,
+    recordAttempt: true,
+  ),
+  _StatusOption(
+    label: 'Colis endommagé (retour dépôt)',
+    description: 'Le colis est abîmé : retour au dépôt. Photo obligatoire.',
+    confirmLabel: 'Signaler avec photo',
     icon: Icons.broken_image_outlined,
     color: Colors.red.shade700,
     bg: Colors.red.shade50,
     newStatut: Statut.retourne,
-    motif: 'COLIS_ENDOMMAGE',
+    motif: 'COLIS_ENDOMMAGE_DEPOT',
     needsNote: true,
+    needsPhoto: true,
+    recordAttempt: true,
   ),
   _StatusOption(
     label: 'Autre incident',
-    description: 'Autre motif à préciser.',
+    description: 'Autre motif à préciser (description obligatoire).',
     confirmLabel: 'Envoyer',
     icon: Icons.report_problem_outlined,
     color: Colors.grey.shade700,
@@ -1486,6 +1583,8 @@ final List<_StatusOption> _options = [
     newStatut: Statut.reporte,
     motif: 'AUTRE',
     needsNote: true,
+    needsDescription: true,
+    recordAttempt: true,
   ),
 ];
 

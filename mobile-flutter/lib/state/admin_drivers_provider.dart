@@ -50,7 +50,11 @@ class AdminDriversProvider extends ChangeNotifier {
     _lastGov = governorate;
     _lastPeriod = period;
     final isFirst = _data == null;
-    if (isFirst) _loading = true; else _refreshing = true;
+    if (isFirst) {
+      _loading = true;
+    } else {
+      _refreshing = true;
+    }
     _error = null;
     notifyListeners();
     try {

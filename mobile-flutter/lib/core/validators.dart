@@ -13,8 +13,11 @@ class TunisianPhoneValidator {
   /// Normalise au format +216 XX XXX XXX
   static String normalize(String value) {
     var cleaned = value.replaceAll(RegExp(r'[\s-]'), '');
-    if (cleaned.startsWith('00216')) cleaned = '+216${cleaned.substring(5)}';
-    else if (!cleaned.startsWith('+216')) cleaned = '+216$cleaned';
+    if (cleaned.startsWith('00216')) {
+      cleaned = '+216${cleaned.substring(5)}';
+    } else if (!cleaned.startsWith('+216')) {
+      cleaned = '+216$cleaned';
+    }
     return cleaned;
   }
 

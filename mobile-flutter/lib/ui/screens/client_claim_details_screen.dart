@@ -77,6 +77,7 @@ class _ClientClaimDetailsScreenState extends State<ClientClaimDetailsScreen> {
       ),
     );
     if (text == null || text.isEmpty) return;
+    if (!mounted) return;
     if (text.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Texte trop court (minimum 10 caractères).')),

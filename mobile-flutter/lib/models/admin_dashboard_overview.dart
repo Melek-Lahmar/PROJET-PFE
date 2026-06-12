@@ -19,7 +19,7 @@ class AdminDashboardOverview {
   });
 
   factory AdminDashboardOverview.fromMap(Map<String, dynamic> m) {
-    List<T> _list<T>(dynamic raw, T Function(Map<String, dynamic>) f) {
+    List<T> parseList<T>(dynamic raw, T Function(Map<String, dynamic>) f) {
       if (raw is! List) return <T>[];
       return raw
           .whereType<Map>()
@@ -33,14 +33,14 @@ class AdminDashboardOverview {
       appliedFilters: AdminAppliedFilters.fromMap(
         Map<String, dynamic>.from(m['appliedFilters'] ?? {}),
       ),
-      kpis: _list(m['kpis'], AdminKpi.fromMap),
+      kpis: parseList(m['kpis'], AdminKpi.fromMap),
       deliveriesVsReturns:
-          _list(m['deliveriesVsReturns'], AdminTrendPoint.fromMap),
-      volumeTrend: _list(m['volumeTrend'], AdminTrendPoint.fromMap),
+          parseList(m['deliveriesVsReturns'], AdminTrendPoint.fromMap),
+      volumeTrend: parseList(m['volumeTrend'], AdminTrendPoint.fromMap),
       statusBreakdown:
-          _list(m['statusBreakdown'], AdminBreakdownItem.fromMap),
+          parseList(m['statusBreakdown'], AdminBreakdownItem.fromMap),
       governorateBreakdown:
-          _list(m['governorateBreakdown'], AdminBreakdownItem.fromMap),
+          parseList(m['governorateBreakdown'], AdminBreakdownItem.fromMap),
     );
   }
 }

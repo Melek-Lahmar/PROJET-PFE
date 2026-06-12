@@ -13,7 +13,7 @@ class AvisProvider extends ChangeNotifier {
   bool submitting = false;
   String? error;
   List<AvisPending> pending = const [];
-  Set<String> _recentlyPrompted = <String>{};
+  final Set<String> _recentlyPrompted = <String>{};
 
   Future<void> refresh() async {
     loading = true;

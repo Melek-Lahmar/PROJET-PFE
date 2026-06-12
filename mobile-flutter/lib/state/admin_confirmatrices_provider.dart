@@ -42,7 +42,11 @@ class AdminConfirmatricesProvider extends ChangeNotifier {
   Future<void> refresh({required AdminPeriod period}) async {
     _lastPeriod = period;
     final isFirst = _data == null;
-    if (isFirst) _loading = true; else _refreshing = true;
+    if (isFirst) {
+      _loading = true;
+    } else {
+      _refreshing = true;
+    }
     _error = null;
     notifyListeners();
     try {

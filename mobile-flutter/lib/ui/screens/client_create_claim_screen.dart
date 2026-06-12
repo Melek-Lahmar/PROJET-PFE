@@ -179,6 +179,7 @@ class _ClientCreateClaimScreenState extends State<ClientCreateClaimScreen> {
       final picker = ImagePicker();
       final picked = await picker.pickImage(source: source, imageQuality: 85);
       if (picked == null) return;
+      if (!mounted) return;
       if (_pickedPhotos.length >= 5) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Maximum 5 photos par demande.')),

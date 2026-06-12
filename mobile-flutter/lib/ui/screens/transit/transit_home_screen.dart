@@ -29,7 +29,6 @@ class _TC {
   static const red        = Color(0xFFDC2626);
   static const redBg      = Color(0xFFFEF2F2);
   static const grey       = Color(0xFF6B7280);
-  static const greyBg     = Color(0xFFF3F4F6);
 }
 
 // ─── Root screen ─────────────────────────────────────────────────────────────
@@ -50,18 +49,6 @@ class _TransitHomeScreenState extends State<TransitHomeScreen> {
   List<Map<String, dynamic>> _missions = const [];
 
   static const _tabs = ['À prendre', 'En cours', 'Historique', 'Profil'];
-  static const _icons = [
-    Icons.inventory_2_outlined,
-    Icons.local_shipping_outlined,
-    Icons.history_rounded,
-    Icons.person_outline_rounded,
-  ];
-  static const _activeIcons = [
-    Icons.inventory_2,
-    Icons.local_shipping_rounded,
-    Icons.history_rounded,
-    Icons.person_rounded,
-  ];
 
   @override
   void initState() {

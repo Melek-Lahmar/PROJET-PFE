@@ -273,7 +273,7 @@ class _ClientOrderTrackingScreenState extends State<ClientOrderTrackingScreen> {
                       ...tracking!.events.asMap().entries.map((e) =>
                         CustomerTrackingStepTile(
                           event: e.value,
-                          isLast: e.key == tracking!.events.length - 1,
+                          isLast: e.key == tracking.events.length - 1,
                         ))
                     else
                       ...milestones.map((item) => _TimelineTile(item: item)),
@@ -1113,7 +1113,7 @@ class _TransitItemsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Articles en transit",
+                    "Acheminement de votre commande",
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -1142,7 +1142,19 @@ class _TransitItemsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            ...tracking.transitItems.map((item) => _TransitItemRow(item: item)),
+            // Client = résumé global ("En transit de X vers Y"). Le détail par
+            // article (transitItems) n'est pas exposé côté client.
+            if (tracking.transitItems.isEmpty)
+              Text(
+                tracking.transitSummary ??
+                    "Certains articles sont acheminés depuis nos autres dépôts vers le dépôt de livraison.",
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+              )
+            else
+              ...tracking.transitItems.map((item) => _TransitItemRow(item: item)),
           ],
         ),
       ),

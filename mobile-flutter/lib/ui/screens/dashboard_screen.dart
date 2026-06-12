@@ -191,10 +191,9 @@ class _KpiSection extends StatelessWidget {
 
   Color _deltaColor(BuildContext context, KpiItem kpi) {
     final delta = kpi.deltaPercent;
-    if (delta == null) return Theme
-        .of(context)
-        .colorScheme
-        .primary;
+    if (delta == null) {
+      return Theme.of(context).colorScheme.primary;
+    }
 
     final good = kpi.positiveIsGood ? delta >= 0 : delta <= 0;
     return good ? Colors.green : Colors.red;

@@ -475,7 +475,9 @@ class _KpiDetailPremiumScreenState<T> extends State<KpiDetailPremiumScreen<T>>
 // Sticky header delegate (titre + chart en haut)
 // ════════════════════════════════════════════════════════════════════
 class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  @override
   final double minExtent;
+  @override
   final double maxExtent;
   final Widget Function(double shrinkOffset) builder;
 

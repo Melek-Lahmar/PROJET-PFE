@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/api_exception.dart';
 import '../../../data/services/refonte/transit_service.dart';
 
 // ─── Helpers statut ──────────────────────────────────────────────────────────
@@ -347,6 +348,7 @@ class _TransitMissionDetailsScreenState
     );
     controller.dispose();
     if (code == null || code.trim().isEmpty) return;
+    if (!mounted) return;
 
     try {
       final svc = TransitService(context.read<ApiClient>());
@@ -364,7 +366,7 @@ class _TransitMissionDetailsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur scan : $e'),
+            content: Text('Erreur scan : ${friendlyError(e)}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -377,6 +379,7 @@ class _TransitMissionDetailsScreenState
   Future<void> _revertPickup() async {
     final justification = await _askRevertJustification(context);
     if (justification == null || justification.isEmpty) return;
+    if (!mounted) return;
 
     try {
       final svc = TransitService(context.read<ApiClient>());
@@ -409,7 +412,7 @@ class _TransitMissionDetailsScreenState
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Impossible d\'annuler : $msg'),
+              content: Text('Impossible d\'annuler : ${friendlyError(e)}'),
               backgroundColor: Colors.red,
             ),
           );
