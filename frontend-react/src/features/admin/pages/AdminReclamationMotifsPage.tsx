@@ -182,17 +182,18 @@ function ClientMotifsSection() {
   const [cfg, setCfg] = useState<ClientMotifsConfig>(DEFAULT_CLIENT);
   const [newMotif, setNewMotif] = useState<ClientMotif>({ code: "", label: "", enabled: true });
 
-  const { isPending } = useQuery({
+  const { data: loadedCfg, isPending } = useQuery({
     queryKey: ["admin-setting", CLIENT_KEY],
     queryFn: () => getSettingByKey(CLIENT_KEY),
     select: (raw) => {
       if (!raw) return null;
       try { return JSON.parse(raw.valueJson ?? "null"); } catch { return null; }
     },
-    onSuccess: (parsed: any) => {
-      if (parsed) setCfg({ ...DEFAULT_CLIENT, ...parsed });
-    },
-  } as any);
+  });
+
+  useEffect(() => {
+    if (loadedCfg) setCfg({ ...DEFAULT_CLIENT, ...loadedCfg });
+  }, [loadedCfg]);
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -305,17 +306,18 @@ function LivreurMotifsSection() {
   const qc = useQueryClient();
   const [motifs, setMotifs] = useState<LivreurMotif[]>(DEFAULT_LIVREUR);
 
-  const { isPending } = useQuery({
+  const { data: loadedMotifs, isPending } = useQuery({
     queryKey: ["admin-setting", LIVREUR_KEY],
     queryFn: () => getSettingByKey(LIVREUR_KEY),
-    select: (raw: any) => {
+    select: (raw) => {
       if (!raw) return null;
       try { return JSON.parse(raw.valueJson ?? "null"); } catch { return null; }
     },
-    onSuccess: (parsed: any) => {
-      if (Array.isArray(parsed)) setMotifs(parsed);
-    },
-  } as any);
+  });
+
+  useEffect(() => {
+    if (Array.isArray(loadedMotifs)) setMotifs(loadedMotifs);
+  }, [loadedMotifs]);
 
   const saveMut = useMutation({
     mutationFn: () =>
