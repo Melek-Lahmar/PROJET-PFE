@@ -74,11 +74,20 @@ namespace Web_Api.Services
                 ["Document"] = JsonConvert.SerializeObject(documentPayload)
             };
 
+            _logger.LogInformation(
+                "DocumentX3 SEND | DO_NumDocument={DocNum} CT_Num={CtNum} DE_No={DeNo} TotalTTC={Total} lignes={Lignes} url={Url}",
+                document.DO_NumDocument, document.CT_Num, document.DE_No,
+                document.DO_TotalTTC, document.LIGNEDOCUMENTs?.Count ?? 0, DocumentEndpointUrl);
+
+            _logger.LogInformation("DocumentX3 PAYLOAD: {Json}", JsonConvert.SerializeObject(request));
+
             try
             {
                 ct.ThrowIfCancellationRequested();
 
                 var response = await DataService.SetObjects("", DocumentEndpointUrl, request);
+
+                _logger.LogInformation("DocumentX3 REPONSE BRUTE: {Response}", response);
 
                 if (string.IsNullOrWhiteSpace(response))
                 {

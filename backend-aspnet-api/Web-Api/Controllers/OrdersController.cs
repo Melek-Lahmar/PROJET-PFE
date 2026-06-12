@@ -188,7 +188,23 @@ namespace Web_Api.Controllers
             if (timeline == null)
                 return NotFound(new { message = "Commande introuvable." });
 
+            // Le client ne voit que le résumé global ("En transit de X vers Y").
+            // Le détail article par article reste réservé au staff.
+            if (IsClientOnly())
+                timeline.Items = new();
+
             return Ok(timeline);
+        }
+
+        // True si l'utilisateur est CLIENT et n'a aucun rôle staff (détail transit réservé au staff).
+        private bool IsClientOnly()
+        {
+            if (!User.IsInRole(AppRoles.CLIENT))
+                return false;
+            return !(User.IsInRole(AppRoles.ADMIN)
+                || User.IsInRole(AppRoles.VENDEUR)
+                || User.IsInRole(AppRoles.CONFIRMATEUR)
+                || User.IsInRole(AppRoles.SUPERVISEUR));
         }
 
         [HttpGet("{piece}/transit-summary")]

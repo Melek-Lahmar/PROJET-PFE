@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Web_Api.Auth.Constants;
 using Web_Api.data;
 using Web_Api.Model;
+using Web_Api.DTO;
 using Web_Api.Services;
 
 namespace Web_Api.Controllers.Stocks
@@ -25,7 +26,9 @@ namespace Web_Api.Controllers.Stocks
         [HttpPost]
         public async Task<IActionResult> Sync(CancellationToken ct)
         {
-            var dtos = await _sageService.GetStocksFromSage(ct);
+            List<StockSageDto> dtos;
+            try { dtos = await _sageService.GetStocksFromSage(ct); }
+            catch (Exception ex) { return StatusCode(502, new { isSuccess = false, error = ex.Message }); }
 
             var existing = await _db.F_ARTSTOCKS.ToListAsync(ct);
             var byKey = existing.ToDictionary(x => $"{x.AR_Ref}__{x.DE_No}");

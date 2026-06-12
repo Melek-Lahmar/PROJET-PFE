@@ -17,8 +17,8 @@ namespace Web_Api.Services
         private readonly ITransitOrchestrationService? _transit;
         private readonly OrderCalculatorService _calculator;
 
-        private const decimal FRAIS_LIVRAISON_HOME = 8m;
-        private const decimal TIMBRE_FISCAL = 1m;
+        private const decimal FRAIS_LIVRAISON_HOME_DEFAULT = 8m;
+        private const decimal TIMBRE_FISCAL_DEFAULT = 1m;
 
         public const string CustomerModeExisting = "EXISTING";
         public const string CustomerModePassager = "PASSAGER";
@@ -454,9 +454,11 @@ namespace Web_Api.Services
             }
             else
             {
-                depotNoForDoc = null;
+                // Zone effective = celle saisie au checkout en priorité, sinon le profil client.
+                var effGouvernorat = TrimOrNull(req.DeliveryGouvernorat) ?? TrimOrNull(req.PassengerSnapshot?.Gouvernorat);
+                var effDelegation = TrimOrNull(req.DeliveryDelegation) ?? TrimOrNull(req.PassengerSnapshot?.Delegation);
 
-                var destinationFromZone = await ResolveDestinationDepotForHomeAsync(req.PassengerSnapshot, normalizedCity, ct);
+                var destinationFromZone = await ResolveDestinationDepotForHomeAsync(effGouvernorat, effDelegation, normalizedCity, ct);
                 var principal = destinationFromZone ?? await _db.F_DEPOTS.AsNoTracking()
                     .OrderByDescending(d => d.DE_Principal)
                     .ThenBy(d => d.DE_No)
@@ -467,6 +469,12 @@ namespace Web_Api.Services
                     throw new BonCommandeValidationException("Aucun dépôt disponible pour vérifier le stock (sync dépôts requis).");
 
                 depotNoForStockCheck = principal;
+
+                // ✅ DE_No affecté DÈS le checkout selon le gouvernorat du client (dépôt servant la zone),
+                // pour réutilisation directe (manifeste vendeur, BL, transit). Si la zone n'est pas
+                // couverte par F_DEPOT_ZONES, on retombe sur le dépôt principal afin que le document
+                // ait toujours un dépôt source exploitable.
+                depotNoForDoc = destinationFromZone ?? principal;
             }
 
             if (deliveryType == DeliveryTypeHome)
@@ -564,8 +572,9 @@ namespace Web_Api.Services
                 });
             }
 
-            var fraisLivraison = deliveryType == DeliveryTypeHome ? FRAIS_LIVRAISON_HOME : 0m;
-            var timbre = TIMBRE_FISCAL;
+            var (fraisHomeCfg, timbreCfg) = await GetDeliveryFeesAsync(ct);
+            var fraisLivraison = deliveryType == DeliveryTypeHome ? fraisHomeCfg : 0m;
+            var timbre = timbreCfg;
             var totals = _calculator.Compute(totalTTC, req.DiscountProfile);
             var netAPayer = totals.Total + fraisLivraison + timbre;
             var piece = await GenerateUniquePieceAsync(ct);
@@ -700,10 +709,10 @@ namespace Web_Api.Services
                     ct);
         }
 
-        private async Task<int?> ResolveDestinationDepotForHomeAsync(OrderCustomerSnapshot? snapshot, string? city, CancellationToken ct)
+        private async Task<int?> ResolveDestinationDepotForHomeAsync(string? gouvernorat, string? delegation, string? city, CancellationToken ct)
         {
-            var gouvernorat = TrimOrNull(snapshot?.Gouvernorat);
-            var delegation = TrimOrNull(snapshot?.Delegation);
+            gouvernorat = TrimOrNull(gouvernorat);
+            delegation = TrimOrNull(delegation);
 
             if (!string.IsNullOrWhiteSpace(gouvernorat) && !string.IsNullOrWhiteSpace(delegation))
             {
@@ -1078,6 +1087,34 @@ namespace Web_Api.Services
                 return null;
 
             return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+        }
+
+        private async Task<(decimal fraisHome, decimal timbre)> GetDeliveryFeesAsync(CancellationToken ct)
+        {
+            try
+            {
+                var raw = await _db.AppSettings.AsNoTracking()
+                    .Where(s => s.Key == "delivery.config")
+                    .Select(s => s.ValueJson)
+                    .FirstOrDefaultAsync(ct);
+
+                if (!string.IsNullOrWhiteSpace(raw) && raw != "null")
+                {
+                    var cfg = System.Text.Json.JsonSerializer.Deserialize<DeliveryConfigSnapshot>(raw,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (cfg != null)
+                        return (cfg.FraisHome, cfg.TimbreFiscal);
+                }
+            }
+            catch { }
+
+            return (FRAIS_LIVRAISON_HOME_DEFAULT, TIMBRE_FISCAL_DEFAULT);
+        }
+
+        private sealed class DeliveryConfigSnapshot
+        {
+            public decimal FraisHome { get; set; } = 8m;
+            public decimal TimbreFiscal { get; set; } = 1m;
         }
     }
 }

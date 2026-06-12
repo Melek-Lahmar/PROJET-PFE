@@ -1,5 +1,5 @@
 import type { ReactNode, SVGProps } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../../shared/components/LanguageSwitcher";
 import { ThemeToggle } from "../../../shared/components/ThemeToggle";
 import { useAuthStore } from "../../auth/store/authStore";
@@ -31,20 +31,13 @@ const groups = [
       { label: "Bons de commande (BC)", href: "/confirmateur/commandes", icon: icons.commandes },
       { label: "Bons de livraison (BL)", href: "/confirmateur/bl", icon: icons.bl },
       { label: "Devis B2B", href: "/confirmateur/devis", icon: icons.devis },
-    ],
-  },
-  {
-    title: "Historique",
-    items: [
-      { label: "BC confirmés", href: "/confirmateur/commandes?status=1", icon: icons.history },
-      { label: "BL confirmés", href: "/confirmateur/bl?status=1", icon: icons.history },
-      { label: "Devis traités", href: "/confirmateur/devis?status=CONVERTED", icon: icons.history },
+      { label: "Suivi client", href: "/confirmateur/suivi", icon: icons.history },
     ],
   },
   {
     title: "Paramètres",
     items: [
-      { label: "Mes paramètres", href: "/profile", icon: icons.settings },
+      { label: "Mes paramètres", href: "/confirmateur/parametres", icon: icons.settings },
     ],
   },
 ];
@@ -57,9 +50,16 @@ function isActivePath(current: string, href: string) {
 
 export function ConfirmateurWorkspace() {
   const location = useLocation();
+  const navigate = useNavigate();
   const email = useAuthStore((s) => s.email);
   const profile = useAuthStore((s) => s.profile);
+  const clear = useAuthStore((s) => s.clear);
   const name = profile?.nomComplet || email?.split("@")[0] || "Admin";
+
+  const handleLogout = () => {
+    clear();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))] text-foreground">
@@ -108,6 +108,18 @@ export function ConfirmateurWorkspace() {
               <div className="truncate text-xs text-muted-foreground">Chef confirmateur</div>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-bold text-danger transition hover:bg-danger/15"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            Déconnexion
+          </button>
         </div>
       </aside>
 
@@ -121,6 +133,19 @@ export function ConfirmateurWorkspace() {
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
               <ThemeToggle />
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Déconnexion"
+                aria-label="Déconnexion"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card text-danger transition hover:bg-danger/10"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+              </button>
               <div className="hidden items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2 sm:flex">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">{name.slice(0, 1).toUpperCase()}</div>
                 <div className="min-w-0">

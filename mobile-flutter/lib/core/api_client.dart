@@ -53,7 +53,7 @@ class ApiClient {
 
   static const String phoneRealBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.100.22:5123',
+    defaultValue: 'http://10.0.2.2:5123',
   );
 
   /// Default backend base URL inferred from the current platform.

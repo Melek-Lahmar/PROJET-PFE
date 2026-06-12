@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Web_Api.Auth.Constants;
 using Web_Api.data;
 using Web_Api.Model;
+using Web_Api.DTO;
 using Web_Api.Services;
 
 namespace Web_Api.Controllers.Articles
@@ -25,7 +26,9 @@ namespace Web_Api.Controllers.Articles
         [HttpPost]
         public async Task<IActionResult> Sync(CancellationToken ct)
         {
-            var dtos = await _sageService.GetArticlesFromSage(ct);
+            List<ArticleSageDto> dtos;
+            try { dtos = await _sageService.GetArticlesFromSage(ct); }
+            catch (Exception ex) { return StatusCode(502, new { isSuccess = false, error = ex.Message }); }
 
             var refs = dtos.Select(x => x.AR_Ref).Distinct().ToList();
 

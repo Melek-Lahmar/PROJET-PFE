@@ -222,6 +222,34 @@ class _ConfirmatriceOrderDetailsScreenState
       return _pushReporterWithDate();
     }
 
+    // TENTATIVE = action journalisée (qui/quand) via l'endpoint dédié /tentative,
+    // pour que les autres confirmatrices voient l'historique des tentatives.
+    if (statusKey == 'TENTATIVE') {
+      final messenger0 = ScaffoldMessenger.of(context);
+      final ok0 = await context
+          .read<ConfirmatriceOrdersProvider>()
+          .adjustTentative(order.piece, 1);
+      if (!mounted) return;
+      if (ok0) {
+        messenger0
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(
+            backgroundColor: Colors.orange,
+            content: Text('Tentative enregistrée.'),
+          ));
+        await _load();
+      } else {
+        final error0 = context.read<ConfirmatriceOrdersProvider>().error;
+        messenger0
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            backgroundColor: Colors.red,
+            content: Text(error0 ?? 'Erreur lors de l\'enregistrement de la tentative.'),
+          ));
+      }
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     final ok = await context
         .read<ConfirmatriceOrdersProvider>()
@@ -508,6 +536,10 @@ class _ConfirmatriceOrderDetailsScreenState
                         if (_coverage != null) const SizedBox(height: 14),
                         _statusDropdownCard(order),
                         const SizedBox(height: 14),
+                        if (order.tentativeLog.isNotEmpty) ...[
+                          _tentativeLogCard(order),
+                          const SizedBox(height: 14),
+                        ],
                         OrderTimelineList(
                           events: _buildConfHistoryEvents(order),
                           accentColor: _gradientStart,
@@ -515,6 +547,66 @@ class _ConfirmatriceOrderDetailsScreenState
                         ),
                       ],
                     ),
+    );
+  }
+
+  // ─────────────────── JOURNAL DES TENTATIVES ───────────────────
+  // Lecture seule : qui a fait une tentative et quand. Partagé entre
+  // confirmatrices pour éviter les doublons d'appels.
+  Widget _tentativeLogCard(ConfirmatriceOrder o) {
+    String fmt(DateTime? d) {
+      if (d == null) return '—';
+      final l = d.toLocal();
+      String two(int n) => n.toString().padLeft(2, '0');
+      return '${two(l.day)}/${two(l.month)}/${l.year} ${two(l.hour)}:${two(l.minute)}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.replay_rounded, color: Colors.orange, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Historique des tentatives (${o.tentativeCount})',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...o.tentativeLog.asMap().entries.map((e) {
+            final i = e.key;
+            final t = e.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${i + 1}. ${(t.actorName ?? '').trim().isEmpty ? 'Confirmateur' : t.actorName!.trim()}',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                  ),
+                  Text(
+                    fmt(t.createdAt),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 

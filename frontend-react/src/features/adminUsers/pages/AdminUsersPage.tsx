@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 import type { SVGProps } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
 import { Loader } from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
-import { adminListUsers } from "../api/adminUsersApi";
+import { adminListUsers, adminUpdateUserProfile } from "../api/adminUsersApi";
 import { AdminCreateUserModal } from "../components/AdminCreateUserModal";
 import { AdminEditRolesModal } from "../components/AdminEditRolesModal";
 import type { UserAdminResponseDto } from "../types/adminUsers";
 import { EmptyView } from "../../../shared/components/premium";
+import { getDepots } from "../../catalog/api/depotsApi";
 
 type RoleFilter = "ALL" | "CLIENT" | "VENDEUR" | "CONFIRMATEUR" | "LIVREUR" | "SUPERVISEUR" | "ADMIN";
 
@@ -144,6 +145,90 @@ function getInitials(user: UserAdminResponseDto) {
   return initials || "?";
 }
 
+function SetDepotModal({
+  user,
+  onClose,
+}: {
+  user: UserAdminResponseDto;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [value, setValue] = useState(user.profile?.codeDepot ?? "");
+
+  const { data: depots = [], isLoading: depotsLoading } = useQuery({
+    queryKey: ["depots-list"],
+    queryFn: () => getDepots(),
+    staleTime: 5 * 60_000,
+  });
+
+  const mut = useMutation({
+    mutationFn: () => adminUpdateUserProfile(user.userId, { codeDepot: value }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-users"] }); onClose(); },
+  });
+
+  const selectedDepot = depots.find((d) => String(d.dE_No) === value || d.dE_Code === value);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <h2 className="text-base font-black text-card-foreground">Configurer le dépôt vendeur</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{user.email}</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Sélectionnez le dépôt (gouvernorat) rattaché à ce vendeur.
+        </p>
+
+        {depotsLoading ? (
+          <div className="mt-3 flex items-center justify-center py-4">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : depots.length === 0 ? (
+          <p className="mt-3 text-sm text-destructive">Aucun dépôt trouvé. Synchronisez d'abord les dépôts depuis Sage.</p>
+        ) : (
+          <select
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            autoFocus
+          >
+            <option value="">— Aucun dépôt —</option>
+            {depots.map((d) => (
+              <option key={d.dE_No} value={String(d.dE_No)}>
+                {d.dE_Intitule || d.dE_Code}
+                {d.dE_Ville ? ` — ${d.dE_Ville}` : ""}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {selectedDepot && (
+          <div className="mt-2 rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground">
+            <span className="font-semibold text-card-foreground">Dépôt #{selectedDepot.dE_No}</span>
+            {" · "}
+            {selectedDepot.dE_Code}
+            {selectedDepot.dE_Adresse ? ` · ${selectedDepot.dE_Adresse}` : ""}
+          </div>
+        )}
+
+        {mut.isError && (
+          <p className="mt-2 text-xs text-destructive">{getApiErrorMessage(mut.error)}</p>
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">
+            Annuler
+          </button>
+          <button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending || depotsLoading}
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {mut.isPending ? "Sauvegarde..." : "Enregistrer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminUsersPage() {
   const [skip, setSkip] = useState(0);
   const [take, setTake] = useState(20);
@@ -152,6 +237,7 @@ export function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editRolesOpen, setEditRolesOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserAdminResponseDto | null>(null);
+  const [depotUser, setDepotUser] = useState<UserAdminResponseDto | null>(null);
 
   const activeRole = role === "ALL" ? undefined : role;
 
@@ -376,7 +462,21 @@ export function AdminUsersPage() {
                       </td>
 
                       <td className="px-5 py-4 align-middle">
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-2">
+                          {u.roles?.includes("VENDEUR") && (
+                            <button
+                              type="button"
+                              title={`Dépôt: ${u.profile?.codeDepot ?? "non configuré"}`}
+                              onClick={() => setDepotUser(u)}
+                              className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
+                                u.profile?.codeDepot
+                                  ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-400"
+                                  : "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-400"
+                              }`}
+                            >
+                              {u.profile?.codeDepot ? `Dépôt: ${u.profile.codeDepot}` : "⚠ Dépôt"}
+                            </button>
+                          )}
                           <Button
                             type="button"
                             variant="outline"
@@ -447,6 +547,10 @@ export function AdminUsersPage() {
           setSelectedUser(null);
         }}
       />
+
+      {depotUser && (
+        <SetDepotModal user={depotUser} onClose={() => setDepotUser(null)} />
+      )}
     </div>
   );
 }

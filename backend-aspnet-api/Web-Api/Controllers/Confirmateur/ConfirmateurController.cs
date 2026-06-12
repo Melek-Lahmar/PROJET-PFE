@@ -177,16 +177,24 @@ namespace Web_Api.Controllers.Confirmateur
                 B2BDiscountAmount = x.B2BDiscountAmount,
                 DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
+                TentativeCount = x.DO_TentativeCount,
                 StatusLabel = x.DocumentStatus,
+                // Pré-remplissage pour les commandes invitées (passager) : nom + téléphone
+                // portés par le document. Écrasés ci-dessous si un profil client existe.
+                ClientDisplay = x.DO_PassagerNomComplet,
+                ClientPhone = x.DO_TelephoneLivraison ?? x.DO_PassagerTelephone,
                 Lignes = new List<ConfirmateurOrderLineDto>()
             }).ToListAsync(ct);
 
-            // ✅ enrichir pour afficher Nom client dans la table
+            // ✅ enrichir pour afficher Nom client + téléphone dans la table (recherche)
             foreach (var o in list)
             {
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
-                o.ClientType = c?.TypeClient;
-                o.ClientDisplay = ComputeDisplay(c);
+                if (c == null) continue;
+                o.ClientType = c.TypeClient;
+                var disp = ComputeDisplay(c);
+                if (!string.IsNullOrWhiteSpace(disp)) o.ClientDisplay = disp;
+                if (!string.IsNullOrWhiteSpace(c.Telephone)) o.ClientPhone = c.Telephone;
             }
 
             return Ok(list);
@@ -224,6 +232,13 @@ namespace Web_Api.Controllers.Confirmateur
 
             var client = await ResolveClientAsync(entete.DO_Tiers, ct);
 
+            // Journal des tentatives (qui/quand) pour le détail.
+            var tentativeLog = await _db.CommandeTentativeLogs.AsNoTracking()
+                .Where(l => l.DoPiece == piece)
+                .OrderBy(l => l.Id)
+                .Select(l => new ConfirmateurTentativeLogDto { ActorName = l.ActorName, CreatedAt = l.CreatedAt })
+                .ToListAsync(ct);
+
             var dto = new ConfirmateurOrderDto
             {
                 DO_Piece = entete.DO_Piece,
@@ -239,6 +254,8 @@ namespace Web_Api.Controllers.Confirmateur
                 B2BDiscountAmount = entete.B2BDiscountAmount,
                 DiscountSource = entete.DiscountSource,
                 DO_Valide = entete.DO_Valide,
+                TentativeCount = entete.DO_TentativeCount,
+                TentativeLog = tentativeLog,
                 StatusLabel = entete.DocumentStatus,
 
                 ClientType = client?.TypeClient,
@@ -294,11 +311,84 @@ namespace Web_Api.Controllers.Confirmateur
             return NoContent();
         }
 
+        public class AdjustTentativeRequest { public int Delta { get; set; } }
+
+        // ✅ Compteur de tentatives (boutons +1 / -1 de la liste BC).
+        // Incrémente/décrémente DO_TentativeCount (borné à 0) et bascule le statut :
+        // TENTATIVE (2) dès qu'il y a au moins une tentative, sinon EN_ATTENTE (0).
+        // Sans effet sur un BC refusé (3) ou déjà transformé (1).
+        [HttpPut("commandes/{piece}/tentative")]
+        [HttpPut("bc/{piece}/tentative")]
+        public async Task<IActionResult> AdjustTentative(string piece, [FromBody] AdjustTentativeRequest req, CancellationToken ct)
+        {
+            if (req.Delta != 1 && req.Delta != -1)
+                return BadRequest(new { message = "Delta doit être +1 ou -1." });
+
+            var entete = await _db.Set<F_DOCENTETE>()
+                .FirstOrDefaultAsync(x => x.DO_Piece == piece && x.DO_Domaine == 0 && x.DO_Type == 0, ct);
+
+            if (entete == null)
+                return NotFound(new { message = "BC introuvable." });
+
+            if (entete.DO_Valide == 1)
+                return BadRequest(new { message = "BC déjà transformé en BL." });
+
+            var now = DateTime.UtcNow;
+            var actorId = GetUserId();
+            string? actorName = null;
+            if (actorId.HasValue)
+            {
+                actorName = await _db.ProfilsUtilisateurs.AsNoTracking()
+                    .Where(p => p.UtilisateurId == actorId.Value)
+                    .Select(p => p.NomComplet)
+                    .FirstOrDefaultAsync(ct);
+            }
+
+            if (req.Delta == 1)
+            {
+                // Chaque tentative est journalisée (qui + quand) pour les autres confirmatrices.
+                _db.CommandeTentativeLogs.Add(new CommandeTentativeLog
+                {
+                    DoPiece = piece,
+                    ActorUserId = actorId,
+                    ActorName = actorName,
+                    CreatedAt = now,
+                });
+            }
+            else
+            {
+                // Correction : on retire la dernière tentative journalisée.
+                var last = await _db.CommandeTentativeLogs
+                    .Where(l => l.DoPiece == piece)
+                    .OrderByDescending(l => l.Id)
+                    .FirstOrDefaultAsync(ct);
+                if (last != null)
+                    _db.CommandeTentativeLogs.Remove(last);
+            }
+
+            await _db.SaveChangesAsync(ct);
+
+            // Le compteur reste synchronisé avec le nombre de lignes de log.
+            var count = await _db.CommandeTentativeLogs.CountAsync(l => l.DoPiece == piece, ct);
+            entete.DO_TentativeCount = count;
+
+            // Ne pas écraser un refus métier (3).
+            if (entete.DO_Valide != 3)
+                entete.DO_Valide = (short)(count > 0 ? 2 : 0);
+
+            entete.cbModification = now;
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(new { tentativeCount = count, doValide = entete.DO_Valide });
+        }
+
         public class UpdateStatusExtendedRequest
         {
             public string? StatusKey { get; set; }
             public int? TentativeCount { get; set; }
             public string? Note { get; set; }
+            // Optionnel : forcer l'affectation au dépôt (utile pour les livraisons HOME dont DE_No est null)
+            public int? DepotNo { get; set; }
         }
 
         // 1.E — La confirmatrice peut désormais changer le statut commande
@@ -367,6 +457,23 @@ namespace Web_Api.Controllers.Confirmateur
 
                 if (blEntete != null)
                 {
+                    // Quand on passe en DEPOT un BL HOME (DE_No null), on résout et affecte le dépôt
+                    // pour que le manifeste vendeur puisse le trouver.
+                    if (liStatut.Value == DeliveryStatusCodes.Depot && (blEntete.DE_No == null || blEntete.DE_No == 0))
+                    {
+                        int? resolvedDepot = req.DepotNo.HasValue && req.DepotNo.Value > 0
+                            ? req.DepotNo.Value
+                            : await ResolveDepotFromDeliveryAddressAsync(blEntete, ct);
+
+                        if (resolvedDepot.HasValue)
+                        {
+                            blEntete.DE_No = resolvedDepot.Value;
+                            // Synchroniser aussi sur le BC source si on est parti d'un BC
+                            if (entete.DO_Piece != blEntete.DO_Piece && (entete.DE_No == null || entete.DE_No == 0))
+                                entete.DE_No = resolvedDepot.Value;
+                        }
+                    }
+
                     var li = await _db.Set<F_LIVRAISON>()
                         .FirstOrDefaultAsync(l => l.DO_Piece == blEntete.DO_Piece, ct);
 
@@ -406,6 +513,62 @@ namespace Web_Api.Controllers.Confirmateur
 
             await _db.SaveChangesAsync(ct);
             return NoContent();
+        }
+
+        // Résout le dépôt de destination pour un BL HOME à partir de son adresse de livraison.
+        // Priorité : gouvernorat+délégation via zones → gouvernorat seul → ville via DE_Ville.
+        private async Task<int?> ResolveDepotFromDeliveryAddressAsync(F_DOCENTETE bl, CancellationToken ct)
+        {
+            var gouvernorat = bl.DO_PassagerGouvernorat?.Trim();
+            var delegation  = bl.DO_PassagerDelegation?.Trim();
+            var ville       = bl.DO_VilleLivraison?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(gouvernorat) && !string.IsNullOrWhiteSpace(delegation))
+            {
+                var g = gouvernorat.ToUpperInvariant();
+                var d = delegation.ToUpperInvariant();
+                var byZone = await _db.F_DEPOT_ZONES.AsNoTracking()
+                    .Where(x => x.Gouvernorat.ToUpper() == g && x.Delegation.ToUpper() == d)
+                    .OrderByDescending(x => x.IsPrimary)
+                    .ThenBy(x => x.DepotNo)
+                    .Select(x => (int?)x.DepotNo)
+                    .FirstOrDefaultAsync(ct);
+                if (byZone.HasValue) return byZone;
+            }
+
+            if (!string.IsNullOrWhiteSpace(gouvernorat))
+            {
+                var g = gouvernorat.ToUpperInvariant();
+                var byGov = await _db.F_DEPOT_ZONES.AsNoTracking()
+                    .Where(x => x.Gouvernorat.ToUpper() == g && x.IsPrimary)
+                    .OrderBy(x => x.DepotNo)
+                    .Select(x => (int?)x.DepotNo)
+                    .FirstOrDefaultAsync(ct);
+                if (byGov.HasValue) return byGov;
+            }
+
+            // Essayer la ville de livraison comme délégation (souvent identique)
+            if (!string.IsNullOrWhiteSpace(ville))
+            {
+                var v = ville.ToUpperInvariant();
+                var byDel = await _db.F_DEPOT_ZONES.AsNoTracking()
+                    .Where(x => x.Delegation.ToUpper() == v)
+                    .OrderByDescending(x => x.IsPrimary)
+                    .ThenBy(x => x.DepotNo)
+                    .Select(x => (int?)x.DepotNo)
+                    .FirstOrDefaultAsync(ct);
+                if (byDel.HasValue) return byDel;
+
+                var byCity = await _db.F_DEPOTS.AsNoTracking()
+                    .Where(x => x.DE_Ville != null && x.DE_Ville.ToUpper().Contains(v))
+                    .OrderByDescending(x => x.DE_Principal)
+                    .ThenBy(x => x.DE_No)
+                    .Select(x => (int?)x.DE_No)
+                    .FirstOrDefaultAsync(ct);
+                if (byCity.HasValue) return byCity;
+            }
+
+            return null;
         }
 
         public class TransformResultDto
@@ -732,14 +895,19 @@ namespace Web_Api.Controllers.Confirmateur
                 DiscountSource = x.DiscountSource,
                 DO_Valide = x.DO_Valide,
                 StatusLabel = x.DocumentStatus,
+                ClientDisplay = x.DO_PassagerNomComplet,
+                ClientPhone = x.DO_TelephoneLivraison ?? x.DO_PassagerTelephone,
                 Lignes = new List<ConfirmateurOrderLineDto>()
             }).ToListAsync(ct);
 
             foreach (var o in list)
             {
                 var c = await ResolveClientAsync(o.DO_Tiers, ct);
-                o.ClientType = c?.TypeClient;
-                o.ClientDisplay = ComputeDisplay(c);
+                if (c == null) continue;
+                o.ClientType = c.TypeClient;
+                var disp = ComputeDisplay(c);
+                if (!string.IsNullOrWhiteSpace(disp)) o.ClientDisplay = disp;
+                if (!string.IsNullOrWhiteSpace(c.Telephone)) o.ClientPhone = c.Telephone;
             }
 
             return Ok(list);

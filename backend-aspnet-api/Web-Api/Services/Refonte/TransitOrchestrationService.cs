@@ -37,10 +37,14 @@ namespace Web_Api.Services.Refonte
         };
 
         private readonly AppDbContext _db;
+        private readonly ITransitAccountProvisioningService _provisioning;
 
-        public TransitOrchestrationService(AppDbContext db)
+        public TransitOrchestrationService(
+            AppDbContext db,
+            ITransitAccountProvisioningService provisioning)
         {
             _db = db;
+            _provisioning = provisioning;
         }
 
         public async Task<TransitPreparationResult> PlanForOrderAsync(
@@ -125,8 +129,30 @@ namespace Web_Api.Services.Refonte
                         break;
 
                     var quantity = Math.Min(deficit, source.Available);
+
+                    // Lot C : si ce dépôt source n'a aucun livreur transit, on
+                    // provisionne automatiquement les comptes du gouvernorat
+                    // (transit + caisse, mdp 123456) puis on recharge.
+                    var candidates = transitLivreurs
+                        .Where(x => x.DepotRattacheNo == source.Stock.DE_No)
+                        .ToList();
+                    if (candidates.Count == 0)
+                    {
+                        await _provisioning.EnsureDepotStaffAsync(source.Stock.DE_No, ct);
+                        candidates = await _db.ProfilsUtilisateurs.AsNoTracking()
+                            .Where(x => x.UtilisateurId != null
+                                && x.IsTransit
+                                && x.DepotRattacheNo == source.Stock.DE_No)
+                            .ToListAsync(ct);
+                        // Étend la liste globale pour les itérations suivantes.
+                        transitLivreurs = transitLivreurs
+                            .Concat(candidates.Where(a =>
+                                transitLivreurs.All(t => t.UtilisateurId != a.UtilisateurId)))
+                            .ToList();
+                    }
+
                     var selectedLivreur = SelectTransitLivreur(
-                        transitLivreurs.Where(x => x.DepotRattacheNo == source.Stock.DE_No).ToList(),
+                        candidates,
                         activeTransfers,
                         source.Stock.DE_No,
                         destinationDepotNo,
@@ -256,6 +282,23 @@ namespace Web_Api.Services.Refonte
                     && x.DepotRattacheNo != null
                     && sourceDepotNos.Contains(x.DepotRattacheNo.Value))
                 .ToListAsync(ct);
+
+            // Lot C : provisionne les comptes manquants des dépôts source avant relance.
+            var missingDepots = sourceDepotNos
+                .Where(no => transitLivreurs.All(x => x.DepotRattacheNo != no))
+                .ToList();
+            if (missingDepots.Count > 0)
+            {
+                foreach (var no in missingDepots)
+                    await _provisioning.EnsureDepotStaffAsync(no, ct);
+
+                transitLivreurs = await _db.ProfilsUtilisateurs.AsNoTracking()
+                    .Where(x => x.UtilisateurId != null
+                        && x.IsTransit
+                        && x.DepotRattacheNo != null
+                        && sourceDepotNos.Contains(x.DepotRattacheNo.Value))
+                    .ToListAsync(ct);
+            }
 
             var activeTransfers = await _db.F_TRANSFERTS.AsNoTracking()
                 .Where(x => ActiveTransitStatuses.Contains(x.Status))

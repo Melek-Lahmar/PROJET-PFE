@@ -27,8 +27,16 @@ namespace Web_Api.DTO.BL
         public string? Address { get; set; }
         public string? City { get; set; }
         public string? PostalCode { get; set; }
+        public string? ClientPhone { get; set; }
         public string? Latitude { get; set; }
         public string? Longitude { get; set; }
+
+        // Manifeste vendeur
+        public bool Printed { get; set; }                  // déjà inclus dans un bloc manifeste imprimé
+        public string? RouteType { get; set; }             // "DOMICILE" | "TRANSIT"
+        public string? DestinationGouvernorat { get; set; } // ex: "Tunis"
+        public string? DestinationDepotName { get; set; }   // ex: "Dépôt Tunis"
+        public string? ClientName { get; set; }             // nom affiché (passager ou profil)
 
         public List<BonLivraisonLineResponseDto> Lines { get; set; } = new();
     }

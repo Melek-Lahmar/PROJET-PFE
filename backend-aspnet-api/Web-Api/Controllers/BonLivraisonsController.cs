@@ -72,6 +72,7 @@ namespace Web_Api.Controllers
                     Address = e.DO_AdresseLivraison,
                     City = e.DO_VilleLivraison,
                     PostalCode = e.DO_CodePostalLivraison,
+                    ClientPhone = e.DO_TelephoneLivraison,
                     Latitude = e.DO_LatitudeLivraison,
                     Longitude = e.DO_LongitudeLivraison,
 

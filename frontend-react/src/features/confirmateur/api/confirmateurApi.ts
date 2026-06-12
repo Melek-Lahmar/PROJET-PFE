@@ -82,9 +82,20 @@ function normalizeOrder(raw: unknown): ConfirmateurOrder {
     b2BDiscountAmount: asNumber(pick(source, ["b2BDiscountAmount", "B2BDiscountAmount"])),
     discountSource: asString(pick(source, ["discountSource", "DiscountSource"])),
     dO_Valide: asNumber(pick(source, ["dO_Valide", "DO_Valide"])),
+    tentativeCount: asNumber(pick(source, ["tentativeCount", "TentativeCount"])),
+    tentativeLog: Array.isArray(pick(source, ["tentativeLog", "TentativeLog"]))
+      ? (pick<unknown[]>(source, ["tentativeLog", "TentativeLog"]) ?? []).map((raw) => {
+          const r = isRecord(raw) ? raw : {};
+          return {
+            actorName: asString(pick(r, ["actorName", "ActorName"])),
+            createdAt: asString(pick(r, ["createdAt", "CreatedAt"])),
+          };
+        })
+      : [],
     statusLabel: asString(pick(source, ["statusLabel", "StatusLabel"])),
     clientType: asString(pick(source, ["clientType", "ClientType"])),
     clientDisplay: asString(pick(source, ["clientDisplay", "ClientDisplay"])),
+    clientPhone: asString(pick(source, ["clientPhone", "ClientPhone"])),
     client: normalizeClient(pick(source, ["client", "Client"])),
     lignes: Array.isArray(lignesRaw) ? lignesRaw.map(normalizeOrderLine) : [],
     dO_PassagerGouvernorat: asString(pick(source, ["dO_PassagerGouvernorat", "DO_PassagerGouvernorat"])),
@@ -116,6 +127,16 @@ export async function getConfirmateurOrderByPiece(piece: string) {
 
 export async function updateConfirmateurOrderStatus(piece: string, status: number) {
   await axiosClient.put(`/api/confirmateur/commandes/${encodeURIComponent(piece.trim())}/status`, { status });
+}
+
+export type AdjustTentativeResult = { tentativeCount: number; doValide: number };
+
+export async function adjustConfirmateurTentative(piece: string, delta: 1 | -1) {
+  const { data } = await axiosClient.put<AdjustTentativeResult>(
+    `/api/confirmateur/commandes/${encodeURIComponent(piece.trim())}/tentative`,
+    { delta },
+  );
+  return data;
 }
 
 export type TransformResult = { blPiece?: string | null };
@@ -208,4 +229,54 @@ export async function getZoneCoverage(piece: string): Promise<ZoneCoverageDto> {
 export async function getConfirmateurSupervisors(): Promise<SupervisorDto[]> {
   const { data } = await axiosClient.get<SupervisorDto[]>("/api/confirmateur/supervisors");
   return Array.isArray(data) ? data : [];
+}
+
+// ── Lot E — Onglet Suivi confirmatrice : recherche client + historique commandes ──
+
+export type ClientSearchItem = {
+  utilisateurId: string | null;
+  nomComplet: string | null;
+  nomSociete: string | null;
+  telephone: string | null;
+  codeClientSage: string | null;
+  typeClient: string | null;
+};
+
+export type ClientHistoryOrder = {
+  piece: string | null;
+  date: string | null;
+  statut: string | null;
+  montant: number;
+  produits: string | null;
+};
+
+export type ClientHistoryResponse = {
+  client: { id: string; nom: string | null; tel: string | null; totalCommandes: number };
+  stats: {
+    total: number;
+    livrees: number;
+    retours: number;
+    refus: number;
+    reportees: number;
+    enCours: number;
+    tauxLivraison: number;
+    montantTotalLivre: number;
+  };
+  orders: ClientHistoryOrder[];
+};
+
+export async function searchConfirmateurClients(q: string): Promise<ClientSearchItem[]> {
+  const query = q.trim();
+  if (query.length < 2) return [];
+  const { data } = await axiosClient.get<ClientSearchItem[]>("/api/confirmatrice/clients/search", {
+    params: { q: query },
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getConfirmateurClientHistory(clientId: string): Promise<ClientHistoryResponse> {
+  const { data } = await axiosClient.get<ClientHistoryResponse>(
+    `/api/confirmatrice/clients/${encodeURIComponent(clientId)}/orders-history`,
+  );
+  return data;
 }

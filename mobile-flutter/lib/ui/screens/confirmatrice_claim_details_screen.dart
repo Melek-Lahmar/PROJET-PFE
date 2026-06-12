@@ -245,6 +245,7 @@ class _ConfirmatriceClaimDetailsScreenState
       content: 'Confirmer le changement de statut de la commande ?',
     );
     if (!confirm) return;
+    if (!mounted) return;
     final provider = context.read<ConfirmatriceClaimsProvider>();
     final updated = await provider.changeCommandeStatus(c.id, newStatus, note: successLabel);
     if (updated != null && mounted) {

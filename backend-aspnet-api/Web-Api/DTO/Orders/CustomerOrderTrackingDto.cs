@@ -41,9 +41,12 @@ namespace Web_Api.DTO.Orders
         public LinkedCaseDto? LinkedReclamation { get; set; }
         public LinkedCaseDto? LinkedDemande { get; set; }
 
-        // Transit inter-dépôts — par article
+        // Transit inter-dépôts
         public int TransitTotalCount { get; set; }
         public int TransitReceivedCount { get; set; }
+        // Résumé global destiné au CLIENT (ex: "En transit de Sfax vers Sousse").
+        public string? TransitSummary { get; set; }
+        // Détail article par article — réservé au staff (vide côté client).
         public List<CustomerTrackingTransitItemDto> TransitItems { get; set; } = new();
     }
 

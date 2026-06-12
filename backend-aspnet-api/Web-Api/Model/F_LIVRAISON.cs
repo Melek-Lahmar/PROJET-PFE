@@ -78,5 +78,9 @@ namespace MODELS_CREATEUR.MODELS_SAGE
         // Plafond métier : 10 (garde-fou pour éviter les boucles).
         // =====================================================
         public int DepotPassageNumber { get; set; } = 0;
+
+        // Manifeste vendeur — true dès que le livreur passe en EN_LIVRAISON (code 1).
+        // Exclut cette livraison de l'onglet "En attente" même si elle retombe DEPOT.
+        public bool HasEverBeenPickedUp { get; set; } = false;
     }
 }

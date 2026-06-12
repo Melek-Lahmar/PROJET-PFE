@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Web_Api.Auth.Constants;
 using Web_Api.data;
 using Web_Api.Model;
+using Web_Api.DTO;
 using Web_Api.Services;
 
 namespace Web_Api.Controllers.Depots
@@ -25,7 +26,9 @@ namespace Web_Api.Controllers.Depots
         [HttpPost]
         public async Task<IActionResult> Sync(CancellationToken ct)
         {
-            var dtos = await _sageService.GetDepotsFromSage(ct);
+            List<DepotSageDto> dtos;
+            try { dtos = await _sageService.GetDepotsFromSage(ct); }
+            catch (Exception ex) { return StatusCode(502, new { isSuccess = false, error = ex.Message }); }
 
             var existing = await _db.F_DEPOTS.ToListAsync(ct);
             var byNo = existing.ToDictionary(x => x.DE_No);

@@ -17,7 +17,7 @@ namespace Web_Api.Services.Orders
             _db = db;
         }
 
-        public async Task<CustomerOrderTrackingDto?> BuildAsync(string piece, CancellationToken ct = default)
+        public async Task<CustomerOrderTrackingDto?> BuildAsync(string piece, bool includeTransitDetail = true, CancellationToken ct = default)
         {
             var order = await _db.F_DOCENTETES
                 .AsNoTracking()
@@ -97,10 +97,14 @@ namespace Web_Api.Services.Orders
                 LinkedReclamation = BuildLinkedReclamation(reclamations),
                 LinkedDemande = BuildLinkedDemande(reclamations),
 
-                // Transit par article
+                // Transit
                 TransitTotalCount = transfers.Count,
                 TransitReceivedCount = receivedCount,
-                TransitItems = BuildTransitItems(lines, transfers, depots)
+                TransitSummary = BuildTransitSummary(transfers, depots, receivedCount),
+                // Détail article par article : réservé au staff. Client = résumé seul.
+                TransitItems = includeTransitDetail
+                    ? BuildTransitItems(lines, transfers, depots)
+                    : new List<CustomerTrackingTransitItemDto>()
             };
 
             return dto;
@@ -209,6 +213,35 @@ namespace Web_Api.Services.Orders
                 return "REFUSE";
 
             return "EN_ATTENTE";
+        }
+
+        // Résumé global "client" : routes distinctes "de X vers Y", sans détail par article.
+        private static string? BuildTransitSummary(
+            IReadOnlyList<F_TRANSFERT> transfers,
+            IReadOnlyDictionary<int, F_DEPOT> depots,
+            int receivedCount)
+        {
+            if (transfers.Count == 0)
+                return null;
+
+            if (receivedCount == transfers.Count)
+                return "Tous les articles sont regroupés au dépôt de destination.";
+
+            var routes = transfers
+                .Select(t =>
+                {
+                    depots.TryGetValue(t.SourceDepotNo, out var s);
+                    depots.TryGetValue(t.DestinationDepotNo, out var d);
+                    var srcName = !string.IsNullOrEmpty(s?.DE_Intitule) ? s!.DE_Intitule
+                        : !string.IsNullOrEmpty(s?.DE_Code) ? s!.DE_Code : $"Dépôt {t.SourceDepotNo}";
+                    var dstName = !string.IsNullOrEmpty(d?.DE_Intitule) ? d!.DE_Intitule
+                        : !string.IsNullOrEmpty(d?.DE_Code) ? d!.DE_Code : $"Dépôt {t.DestinationDepotNo}";
+                    return $"de {srcName} vers {dstName}";
+                })
+                .Distinct()
+                .ToList();
+
+            return $"En transit {string.Join(", ", routes)}.";
         }
 
         private static List<CustomerTrackingTransitItemDto> BuildTransitItems(

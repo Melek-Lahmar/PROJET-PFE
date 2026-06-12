@@ -1,0 +1,2307 @@
+Dédicaces
+
+Grâce à Dieu le Tout-Puissant, j’ai le grand honneur de dédier ce modeste travail à ceux qui occupent la place la plus précieuse dans mon cœur, et à qui je ne pourrai jamais exprimer pleinement mon amour, ma reconnaissance et mon profond respect.
+
+À mon très cher père, « Mohamed Lahmar »
+À l’homme de valeur, de courage et de sagesse, à celui qui n’a jamais cessé de me soutenir et de m’encourager, je dédie ce travail avec une profonde reconnaissance. Tes efforts, tes sacrifices et ta confiance ont été pour moi une source constante de force et de motivation. Que Dieu te bénisse, te protège et fasse de ce travail une source de fierté pour toi.
+
+À ma très chère mère, « Alia Kchaou »
+À celle qui m’a donné la vie, qui m’a entouré d’affection, de patience et de bienveillance, et qui a toujours su m’apporter le courage nécessaire pour avancer, j’adresse cette dédicace avec tout mon amour. Tes prières, ta présence rassurante et ton soutien indéfectible m’ont été d’un grand secours tout au long de mes études.
+ Que Dieu te garde en bonne santé et te protège pour nous.
+
+À mon cher frère, « Ayoub Lahmar »
+Je te remercie pour ton soutien moral et tes encouragements permanents. 
+Que Dieu te protège et t’accorde bonheur, réussite et sérénité.
+
+Aussi, je tiens à exprimer ma gratitude à tous ceux qui, de près ou de loin, ont apporté leur soutien et leur encouragement tout au long de ce parcours.               
+
+
+
+
+
+
+ Melek Lahmar    
+Dédicaces
+
+Je dédie ce modeste travail avant tout à ma famille, qui a toujours été une source de force, de motivation et de soutien tout au long de mon parcours académique.
+À ma très chère mère, Ines Fakhfakh, qui m’a toujours entouré de son amour, de sa patience et de ses encouragements. Merci pour tous les sacrifices que tu as consentis pour mon bien-être et ma réussite. Merci d’avoir toujours cru en moi, dans les moments faciles comme dans les moments difficiles. Ton soutien et tes conseils resteront une source de motivation tout au long de mon parcours.
+À mon très cher père, Slim Siala, pour tous les efforts et les sacrifices qu’il a fournis afin de me permettre d’atteindre mes objectifs. Merci pour ton soutien constant, ta confiance et les valeurs que tu m’as transmises. Ton travail et ta persévérance représentent pour moi un véritable exemple à suivre.
+À mon frère, Mohamed Siala, pour son soutien constant, sa présence précieuse et ses encouragements qui m’ont accompagné tout au long de mon parcours. Merci pour sa confiance et pour les moments de motivation qu’il m’a apportés durant les différentes étapes de cette expérience.
+À ma sœur, Fatma Siala, pour son affection, sa gentillesse et son soutien moral qui ont toujours été une source de réconfort et d’encouragement. Merci pour sa présence et pour tous les moments de joie et de bonheur qu’elle a apportés à mon quotidien.
+Je dédie également ce travail à mes amis, qui ont partagé avec moi de nombreux moments importants et qui m’ont toujours encouragé à avancer.
+J’adresse aussi mes sincères remerciements à mon encadrant ainsi qu’à toute l’équipe de la société qui nous a accueillis, pour leur accompagnement, leurs précieux conseils et leur soutien tout au long de la réalisation de ce projet.
+
+Tawfik Siala   
+Remerciements
+
+C'est avec une grande reconnaissance que nous saisissons cette occasion pour remercier toutes les personnes qui ont contribué à la réussite de ce projet, en nous offrant leur soutien et leur assistance.
+
+À notre encadrant académique, Monsieur Yousri Fakhfakh, nous avons eu le grand honneur de travailler sous votre direction. Votre compétence professionnelle, votre rigueur académique ainsi que vos qualités humaines nous ont profondément marqués. Veuillez trouver, à travers ce modeste travail, l'expression de notre haute considération, de notre sincère reconnaissance et de notre profond respect.
+
+À nos encadrants professionnels, Monsieur Majdi Radadi et Monsieur Mohamed Dhieb, nous exprimons notre profonde gratitude pour leurs remarques pertinentes, leurs conseils avisés, leur patience, leur disponibilité, leur soutien constant et la confiance qu'ils nous ont accordée tout au long de cette expérience. Que ce travail soit à la hauteur des efforts, du temps et de l'attention qu'ils nous ont consacrés.
+
+Nous adressons également nos remerciements à la société INFOSOFT pour nous avoir accueillis dans un cadre professionnel favorable à l'apprentissage, à l'échange et au développement de nos compétences.
+
+Nos remerciements les plus distingués vont aussi aux membres du jury qui nous ont fait l'honneur d'accepter d'évaluer ce travail. Nous leur sommes reconnaissants pour l'intérêt qu'ils portent à ce projet ainsi que pour le temps consacré à cette évaluation.
+
+
+
+
+Table des matières
+Introduction générale1
+Chapitre 1 : Cadre général du projet4
+1. Introduction4
+2. Étude de l'organisme4
+2.1 Présentation de l'organisme4
+2.2 Historique4
+2.3 Organigramme de la société5
+2.4 Services5
+3. Présentation de l'ERP INFOSOFT6
+3.1 Gestion commerciale6
+3.2 Gestion comptable7
+3.3 Gestion de la paie7
+3.4 Gestion de la production8
+4. Cadre du stage8
+5. Étude de l'existant9
+5.1 Analyse de l’existant9
+5.2 Limites de l’existant9
+5.3 Comparaison des approches existantes10
+6. Problématique11
+7. Objectifs11
+8. Solution proposée12
+9. Conclusion13
+Chapitre 2 : Analyse et spécification des besoins15
+1. Introduction15
+2. Acteurs de la solution15
+3. Besoins fonctionnels15
+3.1 Besoins de l’application web15
+3.2 Besoins de l’application mobile16
+3.3 Besoins liés aux services externes17
+4. Besoins non fonctionnels17
+5. Diagramme global de cas d'utilisation18
+6. Diagramme de classes global20
+7. Méthodologie de développement21
+7.1 Méthode Scrum21
+7.2 Équipe du projet22
+7.3 Réunions de suivi22
+7.4 Backlog produit22
+7.5 Planification des sprints23
+8. Conclusion24
+Chapitre 3 : Architecture et choix techniques26
+1. Introduction26
+2. Architecture de la solution26
+2.1 Architecture logique26
+2.2 Architecture physique27
+2.3 Flux global de fonctionnement28
+3. Sécurité applicative28
+3.1 Authentification JWT28
+3.2 Gestion des rôles29
+3.3 Protection des routes et des endpoints29
+4. Exemples d’endpoints API utilisés29
+5. Environnement de travail31
+5.1 Environnement matériel31
+5.2 Technologies utilisées31
+5.2.1 Langages de programmation32
+5.2.2 Frameworks et bibliothèques de développement33
+5.2.3 Outils de développement et de build35
+5.2.4 Base de données et outils de gestion36
+5.2.5 Sécurité, authentification et communication37
+5.2.6 Documentation et test des API38
+5.2.7 Gestion de versions et collaboration38
+5.2.8 Cartographie, géolocalisation et suivi39
+5.2.9 ERP, paiement, notifications et services externes39
+5.2.10 Automatisation et chatbot intelligent40
+6. Conclusion41
+Chapitre 4 : Sprint 1 — Socle technique, authentification, rôles et sécurisation des accès43
+1. Introduction43
+2. Objectif du Sprint43
+3. Backlog du Sprint 143
+4. Analyse et conception du Sprint 144
+4.1 Diagramme de cas d'utilisation du Sprint 145
+4.2 Description des cas d'utilisation45
+4.3 Diagrammes de séquence46
+4.3.1 Authentification46
+4.3.2 Création d'un compte client46
+4.3.3 Mise à jour du profil47
+4.3.4 Création d'un utilisateur par l'administrateur48
+4.3.5 Modification des rôles49
+4.3.6 Réinitialisation du mot de passe50
+5. Réalisation du Sprint 150
+5.1 Interface de connexion web50
+5.2 Interface de création de compte client51
+5.3 Interface de mot de passe oublié53
+5.4 Interface de réinitialisation du mot de passe53
+5.5 Interface « Mon compte »54
+5.6 Interface de gestion des utilisateurs et des rôles55
+5.7 Interface de connexion mobile55
+6. Tests et validation56
+7. Conclusion58
+Chapitre 5 : Sprint 2 — Parcours client, catalogue, panier et commande en ligne60
+1. Introduction60
+2. Objectif du Sprint60
+3. Backlog du Sprint 260
+4. Analyse et conception du Sprint 263
+4.1 Diagramme de cas d'utilisation du Sprint 263
+4.2 Description des cas d’utilisation64
+4.3 Diagrammes de séquence65
+4.3.1 Consultation du catalogue65
+4.3.2 Gestion du panier65
+4.3.3 Création d’une commande client66
+4.3.4 Paiement en ligne via Konnect67
+4.3.5 Demande de devis B2B68
+5. Réalisation du Sprint 269
+5.1 Interface catalogue produits70
+5.2 Interface détail produit70
+5.3 Interface panier71
+5.4 Interface favoris72
+5.5 Interface gestion des adresses72
+5.6 Interface de validation de commande73
+5.7 Interface paiement73
+5.8 Interface suivi des commandes client74
+5.9 Interface demande de devis B2B75
+6. Tests et validation du Sprint 275
+7. Conclusion77
+Chapitre 6 : Sprint 3 — Gestion commerciale, espace vendeur et intégration Sage X379
+1. Introduction79
+2. Objectif du sprint79
+3. Backlog du sprint79
+4. Analyse et conception82
+4.1 Diagramme de cas d’utilisation du Sprint 382
+4.2 Description des cas d’utilisation83
+4.3 Diagrammes de séquence du Sprint 384
+4.3.1 Synchronisation d'une entité depuis Sage X384
+4.3.2 Synchronisation globale (Sync All)84
+4.3.3 Création d'un bon de commande par le vendeur85
+4.3.4 Gestion des images produits avec Cloudinary86
+4.3.5 Publication d'un document commercial vers Sage X387
+5. Réalisation du Sprint 387
+5.1 Interface de tableau de bord administrateur87
+5.2 Interface de gestion des produits88
+5.3 Interface de gestion des images produits89
+5.4 Interface de gestion des stocks90
+5.5 Interface de gestion des dépôts90
+5.6 Interface de gestion des commandes91
+5.7 Interface de consultation des bons de livraison92
+5.8 Interface de gestion des clients93
+5.9 Interface de gestion des clients B2B93
+5.10 Interface de gestion des paramètres applicatifs94
+5.11 Interface vendeur95
+6. Intégration et synchronisation Sage X395
+6.1 Principe général95
+6.2 Synchronisation des articles96
+6.3 Synchronisation des catalogues96
+6.4 Synchronisation des dépôts96
+6.5 Synchronisation des stocks96
+6.6 Synchronisation complète (Sync All)96
+6.7 Rapport et gestion des erreurs96
+7. Échanges GET et POST avec Sage X396
+7.1 Synthèse unifiée des échanges avec Sage X397
+7.2 Fonctionnement technique des échanges98
+7.3 Mapping des champs du document commercial99
+7.4 Paramètres de connexion99
+8. Tests et validation100
+9. Conclusion101
+Chapitre 7 : Sprint 4 — Logistique, livraison et réclamations102
+1. Introduction102
+2. Objectif du sprint102
+3. Backlog du sprint102
+4. Analyse et conception104
+4.1 Diagramme de cas d'utilisation du Sprint 4104
+4.2 Description des cas d'utilisation105
+4.3 Diagrammes de séquence106
+4.3.1 Transformation BC en bon de livraison106
+4.3.2 Livraison COD et diffusion GPS via SignalR107
+4.3.3 Réclamation client avec SignalR et grâce de 5 secondes108
+4.3.4 Transit inter-dépôts par double scan code-barres110
+5. Réalisation111
+5.1 Interface confirmateur — liste des commandes111
+5.2 Interface confirmatrice — transformation BC en BL112
+5.3 Interface confirmatrice — gestion des réclamations113
+5.4 Interface livreur — livraisons disponibles114
+5.5 Interface livreur — suivi GPS et carte de livraison115
+5.6 Interface livreur — caisse COD115
+5.7 Interface suivi commande client (TrackingStateCard)116
+5.8 Interface de transit inter-dépôts et scan codes-barres116
+5.9 Interface superviseur117
+6. Tests et validation118
+7. Conclusion120
+Chapitre 8 : Sprint 5 — Tableaux de bord, exports et chatbot122
+1. Introduction122
+2. Objectif du sprint122
+3. Backlog du sprint122
+4. Analyse et conception123
+4.1 Diagramme de cas d'utilisation du Sprint 5124
+4.2 Description des cas d'utilisation124
+4.3 Diagrammes de séquence124
+4.3.1 Diagramme de séquence — Chatbot administrateur125
+4.3.2 Diagramme de séquence — Export Excel et PDF125
+5. Réalisation126
+5.1 Interface du tableau de bord global126
+5.2 Interface du dashboard ventes et commandes128
+5.3 Interface du dashboard logistique et livreurs129
+5.4 Interface du dashboard réclamations et confirmatrices130
+5.5 Interface du dashboard synchronisation Sage X3131
+5.6 Interface des exports Excel et PDF131
+5.7 Interface du chatbot administrateur132
+5.8 Interface des conversations et insights chatbot134
+6. Tests et validation134
+7. Conclusion136
+Conclusion générale137
+Netographie139
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Liste des figures
+Figure 1 : Logo INFOSOFT4
+Figure 2 : Historique d'INFOSOFT5
+Figure 3 : Organigramme de la société5
+Figure 4 : Module de gestion commerciale7
+Figure 5 : Module de gestion comptable7
+Figure 6 : Module de gestion de la paie8
+Figure 7 : Module de gestion de la production8
+Figure 8 : Acteurs de l'application15
+Figure 9: Diagramme de cas d'utilisation global19
+Figure 10 : Diagramme de classes global20
+Figure 11 : Processus Scrum21
+Figure 12 : Architecture logique27
+Figure 13 : Architecture physique28
+Figure 14 : Logo TypeScript32
+Figure 15 : Logo C#32
+Figure 16 : Logo Dart32
+Figure 17 : Logo SQL32
+Figure 18 : Logos HTML et CSS33
+Figure 19 : Logo React33
+Figure 20 : Logo ASP.NET Core Web API33
+Figure 21 : Logo Flutter33
+Figure 22 : Logo Entity Framework Core34
+Figure 23 : Logo Tailwind CSS34
+Figure 24 : Logo React Router34
+Figure 25 : Logo Axios34
+Figure 26 : Logo Zustand35
+Figure 27 : Logo Provider35
+Figure 28 : Logo Visual Studio Code35
+Figure 29 : Logo Visual Studio35
+Figure 30 : Logo Android Studio36
+Figure 31 : Logo Vite36
+Figure 32 : Logo StarUML36
+Figure 33 : Logo SQL Server36
+Figure 34 : Logo SQL Server Management Studio37
+Figure 35 : Logo JWT37
+Figure 36 : Logo AJAX37
+Figure 37 : Logo SignalR38
+Figure 38 : Logo Swagger38
+Figure 39 : Logo GitHub38
+Figure 40 : Logo Google Maps39
+Figure 41 : Logo Mapbox39
+Figure 42 : Logo Sage X339
+Figure 43 : Logo Konnect40
+Figure 44 : Logo Brevo40
+Figure 45 : Logo n8n40
+Figure 46 : Diagramme de cas d'utilisation du Sprint 145
+Figure 47 : Diagramme de séquence — Authentification46
+Figure 48 : Diagramme de séquence — Création d'un compte client47
+Figure 49 : Diagramme de séquence — Mise à jour du profil48
+Figure 50 : Diagramme de séquence — Création d'un utilisateur par l'administrateur49
+Figure 51 : Diagramme de séquence — Modification des rôles49
+Figure 52 : Diagramme de séquence — Réinitialisation du mot de passe50
+Figure 53 : Interface de connexion web51
+Figure 54 : Interface de création de compte client52
+Figure 55 : Interface de création de compte entreprise52
+Figure 56 : Interface de mot de passe oublié53
+Figure 57 : Interface de réinitialisation du mot de passe53
+Figure 58 : Interface Mon compte54
+Figure 59 : Interface de gestion des utilisateurs55
+Figure 60 : Interface de connexion mobile56
+Figure 61 : Diagramme de cas d’utilisation du Sprint 264
+Figure 62 : Diagramme de séquence — Consultation du catalogue65
+Figure 63 : Diagramme de séquence — Gestion du panier66
+Figure 64 : Diagramme de séquence — Création d’une commande client67
+Figure 65 : Diagramme de séquence — Paiement Konnect68
+Figure 66 : Diagramme de séquence — Demande de devis B2B69
+Figure 67 : Interface catalogue produits70
+Figure 68 : Interface détail produit71
+Figure 69 : Interface panier71
+Figure 70 : Interface favoris72
+Figure 71 : Interface gestion des adresses72
+Figure 72 : Interface de validation de commande73
+Figure 73 : Interface paiement74
+Figure 74 : Interface suivi des commandes client74
+Figure 75 : Interface demande de devis B2B75
+Figure 76 : Diagramme de cas d’utilisation du Sprint83
+Figure 77 :  Diagramme de séquence — Synchronisation d'une entité Sage X384
+Figure 78 : Diagramme de séquence — Synchronisation globale (Sync All)85
+Figure 79 : Diagramme de séquence — Création d'un bon de commande par le vendeur86
+Figure 80 :  Diagramme de séquence — Gestion des images produits avec Cloudinary86
+Figure 81: Diagramme de séquence —vers Sage X387
+Figure 82: Interface du tableau de bord administrateur88
+Figure 83: Interface de gestion des produits89
+Figure 84 :  Interface de gestion des images produits89
+Figure 85 :  Interface de gestion des stocks90
+Figure 86 : Interface de gestion des dépôts91
+Figure 87 :  Interface de gestion des commandes92
+Figure 88 :  Interface de consultation des bons de livraison92
+Figure 89: Interface de gestion des clients93
+Figure 90 : Interface de gestion des clients B2B94
+Figure 91 : Interface de gestion des paramètres applicatifs et Sage X394
+Figure 92 :  Interface de l'espace vendeur95
+Figure 93 : Vue d'ensemble des échanges GET et POST avec Sage X397
+Figure 94 : Diagramme de cas d'utilisation du Sprint 4105
+Figure 95 : Diagramme de séquence — Transformation BC en BL107
+Figure 96 : Diagramme de séquence — Livraison COD et diffusion GPS108
+Figure 97 : Diagramme de séquence — Réclamation client avec SignalR109
+Figure 98 : Diagramme de séquence — Scan codes-barres transit inter-dépôts110
+Figure 99 : Interface confirmateur- liste des commandes111
+Figure 100: Interface confirmateur-liste des commandes(mobile)112
+Figure 101 : Interface confirmateur-transformation BC en BL112
+Figure 102: Interface confirmateur- transformation BC en BL (mobile)113
+Figure 103 : Interface confirmateur-gestion des réclamations113
+Figure 104: Interface confirmateur-gestion des réclamations(mobile)114
+Figure 105 : Interface livreur — livraisons disponibles114
+Figure 106 : Interface livreur — suivi GPS et carte de livraison115
+Figure 107 : Interface livreur — caisse COD115
+Figure 108 : Interface client — TrackingStateCard adaptative116
+Figure 109 : Interface de transit inter-dépôts et scan codes-barres117
+Figure 110 : Interface superviseur117
+Figure 111: Les Interfaces de superviseur(mobile)118
+Figure 112 : Diagramme de cas d'utilisation du Sprint 5124
+Figure 113 : Diagramme de séquence — Chatbot administrateur (n8n)125
+Figure 114 : Diagramme de séquence — Export Excel et PDF126
+Figure 115 : Interface du tableau de bord global127
+Figure 116: Interface du tableau de bord global(mobile)127
+Figure 117 : Interface du dashboard ventes et commandes128
+Figure 118: Interface du dashboard ventes et commandes(mobile)128
+Figure 119 : Interface du dashboard logistique et livreurs129
+Figure 120: Interface du dashboard logistique et livreurs(mobile)129
+Figure 121 : Interface du dashboard réclamations et confirmatrices130
+Figure 122: Interface du dashboard réclamations et confirmatrices(mobile)130
+Figure 123 : Interface du dashboard synchronisation Sage X3131
+Figure 124 : Interface des exports Excel et PDF132
+Figure 125 : Interface du chatbot administrateur133
+Figure 126: Interface du chatbot administrateur (mobile)133
+Figure 127 : Interface des conversations et insights chatbot134
+
+
+
+
+
+
+
+Liste des tableaux
+Tableau 1 : Comparaison des approches existantes10
+Tableau 2 : Planification des sprints23
+Tableau 3 : Les endpoints utilisés29
+Tableau 4 : Environnement matériel31
+Tableau 5 : Backlog du Sprint 143
+Tableau 6 : Tests fonctionnels du Sprint 157
+Tableau 7 : Backlog du Sprint 261
+Tableau 8 : Tests fonctionnels du Sprint 275
+Tableau 9: Synthèse unifiée des échanges GET et POST avec Sage X397
+Tableau 10: Mapping des champs entre la base locale et Sage X399
+Tableau 11 : Paramètres de connexion Sage X3100
+Tableau 12: Tests fonctionnels du Sprint 3100
+Tableau 13 : Backlog du Sprint 4102
+Tableau 14 : Tests fonctionnels du Sprint 4118
+Tableau 15 : Backlog du Sprint 5122
+Tableau 16 : Tests fonctionnels du Sprint 5134
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Liste des acronymes
+La présente liste regroupe les principaux acronymes utilisés dans ce rapport.
+APIApplication Programming Interface
+CODCash On Delivery (paiement à la livraison)
+CRUDCreate, Read, Update, Delete
+DTOData Transfer Object
+EF CoreEntity Framework Core
+ERPEnterprise Resource Planning
+HTTPHyper Text Transfer Protocol
+JWTJSON Web Token
+KPIKey Performance Indicator
+OAuthOpen Authorization
+ORMObject Relational Mapping
+PFEProjet de Fin d'Études
+RESTRepresentational State Transfer
+SGBDSystème de Gestion de Base de Données
+SMTP                   Simple Mail Transfer Protocol
+SQLStructured Query Language
+UIUser Interface
+UXUser Experience
+UMLUnified Modeling Language
+Introduction générale
+Dans un contexte marqué par l'évolution rapide des technologies numériques, les systèmes d'information occupent aujourd'hui une place centrale dans le fonctionnement et le développement des entreprises. Cette transformation s'accompagne d'une diversification des besoins, d'une multiplication des interactions entre les utilisateurs et d'une exigence croissante en matière de fluidité, de réactivité et de disponibilité des services numériques.
+Dans cette perspective, la mise en place de solutions logicielles modernes, capables d'assurer une gestion cohérente et efficace de plusieurs processus métier, constitue un enjeu important pour les organisations.
+C'est dans ce cadre que s'inscrit notre projet de fin d'études, réalisé au sein de la société INFOSOFT. Ce travail a porté sur la conception et le développement d'une solution numérique reposant sur une architecture combinant une application web, une Web API et une application mobile. Une telle approche permet d'assurer une meilleure complémentarité entre les différentes composantes du système et de proposer un environnement de travail adapté à plusieurs profils d'utilisateurs, aussi bien dans un cadre administratif qu'opérationnel.
+Ce projet nous a offert l'opportunité d'évoluer dans un contexte professionnel concret et de mettre en pratique les connaissances acquises tout au long de notre parcours académique. Il nous a également permis de renforcer nos compétences techniques dans des domaines variés, notamment le développement web, le développement mobile, la structuration d'API, l'intégration entre plusieurs couches applicatives ainsi que l'organisation du travail dans le cadre d'un projet réel.
+Ce document constitue le rapport final de notre projet de fin d'études. Il est structuré en huit chapitres principaux :
+Le premier chapitre, intitulé « Cadre général du projet », présente l'organisme d'accueil, le contexte du stage, l'étude de l'existant, la problématique ainsi que les objectifs de la solution.
+Le deuxième chapitre, intitulé « Analyse et spécification des besoins », identifie les acteurs de la solution, définit les besoins fonctionnels et non fonctionnels, présente le diagramme global de cas d'utilisation, le diagramme de classes et la méthodologie de développement adoptée.
+Le troisième chapitre, intitulé « Architecture et choix techniques », décrit l'architecture logique et physique de la solution, la sécurité applicative, les technologies utilisées et l'environnement de travail.
+Le quatrième chapitre, consacré au Sprint 1, présente le socle technique lié à l'authentification, à la gestion des comptes utilisateurs, aux rôles et à la sécurisation des accès.
+Le cinquième chapitre, consacré au Sprint 2, détaille la gestion du catalogue, du panier, du paiement et des commandes client.
+Le sixième chapitre, consacré au Sprint 3, présente l'administration, la gestion des produits, des stocks, des dépôts, des commandes et le tableau de bord initial.
+Le septième chapitre, consacré au Sprint 4, décrit la partie logistique liée aux livreurs, au transit, au suivi des statuts, aux réclamations et à la supervision opérationnelle.
+Le huitième chapitre, consacré au Sprint 5, présente la finalisation de la solution, les tableaux de bord avancés, les exports, le chatbot, les tests finaux et la préparation de la soutenance. Enfin, une conclusion générale clôture ce rapport en récapitulant les principaux apports du projet et en proposant des perspectives d'amélioration.
+Chapitre 1 : Cadre général du projet
+Chapitre 1 : Cadre général du projet
+1. Introduction
+Ce chapitre présente le cadre général dans lequel s'inscrit notre projet de fin d'études. Il situe le travail réalisé au sein de l'organisme d'accueil et met en évidence le contexte professionnel ayant conduit à la définition du sujet. Cette première partie permet ainsi de comprendre l'environnement fonctionnel du projet, les limites de l'existant et les motivations qui justifient la mise en place d'une solution adaptée.
+2. Étude de l'organisme
+2.1 Présentation de l'organisme
+INFOSOFT est une société tunisienne d'assistance et d'ingénierie informatique, implantée notamment à Sfax, et spécialisée dans l'intégration de solutions informatiques de gestion adaptées aux besoins des entreprises. Elle se présente comme un partenaire Sage en Tunisie et propose à ses clients une large gamme de solutions logicielles, de prestations de conseil, d'intégration, de formation et de maintenance, afin d'accompagner les entreprises tout au long du cycle de vie de leur système d'information.
+
+Figure 1 : Logo INFOSOFT
+2.2 Historique
+INFOSOFT a été fondée en 2004 à Sfax. Depuis sa création, l'entreprise s'est spécialisée dans l'assistance et l'ingénierie informatique, avec un positionnement centré sur l'intégration de solutions de gestion pour les entreprises. Au fil de son évolution, elle a développé une expertise autour des logiciels Sage ainsi que de plusieurs solutions spécifiques destinées à répondre aux besoins des organisations en matière de gestion, de digitalisation et d'accompagnement des systèmes d'information. L'entreprise dispose aujourd'hui d'une présence à Sfax et à Tunis et accompagne plus d'une centaine d'entreprises dans leurs projets informatiques.
+
+Figure 2 : Historique d'INFOSOFT
+2.3 Organigramme de la société
+INFOSOFT comporte plusieurs départements, notamment le département Informatique, le département Commercial, le département des Ventes ainsi que le département Technologies de l'Information dans lequel nous avons effectué notre projet.
+
+Figure 3 : Organigramme de la société
+2.4 Services
+INFOSOFT met à la disposition de sa clientèle un ensemble de solutions de gestion articulé autour des logiciels Sage et de solutions spécifiques développées et intégrées par l'entreprise. Son offre couvre principalement les domaines de l'ERP, de la paie et des ressources humaines, ainsi que plusieurs besoins métiers spécialisés.
+Parmi les principales solutions proposées, nous pouvons citer :
+les logiciels Sage, notamment Sage X3, Sage 100, Sage XRT Solutions, Sage 50 et Sage Génération Experts ;
+les solutions liées à la paie et aux ressources humaines, en particulier Sage 100 Paie & RH et Genius Politique Salariale ;
+les solutions spécifiques intégrées autour de Sage, telles que Gestion des Règlements Tiers (GRT), Genius POS, Genius Proximity, Genius Inventaire Immobilisations, Gestion des Dossiers d'Importations, Genius Workflow Achat, Genius Facture Électronique, Gestion des Déclarations Légales (GDL) et Liasse Fiscale.
+3. Présentation de l'ERP INFOSOFT
+INFOSOFT propose à ses clients un progiciel ERP intégré, destiné à couvrir les besoins essentiels de gestion de l'entreprise. Cet ERP repose sur plusieurs modules complémentaires, chacun correspondant à une fonction précise du système d'information. Les principaux modules concernent la gestion commerciale, la gestion comptable, la gestion de la paie et la gestion de la production. Dans ce qui suit, nous présentons brièvement chacun de ces modules afin de situer le projet dans son environnement fonctionnel.
+3.1 Gestion commerciale
+Le module de gestion commerciale prend en charge les opérations liées aux achats, aux ventes, aux stocks et au suivi des indicateurs d'activité. Il constitue un composant central du système, puisqu'il permet de structurer le cycle commercial depuis la gestion des articles jusqu'au traitement des commandes.
+
+Figure 4 : Module de gestion commerciale
+3.2 Gestion comptable
+Le module de gestion comptable permet de traiter les différentes opérations comptables de l'entreprise en s'appuyant sur les règles et principes du système comptable en vigueur. Il facilite l'enregistrement, le suivi et l'exploitation des données financières nécessaires au pilotage de l'activité.
+
+Figure 5 : Module de gestion comptable
+3.3 Gestion de la paie
+Le module de gestion de la paie est destiné à organiser le processus de rémunération des employés. Il permet de gérer les éléments constitutifs de la paie, de calculer les charges salariales et patronales et d'assurer un traitement structuré des données liées aux ressources humaines.
+
+Figure 6 : Module de gestion de la paie
+3.4 Gestion de la production
+Le module de gestion de la production permet de planifier les ordres de fabrication, de suivre l'avancement des commandes et de piloter les activités de production. Il facilite également l'édition de tableaux de bord et d'indicateurs de suivi, tout en contribuant à l'évaluation des rendements des opérateurs et des ateliers.
+
+Figure 7 : Module de gestion de la production
+4. Cadre du stage
+Dans le cadre de notre stage de fin d'études effectué au sein de la société INFOSOFT, nous avons contribué à la réalisation d'une solution e-commerce intégrée, orientée vers la gestion commerciale, le suivi des commandes, le traitement des livraisons et la synchronisation avec Sage X3. Cette solution vise à améliorer la gestion des opérations de vente, à faciliter le suivi logistique et à assurer un échange plus fiable des données avec l'ERP de l'entreprise. Sur le plan technique, le projet s'appuie sur une application web, une Web API et une application mobile. Il s'inscrit ainsi dans une démarche de digitalisation et d'amélioration des processus métier liés à la vente et à la relation client.
+5. Étude de l'existant
+L’étude de l’existant permet d’analyser le fonctionnement actuel des processus commerciaux et logistiques de l’entreprise afin d’identifier les limites à corriger. Dans le cadre de ce projet, elle porte sur la gestion des données issues de Sage X3, le traitement des commandes, le suivi des livraisons, la gestion des réclamations et la coordination entre les différents acteurs de la solution.
+5.1 Analyse de l’existant
+INFOSOFT s’appuie sur un environnement de gestion structuré autour de solutions ERP, notamment Sage X3. Ce système constitue un référentiel métier pour les articles, les stocks, les dépôts, les clients et les données commerciales. Il permet ainsi de centraliser une partie essentielle des informations nécessaires au suivi de l’activité interne.
+Cependant, les besoins actuels dépassent la gestion interne des données. L’entreprise doit aussi offrir un accès plus direct aux clients et aux acteurs opérationnels à travers des interfaces web et mobile. Le parcours attendu comprend la consultation du catalogue, la création des commandes, le suivi des livraisons, la gestion des devis B2B, les réclamations, les notifications et les tableaux de bord.
+Plusieurs profils interviennent dans ce processus, notamment l’administrateur, le vendeur, le confirmateur, le superviseur, le livreur, le client B2C et le client B2B. Cette diversité d’acteurs impose une organisation claire des droits d’accès, des statuts et des traitements métier. L’existant met donc en évidence le besoin d’une plateforme intégrée reliant les données ERP aux usages web et mobile.
+5.2 Limites de l’existant
+L’analyse de l’existant fait apparaître plusieurs limites. D’abord, un ERP seul reste principalement orienté vers la gestion interne de l’entreprise. Il ne répond pas entièrement aux besoins d’un parcours client moderne, ni aux contraintes de mobilité liées aux livreurs et aux opérations logistiques.
+Ensuite, la séparation entre les commandes, les stocks, les livraisons et les réclamations peut entraîner une dispersion de l’information. Cette situation complique le suivi complet d’une commande, depuis sa création jusqu’à sa livraison, et peut ralentir la coordination entre les vendeurs, les confirmateurs, les livreurs et les superviseurs.
+Enfin, la cohérence des données constitue un enjeu essentiel. Les informations affichées dans la plateforme doivent rester alignées avec les données de Sage X3, notamment pour les articles, les stocks et les dépôts. Sans mécanisme de synchronisation structuré, des écarts peuvent apparaître entre le référentiel ERP et les interfaces utilisées par les clients et les équipes opérationnelles.
+5.3 Comparaison des approches existantes
+Le tableau suivant présente une comparaison synthétique des principales approches possibles par rapport aux besoins du projet.
+
+Solution possible
+Apport principal
+Limite constatée
+Décision
+Utiliser Sage X3 seul
+Centraliser les articles, stocks, dépôts et données commerciales
+Peu adapté au parcours client, aux livreurs, aux interfaces mobiles et au suivi en temps réel
+Non retenue seule
+Développer uniquement un site e-commerce
+Permettre la consultation du catalogue, le panier et la commande en ligne
+Ne couvre pas suffisamment la logistique, les réclamations, les rôles internes et la synchronisation ERP
+Non retenue seule
+Développer uniquement une application logistique
+Faciliter le suivi des livraisons, des livreurs et des statuts
+Ne couvre pas le catalogue, les commandes, les devis, le paiement et la relation client
+Non retenue seule
+Mettre en place une plateforme intégrée web, mobile et AP
+Relier le parcours client, la gestion commerciale, la logistique, Sage X3 et les services externes
+Architecture plus complète à concevoir et à sécuriser
+Solution retenue
+Tableau 1 : Comparaison des approches existantes
+
+Cette synthèse montre que les solutions étudiées séparément répondent chacune à une partie du besoin, sans couvrir l’ensemble du processus métier. Sage X3 constitue un référentiel fiable pour les données commerciales, mais il doit être complété par des interfaces adaptées aux clients et aux acteurs opérationnels. De même, un site e-commerce ou une application logistique utilisés seuls ne permettent pas d’assurer une continuité complète entre la commande, le stock, la livraison et le suivi. Le choix retenu consiste donc à mettre en place une plateforme intégrée combinant une application web, une application mobile, une Web API, une base de données SQL Server et des services externes.
+6. Problématique
+À partir de l’étude de l’existant, nous constatons que la gestion commerciale, le suivi des commandes, la livraison et l’échange des données avec Sage X3 nécessitent une organisation plus centralisée. Les approches séparées, telles que l’utilisation de l’ERP seul, d’un site e-commerce classique ou d’une application logistique isolée, ne permettent pas de couvrir l’ensemble du processus métier.
+La problématique de ce projet consiste donc à concevoir et développer une solution e-commerce et logistique intégrée, capable de relier le parcours client, la gestion commerciale, la livraison et la synchronisation avec Sage X3 dans un même environnement. Cette solution doit également faciliter l’interaction entre les différents acteurs, notamment les clients, les vendeurs, les confirmateurs, les livreurs, les superviseurs et l’administrateur.
+7. Objectifs
+L’objectif principal de ce projet est de concevoir et développer une plateforme e-commerce et logistique intégrée permettant de centraliser le parcours de vente, le traitement des commandes, le suivi des livraisons et la synchronisation des données commerciales avec Sage X3. La solution vise à assurer une meilleure continuité entre les opérations commerciales, les acteurs métier et les services externes, à travers une architecture composée d’une application web, d’une Web API, d’une base de données SQL Server et d’une application mobile.
+Les objectifs spécifiques du projet sont les suivants :
+• Mettre à disposition des clients un espace permettant de consulter le catalogue, gérer le panier, passer des commandes et suivre leur état.
+• Offrir aux clients B2B un parcours adapté, incluant la gestion des informations professionnelles, les remises commerciales et les demandes de devis.
+• Fournir aux vendeurs un espace dédié pour accompagner les clients, créer des commandes et suivre les opérations commerciales.
+• Permettre aux confirmateurs de traiter les commandes, gérer leur état et préparer leur passage vers la livraison.
+• Développer une application mobile destinée aux livreurs afin de consulter les livraisons, les prendre en charge et mettre à jour leurs statuts sur le terrain.
+• Assurer le suivi logistique des livreurs, des opérations de transit inter-dépôts et des réclamations clients.
+• Mettre en place un espace d’administration pour gérer les utilisateurs, les rôles, les produits, les paramètres, les tableaux de bord et les services associés.
+• Garantir la cohérence des données commerciales grâce à la synchronisation avec Sage X3, notamment pour les articles, les stocks, les dépôts et les informations exploitées par la plateforme.
+• Intégrer des services complémentaires tels que Brevo pour les notifications, Konnect en pré-intégration de paiement en ligne, ainsi que n8n et un LLM pour le chatbot administrateur et l’aide à la décision.
+8. Solution proposée
+Pour répondre à la problématique identifiée, nous proposons une plateforme e-commerce et logistique intégrée reposant sur une application web, une Web API, une base de données SQL Server et une application mobile. Cette solution vise à centraliser les opérations commerciales et logistiques dans un environnement unique, sécurisé et adapté aux différents acteurs du système.
+L’application web permet aux clients de consulter le catalogue, gérer le panier, passer des commandes et suivre leur état. Elle offre également aux vendeurs, confirmateurs, superviseurs et administrateurs des espaces dédiés pour gérer les commandes, les devis B2B, les produits, les réclamations, les utilisateurs et les tableaux de bord. L’application mobile est destinée principalement aux livreurs afin de faciliter la consultation des missions, la prise en charge des livraisons et la mise à jour des statuts sur le terrain.
+La Web API ASP.NET Core constitue la couche centrale de la solution. Elle assure la communication entre les interfaces, la base de données et les services externes, tout en centralisant les règles métier, l’authentification, la gestion des rôles et la synchronisation avec Sage X3. Cette architecture permet d’assurer une meilleure continuité entre la vente, la gestion commerciale, la livraison et le pilotage de l’activité.
+
+9. Conclusion
+Dans ce chapitre, nous avons présenté le cadre général du projet, l’organisme d’accueil, les principaux modules de l’ERP INFOSOFT ainsi que le contexte du stage. L’étude de l’existant a permis de mettre en évidence les limites des approches séparées et de justifier le besoin d’une solution intégrée.
+Nous avons ensuite formulé la problématique, défini les objectifs du projet et présenté la solution proposée. Ces éléments constituent la base fonctionnelle du projet et préparent le chapitre suivant, consacré à l’analyse et à la spécification des besoins de la plateforme.
+
+
+
+
+
+
+
+
+
+Chapitre 2 : Analyse et spécification des besoins
+Chapitre 2 : Analyse et spécification des besoins
+1. Introduction
+Dans ce chapitre, nous présentons l'analyse et la spécification des besoins de notre solution. Nous identifierons les différents acteurs du système, définirons les besoins fonctionnels et non fonctionnels, et présenterons le diagramme global de cas d'utilisation ainsi que le diagramme de classes, afin d'offrir une vision complète des interactions entre les utilisateurs et le système.
+2. Acteurs de la solution
+Les acteurs de notre solution sont les différents profils qui interagissent avec la plateforme e-commerce et logistique. Il s'agit du visiteur, du client, du vendeur, du confirmateur, du livreur, du livreur de transit, du superviseur et de l'administrateur. Chacun intervient selon des responsabilités précises dans le processus de vente, de traitement, de livraison et d'administration.
+
+Figure 8 : Acteurs de l'application
+3. Besoins fonctionnels
+Les besoins fonctionnels représentent l’ensemble des services que la solution doit offrir aux différents utilisateurs. Dans le cadre de ce projet, ils sont organisés selon trois axes principaux: les besoins de l’application web, les besoins de l’application mobile et les besoins liés aux services externes.
+3.1 Besoins de l’application web
+L’application web constitue l’interface principale de la plateforme. Elle est destinée aux clients, aux vendeurs, aux confirmateurs, aux superviseurs et à l’administrateur. Elle doit permettre les fonctionnalités suivantes :
+• S’authentifier à l’aide d’un compte utilisateur ou via une authentification externe lorsque celle-ci est configurée.
+• Créer un nouveau compte client et gérer les informations du profil.
+• Réinitialiser le mot de passe en cas d’oubli.
+• Consulter le catalogue des produits, rechercher les articles et appliquer des filtres.
+• Gérer le panier, les favoris, les adresses de livraison et la validation de commande.
+• Choisir un mode de paiement, notamment le paiement à la livraison ou le paiement en ligne via Konnect lorsque ce service est disponible.
+• Suivre l’état des commandes depuis l’espace client.
+• Permettre aux clients B2B de bénéficier d’un parcours adapté, incluant les remises commerciales et les demandes de devis.
+• Permettre aux vendeurs de créer et suivre des commandes pour le compte des clients.
+• Permettre aux confirmateurs de consulter, traiter et mettre à jour l’état des commandes.
+• Gérer les réclamations clients et suivre leur traitement.
+• Permettre aux superviseurs de suivre les livreurs, les livraisons et les opérations de transit.
+• Permettre à l’administrateur de gérer les utilisateurs, les rôles, les produits, les paramètres, les tableaux de bord et la synchronisation avec Sage X3.
+3.2 Besoins de l’application mobile
+L'application mobile est principalement destinée aux livreurs et aux acteurs opérationnels sur le terrain. Elle doit faciliter le suivi des missions de livraison et la mise à jour des informations en temps réel. Les principales fonctionnalités attendues sont les suivantes :
+S'authentifier depuis l'application mobile.
+Restaurer automatiquement la session de l'utilisateur à partir du jeton sécurisé.
+Consulter les livraisons disponibles selon la zone affectée.
+Prendre en charge une livraison.
+Consulter les livraisons affectées au livreur connecté.
+Visualiser les informations nécessaires à la livraison, notamment l'adresse du client et l'itinéraire lorsqu'il est disponible.
+Mettre à jour le statut d'une livraison sur le terrain.
+Transmettre les informations de suivi nécessaires au système, notamment les statuts et les données de localisation lorsque le suivi GPS est activé.
+Enregistrer les tentatives de livraison infructueuses et signaler les motifs d'échec afin d'alimenter le système de gestion des réclamations.
+Gérer la caisse journalière en enregistrant les montants encaissés par livraison et en soumettant le récapitulatif financier en fin de tournée.
+Consulter les missions de transit inter-dépôts lorsque ce rôle est attribué.
+3.3 Besoins liés aux services externes
+La solution doit également interagir avec plusieurs services externes afin d’enrichir ses fonctionnalités et d’assurer la continuité avec l’environnement métier de l’entreprise. Ces besoins sont les suivants :
+• Assurer la synchronisation des données commerciales avec Sage X3, notamment les articles, les stocks, les dépôts et les informations nécessaires au catalogue.
+• Intégrer Konnect comme service de paiement en ligne afin de préparer le parcours de paiement électronique.
+• Utiliser Brevo pour l’envoi des e-mails transactionnels, tels que les notifications, les confirmations et les messages de suivi.
+• Exploiter SignalR pour assurer la communication temps réel, notamment dans le suivi des livraisons et la gestion des réclamations.
+• Intégrer n8n et un modèle LLM pour mettre en place un chatbot administrateur capable d’assister l’utilisateur dans l’analyse et l’interrogation des données métier.
+4. Besoins non fonctionnels
+Les besoins non fonctionnels définissent les contraintes de qualité que la solution doit respecter afin d’assurer son bon fonctionnement, sa sécurité et sa maintenabilité. Dans le cadre de notre projet, ces besoins sont essentiels en raison de la diversité des acteurs, de l’intégration entre les applications web et mobile, ainsi que de la synchronisation avec les services externes.
+• Sécurité : l’accès au système doit être protégé par une authentification sécurisée. Chaque utilisateur doit accéder uniquement aux fonctionnalités correspondant à son rôle, notamment client, vendeur, confirmateur, livreur, superviseur ou administrateur.
+• Performance : la plateforme doit assurer une navigation fluide et un traitement rapide des opérations principales, telles que la consultation du catalogue, la création des commandes, le suivi des livraisons et l’affichage des tableaux de bord.
+• Fiabilité : le système doit garantir le bon déroulement des processus métier, notamment la gestion des commandes, des paiements, des livraisons, des réclamations et de la synchronisation avec Sage X3.
+• Utilisabilité : les interfaces doivent être claires, simples et adaptées aux différents profils d’utilisateurs afin de faciliter leur utilisation, aussi bien sur l’application web que sur l’application mobile.
+• Maintenabilité : le code doit être organisé selon une architecture claire, séparant les responsabilités entre l’interface utilisateur, la Web API, la base de données et les services externes, afin de faciliter les corrections et les évolutions futures.
+• Cohérence des données : les informations manipulées par la plateforme doivent rester cohérentes entre la base de données locale, les interfaces utilisateurs et Sage X3, notamment pour les articles, les stocks, les commandes et les dépôts.
+• Évolutivité : la solution doit pouvoir être enrichie progressivement par de nouvelles fonctionnalités, comme l’amélioration des tableaux de bord, l’extension du chatbot, l’ajout de nouveaux services externes ou l’optimisation des modules logistiques.
+5. Diagramme global de cas d'utilisation
+Le diagramme global de cas d'utilisation présente une vue d'ensemble des interactions entre les acteurs et le système. Il met en évidence les principales fonctionnalités de la plateforme, à savoir la gestion des comptes, du catalogue, du panier, des commandes, des livraisons, des réclamations, du transit, du dashboard et des paramètres. Il intègre également les services externes intervenant dans certains scénarios, notamment Sage X3 pour la synchronisation, Konnect pour le paiement en ligne, OAuth 2.0 pour l'authentification externe, SignalR pour les notifications temps réel et n8n pour le chatbot administrateur.
+Figure 9: Diagramme de cas d'utilisation global
+Figure 9: Diagramme de cas d'utilisation global
+Description des cas d'utilisation
+Le diagramme ci-dessus permet d'identifier les responsabilités principales de chaque acteur. Le visiteur peut consulter le catalogue et créer un compte client. Le client gère son profil, son panier, ses favoris, ses commandes et ses réclamations. Le vendeur crée des commandes pour le compte des clients. Le confirmateur traite les commandes à confirmer. Le livreur consulte ses missions, met à jour les statuts et gère l'encaissement COD. Le livreur de transit prend en charge les transferts entre dépôts. Le superviseur suit les livreurs et les opérations de transit. L'administrateur gère les utilisateurs, les rôles, les paramètres, les indicateurs et la synchronisation avec Sage X3.
+
+6. Diagramme de classes global
+Le diagramme de classes global présente la structure statique de la solution et les principales entités manipulées par le système. Il met en relation les comptes utilisateurs et leurs profils avec les entités métier liées au catalogue, aux commandes, aux lignes de documents, aux paiements, aux livraisons, aux réclamations, aux dépôts et aux transferts.
+Figure 10 : Diagramme de classes global
+Description des classes
+Cette représentation facilite la compréhension de l'organisation des données, des associations entre les classes et de la logique métier qui soutient les échanges entre l'application web, l'application mobile et la Web API. Les entités préfixées par « F_ » correspondent aux tables alignées sur la structure Sage X3, tandis que les classes ApplicationUser, IdentityUser et ProfilUtilisateur regroupent les informations d'identité et de profil utilisées par ASP.NET Identity.
+7. Méthodologie de développement
+La réalisation de notre solution e-commerce et logistique intégrée nécessite une organisation méthodologique claire, en raison de la diversité des modules à développer et de l’intervention de plusieurs acteurs. Le projet couvre à la fois une application web, une Web API, une base de données, une application mobile, ainsi que des services externes liés à Sage X3, au paiement, aux notifications et à l’automatisation.
+Afin d’assurer un suivi progressif du travail, nous avons adopté une approche agile basée sur la méthode Scrum. Cette méthodologie permet de diviser le projet en plusieurs sprints, chacun correspondant à un ensemble cohérent de fonctionnalités à analyser, développer, tester et valider.
+7.1 Méthode Scrum
+Scrum est une méthode agile permettant d’organiser le développement d’un projet logiciel en cycles courts appelés sprints. Chaque sprint vise à produire une partie fonctionnelle de la solution, pouvant être vérifiée et améliorée progressivement.
+Dans notre projet, cette méthode a permis de répartir le travail selon une progression logique. Le développement a commencé par le socle technique et l’authentification, puis s’est poursuivi avec le parcours client, la gestion commerciale, la logistique et enfin les tableaux de bord ainsi que le chatbot administrateur. 
+Figure 11 : Processus Scrum
+
+
+7.2 Équipe du projet
+Conformément à l’organisation adoptée dans le cadre de Scrum, l’équipe projet est composée de plusieurs intervenants ayant des responsabilités complémentaires.
+• Product Owner fonctionnel : M. Majdi Radadi et M. Mohamed Dhieb.Ils ont participé à l’orientation fonctionnelle du projet, à l’identification des besoins métier et à la validation des fonctionnalités principales.
+• Scrum Master: M. Yousri Fakhfakh. Il a assuré l’encadrement académique, le suivi méthodologique du projet et l’accompagnement dans l’organisation du travail.
+• Équipe de développement : Melek Lahmar et Tawfik Siala. L’équipe de développement a pris en charge l’analyse, la conception, le développement, l’intégration, les tests et la documentation de la solution.
+7.3 Réunions de suivi
+Durant la période du stage, plusieurs réunions de suivi ont été organisées afin de cadrer le projet, valider les choix techniques et suivre l’avancement des fonctionnalités. Ces réunions ont permis de mieux comprendre les besoins de l’entreprise et d’ajuster progressivement les priorités de développement.
+• Réunion de cadrage : définition du sujet, identification des objectifs du stage et compréhension du contexte métier.
+• Réunion technique : choix des technologies à utiliser, validation de l’architecture générale et préparation de l’environnement de développement.
+• Réunion de suivi : contrôle de l’avancement du travail, discussion des difficultés rencontrées et ajustement des fonctionnalités à développer.
+Ces réunions ont contribué à assurer une meilleure coordination entre les besoins métier, les contraintes techniques et les exigences académiques du projet.
+7.4 Backlog produit
+Le backlog produit regroupe l’ensemble des fonctionnalités prévues pour la solution. Il constitue une base de travail permettant d’organiser les tâches par priorité et de les répartir sur les différents sprints.
+Dans notre projet, le backlog couvre les principaux modules de la plateforme : l’authentification, le parcours client, la gestion commerciale, la synchronisation avec Sage X3, la logistique, les réclamations, les tableaux de bord, les exports et le chatbot administrateur.
+Les éléments du backlog produit sont détaillés progressivement dans les chapitres de réalisation, à travers les backlogs spécifiques de chaque sprint. Cette organisation permet d’éviter la surcharge du chapitre d’analyse et de présenter chaque ensemble de fonctionnalités dans son contexte de développement.
+7.5 Planification des sprints
+La planification des sprints permet de structurer le développement du projet en plusieurs étapes successives. Chaque sprint correspond à un périmètre fonctionnel précis et produit un ensemble de fonctionnalités validables.
+Tableau 2 : Planification des sprints
+Sprint
+Histoire utilisateur / Objectif global
+Priorité
+Date début
+Date fin
+Sprint 1
+Mise en place du socle technique, authentification, rôles, configuration, stabilité des trois applications et préparation de l'environnement de développement.
+1
+02/02/2026
+21/02/2026
+Sprint 2
+Parcours client : catalogue, recherche, filtres, détails produit, panier, favoris, adresses, checkout, création de commande et suivi client initial.
+2
+23/02/2026
+14/03/2026
+Sprint 3
+Administration et gestion métier : produits, images produits, stocks, dépôts, commandes, bons de livraison, clients, clients B2B, paramètres, dashboard initial et synchronisation avec Sage X3.
+3
+16/03/2026
+04/04/2026
+Sprint 4
+Logistique COD : livreur, confirmatrice, statuts de livraison, caisse livreur, réclamations, demandes, SignalR, tracking et mode dégradé.
+4
+06/04/2026
+25/04/2026
+Sprint 5
+Finalisation : dashboard avancé, exports, chatbot, sécurité, performance, tests, correction des anomalies, documentation finale et préparation soutenance.
+5
+27/04/2026
+23/05/2026
+Cette planification a permis d’assurer une progression cohérente du projet. Chaque sprint s’appuie sur les fonctionnalités réalisées précédemment, ce qui facilite l’intégration progressive des modules et la validation continue de la solution.
+8. Conclusion
+Dans ce chapitre, nous avons présenté l’analyse et la spécification des besoins de notre solution. Nous avons identifié les principaux acteurs du système, défini les besoins fonctionnels et non fonctionnels, puis présenté la méthodologie de développement adoptée.
+L’utilisation de la méthode Scrum a permis de structurer le travail en plusieurs sprints cohérents, depuis la mise en place du socle technique jusqu’à la finalisation de la solution. Cette organisation a facilité le suivi de l’avancement, la répartition des tâches et la validation progressive des fonctionnalités.
+Le chapitre suivant sera consacré à l’architecture et aux choix techniques retenus pour la conception et le développement de la plateforme e-commerce et logistique intégrée
+
+
+
+
+
+
+
+Chapitre 3 : Architecture et choix techniques
+Chapitre 3 : Architecture et choix techniques
+1. Introduction
+Ce chapitre présente l’architecture technique adoptée pour la réalisation de la plateforme e-commerce et logistique intégrée. Il décrit l’organisation globale de la solution, les couches applicatives, les flux entre les différents composants, les mécanismes de sécurité ainsi que les principaux choix technologiques utilisés durant le développement.
+La solution repose sur une architecture composée d’une application web, d’une Web API, d’une base de données SQL Server et d’une application mobile. Elle intègre également plusieurs services externes, notamment Sage X3 pour la synchronisation des données commerciales, Konnect pour le paiement en ligne, Brevo pour les notifications par e-mail et n8n avec un LLM pour l’assistance intelligente.
+2. Architecture de la solution
+L’architecture de la solution a été conçue afin d’assurer une séparation claire entre les interfaces utilisateurs, les traitements métier, la base de données et les services externes. Cette organisation améliore la maintenabilité du projet, facilite l’évolution des fonctionnalités et permet une meilleure intégration entre les différentes parties du système.
+2.1 Architecture logique
+L’architecture logique repose sur plusieurs couches complémentaires. La couche présentation regroupe l’application web développée avec React et l’application mobile développée avec Flutter. Ces interfaces permettent aux différents acteurs d’interagir avec le système selon leurs rôles.
+La couche service est assurée par la Web API ASP.NET Core. Elle centralise les règles métier, la sécurité, l’authentification, la gestion des rôles et la communication avec les services externes. La couche données repose sur SQL Server et permet de stocker les informations relatives aux utilisateurs, produits, commandes, livraisons, réclamations, paiements, devis et synchronisations.
+
+
+Figure 12 : Architecture logique
+2.2 Architecture physique
+L’architecture physique décrit le déploiement des différents composants de la solution. L’application web est utilisée depuis un navigateur, tandis que l’application mobile est installée sur les terminaux des utilisateurs mobiles, notamment les livreurs. La Web API et la base de données sont hébergées dans un environnement serveur centralisé.
+Les services externes, tels que Sage X3, Konnect, Brevo et n8n, sont consommés à travers des échanges HTTP sécurisés. Cette organisation permet de connecter la plateforme aux outils métier existants tout en conservant une séparation entre le système interne et les services externes.
+
+
+Figure 13 : Architecture physique
+2.3 Flux global de fonctionnement
+Le fonctionnement global de la solution suit un flux structuré. L’utilisateur interagit avec l’application web ou l’application mobile. L’interface envoie ensuite des requêtes HTTP vers la Web API ASP.NET Core. Cette dernière vérifie l’authentification, applique les règles métier, interroge ou met à jour la base de données SQL Server, puis retourne la réponse à l’interface concernée.
+Lorsque le traitement nécessite un service externe, la Web API joue le rôle d’intermédiaire. Elle communique avec Sage X3 pour la synchronisation des articles, stocks et dépôts, avec Konnect pour le paiement, avec Brevo pour l’envoi des e-mails et avec n8n pour les traitements liés au chatbot administrateur.
+3. Sécurité applicative
+La sécurité représente un élément essentiel dans notre solution, car plusieurs profils d’utilisateurs accèdent à des fonctionnalités différentes. Le système doit donc contrôler l’identité de chaque utilisateur et limiter l’accès aux opérations selon les rôles attribués.
+3.1 Authentification JWT
+L’authentification est basée sur l’utilisation d’un jeton JWT. Lorsqu’un utilisateur se connecte avec des identifiants valides, la Web API génère un jeton contenant les informations nécessaires à l’identification de l’utilisateur et à la vérification de ses droits.
+Ce jeton est ensuite transmis avec les requêtes envoyées par l’application web ou mobile. La Web API l’analyse avant d’autoriser l’accès aux ressources protégées.
+3.2 Gestion des rôles
+La solution repose sur une gestion des rôles afin de séparer les responsabilités entre les différents acteurs. Chaque utilisateur dispose d’un rôle précis, par exemple client, vendeur, confirmateur, livreur, superviseur ou administrateur.
+Cette organisation permet de garantir que chaque acteur accède uniquement aux fonctionnalités qui lui sont destinées. Par exemple, l’administrateur peut gérer les utilisateurs et les tableaux de bord, tandis que le livreur accède principalement aux livraisons et à la mise à jour des statuts.
+3.3 Protection des routes et des endpoints
+La protection est appliquée à deux niveaux. Côté frontend, les routes sont contrôlées afin d’éviter l’accès aux pages non autorisées. Côté backend, les endpoints de la Web API sont protégés à l’aide des règles d’autorisation.
+Ainsi, même si un utilisateur tente d’accéder directement à une URL ou à un endpoint non autorisé, la Web API vérifie son jeton et son rôle avant d’exécuter le traitement demandé.
+4. Exemples d’endpoints API utilisés
+La Web API expose plusieurs endpoints permettant la communication entre les interfaces utilisateurs, la base de données et les services externes. Ces endpoints sont organisés selon les modules fonctionnels de la solution.
+Tableau 3 : Les endpoints utilisés
+Module
+Endpoints représentatifs
+Utilité dans le projet
+Authentification
+/api/auth/login
+/api/auth/register
+/api/auth/me
+Connexion, création de compte, récupération du profil et contrôle de session.
+Administration
+/api/admin/users
+/api/admin/settings
+/api/admin/dashboard/overview
+Gestion des utilisateurs, rôles, paramètres et indicateurs administrateur.
+Catalogue et articles
+/api/articles
+/api/articles/{arRef}
+/api/catalogues
+Consultation du catalogue, détail produit et données nécessaires au parcours client.
+Commandes et suivi
+/api/orders
+/api/orders/guest
+/api/client/orders/{piece}/tracking-state
+Création des commandes, commande invitée et suivi de l’état côté client.
+Paiement Konnect
+/api/payments/konnect/initiate
+/api/payments/konnect/initiate/guest
+/api/payments/konnect/status
+Initialisation du paiement en ligne et suivi du statut de transaction.
+Synchronisation Sage X3
+/api/sync/articles
+/api/sync/catalogues
+/api/sync/depots
+/api/sync/stocks
+Synchronisation des articles, catalogues, dépôts et stocks avec Sage X3.
+Espace vendeur
+/api/vendeur/clients
+/api/vendeur/orders
+Création et suivi des commandes pour le compte des clients.
+Confirmation et BL
+/api/confirmateur/commandes
+/api/confirmateur/commandes/
+{piece}/status
+/api/confirmateur/commandes/{piece}/
+transform-to-bl
+Traitement des commandes, mise à jour des statuts et transformation BC vers BL.
+Livraison et GPS
+/api/livreur/orders/available
+/api/livreur/orders/{piece}/status
+/api/livreur/location/ping
+Gestion des livraisons, mise à jour terrain et remontée de localisation.
+Réclamations
+/api/reclamations
+/api/reclamations/mine
+/api/confirmateur/reclamations
+Création, consultation et traitement des réclamations clients.
+Transit et supervision
+/api/transit/my-missions
+/api/transit/scan
+/api/supervisor/dashboard/stats
+Suivi des missions de transit, scan des articles et supervision opérationnelle.
+Dashboard et chatbot
+/api/dashboard/overview
+/api/admin/chat/query
+/api/admin/chatbot/sessions
+Visualisation des indicateurs et interrogation des données par chatbot.
+5. Environnement de travail
+5.1 Environnement matériel
+L'environnement matériel représente l'ensemble des équipements physiques utilisés pour le développement, l'exécution et les tests de notre solution. Dans le cadre de ce projet, nous avons utilisé deux ordinateurs portables permettant de travailler sur les différentes parties de l'application, notamment la partie web React, la Web API et l'application mobile Flutter.
+Tableau 4 : Environnement matériel
+Ordinateur
+
+
+Modèle
+MSI Thin GF63
+Lenovo LOQ 15IRH8
+Processeur
+Intel Core i5 – 12e génération
+Intel Core i5 – 12e génération
+RAM
+24 Go
+16 Go
+Stockage
+1 025 Go
+512 Go SSD
+Carte graphique
+NVIDIA GeForce RTX 2050 – 4 Go
+NVIDIA GeForce RTX 2050 - 4 Go
+Système d’exploitation
+Windows 11
+Windows 11
+5.2 Technologies utilisées
+Dans cette section, nous présentons les principales technologies utilisées pour la conception et le développement de notre solution e-commerce et logistique intégrée. Elles sont organisées par familles afin de clarifier leur rôle dans l’architecture globale, depuis les langages et frameworks jusqu’aux outils de cartographie, de paiement, de notification et d’automatisation.
+
+
+
+
+
+
+
+5.2.1 Langages de programmation
+TypeScript : utilisé dans l'application web React afin de développer des composants, des pages et des services d'appel API avec un code plus structuré et mieux typé.
+
+Figure 14 : Logo TypeScript
+C# : utilisé dans la Web API ASP.NET Core pour implémenter les contrôleurs, les services métier, les modèles de données et les traitements backend.
+
+Figure 15 : Logo C#
+Dart : utilisé dans l'application mobile Flutter pour développer les interfaces mobiles, gérer l'état de l'application et communiquer avec la Web API.
+
+Figure 16 : Logo Dart
+SQL : utilisé au niveau de la base de données SQL Server pour stocker, organiser et interroger les données de l'application.
+
+Figure 17 : Logo SQL
+
+
+HTML / CSS : utilisés dans la partie web pour structurer les pages et assurer la mise en forme des interfaces utilisateur.
+
+Figure 18 : Logos HTML et CSS
+5.2.2 Frameworks et bibliothèques de développement
+React : framework frontend utilisé pour développer l'interface web de la plateforme e-commerce. Il permet de créer des composants réutilisables et des pages dynamiques adaptées aux différents rôles utilisateurs.
+
+Figure 19 : Logo React
+ASP.NET Core Web API : framework backend utilisé pour exposer des services REST consommés par l'application web React et l'application mobile Flutter. Il centralise la logique métier, la sécurité, l'accès aux données et l'intégration avec les services externes.
+
+Figure 20 : Logo ASP.NET Core Web API
+Flutter : framework mobile utilisé pour développer l'application mobile du projet. Il permet de créer une interface fluide, moderne et adaptée aux usages mobiles.
+
+Figure 21 : Logo Flutter
+Entity Framework Core : ORM utilisé dans la Web API pour faciliter l'accès à la base de données SQL Server à partir du code C#. Il permet de manipuler les données sous forme d'objets métier.
+
+Figure 22 : Logo Entity Framework Core
+Tailwind CSS : framework CSS utilisé dans l'application web pour accélérer la création d'interfaces modernes, cohérentes et responsives à travers des classes utilitaires.
+
+Figure 23 : Logo Tailwind CSS
+React Router : bibliothèque utilisée dans l'application React pour gérer la navigation entre les pages. Elle permet également d'organiser les routes protégées selon les rôles des utilisateurs.
+
+Figure 24 : Logo React Router
+Axios : bibliothèque utilisée pour envoyer les requêtes HTTP depuis l'application React vers la Web API. Elle facilite également la gestion des requêtes authentifiées avec le jeton JWT.
+
+Figure 25 : Logo Axios
+
+
+Zustand : bibliothèque de gestion d'état utilisée côté frontend pour gérer certaines données partagées, comme le panier ou les informations liées à l'authentification.
+
+Figure 26 : Logo Zustand
+Provider : bibliothèque utilisée dans Flutter pour gérer l'état de l'application mobile et organiser la communication entre les interfaces, les services et les données.
+
+Figure 27 : Logo Provider
+5.2.3 Outils de développement et de build
+Visual Studio Code : éditeur de code utilisé principalement pour le développement de l'application web React et de l'application mobile Flutter. Il offre un environnement léger, extensible et adapté au développement multi-technologies.
+
+Figure 28 : Logo Visual Studio Code
+Visual Studio : environnement de développement utilisé pour la Web API ASP.NET Core. Il facilite la compilation, le débogage et l'organisation du projet backend.
+
+Figure 29 : Logo Visual Studio
+
+Android Studio : outil utilisé pour configurer l'environnement mobile Android et exécuter l'application Flutter sur un émulateur ou un appareil mobile.
+
+Figure 30 : Logo Android Studio
+Vite : outil de développement et de build utilisé avec React. Il permet de lancer rapidement l'environnement frontend et de générer une version optimisée de l'application web.
+
+Figure 31 : Logo Vite
+StarUML : outil de conception UML utilisé pour modéliser les diagrammes de cas d'utilisation, de classes, de séquences et d'activités du projet. Il a permis de formaliser l'architecture fonctionnelle de la solution avant l'implémentation.
+
+Figure 32 : Logo StarUML
+5.2.4 Base de données et outils de gestion
+SQL Server : système de gestion de base de données relationnelle utilisé pour stocker les données de la plateforme, notamment les utilisateurs, les produits, les commandes, les paiements, les livraisons et les réclamations.
+
+Figure 33 : Logo SQL Server
+SQL Server Management Studio : outil utilisé pour administrer la base de données SQL Server. Il permet de consulter les tables, exécuter des requêtes, vérifier les données et contrôler la structure de la base.
+
+Figure 34 : Logo SQL Server Management Studio
+5.2.5 Sécurité, authentification et communication
+JWT : mécanisme utilisé pour sécuriser l'authentification et les échanges entre les interfaces clientes et la Web API. Il permet de transmettre un jeton d'accès afin de vérifier l'identité et les droits de l'utilisateur lors des requêtes.
+
+Figure 35 : Logo JWT
+AJAX : mécanisme d'échange asynchrone utilisé dans l'interface web React pour communiquer avec la Web API sans rechargement complet de la page. Il permet d'envoyer des requêtes HTTP en arrière-plan et de mettre à jour dynamiquement les données affichées à l'utilisateur.
+
+Figure 36 : Logo AJAX
+
+
+
+
+
+SignalR (signalr\_netcore) : bibliothèque Flutter permettant d'établir une connexion temps réel avec le serveur ASP.NET Core via le protocole SignalR. Elle est utilisée pour recevoir les notifications de mise à jour des statuts de livraison sans rechargement de page.
+
+Figure 37 : Logo SignalR
+5.2.6 Documentation et test des API
+Swagger : outil utilisé côté backend pour documenter, visualiser et tester les endpoints de la Web API. Il facilite la vérification des services REST pendant la phase de développement.
+
+Figure 38 : Logo Swagger
+5.2.7 Gestion de versions et collaboration
+GitHub : plateforme utilisée pour héberger le code source et suivre l'évolution du projet. Elle facilite la collaboration entre les membres du binôme grâce à la gestion des versions, des commits et des branches.
+
+Figure 39 : Logo GitHub
+
+
+
+
+
+
+5.2.8 Cartographie, géolocalisation et suivi
+Google Maps : bibliothèque utilisée dans l'application mobile Flutter pour intégrer des cartes interactives Google Maps. Elle permet d'afficher l'itinéraire des livraisons et la position géographique des clients.
+
+Figure 40 : Logo Google Maps
+Mapbox : plateforme de cartographie utilisée pour l'affichage des cartes interactives et la géolocalisation dans l'application mobile. Elle fournit les tuiles cartographiques et les services de navigation utilisés pour le suivi des livraisons et la couverture des dépôts.
+
+Figure 41 : Logo Mapbox
+
+5.2.9 ERP, paiement, notifications et services externes
+Sage X3 : ERP utilisé comme référentiel métier pour les articles, les catalogues, les dépôts et les stocks. Dans notre solution, la Web API ASP.NET Core assure l’intermédiaire entre Sage X3, SQL Server et les interfaces web et mobile. Cette intégration permet de synchroniser les données essentielles et de garantir leur cohérence entre l’ERP et la plateforme e-commerce.
+
+Figure 42 : Logo Sage X3
+
+
+Konnect : plateforme tunisienne de paiement en ligne utilisée pour intégrer le paiement électronique dans le parcours client de la solution e-commerce. Elle permet aux clients de régler leurs commandes en ligne de manière sécurisée via une API dédiée.
+
+Figure 43 : Logo Konnect
+Brevo : est une plateforme utilisée dans le projet pour automatiser l’envoi des e-mails transactionnels, tels que les confirmations, notifications et messages de suivi. Elle améliore la fiabilité, la traçabilité et la qualité de la communication avec les utilisateurs.
+
+Figure 44 : Logo Brevo
+
+5.2.10 Automatisation et chatbot intelligent
+n8n : plateforme d'automatisation de flux de travail open-source utilisée pour orchestrer le chatbot administrateur. Elle connecte les différents services (ASP.NET Core API, modèles de langage, base de données) et gère les scénarios d'automatisation métier.
+
+Figure 45 : Logo n8n
+
+
+
+
+
+
+6. Conclusion
+Dans ce chapitre, nous avons présenté l’architecture de la solution, les mécanismes de sécurité, les principaux endpoints API, l’environnement de travail ainsi que les technologies utilisées. Ces choix techniques, incluant React, ASP.NET Core Web API, SQL Server, Flutter, Sage X3, Konnect, Brevo et n8n, constituent la base de réalisation de notre plateforme e-commerce et logistique intégrée.
+Ils permettent d’assurer une organisation claire du système, une meilleure sécurité des accès et une intégration cohérente entre les différents modules. Les chapitres suivants seront consacrés à la réalisation progressive des fonctionnalités à travers les différents sprints.
+Chapitre 4 : Sprint 1 — Socle technique, authentification, rôles et sécurisation des accès
+Chapitre 4 : Sprint 1 — Socle technique, authentification, rôles et sécurisation des accès
+1. Introduction
+Ce chapitre présente le premier sprint de réalisation de notre solution e-commerce. Il porte sur la mise en place des mécanismes nécessaires à l'authentification, à la déconnexion, à la création des comptes, à la réinitialisation du mot de passe, à la gestion du profil et à l'administration des rôles utilisateurs. Ce sprint constitue une base importante pour la suite du projet, car les fonctionnalités développées par la suite reposent sur une identification fiable des utilisateurs et une gestion claire de leurs droits d'accès.
+2. Objectif du Sprint 
+Le Sprint 1 s'est déroulé du 02/02/2026 au 21/02/2026. Son objectif principal consiste à mettre en place les fonctionnalités liées à l'authentification, à la déconnexion, à la création des comptes, à la réinitialisation du mot de passe, à la gestion du profil, à la gestion des rôles et à la sécurisation des accès. Ce périmètre concerne à la fois l'application web React, la Web API ASP.NET Core et l'application mobile Flutter, afin d'assurer une cohérence d'accès entre les différentes parties de la solution.
+3. Backlog du Sprint 1
+Le tableau suivant présente les principales histoires utilisateurs traitées durant ce sprint. Elles concernent l'authentification et la déconnexion, la création d'un compte client, la réinitialisation du mot de passe, la gestion du profil, l'administration des utilisateurs et des rôles, ainsi que l'accès depuis l'application mobile.
+Tableau 5 : Backlog du Sprint 1
+ID
+User Story
+Tâches principales
+Responsable
+Estimation
+US1.1
+En tant qu'utilisateur, je peux m'authentifier et me déconnecter afin d'accéder aux fonctionnalités autorisées et de quitter la session de manière sécurisée.
+Développer l'interface de connexion et de déconnexion, gérer l'authentification, supprimer le jeton JWT lors de la déconnexion et rediriger l'utilisateur selon son rôle.
+Melek Lahmar
+3 j
+US1.2
+En tant que visiteur, je peux créer un compte client afin d'utiliser l'espace e-commerce.
+Mettre en place l’inscription client avec validation des champs et création du profil utilisateur.
+Tawfik Siala
+3 j
+US1.3
+En tant qu'utilisateur, je peux réinitialiser mon mot de passe en cas d'oubli.
+Développer le processus de mot de passe oublié et l’envoi du lien de réinitialisation sécurisé.
+Melek Lahmar
+2 j
+US1.4
+En tant qu'utilisateur connecté, je peux consulter et modifier mon profil.
+Permettre la consultation et la mise à jour du profil utilisateur connecté.
+Tawfik Siala
+3 j
+US1.5
+En tant qu'administrateur, je peux créer des utilisateurs et affecter leurs rôles.
+Développer la gestion des utilisateurs et l’affectation des rôles par l’administrateur.
+Melek Lahmar
+4 j
+US1.6
+En tant qu'utilisateur mobile autorisé, je peux me connecter depuis l'application Flutter.
+Intégrer l’authentification mobile et la restauration automatique de la session utilisateur.
+Tawfik Siala
+2 j
+US1.7
+En tant qu'utilisateur, je peux utiliser une authentification externe Google ou Facebook lorsque la configuration est disponible.
+Préparer l’authentification externe via Google ou Facebook lorsque la configuration est disponible.
+Melek Lahmar
+2 j
+4. Analyse et conception du Sprint 1
+Les activités de ce sprint se concentrent sur la préparation du socle d'accès de la solution. Elles comprennent l'analyse des rôles utilisateurs, la définition des règles d'authentification, la conception des échanges entre les interfaces et la Web API, ainsi que la validation des accès selon les profils. Cette étape permet d'assurer que chaque utilisateur accède uniquement aux fonctionnalités correspondant à son rôle.
+4.1 Diagramme de cas d'utilisation du Sprint 1
+ Le diagramme suivant présente les principales interactions du Sprint 1. Le visiteur peut créer un compte via le formulaire classique ou utiliser l'authentification externe lorsque Google ou Facebook sont configurés. Ces deux modes d'inscription constituent des extensions du cas d'utilisation principal de création de compte. Le client, qui hérite des droits du visiteur, peut se connecter, se déconnecter, gérer son profil et réinitialiser son mot de passe. La réinitialisation du mot de passe inclut systématiquement l'envoi d'un email sécurisé via le service SMTP. L'administrateur dispose de fonctions supplémentaires lui permettant de créer des utilisateurs et d'affecter leurs rôles. L'application mobile Flutter exploite les mêmes cas d'utilisation d'authentification via la Web API.
+
+Figure 46 : Diagramme de cas d'utilisation du Sprint 1 
+4.2 Description des cas d'utilisation
+Les cas d'utilisation du Sprint 1 décrivent les principales fonctionnalités liées à l'accès sécurisé au système. Le visiteur peut créer un compte client via le formulaire classique ou via l'authentification externe Google ou Facebook lorsque la configuration est disponible. Le client peut se connecter à l'aide de son email et de son mot de passe, puis accéder à l'espace correspondant à son rôle grâce au jeton JWT généré par la Web API. Il peut également se déconnecter afin de mettre fin à sa session de manière sécurisée, consulter et modifier son profil, ou réinitialiser son mot de passe via un lien sécurisé envoyé par le service email SMTP. L'administrateur dispose d'un accès spécifique lui permettant de créer des utilisateurs et d'affecter leurs rôles. Enfin, l'application mobile Flutter exploite le même mécanisme d'authentification afin d'assurer une continuité d'accès entre la version web et mobile.
+4.3 Diagrammes de séquence
+Les diagrammes de séquence suivants décrivent les principaux échanges entre les acteurs, les interfaces web ou mobile, la Web API ASP.NET Core, les services Identity et la base de données SQL Server. Ils permettent de formaliser l'ordre des traitements et les principaux cas d'erreur du Sprint 1.
+4.3.1 Authentification
+Ce diagramme illustre le processus de connexion d'un utilisateur depuis React ou Flutter. La Web API vérifie les identifiants, génère un jeton JWT et retourne les rôles permettant d'orienter l'utilisateur vers l'espace autorisé.
+
+Figure 47 : Diagramme de séquence — Authentification
+4.3.2 Création d'un compte client
+Ce diagramme décrit la création d'un compte client à partir de l'interface React. Il montre la vérification de l'email, la création du compte Identity, l'enregistrement du profil utilisateur et l'affectation du rôle CLIENT.
+
+Figure 48 : Diagramme de séquence — Création d'un compte client
+
+4.3.3 Mise à jour du profil
+Ce diagramme représente la récupération et la modification des informations du profil. Les données sont d'abord chargées à partir de la Web API, puis mises à jour dans la base de données après validation.
+
+Figure 49 : Diagramme de séquence — Mise à jour du profil
+
+4.3.4 Création d'un utilisateur par l'administrateur
+Ce diagramme présente la création d'un utilisateur depuis l'espace administrateur. La Web API contrôle le rôle de l'appelant, crée le compte, affecte le rôle demandé et enregistre le profil associé.
+
+Figure 50 : Diagramme de séquence — Création d'un utilisateur par l'administrateur
+4.3.5 Modification des rôles
+Ce diagramme illustre la modification des rôles d'un utilisateur. Le système compare les rôles actuels avec les rôles demandés, supprime les anciens rôles non retenus et ajoute les nouveaux rôles autorisés.
+
+Figure 51 : Diagramme de séquence — Modification des rôles
+4.3.6 Réinitialisation du mot de passe
+Ce diagramme décrit le processus de réinitialisation du mot de passe. La demande génère un lien sécurisé envoyé par email, puis le nouveau mot de passe est enregistré si le lien reste valide.
+
+Figure 52 : Diagramme de séquence — Réinitialisation du mot de passe
+5. Réalisation du Sprint 1
+La réalisation du Sprint 1 concrétise les éléments d'analyse et de conception présentés précédemment. Les interfaces web sont développées avec React et communiquent avec la Web API via Axios. Les informations d'authentification sont conservées côté frontend afin de contrôler l'accès aux routes protégées. L'application mobile Flutter consomme également les services d'authentification afin de restaurer la session et d'orienter l'utilisateur selon son rôle.
+5.1 Interface de connexion web
+L'interface de connexion web permet à l'utilisateur de saisir son email et son mot de passe. Après validation, elle appelle la Web API pour recevoir un jeton JWT et les rôles associés au compte.
+
+Figure 53 : Interface de connexion web
+5.2 Interface de création de compte client
+L'interface d'inscription permet au visiteur de créer un compte client. Elle regroupe les données du compte, les informations personnelles et les informations d'adresse nécessaires à la constitution du profil utilisateur.
+
+Figure 54 : Interface de création de compte client 
+
+Figure 55 : Interface de création de compte entreprise
+5.3 Interface de mot de passe oublié
+Cette interface permet à l'utilisateur de demander l'envoi d'un lien de réinitialisation. L’API traite la demande et renvoie un message générique afin de ne pas exposer l'existence ou l'absence du compte.
+
+Figure 56 : Interface de mot de passe oublié
+5.4 Interface de réinitialisation du mot de passe
+L'interface de réinitialisation permet de saisir un nouveau mot de passe à partir du lien reçu par email. L’API vérifie le jeton, puis applique la mise à jour si les données sont valides.
+
+Figure 57 : Interface de réinitialisation du mot de passe
+5.5 Interface « Mon compte »
+L'interface Mon compte affiche les informations du profil et permet leur mise à jour. Elle exploite les endpoints /api/auth/me et /api/auth/me/profile pour récupérer et enregistrer les données.
+
+Figure 58 : Interface Mon compte
+5.6 Interface de gestion des utilisateurs et des rôles
+Cette interface est destinée à l'administrateur. Elle permet de consulter les utilisateurs, de filtrer par rôle, de créer de nouveaux comptes et de modifier les rôles attribués.
+
+Figure 59 : Interface de gestion des utilisateurs
+5.7 Interface de connexion mobile
+L'interface mobile permet à l'utilisateur de se connecter depuis l'application Flutter. Après authentification, le jeton est sauvegardé localement et la session peut être restaurée lors des prochains accès.
+
+Figure 60 : Interface de connexion mobile
+6. Tests et validation
+Les tests réalisés visent à vérifier la conformité des fonctionnalités développées avec les besoins définis au début du sprint. Ils couvrent principalement la validation des champs, la réponse de la Web API, la gestion du jeton JWT, l'accès aux routes protégées et l'application correcte des rôles.
+
+
+Tableau 6 : Tests fonctionnels du Sprint 1
+Test
+Objectif
+Résultat attendu
+Statut
+Authentification valide
+Vérifier la connexion avec un email et un mot de passe corrects.
+L'utilisateur est connecté et redirigé vers l'espace autorisé.
+Validé
+Authentification invalide
+Vérifier le rejet des identifiants incorrects.
+Le système affiche un message d'erreur et refuse l'accès.
+Validé
+Création de compte client
+Vérifier la création d'un compte avec les informations obligatoires.
+Le compte est créé avec le rôle CLIENT et un profil associé.
+Validé
+Email déjà utilisé
+Contrôler le cas d'un email existant.
+Le système refuse la création et affiche une erreur.
+Validé
+Authentification externe
+Vérifier le lancement du flux Google ou Facebook et le retour du JWT.
+Le compte est créé ou lié, et la session React est ouverte.
+Validé
+Réinitialisation du mot de passe
+Vérifier la génération du lien et la modification du mot de passe.
+Le mot de passe est mis à jour si le lien est valide.
+Validé
+Consultation du profil
+Vérifier la récupération des données via /api/auth/me.
+Les informations du compte et du profil sont affichées.
+Validé
+Modification du profil
+Vérifier la mise à jour des informations personnelles et d'adresse.
+Les données sont enregistrées et visibles après actualisation.
+Validé
+Gestion des rôles
+Vérifier la modification des rôles par l'administrateur.
+Les rôles sont remplacés conformément à la sélection.
+Validé
+Accès non autorisé
+Vérifier l'accès aux pages administrateur sans rôle ADMIN.
+
+L'accès est refusé.
+Validé
+Connexion mobile
+Vérifier l'appel mobile vers /api/auth/login et la restauration de session.
+Le jeton est sauvegardé et la session est restaurée.
+Validé
+7. Conclusion
+Ce sprint a permis de mettre en place le socle d'accès de la solution e-commerce et logistique. Les principales fonctionnalités couvertes concernent l'authentification, la déconnexion, la création du compte client, la réinitialisation du mot de passe, l'authentification externe, la gestion du profil et l'administration des utilisateurs et des rôles. Les diagrammes réalisés clarifient les interactions entre les interfaces, la Web API, ASP.NET Identity, le service email SMTP et la base de données. Ce socle prépare les sprints suivants, qui pourront s'appuyer sur une gestion d'accès structurée pour développer les modules métier liés au catalogue, aux                                                        commandes, aux livraisons, au transit, aux réclamations et à l'administration .                    .                                                               
+Chapitre 5 : Sprint 2 — Parcours client, catalogue, panier et commande en ligne
+Chapitre 5 : Sprint 2 — Parcours client, catalogue, panier et commande en ligne
+1. Introduction
+Ce chapitre présente le deuxième sprint de réalisation de notre solution e-commerce et logistique intégrée. Après la mise en place du socle technique, de l'authentification et de la gestion des rôles dans le Sprint 1, ce sprint introduit le parcours client principal de la plateforme.
+Il couvre la consultation du catalogue, la recherche des produits, la gestion du panier, des favoris et des adresses, ainsi que la validation du checkout, le paiement et la création des commandes. Il prend également en compte les particularités des clients B2C, des clients B2B et des commandes passées en mode invité.
+2. Objectif du Sprint 
+Le Sprint 2 s’est déroulé du 23/02/2026 au 14/03/2026. Son objectif principal consiste à rendre opérationnel le parcours client, depuis la consultation des articles jusqu'à la création d'une commande ou d'une demande de devis B2B.
+Le périmètre de ce sprint couvre le catalogue, la recherche, les filtres, le détail produit, le panier, les favoris, les adresses, le checkout, le paiement à la livraison, le paiement en ligne via Konnect, la commande invitée, la commande d'un client connecté, le suivi initial des commandes, le parcours client B2B, la remise commerciale et la demande de devis.
+Le traitement administratif des commandes, la validation par le confirmateur, la gestion interne du stock et la transformation du bon de commande vers le bon de livraison ne font pas partie de ce sprint. Ces éléments sont traités dans le Sprint 3, consacré au backoffice et aux opérations internes.
+3. Backlog du Sprint 2
+Le tableau suivant présente les histoires utilisateurs traitées durant ce sprint. Elles couvrent les fonctionnalités essentielles du parcours client et respectent la durée prévue ainsi que la répartition du travail entre les deux membres du binôme.
+
+
+
+
+Tableau 7 : Backlog du Sprint 2
+ID
+User Story
+Tâches principales
+Responsable
+Estimation
+US2.1
+En tant que visiteur ou client, je peux consulter le catalogue des produits.
+Développer l’affichage du catalogue produits, récupérer les articles depuis la Web API et présenter les informations principales des produits.
+Melek Lahmar
+2 j
+US2.2
+En tant que visiteur ou client, je peux rechercher et filtrer les produits.
+Mettre en place la recherche et les filtres des produits afin de faciliter la consultation du catalogue selon les critères de l’utilisateur.
+Tawfik Siala
+2 j
+US2.3
+En tant que client, je peux consulter le détail d’un produit.
+Développer la page détail produit permettant d’afficher les informations complètes de l’article sélectionné et les actions associées.
+Melek Lahmar
+3 j
+US2.4
+En tant que client, je peux gérer mon panier.
+Implémenter la gestion du panier : ajout d’articles, modification des quantités, suppression des lignes et recalcul du total.
+Melek Lahmar
+2 j
+US2.5
+En tant que client, je peux gérer mes favoris.
+Mettre en place la gestion des favoris afin de permettre au client d’enregistrer, consulter et supprimer les produits souhaités.
+Tawfik Siala
+3 j
+US2.6
+En tant que client connecté, je peux gérer mes adresses de livraison.
+Développer la gestion des adresses de livraison : ajout, modification, suppression et sélection de l’adresse utilisée lors de la commande.
+Melek Lahmar
+2 j
+US2.7
+En tant que client connecté, je peux valider mon panier et créer une commande.
+Implémenter le processus de validation du panier et de création de commande pour un client connecté.
+Melek Lahmar
+2 j
+US2.8
+En tant que visiteur, je peux passer une commande invitée.
+Développer le parcours de commande invitée permettant à un visiteur de passer une commande sans création préalable de compte.
+Tawfik Siala
+3 j
+US2.9
+En tant que client, je peux choisir un mode de paiement.
+Intégrer les modes de paiement disponibles, notamment le paiement à la livraison et la pré-intégration du paiement en ligne via Konnect.
+Melek Lahmar
+3 j
+US2.10
+En tant que client, je peux suivre mes commandes.
+Mettre en place le suivi initial des commandes afin de permettre au client de consulter l’historique et l’état de ses commandes.
+Melek Lahmar
+2 j
+US2.11
+En tant que client B2B, je peux bénéficier d’un parcours adapté à mon profil professionnel.
+Adapter le parcours client B2B en intégrant les informations professionnelles et les remises commerciales associées.
+Tawfik Siala
+2 j
+US2.12
+En tant que client B2B, je peux demander un devis à partir de mon panier.
+Développer la demande de devis B2B à partir du panier et enregistrer le devis avec un statut initial de traitement.
+ Tawfik Siala
+2 j
+4. Analyse et conception du Sprint 2
+L'analyse et la conception de ce sprint décrivent les interactions entre les acteurs du parcours client et les composants de la solution. Les acteurs concernés sont le visiteur, le client, le client B2C, le client B2B et le service de paiement Konnect.
+Le client hérite des possibilités du visiteur, notamment la consultation du catalogue. Le client B2C hérite du client et accède aux fonctionnalités classiques de commande, tandis que le client B2B hérite du client avec des fonctionnalités supplémentaires liées à la remise commerciale et à la demande de devis.
+Le Sprint 2 reste centré sur la création de la commande côté client. Les traitements internes de confirmation, de gestion administrative et de transformation documentaire sont volontairement reportés au Sprint 3 afin de préserver une séparation claire des responsabilités.
+4.1 Diagramme de cas d'utilisation du Sprint 2
+Le diagramme de cas d'utilisation du Sprint 2 présente les interactions principales entre les acteurs clients et le système. Il met en évidence la consultation du catalogue, la gestion du panier, le checkout, le paiement, le suivi initial des commandes, ainsi que les fonctionnalités spécifiques au client B2B.
+
+Figure 61 : Diagramme de cas d’utilisation du Sprint 2
+4.2 Description des cas d’utilisation
+Le visiteur peut consulter le catalogue, rechercher des produits, accéder au détail d'un article et passer une commande en mode invité. Le client connecté peut gérer son panier, ses favoris, ses adresses de livraison, valider son checkout, choisir un mode de paiement et suivre ses commandes.
+Le client B2C utilise le parcours de commande standard, tandis que le client B2B bénéficie d'informations professionnelles supplémentaires, d'une remise commerciale et de la possibilité de demander un devis à partir de son panier. Le service Konnect intervient uniquement lorsque le paiement en ligne est sélectionné par le client.
+
+
+4.3 Diagrammes de séquence
+Les diagrammes de séquence suivants décrivent l'enchaînement des échanges entre l'utilisateur, l'interface React, la Web API ASP.NET Core, les services métier, la base de données SQL Server et, lorsque cela est nécessaire, le service de paiement Konnect.
+4.3.1 Consultation du catalogue
+Ce diagramme illustre la récupération des articles depuis l'interface catalogue. L'application React interroge l’API, qui charge les produits disponibles depuis la base de données avant de retourner les informations nécessaires à l'affichage. 
+
+Figure 62 : Diagramme de séquence — Consultation du catalogue
+4.3.2 Gestion du panier
+Ce diagramme décrit l'ajout d'un produit au panier, la modification des quantités et la suppression d'une ligne. Il met en évidence le contrôle des doublons et le recalcul du total provisoire côté interface avant la validation finale par le backend.
+
+Figure 63 : Diagramme de séquence — Gestion du panier
+4.3.3 Création d’une commande client
+Ce diagramme représente la transformation du panier validé en commande. La Web API vérifie les lignes, contrôle les quantités, recalcule les montants et enregistre l'entête ainsi que les lignes de commande dans la base de données.
+
+Figure 64 : Diagramme de séquence — Création d’une commande client
+4.3.4 Paiement en ligne via Konnect
+Ce diagramme présente le déroulement du paiement en ligne. Lorsque le client choisit Konnect, la Web API initialise le paiement, redirige l'utilisateur vers le service externe, puis traite le retour afin de mettre à jour l'état du paiement.
+
+Figure 65 : Diagramme de séquence — Paiement Konnect
+4.3.5 Demande de devis B2B
+Ce diagramme décrit la création d'une demande de devis à partir du panier d'un client B2B. Les articles sélectionnés sont transmis au backend, qui enregistre le devis avec un statut initial afin de permettre son suivi ultérieur.
+
+Figure 66 : Diagramme de séquence — Demande de devis B2B
+5. Réalisation du Sprint 2
+La réalisation du Sprint 2 concrétise le parcours client défini dans l'analyse. Les interfaces React permettent aux utilisateurs de consulter les produits, de construire leur panier, de gérer leurs informations de livraison, de finaliser le checkout et de suivre les commandes créées.
+Sur le plan technique, React assure les interfaces client et communique avec la Web API ASP.NET Core à travers Axios. L'état local du panier peut être géré avec Zustand, tandis que SQL Server conserve les articles, les adresses, les commandes, les paiements et les demandes de devis. Le backend recalcule les montants afin d'éviter toute manipulation côté client. Lorsque le paiement en ligne est choisi, Konnect est utilisé pour l'initialisation et le retour de paiement. Les commandes créées dans ce sprint sont ensuite traitées dans le Sprint 3.
+5.1 Interface catalogue produits
+L'interface catalogue produits présente les articles disponibles avec leurs images, leurs prix, leur disponibilité et les actions principales. Elle facilite l'accès rapide au détail produit et constitue le point d'entrée du parcours d'achat.
+
+Figure 67 : Interface catalogue produits
+5.2 Interface détail produit
+L'interface détail produit affiche les informations détaillées de l'article sélectionné, notamment son image, son prix, sa disponibilité et les actions d'ajout au panier ou aux favoris. Elle aide le client à prendre une décision avant l'achat.
+
+Figure 68 : Interface détail produit
+5.3 Interface panier
+L'interface panier permet au client de visualiser les produits sélectionnés, de modifier les quantités, de supprimer une ligne et de consulter le total provisoire avant le checkout. Elle assure une meilleure maîtrise du contenu de la commande.
+
+Figure 69 : Interface panier
+5.4 Interface favoris
+L'interface favoris permet au client d'enregistrer les produits qui l'intéressent afin de les retrouver ultérieurement. Elle améliore l'expérience utilisateur en facilitant la préparation d'un achat futur.
+
+Figure 70 : Interface favoris
+5.5 Interface gestion des adresses
+L'interface de gestion des adresses permet au client connecté d'ajouter, de modifier, de supprimer et de sélectionner une adresse de livraison. Elle garantit que les informations nécessaires au checkout sont correctement renseignées.
+
+Figure 71 : Interface gestion des adresses
+5.6 Interface de validation de commande
+L'interface de validation de commande regroupe le choix de l'adresse, le mode de livraison, le récapitulatif du panier et la confirmation finale. Elle transforme le panier en commande en attente de traitement interne.
+
+Figure 72 : Interface de validation de commande
+5.7 Interface paiement
+L'interface paiement permet au client de choisir entre le paiement à la livraison et le paiement en ligne via Konnect. Elle affiche le résultat de l'opération afin de confirmer la prise en charge du paiement ou de signaler une erreur.
+
+Figure 73 : Interface paiement
+5.8 Interface suivi des commandes client
+L'interface suivi des commandes client permet de consulter l'historique des commandes, leurs lignes, leurs montants, leurs modes de paiement et leurs statuts initiaux. Elle donne au client une première visibilité sur l'état de ses achats.
+
+Figure 74 : Interface suivi des commandes client
+5.9 Interface demande de devis B2B
+L'interface demande de devis B2B permet au client professionnel de transformer le contenu de son panier en demande de devis. Cette fonctionnalité répond aux besoins des clients nécessitant une validation commerciale avant la commande définitive.
+
+Figure 75 : Interface demande de devis B2B
+6. Tests et validation du Sprint 2
+Les tests de validation ont pour objectif de vérifier la conformité des fonctionnalités développées avec les besoins définis au début du sprint. Ils couvrent les principaux scénarios du parcours client, depuis la consultation du catalogue jusqu'à la création d'une commande, au paiement et au suivi initial.
+Tableau 8 : Tests fonctionnels du Sprint 2
+Test
+Objectif
+Résultat attendu
+Statut
+Consultation catalogue
+Vérifier l’affichage des produits disponibles.
+Les produits sont affichés avec leurs informations principales.
+Validé
+Recherche et filtrage produit
+Vérifier que la recherche et les filtres retournent les articles attendus.
+La liste des produits est mise à jour selon les critères choisis.
+Validé
+Ajout au panier
+Contrôler l’ajout d’un produit au panier.
+Le produit est ajouté sans doublon et la quantité est correcte.
+Validé
+Modification du panier
+Vérifier la modification des quantités et la suppression d’un article.
+Le panier reste cohérent et le total provisoire est recalculé.
+Validé
+Gestion des adresses
+Vérifier l’ajout, la modification et la sélection d’une adresse de livraison.
+L’adresse est enregistrée et peut être utilisée lors du checkout.
+Validé
+Commande client connecté
+Tester la création d’une commande avec un compte client.
+La commande est créée et associée au profil du client connecté.
+Validé
+Commande invitée
+Tester la création d’une commande sans compte utilisateur.
+La commande est enregistrée avec les informations du visiteur.
+Validé
+Paiement Konnect
+Vérifier l’initialisation du paiement en ligne.
+Le client est redirigé vers le service de paiement et le retour est traité.
+Validé
+Suivi initial des commandes
+Contrôler l’affichage des commandes du client.
+Le client visualise uniquement ses commandes et leurs statuts.
+Validé
+Parcours B2B
+Vérifier l’affichage des informations professionnelles et de la remise.
+Le client B2B visualise les informations adaptées à son profil.
+
+
+Validé
+Demande de devis B2B
+Vérifier la création d’une demande de devis à partir du panier.
+Le devis est enregistré avec un statut initial.
+Validé
+7. Conclusion
+Ce sprint a permis de construire le parcours client principal de la solution. Les fonctionnalités liées au catalogue, au panier, aux favoris, aux adresses, au checkout, au paiement et au suivi initial des commandes deviennent opérationnelles. Les spécificités B2B, notamment la remise commerciale et la demande de devis, enrichissent le parcours professionnel. Les commandes créées dans ce sprint constituent la base du Sprint 3, qui prend en charge le traitement administratif, le stock, la confirmation et le tableau de bord initial.
+Chapitre 6 : Sprint 3 — Gestion commerciale, espace vendeur et intégration Sage X3
+Chapitre 6 : Sprint 3 — Gestion commerciale, espace vendeur et intégration Sage X3
+1. Introduction
+Ce chapitre présente le troisième sprint de réalisation de notre solution e-commerce et logistique intégrée. Après la mise en place du socle technique dans le Sprint 1 et du parcours client dans le Sprint 2, ce sprint introduit la partie commerciale interne de la plateforme, l'espace vendeur et l'intégration avec Sage X3.
+Il couvre la synchronisation des données maîtres depuis Sage X3, notamment les articles, les catalogues, les dépôts et les stocks. Il prend également en charge la gestion des produits et de leurs images, la gestion des clients B2C et B2B, les paramètres applicatifs, la configuration Sage X3, la création de bons de commande par le vendeur et la publication des documents commerciaux vers Sage X3 à travers un wrapper REST.
+2. Objectif du sprint
+Le Sprint 3 s'est déroulé du 16/03/2026 au 04/04/2026. Son objectif principal consiste à mettre en place une chaîne de gestion commerciale cohérente, depuis l'importation des données maîtres jusqu'à la création et la publication des documents commerciaux vers Sage X3.
+Le périmètre du sprint couvre la synchronisation des articles, catalogues, dépôts et stocks, la gestion des produits, l'association des images via Cloudinary, la consultation des stocks et des dépôts, la gestion des clients, la configuration des paramètres applicatifs, l'espace vendeur et la consultation administrative des bons de commande et des bons de livraison.
+La transformation opérationnelle des bons de commande en bons de livraison, la livraison effective, le suivi GPS, la caisse COD et le traitement des réclamations ne font pas partie de ce sprint. Ces éléments sont volontairement réservés au Sprint 4 afin de conserver une séparation claire entre la gestion commerciale et la logistique terrain.
+3. Backlog du sprint
+Le tableau suivant présente les histoires utilisateurs traitées durant ce sprint. Elles couvrent les fonctionnalités administratives et les opérations de synchronisation nécessaires à la gestion commerciale de la plateforme.
+
+Tableau 8 : Backlog du Sprint 3
+ID
+User Story
+Tâches principales
+Responsable
+Estimation
+US3.1
+En tant qu'administrateur, je veux synchroniser les articles depuis Sage X3 afin de mettre à jour le catalogue local.
+Appeler le service SageService, récupérer les articles, transformer les données et appliquer l'insertion ou la mise à jour dans F_ARTICLE.
+Melek Lahmar
+2 j
+US3.2
+En tant qu'administrateur, je veux synchroniser les catalogues, les dépôts et les stocks afin d'aligner la plateforme avec Sage X3.
+Développer et exploiter les endpoints /api/sync/catalogues, /api/sync/depots et /api/sync/stocks.
+Melek Lahmar
+3 j
+US3.3
+En tant qu'administrateur, je veux lancer une synchronisation globale afin de mettre à jour toutes les données commerciales.
+Mettre en place l'action Sync All, chaîner les synchronisations unitaires et retourner un rapport agrégé.
+Melek Lahmar
+1 j
+US3.4
+En tant qu'administrateur, je veux gérer les articles afin de contrôler les informations affichées dans le catalogue.
+Développer la liste, la fiche article, la recherche, les filtres et la mise à jour via ArticlesController.
+Tawfik Siala
+2 j
+US3.5
+En tant qu'administrateur, je veux gérer les images produits afin d'améliorer la présentation du catalogue.
+Intégrer l'upload Cloudinary, gérer les URLs et associer les images aux articles via ArticleImagesController.
+Tawfik Siala
+2 j
+US3.6
+En tant qu'administrateur, je veux consulter les dépôts et les stocks afin de suivre la disponibilité des produits.
+Exploiter DepotsController et StocksController pour afficher les quantités par article et par dépôt.
+
+Tawfik Siala
+1 j
+US3.7
+En tant qu'administrateur, je veux gérer les clients B2C et B2B afin d'administrer les profils commerciaux.
+
+Mettre en place la consultation des clients, le filtrage par type et l'administration des informations B2B.
+Melek Lahmar
+3 j
+US3.8
+En tant qu'administrateur, je veux configurer les paramètres applicatifs afin d'adapter les informations générales de la plateforme.
+Développer AdminSettingsController, gérer la table AppSettings et permettre la modification des paramètres autorisés.
+Melek Lahmar
+2 j
+US3.9
+En tant qu'administrateur, je veux configurer la connexion Sage X3 afin de piloter les échanges avec l'ERP.
+Créer la page de configuration Sage X3 et sauvegarder les informations sous la clé sage.x3.connexion.
+Melek Lahmar
+1 j
+US3.10
+En tant que vendeur, je veux rechercher un client afin de préparer une commande pour son compte.
+Développer la recherche client par nom, téléphone ou code via VendeurOrdersController.
+Tawfik Siala
+2 j
+US3.11
+En tant que vendeur, je veux créer un bon de commande afin d'enregistrer une vente assistée.
+Créer l'interface de saisie, sélectionner les articles, calculer les montants et enregistrer le document via POST /orders.
+Tawfik Siala
+3 j
+US3.12
+En tant que vendeur, je veux consulter mes commandes afin de suivre les documents que j'ai créés.
+Afficher la liste des commandes du vendeur connecté et permettre la consultation du détail.
+Tawfik Siala
+1 j
+
+
+
+US3.13
+En tant qu'administrateur ou confirmateur, je veux consulter les bons de commande et les bons de livraison afin de suivre les documents commerciaux.
+Mettre en place une liste filtrable des documents F_DOCENTETE selon le domaine et le type.
+Melek Lahmar
+2 j
+US3.14
+En tant que système, je veux publier un document commercial vers Sage X3 afin d'assurer la continuité avec l'ERP.
+Construire le DOCUMENT, charger Param_Connexion_X3, appeler INTEGRATION_DOCUMENT_X3 et traiter la réponse du wrapper REST.
+Melek Lahmar
+3 j
+
+4. Analyse et conception
+L'analyse et la conception de ce sprint décrivent les interactions entre les acteurs internes de la plateforme et les composants techniques de la solution. Les acteurs concernés sont principalement l'administrateur, le vendeur et le confirmateur. Sage X3 intervient comme système externe pour la lecture des données maîtres et la publication des documents commerciaux.
+L'administrateur assure les opérations de synchronisation, la gestion des produits, des images, des stocks, des dépôts, des clients et des paramètres. Le vendeur dispose d'un espace dédié lui permettant de rechercher un client et de créer un bon de commande en son nom. Le confirmateur consulte les documents commerciaux produits afin de préparer les traitements logistiques prévus dans le sprint suivant.
+4.1 Diagramme de cas d’utilisation du Sprint 3
+Le diagramme de cas d'utilisation du Sprint 3 présente les principales interactions entre les acteurs internes et le système. Il met en évidence les fonctions de synchronisation avec Sage X3, de gestion commerciale, de configuration applicative et de création de commandes par le vendeur.
+
+Figure 76 : Diagramme de cas d’utilisation du Sprint
+4.2 Description des cas d’utilisation
+L'administrateur peut lancer une synchronisation par entité, notamment les articles, les catalogues, les dépôts ou les stocks, ou déclencher une synchronisation complète. Il peut également gérer les fiches articles, associer des images produites à travers Cloudinary, consulter les stocks, suivre les dépôts et administrer les clients B2C et B2B.
+Le vendeur dispose d'un espace spécifique dans lequel il recherche un client par nom, téléphone ou code, sélectionne les articles, saisit les quantités et valide la création d'un bon de commande. Le document est enregistré dans la base locale puis peut être publié vers Sage X3 lorsque la configuration de connexion est disponible.
+Le confirmateur intervient dans ce sprint en consultation des bons de commande et des bons de livraison. Cette consultation prépare le traitement documentaire et logistique du Sprint 4. Sage X3 intervient comme système externe en lecture pour les données maîtresses et en écriture pour recevoir les documents commerciaux publiés par la plateforme.
+4.3 Diagrammes de séquence du Sprint 3
+Les diagrammes de séquence suivants décrivent l'enchaînement des échanges entre les acteurs internes, les interfaces React ou Flutter, la Web API ASP.NET Core, les services métier, SQL Server, Cloudinary et le wrapper REST de Sage X3.
+4.3.1 Synchronisation d'une entité depuis Sage X3
+Ce diagramme illustre le déroulement d'une synchronisation déclenchée par l'administrateur sur une entité précise, par exemple les articles. La Web API interroge le wrapper Sage X3, désérialise la réponse, transforme les données reçues puis insère ou met à jour les enregistrements dans la table locale correspondante.
+
+Figure 77 :  Diagramme de séquence — Synchronisation d'une entité Sage X3
+
+4.3.2 Synchronisation globale (Sync All)
+Ce diagramme décrit l'enchaînement des synchronisations élémentaires lorsqu'elles sont déclenchées depuis une action unique. Le système exécute successivement la synchronisation des articles, des catalogues, des dépôts et des stocks, puis retourne un rapport global indiquant les traitements réalisés et les éventuelles erreurs.
+
+Figure 78 : Diagramme de séquence — Synchronisation globale (Sync All)
+4.3.3 Création d'un bon de commande par le vendeur
+Ce diagramme représente la création d'un bon de commande par un vendeur au nom d'un client existant. Le vendeur recherche le client, sélectionne les articles, renseigne les quantités, puis valide la commande. La Web API enregistre l'entête et les lignes du document avant de retourner la référence générée.
+
+Figure 79 : Diagramme de séquence — Création d'un bon de commande par le vendeur
+4.3.4 Gestion des images produits avec Cloudinary
+Ce diagramme présente l'ajout d'une image à un article depuis l'espace administrateur. L'image est envoyée à Cloudinary, qui retourne une URL persistante. La Web API enregistre ensuite cette URL et les métadonnées associées dans la base locale afin de les réutiliser lors de l'affichage du catalogue.
+
+Figure 80 :  Diagramme de séquence — Gestion des images produits avec Cloudinary
+4.3.5 Publication d'un document commercial vers Sage X3
+Ce diagramme formalise l'envoi d'un document commercial vers Sage X3. La Web API récupère les paramètres de connexion, construit l'objet DOCUMENT avec son entête et ses lignes, puis l'envoie au wrapper REST. La réponse indique le statut de l'opération et le numéro attribué par Sage X3 lorsque la publication aboutit.
+
+Figure 81: Diagramme de séquence —vers Sage X3
+5. Réalisation du Sprint 3
+La réalisation du Sprint 3 concrétise les éléments d'analyse et de conception présentés précédemment. Les interfaces web sont développées avec React et communiquent avec la Web API via Axios. Les traitements métier sont centralisés côté ASP.NET Core Web API, tandis que SQL Server conserve les données locales nécessaires à l'exploitation de la plateforme.
+5.1 Interface de tableau de bord administrateur
+Le tableau de bord administrateur constitue la page d'accueil de l'espace de gestion. Il présente des indicateurs de synthèse et donne accès aux modules les plus utilisés, notamment la synchronisation, les articles, les clients, les commandes, les paramètres et la configuration Sage X3.
+Figure 82: Interface du tableau de bord administrateur
+Figure 82: Interface du tableau de bord administrateur
+5.2 Interface de gestion des produits
+L'interface de gestion des produits affiche la liste des articles synchronisés depuis Sage X3. Elle permet la recherche, le filtrage, la pagination et la consultation du détail d'un article. Les informations affichées proviennent des données enregistrées localement après synchronisation.
+
+Figure 83: Interface de gestion des produits
+5.3 Interface de gestion des images produits
+Cette interface permet d'associer des images aux produits du catalogue. L'administrateur peut ajouter une image, la supprimer ou définir l'image principale. Les fichiers sont stockés sur Cloudinary et leurs URLs sont enregistrées dans la base afin d'être affichées côté client.
+
+Figure 84 :  Interface de gestion des images produits
+5.4 Interface de gestion des stocks
+L'interface de gestion des stocks affiche les quantités disponibles par article et par dépôt. Elle permet d'identifier les produits en rupture ou en stock faible, et s'appuie sur les données importées depuis Sage X3 afin de maintenir une information cohérente avec le référentiel métier.
+
+Figure 85 :  Interface de gestion des stocks
+5.5 Interface de gestion des dépôts
+Cette interface présente les dépôts synchronisés depuis Sage X3 avec leurs informations principales. Ces dépôts servent de référence pour l'affichage des stocks et pour la création des documents commerciaux, notamment à travers le champ DE_No.
+
+Figure 86 : Interface de gestion des dépôts
+5.6 Interface de gestion des commandes
+L'interface de gestion des commandes permet de consulter les bons de commande créés depuis le parcours client ou depuis l'espace vendeur. Elle affiche les références, les clients, les montants, les dates et les statuts, avec la possibilité d'accéder au détail du document.
+
+Figure 87 :  Interface de gestion des commandes
+5.7 Interface de consultation des bons de livraison
+Cette interface permet de consulter les bons de livraison déjà disponibles dans le système. Elle affiche leur état, leur client, leur date et leur total. La transformation opérationnelle d'un bon de commande en bon de livraison reste traitée dans le Sprint 4.
+
+Figure 88 :  Interface de consultation des bons de livraison
+5.8 Interface de gestion des clients
+L'interface de gestion des clients offre une vue unifiée des comptes clients de la plateforme. Elle expose les informations d'identification, les coordonnées, l'adresse et le code client Sage lorsqu'il est renseigné, ce qui facilite le lien entre le client web et le compte tiers Sage X3.
+
+Figure 89: Interface de gestion des clients
+
+5.9 Interface de gestion des clients B2B
+Une vue dédiée regroupe les comptes B2B avec leurs informations professionnelles et leurs paramètres spécifiques. L'administrateur peut y mettre à jour les informations nécessaires au traitement commercial, notamment le rattachement au code client Sage utilisé lors de la publication documentaire.
+
+Figure 90 : Interface de gestion des clients B2B
+5.10 Interface de gestion des paramètres applicatifs
+Cette interface regroupe les paramètres applicatifs modifiables depuis l'espace administrateur. Elle inclut notamment les sections liées à la société, au branding, au contenu affiché et à la connexion Sage X3. Les valeurs sont persistées dans la table AppSettings afin d'être exploitées par la Web API.
+
+Figure 91 : Interface de gestion des paramètres applicatifs et Sage X3
+5.11 Interface vendeur
+L'espace vendeur regroupe les fonctionnalités nécessaires à la saisie commerciale assistée. Le vendeur peut rechercher un client, créer un bon de commande pour son compte et consulter les commandes qu'il a déjà saisies. Il n'accède pas aux paramètres d'administration ni aux opérations de synchronisation.
+
+Figure 92 :  Interface de l'espace vendeur
+6. Intégration et synchronisation Sage X3
+L'intégration avec Sage X3 repose sur deux mécanismes complémentaires. Le premier est la synchronisation descendante des données maîtres depuis Sage X3 vers la base locale. Le second est la publication ascendante des documents commerciaux depuis la plateforme vers Sage X3. Ces échanges passent par le wrapper REST WEB_API_STAGE_X3, utilisé comme adaptateur entre la Web API ASP.NET Core et les services exposés par Sage X3.
+6.1 Principe général
+La plateforme considère Sage X3 comme le référentiel métier principal pour les articles, les catalogues, les dépôts et les stocks. Les données nécessaires à l'affichage et au traitement local sont synchronisées dans SQL Server selon une logique d'insertion ou de mise à jour. Cette approche permet de conserver une consultation rapide côté plateforme tout en maintenant l'alignement avec l'ERP.
+
+
+6.2 Synchronisation des articles
+La synchronisation des articles importe les références commerciales depuis Sage X3 avec leurs informations descriptives et tarifaires. Les données récupérées sont transformées puis enregistrées dans la table locale des articles. Lorsqu'un article existe déjà, ses informations sont mises à jour ; sinon, un nouvel enregistrement est créé.
+6.3 Synchronisation des catalogues
+La synchronisation des catalogues permet de conserver une classification cohérente des produits. Les catalogues récupérés depuis Sage X3 sont enregistrés localement afin d'organiser l'affichage du catalogue et de faciliter la recherche des articles.
+6.4 Synchronisation des dépôts
+La synchronisation des dépôts aligne les points de stockage locaux avec ceux gérés dans Sage X3. Ces dépôts sont utilisés pour le suivi des stocks et pour la création des documents commerciaux, notamment lorsque le dépôt doit être transmis dans le champ DE_No.
+6.5 Synchronisation des stocks
+La synchronisation des stocks met à jour les quantités disponibles par article et par dépôt. Elle constitue un point important du sprint, car les informations de disponibilité affichées dans la plateforme doivent rester cohérentes avec les données de l'ERP.
+6.6 Synchronisation complète (Sync All)
+La synchronisation complète permet de lancer en une seule action la mise à jour des articles, des catalogues, des dépôts et des stocks. Le résultat global regroupe les rapports de chaque synchronisation afin de faciliter le contrôle par l'administrateur.
+6.7 Rapport et gestion des erreurs
+Chaque synchronisation produit un rapport indiquant le nombre d'éléments traités et les éventuelles erreurs rencontrées. En cas d'indisponibilité du wrapper ou de Sage X3, la plateforme reste exploitable avec les données déjà présentes en base, ce qui limite l'impact sur l'utilisation quotidienne du système.
+7. Échanges GET et POST avec Sage X3
+La communication avec Sage X3 s'organise autour de deux familles d'échanges. Les requêtes GET servent à alimenter la base locale avec les données maîtres provenant de Sage X3. Les requêtes POST servent à publier les documents commerciaux créés dans la plateforme vers Sage X3. Dans les deux cas, la Web API ASP.NET Core s'appuie sur le wrapper REST WEB_API_STAGE_X3.
+
+Figure 93 : Vue d'ensemble des échanges GET et POST avec Sage X3
+7.1 Synthèse unifiée des échanges avec Sage X3
+Le tableau suivant regroupe dans une seule vue les échanges utilisés pour la synchronisation descendante et la publication ascendante. Cette présentation évite la séparation entre les flux GET et POST et permet de mieux comprendre le rôle de chaque endpoint dans le Sprint 3.
+Tableau 9: Synthèse unifiée des échanges GET et POST avec Sage X3
+Sens d’échange
+Action
+Déclencheurplateforme
+Données concernées
+Objectif dans le projet
+Synchronisation
+GET
+Synchronisationdes articles
+Articles Sage X3→ F_ARTICLE
+Importer ou mettre à jour les références articles utilisées dans le catalogue : désignation, prix et informations commerciales.
+Synchronisation
+GET
+Synchronisationdes catalogues
+Catalogues→ F_CATALOGUE
+Mettre à jour la classification commerciale des produits afin d’organiser l’affichage et le filtrage dans la plateforme.
+Synchronisation
+GET
+Synchronisationdes dépôts
+Dépôts→ F_DEPOT
+Aligner les dépôts SQL Server avec les points de stockage définis dans Sage X3 pour garantir la cohérence logistique.
+Synchronisation
+GET
+Synchronisationdes stocks
+Stocks par articleet dépôt→ F_ARTSTOCK
+Actualiser les quantités disponibles afin d’afficher un stock cohérent dans le catalogue et le back-office.
+Synchronisationglobale
+GETALL
+Synchronisationcomplète
+Articles, catalogues,dépôts et stocks
+Lancer les synchronisations en cascade et produire un rapport global d’exécution pour l’administrateur.
+Publicationascendante
+POST
+Publicationd’un document commercial
+Param_Connexion_X3+ Document(entête + lignes)
+Transmettre un document commercial vers Sage X3 et récupérer le statut de traitement ainsi que le numéro Sage retourné.
+7.2 Fonctionnement technique des échanges
+Le mécanisme d'échange repose sur une architecture bidirectionnelle en couches, assurant la séparation des responsabilités et la cohérence des données entre la plateforme et Sage X3.
+Dans le flux descendant (Sage X3 → Plateforme), l'administrateur déclenche la synchronisation depuis React. La Web API valide le jeton JWT et les habilitations, puis délègue le traitement au SageService, qui consomme le wrapper REST Sage X3 et transforme les réponses en DTO normalisés. Les données sont persistées dans SQL Server via une stratégie d'upsert garantissant l'idempotence. L'action SyncAll orchestre les synchronisations des articles, catalogues, dépôts et stocks au sein d'un rapport global.
+Dans le flux ascendant (Plateforme → Sage X3), la plateforme construit un objet Document regroupant l'entête, les lignes et les paramètres Param_Connexion_X3. La classe INTEGRATION_DOCUMENT_X3 assure la transmission de la requête vers le wrapper REST et le traitement de la réponse, avec gestion des erreurs métier et techniques.
+Les paramètres sont chargés dynamiquement via AppSettings, autorisant leur modification depuis l'espace administrateur sans redéploiement et garantissant une exploitation flexible du dispositif d'intégration.
+
+7.3 Mapping des champs du document commercial
+Le tableau suivant détaille la correspondance entre les champs attendus par Sage X3 et les données issues de la base locale lors de la publication d'un bon de commande ou d'un bon de livraison.
+Tableau 10: Mapping des champs entre la base locale et Sage X3
+Champ Sage X3
+Source en base locale
+Commentaire
+DO_NumDocument
+F_DOCENTETE.DO_Piece
+Numéro du document local, bon de commande ou bon de livraison.
+DO_Date
+F_DOCENTETE.DO_Date
+Date du document commercial.
+CT_Num
+DO_Tiers ou code client web par défaut
+Code client Sage X3 utilisé pour rattacher le document au tiers.
+DE_No
+F_DOCENTETE.DE_No ou valeur de configuration
+Numéro du dépôt Sage X3 utilisé pour le document.
+DO_Ref
+F_DOCENTETE.DO_Ref
+Référence libre du document.
+DO_TotalTTC
+F_DOCENTETE.DO_TotalTTC
+Montant total TTC du document.
+AR_Ref
+F_DOCLIGNE.AR_Ref
+Référence article Sage X3.
+LP_QteMvt
+F_DOCLIGNE.DL_Qte
+Quantité de la ligne de document.
+LP_PrixUnitaire
+F_DOCLIGNE.DL_PrixUnitaire
+Prix unitaire hors taxe ou prix de référence local.
+LP_PUTTC
+F_DOCLIGNE.DL_PrixUnitaire
+Prix unitaire TTC transmis au wrapper lorsque le calcul local est simplifié.
+LP_MontantTTC
+F_DOCLIGNE.DL_MontantTTC
+Montant TTC de la ligne.
+7.4 Paramètres de connexion
+Les paramètres de connexion à Sage X3 sont externalisés dans la table AppSettings sous la clé « sage.x3.connexion ». Cette organisation permet à l'administrateur de modifier la configuration directement depuis l'interface dédiée, sans intervention sur le code source ni redéploiement applicatif.
+
+
+
+Tableau 11 : Paramètres de connexion Sage X3
+Paramètre
+Description
+Http
+Protocole utilisé pour joindre le wrapper, Http ou Https.
+AdresseIP_API
+Hôte ou adresse IP du wrapper WEB_API_STAGE_X3.
+AdresseIP_X3
+Adresse et port du serveur Sage X3.
+Login / Password
+Identifiants utilisés pour la connexion à Sage X3.
+Dossier
+Code du dossier Sage X3 cible.
+Service_Web_BC
+Nom du service web utilisé pour publier le document commercial.
+Type_BC
+Type de document ou scénario de publication utilisé par le service Sage X3.
+DefaultDepotNo
+Numéro de dépôt utilisé lorsque le document local ne précise pas DE_No.
+8. Tests et validation
+Les tests du Sprint 3 vérifient la cohérence des données après synchronisation, le bon fonctionnement des interfaces administrateur et vendeur, ainsi que la qualité des échanges avec Sage X3 et Cloudinary. Le tableau suivant synthétise les principaux cas de test validés.
+Tableau 12: Tests fonctionnels du Sprint 3
+Test
+Objectif
+Résultat attendu
+Statut
+Synchronisation articles
+Vérifier l’importation ou la mise à jour des articles depuis Sage X3.
+Les articles sont insérés ou mis à jour dans la base locale.
+Validé
+Synchronisation globale
+Vérifier l’exécution de Sync All sur les entités commerciales.
+Les synchronisations articles, catalogues, dépôts et stocks s’exécutent avec un rapport global.
+Validé
+Wrapper indisponible
+Vérifier le comportement en cas d’indisponibilité du wrapper ou de Sage X3.
+L’erreur est signalée et la plateforme reste exploitable avec les données locales.
+Validé
+Upload image produit
+Vérifier l’ajout d’une image produit via Cloudinary.
+L’image est stockée et son URL est associée à l’article.
+Validé
+Gestion clients B2B
+Vérifier la consultation et la mise à jour des informations B2B.
+
+Les informations professionnelles sont enregistrées correctement.
+Validé
+Configuration Sage X3
+Vérifier la sauvegarde des paramètres de connexion.
+Les valeurs sont persistées dans AppSettings et relues lors des appels suivants.
+Validé
+Recherche client vendeur
+Vérifier la recherche d’un client depuis l’espace vendeur.
+Le vendeur retrouve le client par nom, téléphone ou code.
+Validé
+Création bon de commande vendeur
+Vérifier la saisie d’un bon de commande par le vendeur.
+Le document est créé avec son entête et ses lignes dans SQL Server.
+Validé
+Consultation commandes vendeur
+Vérifier que le vendeur consulte uniquement ses commandes.
+La liste affiche les documents associés au vendeur connecté.
+Validé
+Consultation BC et BL
+Vérifier l’affichage des bons de commande et bons de livraison.
+Les documents sont affichés avec leurs références, statuts, clients et montants.
+Validé
+Publication document vers Sage X3
+Vérifier l’envoi d’un document commercial vers Sage X3.
+Le wrapper retourne un statut exploitable et le numéro Sage lorsque l’opération aboutit.
+Validé
+9. Conclusion
+Le Sprint 3 a permis de mettre en place le socle commercial de la solution et d'établir l'intégration structurelle avec Sage X3. La plateforme peut désormais récupérer les données maîtres de l'ERP, gérer les produits, les images, les stocks, les dépôts, les clients et les paramètres, tout en offrant un espace vendeur pour la saisie assistée des commandes. La publication des documents commerciaux vers Sage X3 prépare la continuité avec les traitements logistiques du Sprint 4, notamment la transformation documentaire, la livraison et le suivi opérationnel.
+
+Chapitre 7 : Sprint 4 — Logistique, livraison et réclamations
+1. Introduction
+Ce chapitre présente le quatrième sprint de la solution. Il met en place le cœur opérationnel de la plateforme : la confirmatrice traite les bons de commande, le livreur prend en charge ses livraisons en mode COD avec suivi GPS en temps réel, le client suit l'avancement de sa commande, le superviseur observe l'activité et le livreur de transit déplace les marchandises entre dépôts. Les réclamations sont également traitées en temps réel, avec un chat entre le client et la confirmatrice. L'objectif est de fermer la chaîne logistique de bout en bout.
+2. Objectif du sprint
+Le Sprint 4 s'est déroulé du 06/04/2026 au 25/04/2026. Son objectif est de relier la commande en ligne à la livraison réelle au client. Il couvre cinq ensembles de fonctionnalités : la confirmation et la transformation documentaire avec Sage X3, la livraison COD avec suivi GPS temps réel, le suivi du client à travers une carte adaptative, la gestion des réclamations avec chat en temps réel, et le transit inter-dépôts par double scan code-barres. La supervision de l'activité terrain est également mise en place pour permettre une intervention rapide en cas d'écart.
+3. Backlog du sprint
+Le tableau suivant présente les histoires utilisateurs traitées pendant ce sprint. Elles couvrent l'ensemble des rôles concernés et respectent la répartition habituelle du travail entre les deux membres du binôme.
+Tableau 13 : Backlog du Sprint 4
+ID
+Histoire utilisateur
+Tâches techniques
+Responsable
+Estimation
+US4.1
+Consulter les bons de commande
+Lister les BC paginés, filtrer par statut DO_Valide, rechercher par référence ou client.
+Melek Lahmar
+3 j
+US4.2
+Consulter le détail d'un bon de commande
+Afficher les lignes F_DOCLIGNE, le client enrichi, les montants TTC et le mode de paiement.
+Tawfik Siala
+2 j
+US4.3
+Modifier le statut d'un BC
+PUT /api/confirmateur/commandes/{piece}/status avec contrôle du workflow.
+Melek Lahmar
+3 j
+US4.4
+Transformer un BC en bon de livraison
+POST /transform-to-bl : copie des lignes, anti-doublon, création F_LIVRAISON, transaction SQL.
+Melek Lahmar
+4 j
+US4.5
+Exporter un BL vers Sage X3
+Envoi non bloquant via SageX3Client ; sageSuccess et sageHttpStatus journalisés.
+Tawfik Siala
+3 j
+US4.6
+Affecter automatiquement un livreur
+AssignmentService : filtre Haversine par zone du client puis tri par file la plus courte.
+Melek Lahmar
+3 j
+US4.7
+Traiter les devis B2B côté confirmateur
+GET /confirmateur/devis, POST /devis/{piece}/transform-to-bc.
+Tawfik Siala
+3 j
+US4.8
+Consulter les livraisons disponibles
+GET /api/livreur/orders/available filtré par gouvernorat et délégation du livreur.
+Tawfik Siala
+3 j
+US4.9
+Prendre en charge une livraison
+POST /assign avec gestion du conflit 409 si déjà prise par un autre livreur.
+Tawfik Siala
+2 j
+US4.10
+Diffuser la position GPS en temps réel
+POST /start-heading + boucle /location/ping 10 s + /ping-batch idempotent (ClientActionId).
+Melek Lahmar
+4 j
+US4.11
+Mettre à jour le statut d'une livraison
+Huit codes (0 Confirme à 7 DepotPret) ; encaissement COD automatique au statut 2 (Livre).
+Tawfik Siala
+3 j
+US4.12
+Gérer la caisse COD du livreur
+Encaisse, MontantEncaisse, EncaisseAt sur F_LIVRAISON ; remise au dépôt et historique.
+Melek Lahmar
+3 j
+US4.13
+Optimiser la tournée du livreur
+Plus-proche-voisin + Haversine, ETA cumulatif (35 km/h), affichage Mapbox + OSRM.
+Melek Lahmar
+3 j
+US4.14
+Créer et suivre une réclamation
+POST /api/reclamations avec photos compressées ; TrackingStateCard 4 états côté client.
+Tawfik Siala
+3 j
+US4.15
+Traiter une réclamation côté confirmatrice
+Verrou + grâce 5 s SignalR, chat NouveauMessage, escalade automatique au seuil 3 tentatives.
+Melek Lahmar
+3 j
+US4.16
+Gérer les missions de transit inter-dépôts
+Double scan code-barres mobile_scanner, réception partielle, fenêtre d'annulation 10 min.
+Tawfik Siala
+4 j
+US4.17
+Superviser l'activité terrain
+Carte temps réel des livreurs, heatmap 90 jours, réaffectation de mission, alertes par sévérité.
+Melek Lahmar
+4 j
+
+4. Analyse et conception
+L'analyse de ce sprint précise les interactions entre les cinq acteurs du terrain et les composants de la solution. Le diagramme de cas d'utilisation présente une vue d'ensemble. Les diagrammes de séquence détaillent les quatre flux les plus structurants : la transformation documentaire avec Sage X3, la diffusion GPS et l'encaissement COD, la réclamation temps réel et le double scan du transit.
+4.1 Diagramme de cas d'utilisation du Sprint 4
+Le diagramme regroupe les fonctionnalités en cinq paquets correspondant aux grands domaines fonctionnels du sprint : confirmation, livraison COD, transit inter-dépôts, réclamations temps réel et supervision.
+
+Figure 94 : Diagramme de cas d'utilisation du Sprint 4
+4.2 Description des cas d'utilisation
+La confirmatrice consulte les bons de commande, ajuste leur statut et déclenche la transformation BC vers BL, opération qui crée le bon de livraison en local et l'envoie à Sage X3 sans bloquer le processus. Elle traite également les devis B2B et les réclamations clients. Le livreur consulte le pool des livraisons filtré par sa zone, prend en charge une livraison disponible, diffuse sa position GPS, met à jour le statut (huit codes de 0 à 7) et gère sa caisse COD. Le livreur de transit se concentre sur les missions de transfert entre dépôts par double scan de code-barres. Le client suit sa commande grâce à une carte adaptative en quatre états et peut déposer une réclamation. Le superviseur surveille l'activité en temps réel, consulte la heatmap des échecs et réaffecte les missions de transit lorsque c'est nécessaire.
+4.3 Diagrammes de séquence
+Quatre flux temps réel ont été modélisés. Ils précisent les échanges entre l'interface, la Web API, la base SQL Server, le hub SignalR et, lorsque c'est nécessaire, les services externes Sage X3 et n8n.
+4.3.1 Transformation BC en bon de livraison
+La méthode « TransformBcToBl » du ConfirmateurController vérifie l'existence du BC et l'absence d'un BL déjà généré, puis ouvre une transaction pour insérer l'entête F_DOCENTETE avec DO_Type = 1 et une référence horodatée, recopier les lignes F_DOCLIGNE, créer la livraison F_LIVRAISON avec LI_Statut = 0 et passer le BC en statut CONFIRME avant le COMMIT. L'AssignmentService sélectionne ensuite le livreur dont la zone couvre l'adresse du client via un test de proximité Haversine, en privilégiant celui disposant de la file d'attente la plus courte. La transmission vers Sage X3 s'effectue de manière asynchrone, et la réponse expose les indicateurs sageSent, sageSuccess et sageHttpStatus pour assurer la supervision des échanges.
+
+Figure 95 : Diagramme de séquence — Transformation BC en BL
+4.3.2 Livraison COD et diffusion GPS via SignalR
+Le livreur initie la course via /start-heading, activant le flag IsActiveDelivery et émettant l'événement DeliveryStarted vers le groupe SignalR client-{userId}, qui fait basculer le client sur l'état HEADING_TO_YOU. Toutes les 10 secondes, le Geolocator transmet un ping (latitude, longitude, ClientActionId) : la Web API met à jour F_LIVREUR_POSITION, historise la trace, calcule la distance Haversine et diffuse LivreurPositionUpdate, complété par un événement de proximité sous 500 mètres. En cas de coupure réseau, les positions sont mises en file Hive et retransmises via /ping-batch, l'idempotence étant assurée par ClientActionId. À la validation finale (statut 2), F_LIVRAISON est mise à jour avec Encaisse = true et MontantEncaisse = DO_NetAPayer, le client est notifié et la diffusion GPS s'interrompt.
+
+Figure 96 : Diagramme de séquence — Livraison COD et diffusion GPS
+4.3.3 Réclamation client avec SignalR et grâce de 5 secondes
+La création d'une réclamation par un client provoque l'envoi de l'événement NouveauCas au groupe confirmateurs. La confirmatrice qui prend en charge le cas ouvre une session F_CONFIRMATRICE_SESSION et verrouille le cas. La discussion se déroule via l'événement NouveauMessage diffusé au groupe client-{userId} et au groupe confirmateurs. La particularité de ce flux est la gestion de la grâce de 5 secondes à la déconnexion. La méthode OnDisconnectedAsync du ReclamationHub décrémente le compteur de connexions de la confirmatrice. Si c'est la dernière connexion, un timer GracePeriod = TimeSpan.FromSeconds(5) est armé. Si la confirmatrice se reconnecte dans cet intervalle, le timer est annulé et le verrou conservé. Si la grâce expire, le cas redevient libre et l'événement CommandeLiberee est diffusé. Lorsque trois tentatives de livraison ont échoué (F_RECLAMATION_TENTATIVE), l'événement SeuilTentativesAtteint est émis vers les superviseurs.
+Figure 97 : Diagramme de séquence — Réclamation client avec SignalR
+4.3.4 Transit inter-dépôts par double scan code-barres
+Le livreur de transit ouvre la mission dans transit_mission_details_screen. Le scanner transit_barcode_scanner_screen utilise le plugin mobile_scanner pour lire les codes. Un premier scan (POST /scan-pickup) fait passer la ligne F_TRANSFERT de EN_ATTENTE_TRANSIT à EN_TRANSIT, enregistre PickedUpAt et la position GPS, et écrit un journal F_TRANSFERT_AUDIT_LOG avec ActionType = PICKUP. Le second scan (POST /scan-delivery) au dépôt destination bascule la ligne en RECU_DEPOT_DESTINE. Une fenêtre d'annulation de dix minutes (RevertWindowMinutes = 10) permet de corriger une erreur, avec un nouveau journal d'audit. Si la quantité reçue est inférieure à la quantité attendue, l'application déclenche POST /scan-partial : la ligne passe en TRANSIT_PARTIELLEMENT_RECU et une alerte est envoyée au groupe superviseurs.
+
+Figure 98 : Diagramme de séquence — Scan codes-barres transit inter-dépôts
+5. Réalisation
+La réalisation utilise les trois canaux de la solution. Les écrans React de la confirmatrice et du superviseur consomment les endpoints via Axios. Les écrans Flutter passent par un ApiClient qui injecte automatiquement le jeton JWT stocké en sécurisé (flutter_secure_storage). Les notifications sonores des scans utilisent audioplayers et les vibrations sont gérées par le plugin du scanner. Les photos des réclamations sont compressées par flutter_image_compress avant l'envoi pour réduire le coût réseau. Les sections suivantes présentent les principaux écrans réalisés.
+5.1 Interface confirmateur — liste des commandes
+L'écran ConfirmateurOrdersPage liste les bons de commande paginés. La confirmatrice peut filtrer par statut (EN_ATTENTE, CONFIRME, EN_LIVRAISON, LIVRE), rechercher par référence ou par client et consulter le détail. Chaque ligne affiche la référence DO_Piece, le client, la date, le montant TTC et le libellé du statut.
+
+Figure 99 : Interface confirmateur- liste des commandes
+
+Figure 100: Interface confirmateur-liste des commandes(mobile)
+5.2 Interface confirmatrice — transformation BC en BL
+Lorsque le bon de commande est confirmé, l'écran ConfirmateurOrderDetailsPage propose le bouton « Transformer en BL ». Le résultat de l'opération est affiché : référence du nouveau BL, indicateur alreadyExists si un BL existe déjà, sageSent et sageSuccess pour le suivi de la synchronisation Sage X3. L'identifiant du livreur automatiquement affecté est également rappelé.
+
+Figure 101 : Interface confirmateur-transformation BC en BL
+
+Figure 102: Interface confirmateur- transformation BC en BL (mobile)
+5.3 Interface confirmatrice — gestion des réclamations
+L'écran des réclamations affiche les cas par ordre de priorité et d'ancienneté. Les nouvelles réclamations apparaissent en temps réel grâce à l'événement SignalR NouveauCas, sans rechargement de page. La confirmatrice peut prendre en charge un cas, modifier son statut, envoyer une demande de correction d'adresse, créer un bon d'échange, ajouter une note interne, réaffecter le cas et chatter avec le client. L'historique des tentatives de livraison est consultable, avec mise en évidence du seuil de trois tentatives.
+Figure 103 : Interface confirmateur-gestion des réclamations
+
+Figure 104: Interface confirmateur-gestion des réclamations(mobile)
+5.4 Interface livreur — livraisons disponibles
+L'écran new_orders_screen présente les bons de livraison filtrés par gouvernorat et délégation du livreur. Pour chaque livraison, l'application affiche l'adresse, le montant COD attendu et les coordonnées du client. La prise en charge se fait d'un seul appui ; si un autre livreur prend la livraison en parallèle, l'API renvoie un code 409 Conflict et l'utilisateur en est informé.
+
+Figure 105 : Interface livreur — livraisons disponibles
+5.5 Interface livreur — suivi GPS et carte de livraison
+La carte affiche la position du livreur (mise à jour via SignalR), les arrêts restants et l'itinéraire optimisé. L'algorithme du plus-proche-voisin avec distance Haversine ordonne les arrêts, et OSRM fournit un calcul d'ETA plus précis. La feuille LiveDeliveryMapSheet expose au client la position du livreur lorsqu'il est en route, avec un indicateur de fraîcheur du dernier ping.
+
+Figure 106 : Interface livreur — suivi GPS et carte de livraison
+5.6 Interface livreur — caisse COD
+L'écran livreur_stats_screen présente la caisse du livreur : montant total encaissé, nombre de livraisons effectuées, taux de réussite et répartition par statut. L'historique des remises au dépôt est accessible. Les sous-états DepotEnCoursDePreparation (6) et DepotPret (7) sont visibles uniquement par le livreur, le client voyant un état agrégé « au dépôt ».
+
+Figure 107 : Interface livreur — caisse COD
+5.7 Interface suivi commande client (TrackingStateCard)
+Le composant TrackingStateCard prend l'apparence dictée par l'endpoint /api/client/orders/{piece}/tracking-state. En AT_DEPOT, la carte est informative. En IN_DELIVERY_QUEUE, le client sait qu'un livreur va le prendre en charge. En HEADING_TO_YOU, la carte devient une vue cartographique avec la position GPS du livreur, l'ETA en minutes (calculé par Haversine à 40 km/h) et un bouton d'appel ou de SMS. En TERMINAL, la livraison est finalisée.
+
+Figure 108 : Interface client — TrackingStateCard adaptative
+5.8 Interface de transit inter-dépôts et scan codes-barres
+L'écran transit_home_screen regroupe les missions en trois onglets (en attente, en cours, historique). Le détail d'une mission liste les articles attendus. Le scanner active la caméra ; chaque scan donne un retour sonore (audioplayers) et tactile. L'application gère également la réception partielle et la fenêtre d'annulation de dix minutes après un pickup.
+               
+Figure 109 : Interface de transit inter-dépôts et scan codes-barres
+5.9 Interface superviseur
+Le superviseur dispose d'une carte temps réel des livreurs actifs, d'un tableau de bord des alertes (retard, échec, zone non couverte, écart de caisse) et d'une heatmap construite par LivreurMapController.HeatMap. Les cellules sont d'environ 500 mètres et l'intensité représente le ratio (retours + reports) / livraisons sur les 90 derniers jours. Le superviseur peut aussi réaffecter une mission de transit grâce à l'endpoint /api/supervisor/transferts/{id}/reassign.
+Figure 110 : Interface superviseur
+
+Figure 111: Les Interfaces de superviseur(mobile)
+6. Tests et validation
+Les tests fonctionnels ont été menés tout au long du sprint sur des jeux de données réalistes (jeu de départ Sage X3 et seed Tunisie : neuf gouvernorats avec leurs délégations). Les cas limites — Sage X3 indisponible, conflit de prise en charge, perte de connexion du livreur, déconnexion fugace de la confirmatrice, scans erronés — ont été vérifiés en plus des cas nominaux.
+Tableau 14 : Tests fonctionnels du Sprint 4
+Test
+Objectif
+Résultat attendu
+Statut
+Consultation des commandes confirmatrice
+Vérifier l’affichage des bons de commande à traiter.
+La liste affiche les bons de commande avec leurs références, clients, montants et statuts.
+Validé
+Détail bon de commande
+Contrôler la consultation des lignes, des montants et des informations client.
+Les lignes du document, le mode de paiement et les données du client sont affichés correctement.
+Validé
+Transformation BC en BL
+Vérifier la création d’un bon de livraison à partir d’un bon de commande confirmé.
+Le BL est créé avec son entête, ses lignes et une livraison associée, sans duplication.
+Validé
+Export Sage X3 non bloquant
+Vérifier le comportement lorsque Sage X3 ou le wrapper REST est indisponible.
+Le BL reste enregistré localement et l’erreur de synchronisation est signalée à l’utilisateur.
+Validé
+Affectation automatique du livreur
+Contrôler la sélection du livreur selon la zone et la charge de travail.
+Le livreur retenu appartient à la zone concernée et possède la file de livraisons la plus adaptée.
+Validé
+Prise en charge d’une livraison
+Vérifier la récupération d’une livraison disponible depuis l’application mobile.
+La livraison est affectée au livreur connecté et n’est plus disponible pour les autres livreurs.
+Validé
+Diffusion GPS temps réel
+Contrôler l’envoi périodique de la position du livreur via SignalR.
+Le client reçoit la position mise à jour et suit l’avancement de la livraison sur la carte.
+Validé
+Mode hors ligne livreur
+Vérifier la conservation des positions en cas de perte de connexion.
+Les positions sont stockées localement puis envoyées en lot après la reconnexion.
+Validé
+Encaissement COD
+Vérifier l’enregistrement du paiement à la livraison.
+Le montant encaissé est enregistré automatiquement lorsque la livraison est marquée comme livrée.
+Validé
+Suivi client adaptatif
+Contrôler les changements d’état du suivi de commande côté client.
+Le client visualise l’état correspondant : au dépôt, en file de livraison, livreur en route ou terminé.
+Validé
+Réclamation temps réel
+Vérifier la création et le traitement d’une réclamation avec chat SignalR.
+La confirmatrice reçoit la réclamation sans rechargement et peut échanger avec le client.
+Validé
+Transit par double scan
+Vérifier le scan au départ et à l’arrivée entre deux dépôts.
+La mission passe correctement de l’attente au transit puis à la réception, avec journal d’audit.
+Validé
+Supervision opérationnelle
+Vérifier le suivi des livreurs, des alertes et des missions bloquées.
+Le superviseur visualise l’activité terrain et peut réaffecter une mission lorsque c’est nécessaire.
+Validé
+
+7. Conclusion
+Le Sprint 4 referme la chaîne logistique de la plateforme. Une commande passée en ligne peut désormais être confirmée, transformée en bon de livraison synchronisé avec Sage X3, affectée automatiquement à un livreur, suivie en temps réel par le client, livrée avec encaissement COD automatique, puis suivie d'une éventuelle réclamation traitée en conversation directe. Le transit inter-dépôts apporte la traçabilité des mouvements internes par double scan. Le superviseur dispose d'outils pour suivre l'activité et intervenir en cas d'écart. La résilience opérationnelle a été soignée : file locale hors ligne, idempotence des pings, grâce SignalR, synchronisation Sage non bloquante, audit log et jobs Hangfire d'escalade. Le sprint suivant exploite ce socle pour offrir à l'administrateur une couche 
+complète de pilotage et d'aide à la décision.
+
+
+
+
+
+
+
+
+
+Chapitre 8 : Sprint 5 — Pilotage, tableaux de bord, chatbot et aide à la décision
+
+
+
+
+
+
+
+
+
+Chapitre 8 : Sprint 5 — Tableaux de bord, exports et chatbot
+1. Introduction
+Ce chapitre présente le cinquième et dernier sprint de la solution. À ce stade, l'ensemble des fonctionnalités opérationnelles — catalogue, commandes, paiement, confirmation, livraison, réclamations, transit — est en place. Le Sprint 5 ajoute la couche de pilotage et d'aide à la décision destinée à l'administrateur. Trois axes sont traités en parallèle : les tableaux de bord multi-dimensionnels qui agrègent les données de tous les modules précédents, les exports Excel et PDF qui permettent d'extraire ces données vers des outils externes, et un chatbot administrateur capable d'interroger la base en langage naturel grâce à n8n, à un modèle de langage Groq et à trois modèles ML.NET.
+2. Objectif du sprint
+Le Sprint 5 s'est déroulé du 27/04/2026 au 23/05/2026. Son objectif est de transformer la solution en une plateforme pilotable. L'administrateur doit pouvoir consulter les indicateurs clés, identifier les anomalies, extraire les données et obtenir des réponses synthétiques à des questions en français. Le périmètre couvre onze tableaux de bord, deux services d'export, un chatbot conversationnel multimodal (texte sur web et vocal sur mobile) et un mécanisme d'insights proactifs qui détecte automatiquement les tendances et les écarts.
+3. Backlog du sprint
+Le tableau ci-après présente les vingt-deux histoires utilisateurs du sprint. Elles se répartissent entre les tableaux de bord, les exports, le chatbot et les services d'arrière-plan associés.
+Tableau 15 : Backlog du Sprint 5
+ID
+Histoire utilisateur
+Tâches techniques
+Responsable
+Estimation
+US5.1
+Vue d'ensemble multi-modules
+GET /api/dashboard/overview : KPI consolidés, alertes, série temporelle 7 jours.
+Melek Lahmar
+3 j
+US5.2
+Analyse des ventes
+GET /api/dashboard/sales : CA par période, top produits, répartition B2C/B2B.
+Tawfik Siala
+3 j
+US5.3
+Analyse des commandes
+GET /api/dashboard/orders : statuts, délais, segmentation par zone et par livreur.
+Melek Lahmar
+3 j
+US5.4
+Analyse des produits
+GET /api/dashboard/products : top ventes, ruptures, marges indicatives.
+Tawfik Siala
+3 j
+US5.5
+Analyse des stocks et dépôts
+GET /api/dashboard/stock + /depots : niveaux par dépôt, alertes critiques.
+Melek Lahmar
+3 j
+US5.6
+Analyse logistique
+GET /api/dashboard/logistics : taux de livraison par zone, heatmap, délais moyens.
+Tawfik Siala
+3 j
+US5.7
+Analyse des livreurs
+GET /api/dashboard/drivers : classement, taux de réussite, caisse COD.
+Melek Lahmar
+3 j
+US5.8
+Analyse des clients
+GET /api/dashboard/clients : fidélité, panier moyen, segmentation B2C/B2B.
+Tawfik Siala
+3 j
+US5.9
+Analyse des réclamations
+GET /api/dashboard/reclamations : motifs, SLA, performance des confirmatrices.
+Melek Lahmar
+3 j
+US5.10
+Performance des confirmatrices
+GET /api/dashboard/confirmateur : cas actifs, taux de résolution, temps moyen.
+Tawfik Siala
+2 j
+US5.11
+État de la synchronisation Sage X3
+GET /api/dashboard/sync : dernière exécution, intégrité, articles/dépôts/stocks à jour.
+Melek Lahmar
+2 j
+US5.12
+Insights stratégiques automatiques
+GET /api/dashboard/strategic-insights : tendances, anomalies, recommandations.
+Tawfik Siala
+2 j
+US5.13
+Insights proactifs du chatbot
+ProactiveInsightsJob (Hangfire, toutes les 30 min) alimente F_CHATBOT_INSIGHTS.
+Melek Lahmar
+2 j
+US5.14
+Export Excel ClosedXML
+GET /api/admin/orders/export?format=xlsx : entêtes en gras, largeurs auto, plafond 10 000 lignes.
+Melek Lahmar
+2 j
+US5.15
+Export PDF QuestPDF
+GET /api/admin/orders/export?format=pdf : mise en page A4 avec en-tête, table et pagination.
+Tawfik Siala
+2 j
+US5.16
+Chatbot conversationnel /ask
+Orchestrator interne : Groq Router → Exécuteur → Groq Formatter (llama-3.3-70b-versatile).
+Tawfik Siala
+3 j
+US5.17
+Streaming SSE /ask-stream
+Phases routing → data → chunks → done pour un rendu mot-à-mot côté React.
+Melek Lahmar
+2 j
+US5.18
+Workflow n8n d'orchestration
+admin-chatbot-workflow-v3.json : webhook → langue → backend → insights → merge → response.
+Tawfik Siala
+2 j
+US5.19
+Prédictions ML.NET
+PredictionService : trois modèles (risque, churn, routing) consommés via /predict.
+Melek Lahmar
+3 j
+US5.20
+Chatbot vocal sur mobile
+voice_buttons.dart : reconnaissance vocale speech_to_text et lecture flutter_tts.
+Tawfik Siala
+2 j
+US5.21
+Conversations et historique chatbot
+F_CHATBOT_MESSAGE par session, filtre par date et par utilisateur.
+Melek Lahmar
+2 j
+US5.22
+Rafraîchissement de la base de connaissances
+KbGeneratorService (IHostedService) régénère le contexte exploité par Groq.
+Tawfik Siala
+2 j
+
+4. Analyse et conception
+L'analyse de ce sprint porte sur des fonctionnalités transverses qui réutilisent les données produites par les sprints précédents. Les tableaux de bord s'appuient sur un service d'agrégation unique. Les exports sont centralisés dans un service générique. Le chatbot est orchestré par un pipeline interne en trois étapes (Router, Exécuteur, Formatter) et complété par un workflow n8n qui injecte des insights proactifs.
+4.1 Diagramme de cas d'utilisation du Sprint 5
+Le diagramme regroupe les fonctionnalités en quatre paquets : tableaux de bord, exports, chatbot et pilotage avancé. Il fait apparaître les trois acteurs techniques qui interviennent en arrière-plan : le workflow n8n pour l'orchestration, le modèle Groq llama-3.3-70b-versatile pour le routage et la mise en forme des réponses, et ML.NET pour les prédictions. Sage X3 reste la source du tableau de bord de synchronisation.
+
+Figure 112 : Diagramme de cas d'utilisation du Sprint 5
+4.2 Description des cas d'utilisation
+L'administrateur accède à la vue d'ensemble, à l'analyse des ventes, des commandes, des produits, des stocks et des dépôts, de la logistique, des livreurs, des clients, des réclamations, des confirmatrices et de la synchronisation Sage X3. Il consulte les insights stratégiques et les insights proactifs générés en arrière-plan, déclenche les exports Excel et PDF, dialogue avec le chatbot en mode texte ou voix, parcourt l'historique des conversations et peut rafraîchir manuellement la base de connaissances utilisée par le router Groq.
+4.3 Diagrammes de séquence
+Deux flux ont été modélisés en détail : la chaîne complète du chatbot administrateur (React → n8n → Backend → Groq → ML.NET) et la génération des exports Excel et PDF par le service ExportService.
+4.3.1 Diagramme de séquence — Chatbot administrateur
+L'administrateur saisit sa question depuis la page ChatbotSandboxPage. Le payload (question, sessionId, locale) est envoyé au webhook n8n /admin-chat-v3. Le premier nœud détecte la langue (français, arabe ou « tounsi ») puis transmet la requête au backend via POST /api/admin/chat/ask. L'AdminChatOrchestratorService applique alors le pipeline interne : un premier appel à Groq joue le rôle de routeur et choisit l'action (KB, QUERY, ANALYZE, PREDICT ou CHITCHAT). L'action est exécutée : interrogation SQL pour QUERY, modèle ML.NET pour PREDICT, lecture de la base de connaissances pour KB. Un second appel à Groq met en forme la réponse en français et propose éventuellement une structure de tableau et de graphique. Le message est journalisé dans F_CHATBOT_MESSAGE. Côté n8n, un nœud complémentaire récupère les insights proactifs en attente (F_CHATBOT_INSIGHTS) et les fusionne à la réponse avant le retour à React. Une variante de cet endpoint, /ask-stream, renvoie un flux SSE en quatre phases (routing, data, chunks, done) pour un rendu mot-à-mot.
+
+Figure 113 : Diagramme de séquence — Chatbot administrateur (n8n)
+4.3.2 Diagramme de séquence — Export Excel et PDF
+L'administrateur déclenche un export depuis l'interface de synthèse. La route GET /api/admin/orders/export reçoit deux paramètres : format (xlsx ou pdf) et period. La méthode parse la période, projette F_DOCENTETES dans la limite de MaxRows = 10 000 lignes et délègue la sérialisation à ExportService. ClosedXML construit le classeur Excel avec entêtes en gras et colonnes ajustées automatiquement. QuestPDF construit un document A4 avec en-tête contextualisé, un tableau paginé et un pied de page. Le flux binaire est renvoyé en téléchargement direct via l'en-tête Content-Disposition. Le même service est réutilisé pour /api/admin/reclamations/export.
+
+Figure 114 : Diagramme de séquence — Export Excel et PDF
+5. Réalisation
+Les onze tableaux de bord partagent une même infrastructure côté React : le composant DashboardAnalyticsPage est paramétré par une clé pageKey qui détermine l'endpoint à appeler, la configuration des KPI et la liste des alertes à afficher. Le rendu des graphiques utilise Recharts. Les exports sont déclenchés depuis les écrans de synthèse via un appel HTTP qui produit un téléchargement direct. Le chatbot est accessible depuis une fenêtre flottante (ChatbotFab) sur toutes les pages d'administration.
+5.1 Interface du tableau de bord global
+L'écran AdminOverviewDashboardPage agrège les indicateurs clés : chiffre d'affaires, nombre de livraisons, réclamations ouvertes, livreurs actifs et tendance hebdomadaire. Le panneau d'alertes AlertPanel met en évidence les anomalies par sévérité (avertissement, critique). Les insights stratégiques et les insights proactifs alimentés par Hangfire toutes les 30 minutes y sont également visibles.
+
+Figure 115 : Interface du tableau de bord global
+
+Figure 116: Interface du tableau de bord global(mobile)
+5.2 Interface du dashboard ventes et commandes
+AdminSalesDashboardPage présente le chiffre d'affaires sur la période, le top produits et la répartition B2C / B2B. AdminOrdersDashboardPage détaille les statuts des commandes, les délais moyens (BC → BL → livraison) et la segmentation géographique. Les graphiques sont produits par Recharts à partir du JSON retourné par la Web API.
+
+Figure 117 : Interface du dashboard ventes et commandes
+
+Figure 118: Interface du dashboard ventes et commandes(mobile)
+5.3 Interface du dashboard logistique et livreurs
+AdminLogisticsDashboardPage présente le taux de livraison par zone, la heatmap des échecs sur 90 jours et le délai moyen de livraison. AdminDriversDashboardPage expose le classement des livreurs (taux de réussite, volume, caisse COD) et leurs alertes individuelles. Les huit codes de statut sont restitués séparément pour permettre une lecture précise.
+
+Figure 119 : Interface du dashboard logistique et livreurs
+
+Figure 120: Interface du dashboard logistique et livreurs(mobile)
+5.4 Interface du dashboard réclamations et confirmatrices
+AdminReclamationsDashboardPage croise les réclamations par motif (COLIS_ENDOMMAGE, NON_LIVRE, MAUVAIS_ARTICLE, NUMERO_INCORRECT, ADRESSE_INCORRECTE) et par statut (ENVOYEE, EN_COURS, CLOTUREE, REFUSEE). Elle suit également les performances des confirmatrices : cas actifs, taux de résolution, temps moyen et durée des sessions F_CONFIRMATRICE_SESSION.
+
+Figure 121 : Interface du dashboard réclamations et confirmatrices
+
+Figure 122: Interface du dashboard réclamations et confirmatrices(mobile)
+5.5 Interface du dashboard synchronisation Sage X3
+AdminSyncDashboardPage présente l'état des données synchronisées : nombre d'articles, de catalogues, de dépôts et de stocks à jour, alertes d'intégrité (clients sans adresse, articles sans famille, stocks négatifs) et horodatage de la dernière synchronisation. Elle permet à l'administrateur de vérifier en permanence la cohérence entre la plateforme et l'ERP.
+
+Figure 123 : Interface du dashboard synchronisation Sage X3
+5.6 Interface des exports Excel et PDF
+L'écran de synthèse propose, à côté de chaque liste, deux boutons « Exporter en Excel » et « Exporter en PDF ». Les fichiers sont générés par ExportService (ClosedXML 0.104.1 et QuestPDF 2024.7.3) dans la limite de 10 000 lignes par export. La nomenclature des fichiers inclut la période sélectionnée pour faciliter le classement.
+
+Figure 124 : Interface des exports Excel et PDF
+5.7 Interface du chatbot administrateur
+La page ChatbotSandboxPage offre une zone de saisie, l'historique du fil de conversation et le rendu structuré des réponses (message, tableau, graphique). Le bouton ChatbotFab permet d'ouvrir le chatbot depuis n'importe quelle page d'administration. Les exemples de questions traitées sont nombreux : « CA du jour », « Top 5 produits du mois », « Livreurs à plus de 10 % de retours ». Une bascule active le streaming SSE pour afficher la réponse mot à mot.
+
+Figure 125 : Interface du chatbot administrateur 
+
+Figure 126: Interface du chatbot administrateur (mobile)
+
+5.8 Interface des conversations et insights chatbot
+ChatbotConversationsPage parcourt l'historique des sessions, filtrable par date et par utilisateur. ChatbotInsightsPage présente les insights proactifs sous forme de cartes : chaque insight expose un titre, un constat chiffré et une action suggérée. Un bouton de feedback alimente la qualité des futures recommandations. L'endpoint /api/admin/chat/kb/refresh permet de régénérer la base de connaissances qui sert de contexte au router Groq.
+
+Figure 127 : Interface des conversations et insights chatbot
+6. Tests et validation
+Les tests vérifient la cohérence des indicateurs par rapport aux données sources, la conformité des artefacts d'export aux spécifications et la qualité des réponses du chatbot. Les tests de validation du Sprint 5 ont été réalisés manuellement à travers des scénarios fonctionnels couvrant les principaux modules développés. Ils ont permis de vérifier la cohérence des indicateurs affichés dans les tableaux de bord, la génération correcte des exports Excel et PDF, le fonctionnement du chatbot administrateur, la consultation de l’historique des conversations ainsi que l’affichage des insights. Cette validation a été menée en comparant les résultats obtenus avec les données enregistrées dans le système et avec les comportements attendus pour chaque fonctionnalité.
+
+
+
+
+Tableau 16 : Tests fonctionnels du Sprint 5
+Test
+Objectif
+Résultat attendu
+Statut
+Vue d’ensemble du dashboard
+Vérifier la cohérence des indicateurs globaux affichés à l’administrateur.
+Les KPI correspondent aux données calculées depuis les commandes, livraisons et réclamations.
+Validé
+Dashboard ventes et commandes
+Contrôler le chiffre d’affaires, les statuts et la répartition des commandes.
+Les montants, tendances, statuts et graphiques reflètent les données réelles de la période choisie.
+Validé
+Dashboard logistique et livreurs
+Vérifier les délais, les zones à risque, le classement des livreurs et la caisse COD.
+Les taux, retards, volumes, montants encaissés et alertes sont calculés à partir des statuts réels.
+Validé
+Dashboard réclamations
+Contrôler l’analyse des réclamations par motif, statut et délai de traitement.
+Les motifs, statuts et temps moyens correspondent aux réclamations enregistrées.
+Validé
+Dashboard synchronisation Sage X3
+Vérifier les compteurs d’articles, dépôts, stocks et alertes d’intégrité.
+L’administrateur visualise l’état de synchronisation et les incohérences détectées.
+Validé
+Insights stratégiques
+Vérifier la génération des tendances, anomalies et recommandations.
+Les insights proposés sont cohérents avec les données agrégées du système.
+Validé
+Panneau d’alertes
+Contrôler l’affichage des alertes selon leur niveau de sévérité.
+Les alertes critiques et avertissements apparaissent clairement dans le tableau de bord.
+Validé
+Export Excel
+Vérifier la génération d’un fichier Excel depuis les données filtrées.
+Le fichier .xlsx s’ouvre correctement avec des entêtes lisibles et des colonnes ajustées.
+Validé
+Export PDF
+Vérifier la génération d’un document PDF paginé.
+Le PDF contient l’en-tête, le tableau, les données exportées et la pagination.
+Validé
+Limite d’export
+Contrôler le respect du plafond maximal de lignes exportées.
+L’export respecte la limite configurée et l’utilisateur est informé en cas de dépassement.
+Validé
+Chatbot administrateur
+Vérifier la réponse à une question métier formulée en langage naturel.
+Le chatbot retourne une réponse claire, structurée et cohérente avec les données interrogées.
+Validé
+Contexte et streaming SSE
+Contrôler la continuité du dialogue et l’affichage progressif de la réponse.
+Le chatbot conserve le contexte de session et affiche la réponse progressivement dans React.
+Validé
+Workflow n8n et insights
+Vérifier l’enchaînement du webhook, du backend, des insights et de la réponse finale.
+Le workflow orchestre correctement les traitements et retourne une réponse exploitable.
+Validé
+Prédictions ML.NET
+Vérifier l’appel des modèles de prédiction depuis le chatbot.
+Le système retourne un score exploitable pour le risque, le churn ou le routage.
+Validé
+Historique et base de connaissances
+Vérifier la consultation des conversations et le rafraîchissement de la base de connaissances.
+Les messages sont historisés et la base de connaissances peut être régénérée avec succès.
+Validé
+
+7. Conclusion
+Le Sprint 5 referme le projet en plaçant l'administrateur au centre d'une plateforme instrumentée. Les onze tableaux de bord offrent une vision unifiée et homogène — un contrat unique ProDashboardPageResponseDto et un composant React unique. Les exports Excel et PDF construits avec ClosedXML et QuestPDF permettent de matérialiser cette vision dans des supports partageables. Le chatbot orchestré par n8n, par le pipeline interne Router-Exécuteur-Formatter et par trois modèles ML.NET, agit comme une couche d'accès conversationnelle (texte sur le web, voix sur le mobile) qui rapproche les données métier des questions opérationnelles quotidiennes. Les insights proactifs, calculés en arrière-plan par Hangfire, anticipent les besoins de l'administrateur. Avec ce cinquième sprint, la solution atteint un niveau de maturité opérationnelle compatible avec une démonstration finale et une 
+mise en production progressive.
+Conclusion générale
+Le présent rapport a présenté le travail réalisé dans le cadre de notre projet de fin d’études, qui consiste à concevoir et développer une plateforme e-commerce et logistique destinée à améliorer la gestion des ventes, des commandes, des livraisons et du suivi opérationnel au sein de l’entreprise d’accueil.
+
+L’objectif principal de ce projet était de mettre en place une solution complète permettant de digitaliser plusieurs processus métiers liés au commerce en ligne et à la livraison Cash on Delivery. Pour atteindre cet objectif, nous avons commencé par analyser le contexte général du projet, identifier les besoins fonctionnels et non fonctionnels, définir les différents acteurs du système, puis concevoir l’architecture globale de l’application à travers les diagrammes UML et la planification des sprints selon la méthodologie Scrum.
+
+Sur le plan fonctionnel, la solution réalisée couvre plusieurs espaces complémentaires. Elle permet aux clients B2C et B2B de consulter les produits, gérer le panier, passer des commandes et suivre leur état. Elle offre également au vendeur la possibilité de gérer les commandes clients, à la confirmatrice de traiter les bons de commande, les bons de livraison et les réclamations, au livreur de suivre les opérations de livraison sur le terrain, et à l’administrateur de superviser l’activité globale à travers des tableaux de bord, des statistiques, la gestion des utilisateurs, des produits, des dépôts et des synchronisations.
+
+Sur le plan technique, ce projet nous a permis de mettre en œuvre une architecture moderne basée sur plusieurs technologies complémentaires. Le frontend web a été développé avec React, TypeScript et Tailwind CSS, tandis que le backend repose sur ASP.NET Core Web API, Entity Framework Core, JWT, SignalR et SQL Server. Une application mobile Flutter a également été intégrée pour répondre aux besoins des utilisateurs mobiles, notamment les livreurs et les acteurs opérationnels. Le système communique aussi avec des services externes tels que Sage X3 pour la synchronisation des données métier, Konnect pour le paiement, Brevo pour les notifications par e-mail et n8n avec un modèle LLM pour l’assistance intelligente côté administrateur.
+
+Malgré les contraintes rencontrées, notamment la complexité de l’architecture, la diversité des rôles utilisateurs, la cohérence des statuts métier, l’intégration entre le frontend, le backend, la base de données et les services externes, nous avons pu réaliser une partie importante des objectifs fixés initialement. Ce travail nous a permis de renforcer nos compétences en développement full stack, en conception logicielle, en intégration d’API, en modélisation de base de données, en sécurité applicative et en gestion de projet agile.
+
+Enfin, ce projet reste ouvert à plusieurs perspectives d’amélioration. Il serait possible d’enrichir davantage les tableaux de bord décisionnels, d’améliorer les performances globales, de renforcer les tests automatisés, d’optimiser l’expérience utilisateur sur les interfaces web et mobile, d’étendre les fonctionnalités du chatbot intelligent et de consolider l’intégration avec Sage X3 dans un environnement de production réel. Ainsi, la solution développée constitue une base solide et évolutive pouvant être améliorée progressivement pour répondre à des besoins métier plus avancés.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Netographie
+Les sources suivantes ont été utilisées comme références techniques, méthodologiques ou de structuration. Elles sont présentées de manière homogène afin de faciliter leur consultation.
+1. Dépôt GitHub du projet : https://github.com/Melek-Lahmar/PROJET-PFE (consulté en mai 2026).
+2. Documentation officielle Microsoft ASP.NET Core : https://learn.microsoft.com/aspnet/core/ (consultée en avril 2026).
+3. Documentation Entity Framework Core : https://learn.microsoft.com/ef/core/ (consultée en mars 2026).
+4. Documentation Microsoft SQL Server : https://learn.microsoft.com/sql/sql-server/ (consultée en avril 2026).
+5. Documentation officielle React : https://react.dev/ (consultée en février 2026).
+6. Documentation officielle Flutter : https://docs.flutter.dev/ (consultée en mars 2026).
+7. Documentation Swagger / OpenAPI : https://swagger.io/docs/ (consultée en février 2026).
+8. Documentation ASP.NET Core SignalR : https://learn.microsoft.com/aspnet/core/signalr/ (consultée en avril 2026).
+9. Documentation n8n : https://docs.n8n.io/ (consultée en mai 2026).
+10. Site officiel Sage : https://www.sage.com/ (consulté en mars 2026).
+11. Site officiel Konnect : https://konnect.network/ (consulté en mai 2026).
+12. Documentation officielle Cloudinary : https://cloudinary.com/documentation (consultée en mars 2026).
+13. Documentation officielle Mapbox : https://docs.mapbox.com/ (consultée en avril 2026).
+14. Documentation officielle Brevo : https://developers.brevo.com/ (consultée en février 2026).
+15. Guide de rédaction du rapport de stage de fin d’études, ISET Sfax,
+Département Technologies de l’Informatique (consulté en mai 2026).
+
+
+
+
+
+
+
+
+ANNEXES
+
+
+Annexes
+
+

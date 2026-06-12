@@ -73,7 +73,18 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 3 http://localhost:5174/)",
       "Bash(cp \"C:/PROJET-PFE/frontend-react/shots/cart-dark.png\" /tmp/cd.png)",
       "Bash(node -e \"const{chromium}=require\\('playwright'\\);\\(async\\(\\)=>{}\\)\\(\\)\")",
-      "Bash(python3 -c \"from PIL import Image; im=Image.open\\(r'C:/PROJET-PFE/frontend-react/shots/cart-dark.png'\\); px=im.convert\\('RGB'\\); w,h=im.size; print\\('size',w,h\\); from collections import Counter; c=Counter\\(px.getdata\\(\\)\\); print\\('top colors:'\\); [print\\(' ',col,n\\) for col,n in c.most_common\\(5\\)]\")"
+      "Bash(python3 -c \"from PIL import Image; im=Image.open\\(r'C:/PROJET-PFE/frontend-react/shots/cart-dark.png'\\); px=im.convert\\('RGB'\\); w,h=im.size; print\\('size',w,h\\); from collections import Counter; c=Counter\\(px.getdata\\(\\)\\); print\\('top colors:'\\); [print\\(' ',col,n\\) for col,n in c.most_common\\(5\\)]\")",
+      "Bash(Get-ChildItem \"C:\\\\PROJET-PFE\\\\backend-aspnet-api\\\\Web-Api\" -Filter \"*.cs\" -Recurse)",
+      "Bash(Select-String \"global using\")",
+      "Bash(Select-Object -First 10)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(curl -s -X POST \"http://localhost:5123/api/auth/login\" -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"admin@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"Admin@123\\\\\"}\")",
+      "Bash(Get-Process -Name \"dotnet\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Id, ProcessName, StartTime)",
+      "Bash(dotnet ef *)",
+      "PowerShell(Get-Process *)",
+      "Bash(dotnet build *)",
+      "Bash(tasklist)"
     ]
   }
 }

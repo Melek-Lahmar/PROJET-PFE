@@ -106,6 +106,7 @@ builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email
 builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection("Cloudinary"));
 builder.Services.Configure<KonnectOptions>(builder.Configuration.GetSection(KonnectOptions.SectionName));
 builder.Services.Configure<SageOptions>(builder.Configuration.GetSection(SageOptions.SectionName));
+builder.Services.Configure<SageX3Options>(builder.Configuration.GetSection(SageX3Options.SectionName));
 
 builder.Services.AddScoped<IImageStorage, CloudinaryImageStorage>();
 builder.Services.AddScoped<IEmailSenderService, BrevoSmtpEmailSender>();
@@ -176,6 +177,7 @@ builder.Services.AddScoped<Web_Api.Services.Avis.AvisService>();
 builder.Services.AddScoped<Web_Api.Services.Livreur.CommandePoolService>();
 builder.Services.AddScoped<IDepotZoneService, DepotZoneService>();
 builder.Services.AddScoped<IStockTransferService, StockTransferService>();
+builder.Services.AddScoped<ITransitAccountProvisioningService, TransitAccountProvisioningService>();
 builder.Services.AddScoped<ITransitOrchestrationService, TransitOrchestrationService>();
 builder.Services.AddScoped<IOrderTimelineService, OrderTimelineService>();
 builder.Services.AddScoped<ISupervisorAlertService, SupervisorAlertService>();
@@ -220,6 +222,9 @@ builder.Services.AddScoped<Web_Api.Services.Push.PushNotificationService>();
 
 // Section 4.7 — exports Excel/PDF
 builder.Services.AddScoped<Web_Api.Services.Admin.Export.ExportService>();
+
+// Module Impression — PDF BL/Manifeste + paramètres d'impression
+builder.Services.AddScoped<Web_Api.Services.Print.BlPdfService>();
 
 // Chantier 1 Géo — polygones de validation des délégations (chargement au boot via IHostedService).
 builder.Services.AddSingleton<GeoPolygonService>();

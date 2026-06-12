@@ -26,6 +26,9 @@ class ClientOrderTracking {
   // Transit inter-dépôts.
   final int transitTotalCount;
   final int transitReceivedCount;
+  // Résumé global "client" ("En transit de X vers Y"). Le détail par article
+  // (transitItems) reste réservé au staff (vide côté client).
+  final String? transitSummary;
   final List<ClientOrderTrackingTransitItem> transitItems;
 
   // Bloc 5 et 6 — Réclamation / Demande liées.
@@ -56,6 +59,7 @@ class ClientOrderTracking {
     this.events = const [],
     this.transitTotalCount = 0,
     this.transitReceivedCount = 0,
+    this.transitSummary,
     this.transitItems = const [],
     this.linkedReclamation,
     this.linkedDemande,
@@ -100,6 +104,7 @@ class ClientOrderTracking {
       events: events,
       transitTotalCount: _int(map['transitTotalCount']),
       transitReceivedCount: _int(map['transitReceivedCount']),
+      transitSummary: _nullStr(map['transitSummary']),
       transitItems: (map['transitItems'] is List)
           ? (map['transitItems'] as List)
               .whereType<Map<String, dynamic>>()

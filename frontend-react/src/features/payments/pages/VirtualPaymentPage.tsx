@@ -3,15 +3,66 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { Button } from "../../../shared/components/Button";
-import { Input } from "../../../shared/components/Input";
 import { Loader } from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 import {
   cancelVirtualPayment,
   confirmVirtualPayment,
   getVirtualPaymentStatus,
+  getVirtualTestCards,
 } from "../api/virtualPaymentsApi";
 import { EmptyView } from "../../../shared/components/premium";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers de formatage + validation (miroir des règles backend VirtualPaymentService)
+// ──────────────────────────────────────────────────────────────────────────────
+
+function money(value: number, currency: string) {
+  return `${value.toFixed(3)} ${currency}`;
+}
+
+function onlyDigits(value: string) {
+  return value.replace(/\D+/g, "");
+}
+
+function formatCardNumber(raw: string) {
+  const digits = onlyDigits(raw).slice(0, 19);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+
+function formatExpiry(raw: string) {
+  const digits = onlyDigits(raw).slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+type CardBrand = "visa" | "mastercard" | "amex" | "card";
+
+function detectBrand(digits: string): CardBrand {
+  if (/^4/.test(digits)) return "visa";
+  if (/^(5[1-5]|2[2-7])/.test(digits)) return "mastercard";
+  if (/^3[47]/.test(digits)) return "amex";
+  return "card";
+}
+
+function brandLabel(brand: CardBrand) {
+  return brand === "visa" ? "VISA" : brand === "mastercard" ? "Mastercard" : brand === "amex" ? "AMEX" : "Carte";
+}
+
+function isCardNumberValid(digits: string) {
+  return digits.length >= 13 && digits.length <= 19;
+}
+
+function isExpiryValid(expiry: string) {
+  const m = expiry.match(/^(\d{2})\/(\d{2})$/);
+  if (!m) return false;
+  const month = Number(m[1]);
+  const year = 2000 + Number(m[2]);
+  if (month < 1 || month > 12) return false;
+  const now = new Date();
+  const endOfMonth = new Date(year, month, 0, 23, 59, 59);
+  return endOfMonth >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
 
 type FormState = {
   cardNumber: string;
@@ -21,21 +72,11 @@ type FormState = {
   otp: string;
 };
 
-const initialForm: FormState = {
-  cardNumber: "",
-  expiry: "",
-  cvv: "",
-  cardHolderName: "",
-  otp: "",
-};
+const initialForm: FormState = { cardNumber: "", expiry: "", cvv: "", cardHolderName: "", otp: "" };
 
-function money(value: number, currency: string) {
-  return `${value.toFixed(3)} ${currency}`;
-}
+type Step = "card" | "otp";
 
-function compactCard(cardNumber: string) {
-  return cardNumber.replace(/\s+/g, "");
-}
+// ──────────────────────────────────────────────────────────────────────────────
 
 export function VirtualPaymentPage() {
   const [searchParams] = useSearchParams();
@@ -45,11 +86,20 @@ export function VirtualPaymentPage() {
   const paymentRef = (searchParams.get("paymentRef") ?? "").trim();
 
   const [form, setForm] = useState<FormState>(initialForm);
+  const [step, setStep] = useState<Step>("card");
+  const [showTestCards, setShowTestCards] = useState(false);
 
   const statusQuery = useQuery({
     queryKey: ["virtual-payment-status", piece, paymentRef],
     queryFn: () => getVirtualPaymentStatus(piece, paymentRef),
     enabled: Boolean(piece && paymentRef),
+  });
+
+  const testCardsQuery = useQuery({
+    queryKey: ["virtual-test-cards"],
+    queryFn: () => getVirtualTestCards(),
+    enabled: showTestCards,
+    staleTime: 5 * 60_000,
   });
 
   const returnUrl = useMemo(() => {
@@ -62,22 +112,18 @@ export function VirtualPaymentPage() {
       confirmVirtualPayment({
         piece,
         paymentRef,
-        cardNumber: form.cardNumber,
+        cardNumber: onlyDigits(form.cardNumber),
         expiry: form.expiry,
         cvv: form.cvv,
-        cardHolderName: form.cardHolderName,
+        cardHolderName: form.cardHolderName.trim(),
         otp: form.otp,
       }),
-    onSuccess: () => {
-      navigate(returnUrl, { replace: true });
-    },
+    onSuccess: () => navigate(returnUrl, { replace: true }),
   });
 
   const cancelMutation = useMutation({
     mutationFn: () => cancelVirtualPayment(piece, paymentRef),
-    onSuccess: () => {
-      navigate(returnUrl, { replace: true });
-    },
+    onSuccess: () => navigate(returnUrl, { replace: true }),
   });
 
   const status = statusQuery.data;
@@ -85,18 +131,38 @@ export function VirtualPaymentPage() {
   const isBusy = confirmMutation.isPending || cancelMutation.isPending;
   const error = confirmMutation.error ?? cancelMutation.error ?? statusQuery.error;
 
-  const canSubmit =
-    Boolean(piece && paymentRef) &&
-    !isFinal &&
-    !isBusy &&
-    compactCard(form.cardNumber).length > 0 &&
-    form.expiry.trim().length > 0 &&
-    form.cvv.trim().length > 0 &&
-    form.cardHolderName.trim().length > 0 &&
-    form.otp.trim().length > 0;
+  const cardDigits = onlyDigits(form.cardNumber);
+  const brand = detectBrand(cardDigits);
+
+  const fieldErrors = {
+    cardNumber: form.cardNumber && !isCardNumberValid(cardDigits) ? "Numéro de carte invalide (13 à 19 chiffres)." : "",
+    expiry: form.expiry && !isExpiryValid(form.expiry) ? "Date invalide ou carte expirée (MM/AA)." : "",
+    cvv: form.cvv && !/^\d{3}$/.test(form.cvv) ? "Le CVV doit contenir 3 chiffres." : "",
+    cardHolderName: form.cardHolderName && form.cardHolderName.trim().length < 2 ? "Nom du porteur requis." : "",
+    otp: form.otp && !/^\d{6}$/.test(form.otp) ? "Le code de vérification doit contenir 6 chiffres." : "",
+  };
+
+  const cardStepValid =
+    isCardNumberValid(cardDigits) &&
+    isExpiryValid(form.expiry) &&
+    /^\d{3}$/.test(form.cvv) &&
+    form.cardHolderName.trim().length >= 2;
+
+  const otpStepValid = /^\d{6}$/.test(form.otp);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function applyTestCard(cardNumber: string) {
+    setForm({
+      cardNumber: formatCardNumber(cardNumber),
+      expiry: "12/30",
+      cvv: "123",
+      cardHolderName: form.cardHolderName.trim() || "CLIENT TEST",
+      otp: "123456",
+    });
+    setShowTestCards(false);
   }
 
   if (!piece || !paymentRef) {
@@ -108,9 +174,7 @@ export function VirtualPaymentPage() {
           iconPath="M12 9v4 M12 17h.01 M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
           action={
             <Link to="/cart">
-              <Button type="button" size="lg">
-                Retour au panier
-              </Button>
+              <Button type="button" size="lg">Retour au panier</Button>
             </Link>
           }
         />
@@ -126,261 +190,245 @@ export function VirtualPaymentPage() {
     );
   }
 
-  return (
-    <div className="w-full space-y-8 py-10">
-      <section className="app-surface overflow-hidden p-0 shadow-[0_40px_120px_-70px_rgba(15,23,42,0.85)]">
-        <div className="border-b border-border/70 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_34%),hsl(var(--card))] px-6 py-6 md:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Passerelle de paiement sécurisée
-              </div>
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-card-foreground">
-                Paiement virtuel sécurisé
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Effectuez votre paiement en toute sécurité. Vos informations sont protégées à chaque étape.
-              </p>
-            </div>
+  const amountLabel = status ? money(status.amount, status.currency) : "—";
 
-            {status ? (
-              <div className="rounded-2xl border border-border/70 bg-card/85 px-5 py-4 shadow-sm lg:min-w-[280px]">
-                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                  Montant
-                </div>
-                <div className="mt-2 text-3xl font-black tracking-tight text-primary">
-                  {money(status.amount, status.currency)}
-                </div>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  {status.provider} {status.isSandbox ? "· sandbox sécurisé" : ""}
-                </div>
-              </div>
-            ) : null}
+  return (
+    <div className="mx-auto w-full max-w-[560px] py-8">
+      {/* En-tête type checkout hébergé Konnect */}
+      <div className="overflow-hidden rounded-t-[28px] border border-b-0 border-border/70 bg-gradient-to-br from-[#1b9aaa] via-[#157f9c] to-[#0f5e8c] px-7 py-7 text-white shadow-[0_30px_90px_-60px_rgba(15,23,42,0.9)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-lg font-black">K</span>
+            <span className="text-lg font-black tracking-tight">Konnect</span>
+          </div>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]">
+            Paiement sécurisé
+          </span>
+        </div>
+        <div className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Montant à payer</div>
+        <div className="mt-1 text-4xl font-black tracking-tight">{amountLabel}</div>
+        <div className="mt-2 text-sm text-white/80">
+          Commande <span className="font-mono font-bold">{piece}</span>
+          {status?.isSandbox ? " · environnement sandbox sécurisé" : ""}
+        </div>
+      </div>
+
+      <section className="space-y-6 rounded-b-[28px] border border-border/70 bg-card px-6 py-7 shadow-[0_40px_120px_-70px_rgba(15,23,42,0.85)] md:px-8">
+        {/* Aperçu carte */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 p-5 text-white shadow-lg">
+          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10" />
+          <div className="flex items-center justify-between">
+            <div className="h-7 w-10 rounded-md bg-gradient-to-br from-amber-300 to-amber-500" />
+            <span className="text-sm font-black tracking-wide">{brandLabel(brand)}</span>
+          </div>
+          <div className="mt-5 font-mono text-lg tracking-[0.18em]">
+            {form.cardNumber || "•••• •••• •••• ••••"}
+          </div>
+          <div className="mt-4 flex items-center justify-between text-xs">
+            <div>
+              <div className="text-[10px] uppercase text-white/50">Titulaire</div>
+              <div className="font-semibold uppercase">{form.cardHolderName || "NOM PRÉNOM"}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-white/50">Expire</div>
+              <div className="font-semibold">{form.expiry || "MM/AA"}</div>
+            </div>
           </div>
         </div>
 
-        {status ? (
-          <div className="grid gap-4 px-6 py-5 md:grid-cols-2 xl:grid-cols-4 md:px-8">
-            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Commande
-              </div>
-              <div className="mt-2 font-mono text-sm font-bold text-card-foreground">{status.piece}</div>
-            </div>
-            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Référence paiement
-              </div>
-              <div className="mt-2 break-all font-mono text-sm font-bold text-card-foreground">
-                {status.paymentRef}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Statut
-              </div>
-              <div className="mt-2 text-sm font-bold text-card-foreground">{status.localStatus}</div>
-            </div>
-            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Provider ID
-              </div>
-              <div className="mt-2 break-all font-mono text-sm font-bold text-card-foreground">
-                {status.providerPaymentId ?? "-"}
-              </div>
-            </div>
+        {isFinal ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
+            Ce paiement est déjà finalisé. Aucune nouvelle confirmation ne peut être envoyée.
           </div>
         ) : null}
-      </section>
 
-      <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-        <section className="app-surface space-y-6 p-6 md:p-8 lg:col-span-7">
-          <div>
-          <h2 className="text-2xl font-black tracking-tight text-card-foreground">
-              Informations de paiement
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Saisissez les informations de votre carte bancaire. Aucune information bancaire n'est stockée sur nos serveurs.
-            </p>
+        {error ? (
+          <div className="rounded-2xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.12)] p-4 text-sm text-[hsl(var(--danger))]">
+            {getApiErrorMessage(error)}
           </div>
+        ) : null}
 
-          {isFinal ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900">
-              Ce paiement est finalisé. Aucune nouvelle confirmation ne peut être envoyée.
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="rounded-2xl border border-[hsl(var(--danger)/0.25)] bg-[hsl(var(--danger)/0.12)] p-4 text-sm text-[hsl(var(--danger))]">
-              {getApiErrorMessage(error)}
-            </div>
-          ) : null}
-
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-card-foreground">Numéro de carte</label>
-              <Input
+        {!isFinal && step === "card" ? (
+          <div className="space-y-4">
+            <Field label="Numéro de carte" error={fieldErrors.cardNumber}>
+              <input
+                className={inputCls(fieldErrors.cardNumber)}
                 value={form.cardNumber}
-                onChange={(e) => updateField("cardNumber", e.target.value)}
+                onChange={(e) => updateField("cardNumber", formatCardNumber(e.target.value))}
                 inputMode="numeric"
-                autoComplete="off"
+                autoComplete="cc-number"
                 placeholder="4242 4242 4242 4242"
-                disabled={isFinal || isBusy}
+                disabled={isBusy}
               />
-            </div>
+            </Field>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-card-foreground">Date expiration</label>
-                <Input
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Expiration" error={fieldErrors.expiry}>
+                <input
+                  className={inputCls(fieldErrors.expiry)}
                   value={form.expiry}
-                  onChange={(e) => updateField("expiry", e.target.value)}
-                  placeholder="MM/YY"
-                  autoComplete="off"
-                  disabled={isFinal || isBusy}
+                  onChange={(e) => updateField("expiry", formatExpiry(e.target.value))}
+                  inputMode="numeric"
+                  autoComplete="cc-exp"
+                  placeholder="MM/AA"
+                  disabled={isBusy}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-card-foreground">CVV</label>
-                <Input
+              </Field>
+              <Field label="CVV" error={fieldErrors.cvv}>
+                <input
+                  className={inputCls(fieldErrors.cvv)}
                   value={form.cvv}
-                  onChange={(e) => updateField("cvv", e.target.value)}
+                  onChange={(e) => updateField("cvv", onlyDigits(e.target.value).slice(0, 3))}
                   inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={3}
+                  autoComplete="cc-csc"
                   placeholder="123"
-                  disabled={isFinal || isBusy}
+                  disabled={isBusy}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-card-foreground">Code OTP</label>
-                <Input
-                  value={form.otp}
-                  onChange={(e) => updateField("otp", e.target.value)}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={6}
-                  placeholder="123456"
-                  disabled={isFinal || isBusy}
-                />
-              </div>
+              </Field>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-card-foreground">Nom du porteur</label>
-              <Input
+            <Field label="Nom du porteur" error={fieldErrors.cardHolderName}>
+              <input
+                className={inputCls(fieldErrors.cardHolderName)}
                 value={form.cardHolderName}
                 onChange={(e) => updateField("cardHolderName", e.target.value)}
-                autoComplete="off"
-                placeholder="Client Test"
-                disabled={isFinal || isBusy}
+                autoComplete="cc-name"
+                placeholder="Nom Prénom"
+                disabled={isBusy}
               />
-            </div>
-          </div>
+            </Field>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               type="button"
               variant="primary"
               size="lg"
-              className="h-12 flex-1 rounded-2xl text-base font-bold"
-              disabled={!canSubmit}
-              isLoading={confirmMutation.isPending}
-              onClick={() => confirmMutation.mutate()}
+              className="h-12 w-full rounded-2xl text-base font-extrabold"
+              disabled={!cardStepValid || isBusy}
+              onClick={() => setStep("otp")}
             >
-              Payer
+              Continuer
             </Button>
+
+            <button
+              type="button"
+              onClick={() => setShowTestCards((v) => !v)}
+              className="w-full text-center text-xs font-bold text-muted-foreground underline-offset-2 hover:underline"
+            >
+              {showTestCards ? "Masquer les cartes de test" : "Utiliser une carte de test (sandbox)"}
+            </button>
+
+            {showTestCards ? (
+              <div className="space-y-2 rounded-2xl border border-border/70 bg-muted/20 p-3">
+                {testCardsQuery.isLoading ? (
+                  <div className="text-xs text-muted-foreground">Chargement des cartes de test…</div>
+                ) : (
+                  (testCardsQuery.data ?? []).map((c) => (
+                    <button
+                      key={c.cardNumber}
+                      type="button"
+                      onClick={() => applyTestCard(c.cardNumber)}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left transition hover:bg-muted"
+                    >
+                      <span className="font-mono text-xs font-bold text-card-foreground">{c.cardNumber}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                          c.result === "SUCCES"
+                            ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                        }`}
+                      >
+                        {c.result}
+                      </span>
+                    </button>
+                  ))
+                )}
+                <div className="text-[11px] text-muted-foreground">CVV de test : 123 · OTP : 123456</div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {!isFinal && step === "otp" ? (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
+              <div className="font-bold text-card-foreground">Vérification 3-D Secure</div>
+              Un code de vérification à 6 chiffres a été envoyé à votre banque. Saisissez-le pour valider le paiement de{" "}
+              <span className="font-bold text-card-foreground">{amountLabel}</span>.
+            </div>
+
+            <Field label="Code de vérification (OTP)" error={fieldErrors.otp}>
+              <input
+                className={`${inputCls(fieldErrors.otp)} text-center text-2xl font-black tracking-[0.5em]`}
+                value={form.otp}
+                onChange={(e) => updateField("otp", onlyDigits(e.target.value).slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="••••••"
+                disabled={isBusy}
+              />
+            </Field>
 
             <Button
               type="button"
-              variant="outline"
+              variant="primary"
               size="lg"
-              className="h-12 rounded-2xl px-6 text-base"
-              disabled={isFinal || isBusy}
-              isLoading={cancelMutation.isPending}
-              onClick={() => cancelMutation.mutate()}
+              className="h-12 w-full rounded-2xl text-base font-extrabold"
+              disabled={!otpStepValid || isBusy}
+              isLoading={confirmMutation.isPending}
+              onClick={() => confirmMutation.mutate()}
             >
-              Annuler
+              Payer {amountLabel}
             </Button>
-          </div>
-        </section>
 
-        <aside className="app-surface space-y-6 p-6 md:p-8 lg:col-span-5">
-          <div>
-            <h2 className="text-xl font-black tracking-tight text-card-foreground">
-              Résumé du paiement
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Vérifiez les informations avant validation. Le statut réel reste contrôlé par le backend.
-            </p>
+            <button
+              type="button"
+              onClick={() => setStep("card")}
+              disabled={isBusy}
+              className="w-full text-center text-xs font-bold text-muted-foreground hover:underline"
+            >
+              ← Revenir aux informations de carte
+            </button>
           </div>
+        ) : null}
 
-          {status ? (
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Montant à payer</span>
-                <span className="font-black text-primary">{money(status.amount, status.currency)}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Commande</span>
-                <span className="font-mono font-semibold text-card-foreground">{status.piece}</span>
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-muted-foreground">Référence paiement</span>
-                <span className="max-w-[220px] break-all text-right font-mono font-semibold text-card-foreground">{status.paymentRef}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Statut</span>
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
-                  {status.localStatus}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Environnement</span>
-                <span className="font-semibold text-card-foreground">{status.isSandbox ? "Sandbox sécurisé" : "Production"}</span>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="border-t border-border/70 pt-5">
-            <div className="text-sm font-black text-card-foreground">Méthodes acceptées</div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["Mastercard", "Visa", "e-Dinar"].map((method) => (
-                <span key={method} className="rounded-2xl border border-border bg-card px-4 py-2 text-sm font-black text-card-foreground shadow-sm">
-                  {method}
-                </span>
-              ))}
-            </div>
+        <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-4">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="4" y="11" width="16" height="9" rx="2" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+            Paiement chiffré · aucune donnée carte stockée
           </div>
+          <button
+            type="button"
+            onClick={() => cancelMutation.mutate()}
+            disabled={isFinal || isBusy}
+            className="text-xs font-bold text-muted-foreground hover:text-[hsl(var(--danger))] disabled:opacity-40"
+          >
+            Annuler
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
 
-          <div className="border-t border-border/70 pt-5">
-            <div className="text-sm font-black text-card-foreground">Sécurité et confidentialité</div>
-            <div className="mt-3 space-y-3">
-              {[
-                ["Paiement chiffré", "Vos informations sont protégées pendant la saisie."],
-                ["Passerelle sécurisée", "La transaction est traitée par le flux existant."],
-                ["Validation par OTP", "Un code de vérification est demandé pour confirmer."],
-              ].map(([title, description]) => (
-                <div key={title} className="rounded-2xl border border-border/70 bg-muted/25 px-4 py-3">
-                  <div className="text-sm font-bold text-card-foreground">{title}</div>
-                  <div className="mt-1 text-xs leading-5 text-muted-foreground">{description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+// ── petits composants présentationnels ────────────────────────────────────────
 
-          <div className="rounded-[24px] border border-border/70 bg-card/75 p-4">
-            <div className="text-sm font-black text-card-foreground">Besoin d’aide ?</div>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Notre équipe support reste disponible pour vous accompagner.</p>
-            <div className="mt-4 space-y-1 text-sm font-semibold text-card-foreground">
-              <div>+216 00 000 000</div>
-              <div>support@ecommerce.tn</div>
-            </div>
-          </div>
-        </aside>
-      </div>
+function inputCls(error?: string) {
+  return [
+    "h-12 w-full rounded-2xl border bg-input px-4 text-sm text-card-foreground outline-none transition",
+    "placeholder:text-muted-foreground focus:ring-4 focus:ring-primary/10",
+    error ? "border-[hsl(var(--danger)/0.5)] focus:border-[hsl(var(--danger))]" : "border-border/80 focus:border-primary/50",
+  ].join(" ");
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</label>
+      {children}
+      {error ? <div className="text-xs font-semibold text-[hsl(var(--danger))]">{error}</div> : null}
     </div>
   );
 }

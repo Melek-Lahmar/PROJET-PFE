@@ -8,6 +8,9 @@ class ConfirmatriceOrder {
   final int status;
   final String? statusLabel;
 
+  final int tentativeCount;
+  final List<ConfirmatriceTentativeLog> tentativeLog;
+
   final String? clientType;
   final String? clientDisplay;
   final ConfirmatriceClient? client;
@@ -23,6 +26,8 @@ class ConfirmatriceOrder {
     required this.netAPayer,
     required this.status,
     this.statusLabel,
+    this.tentativeCount = 0,
+    this.tentativeLog = const [],
     this.clientType,
     this.clientDisplay,
     this.client,
@@ -80,6 +85,13 @@ class ConfirmatriceOrder {
       netAPayer: _double(map['do_NetAPayer']) ?? _double(map['dO_NetAPayer']) ?? 0,
       status: _int(map['do_Valide']) ?? _int(map['dO_Valide']) ?? 0,
       statusLabel: _string(map['statusLabel']),
+      tentativeCount: _int(map['tentativeCount']) ?? 0,
+      tentativeLog: map['tentativeLog'] is List
+          ? (map['tentativeLog'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map(ConfirmatriceTentativeLog.fromMap)
+              .toList()
+          : const [],
       clientType: _string(map['clientType']),
       clientDisplay: _string(map['clientDisplay']),
       client: clientMap is Map<String, dynamic>
@@ -91,6 +103,20 @@ class ConfirmatriceOrder {
           .map((e) => ConfirmatriceOrderLine.fromMap(e))
           .toList()
           : const [],
+    );
+  }
+}
+
+class ConfirmatriceTentativeLog {
+  final String? actorName;
+  final DateTime? createdAt;
+
+  const ConfirmatriceTentativeLog({this.actorName, this.createdAt});
+
+  factory ConfirmatriceTentativeLog.fromMap(Map<String, dynamic> map) {
+    return ConfirmatriceTentativeLog(
+      actorName: _string(map['actorName']),
+      createdAt: _date(map['createdAt']),
     );
   }
 }

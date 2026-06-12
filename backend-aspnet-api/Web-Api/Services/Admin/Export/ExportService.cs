@@ -65,7 +65,10 @@ namespace Web_Api.Services.Admin.Export
                     {
                         col.Item().Text(title).FontSize(18).Bold();
                         col.Item().Text($"Période : {period}").FontSize(10);
-                        col.Item().Text($"Total lignes : {rows.Count}").FontSize(10);
+                        if (rows.Count > take)
+                            col.Item().Text($"Lignes affichées : {take} / {rows.Count} (limite {MaxRows})").FontSize(10).FontColor(Colors.Orange.Darken2);
+                        else
+                            col.Item().Text($"Total lignes : {rows.Count}").FontSize(10);
                     });
                     page.Content().PaddingVertical(10).Column(col =>
                     {

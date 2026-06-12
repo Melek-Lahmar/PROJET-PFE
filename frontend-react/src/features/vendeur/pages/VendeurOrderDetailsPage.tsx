@@ -1,9 +1,10 @@
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "../../../shared/components/Button";
 import { Loader } from "../../../shared/components/Loader";
 import { OrderTimeline } from "../../orders/components/OrderTimeline";
-import { getVendeurOrderByPiece } from "../api/vendeurApi";
+import { getVendeurOrderByPiece, getVendeurFacturePdf } from "../api/vendeurApi";
+import { openPdfBlob } from "../api/manifesteApi";
 import type { VendeurOrderResponseDto } from "../types/vendeur";
 import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
 import { PremiumHero } from "../../../shared/components/premium/PremiumHero";
@@ -34,6 +35,11 @@ export function VendeurOrderDetailsPage() {
     queryKey: ["vendeur-order", piece],
     queryFn: () => getVendeurOrderByPiece(piece as string),
     enabled: !!piece,
+  });
+
+  const factureMut = useMutation({
+    mutationFn: () => getVendeurFacturePdf(piece as string),
+    onSuccess: (blob) => openPdfBlob(blob, `facture-${piece}.pdf`),
   });
 
   if (isLoading) return <Loader label="Chargement du détail vendeur..." />;
@@ -105,6 +111,16 @@ export function VendeurOrderDetailsPage() {
               Net à payer :{" "}
               <span className="font-extrabold text-primary">{money(data.netAPayer)}</span>
             </p>
+            <button
+              onClick={() => factureMut.mutate()}
+              disabled={factureMut.isPending}
+              className="mt-4 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow transition hover:bg-primary/90 disabled:opacity-50"
+            >
+              {factureMut.isPending ? "Génération..." : "Imprimer Facture"}
+            </button>
+            {factureMut.isError && (
+              <p className="mt-2 text-xs text-destructive">Erreur lors de la génération.</p>
+            )}
           </PremiumCard>
         }
       />

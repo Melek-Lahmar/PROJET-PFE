@@ -33,3 +33,10 @@ export async function getVendeurOrderByPiece(piece: string) {
   const res = await axiosClient.get<VendeurOrderResponseDto>(endpoints.vendeurOrderByPiece(piece));
   return res.data;
 }
+
+export async function getVendeurFacturePdf(piece: string): Promise<Blob> {
+  const res = await axiosClient.get(`/api/vendeur/orders/${encodeURIComponent(piece)}/facture-pdf`, {
+    responseType: "blob",
+  });
+  return res.data;
+}

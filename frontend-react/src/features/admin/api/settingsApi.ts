@@ -35,6 +35,15 @@ export async function getPublicSettings(): Promise<Record<string, unknown>> {
   return out;
 }
 
+export async function getSettingByKey(key: string): Promise<AppSetting | null> {
+  try {
+    const { data } = await axiosClient.get<any>(endpoints.adminSettingByKey(key));
+    return normalize(data);
+  } catch {
+    return null;
+  }
+}
+
 export async function putSetting(key: string, valueJson: string, isPublic: boolean, description?: string) {
   const { data } = await axiosClient.put(endpoints.adminSettingByKey(key), { valueJson, isPublic, description });
   return normalize(data);

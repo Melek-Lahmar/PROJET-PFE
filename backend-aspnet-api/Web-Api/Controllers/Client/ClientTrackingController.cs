@@ -57,7 +57,8 @@ namespace Web_Api.Controllers.Client
                 if (!owns)
                     return NotFound(new { message = "Commande introuvable." });
 
-                var dto = await _builder.BuildAsync(piece, ct);
+                // Client = résumé global du transit ("En transit de X vers Y"), sans détail par article.
+                var dto = await _builder.BuildAsync(piece, includeTransitDetail: false, ct);
                 if (dto == null)
                     return NotFound(new { message = "Commande introuvable." });
 

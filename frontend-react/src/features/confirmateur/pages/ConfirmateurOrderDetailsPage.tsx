@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  adjustConfirmateurTentative,
   getConfirmateurOrderByPiece,
   getConfirmateurSupervisors,
   getZoneCoverage,
@@ -523,6 +524,14 @@ export function ConfirmateurOrderDetailsPage() {
     },
   });
 
+  const tentativeMutation = useMutation({
+    mutationFn: (delta: 1 | -1) => adjustConfirmateurTentative(piece as string, delta),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes", piece] });
+      await queryClient.invalidateQueries({ queryKey: ["confirmateur", "commandes"] });
+    },
+  });
+
   const confirmMutation = useMutation({
     mutationFn: () => transformBcToBl(piece as string),
     onSuccess: async (res) => {
@@ -619,139 +628,108 @@ export function ConfirmateurOrderDetailsPage() {
   const totalLignes = (data.lignes ?? []).length;
 
   return (
-    <div className="w-full space-y-6 pb-12">
+    <div className="mx-auto w-full max-w-6xl space-y-5 pb-12">
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-8 py-7 text-white shadow-2xl">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.18),transparent_55%)]" />
-        <div className="relative flex flex-wrap items-start justify-between gap-5">
-          <div className="space-y-3">
-            <Link to="/confirmateur/commandes" className="inline-flex items-center gap-1 text-xs font-bold text-white/70 hover:text-white">
-              ← Retour aux BC
-            </Link>
+      {/* ── En-tête compact ── */}
+      <div>
+        <Link to="/confirmateur/commandes" className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
+          ← Retour aux BC
+        </Link>
+        <section className="mt-2 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm">
+          <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${statusMeta.badgeClass}`}>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusMeta.badgeClass}`}>
                 {statusMeta.label}
               </span>
-              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
                 {clientTypeLabel(client)}
               </span>
               {data.dO_ModeLivraison && (
-                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold backdrop-blur-sm">
+                <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
                   {deliveryLabel(data.dO_ModeLivraison)}
                 </span>
               )}
             </div>
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-white/50">Bon de commande</div>
-              <h1 className="mt-1 font-mono text-3xl font-black tracking-tight">{safe(data.dO_Piece)}</h1>
-              <div className="mt-1 text-xs text-white/60">📅 {formatDateTime(data.dO_Date)}</div>
-            </div>
+            <h1 className="font-mono text-2xl font-black tracking-tight text-card-foreground">{safe(data.dO_Piece)}</h1>
+            <div className="text-xs text-muted-foreground">{formatDateTime(data.dO_Date)}</div>
           </div>
-
-          <div className="rounded-2xl border border-white/15 bg-white/5 px-6 py-4 backdrop-blur-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/50">Net à payer</div>
-            <div className="mt-1 text-4xl font-black text-white">{money(data.dO_NetAPayer)}</div>
-            <div className="mt-1 text-xs text-white/60">TTC : {money(data.dO_TotalTTC)}</div>
+          <div className="text-right">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net à payer</div>
+            <div className="text-3xl font-black text-primary">{money(data.dO_NetAPayer)}</div>
+            <div className="text-xs text-muted-foreground">TTC {money(data.dO_TotalTTC)}</div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* ── Grille principale ── */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
 
-        {/* ── Colonne gauche ── */}
-        <div className="space-y-6">
+        {/* ── Colonne gauche : infos ── */}
+        <div className="space-y-5">
 
           {/* Client */}
-          <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-lg">👤</div>
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identité</div>
-                <h2 className="text-lg font-black text-card-foreground">{clientDisplayFromClient(client)}</h2>
-              </div>
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-base font-bold text-card-foreground">👤 {clientDisplayFromClient(client)}</h2>
+              {phone && (
+                <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90">
+                  📞 Appeler
+                </a>
+              )}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {phone && <InfoTile icon="📞" label="Téléphone" value={safe(phone)} href={`tel:${phone}`} accent="primary" />}
-              {client?.cin && <InfoTile icon="🪪" label="CIN" value={safe(client.cin)} />}
-              {client?.utilisateurId && <InfoTile icon="🔑" label="Compte" value="Client enregistré" sub="Utilisateur connecté" />}
-              {!client?.utilisateurId && <InfoTile icon="👻" label="Compte" value="Invité" sub="Sans compte client" />}
-              {client?.nomSociete && <InfoTile icon="🏢" label="Société" value={safe(client.nomSociete)} sub={client.matriculeFiscal ? `MF: ${client.matriculeFiscal}` : undefined} />}
-              {data.dO_Tiers && <InfoTile icon="🆔" label="Code tiers Sage" value={safe(data.dO_Tiers)} />}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+              {phone && <Field label="Téléphone" value={safe(phone)} />}
+              {client?.cin && <Field label="CIN" value={safe(client.cin)} />}
+              <Field label="Compte" value={client?.utilisateurId ? "Client enregistré" : "Invité"} />
+              {client?.nomSociete && <Field label="Société" value={safe(client.nomSociete)} />}
+              {client?.matriculeFiscal && <Field label="Matricule fiscal" value={safe(client.matriculeFiscal)} />}
+              {data.dO_Tiers && <Field label="Code tiers" value={safe(data.dO_Tiers)} />}
             </div>
           </section>
 
-          {/* Adresse de LIVRAISON (saisie à la commande) — source de vérité */}
-          <section className="rounded-[28px] border-2 border-purple-200 bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-lg">📮</div>
-              <div className="flex-1">
-                <div className="text-[10px] font-black uppercase tracking-widest text-purple-700">Adresse de livraison</div>
-                <h2 className="text-lg font-black text-card-foreground">Où livrer cette commande</h2>
-              </div>
-              <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-800">
-                Saisie à la commande
-              </span>
-            </div>
+          {/* Adresse de livraison */}
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="mb-3 text-base font-bold text-card-foreground">📮 Adresse de livraison</h2>
             {hasDeliveryAddress ? (
-              <div className="space-y-3">
-                {adresse && (
-                  <div className="rounded-2xl border border-purple-200/60 bg-purple-50/40 p-4">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Adresse complète</div>
-                    <div className="mt-1 text-base font-bold text-card-foreground">{safe(adresse)}</div>
-                  </div>
-                )}
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {zoneGouvernorat && <InfoTile icon="🏛️" label="Gouvernorat" value={safe(zoneGouvernorat)} />}
-                  {zoneDelegation && <InfoTile icon="📍" label="Délégation" value={safe(zoneDelegation)} />}
-                  {ville && <InfoTile icon="🏙️" label="Ville" value={safe(ville)} />}
-                  {cp && <InfoTile icon="📬" label="Code postal" value={safe(cp)} />}
+              <div className="space-y-2 text-sm">
+                {adresse && <div className="font-semibold text-card-foreground">{safe(adresse)}</div>}
+                <div className="flex flex-wrap gap-x-5 gap-y-1 text-muted-foreground">
+                  {zoneGouvernorat && <span><b className="font-semibold text-card-foreground">{safe(zoneGouvernorat)}</b> (gouv.)</span>}
+                  {zoneDelegation && <span>{safe(zoneDelegation)} (délég.)</span>}
+                  {ville && <span>{safe(ville)}</span>}
+                  {cp && <span>CP {safe(cp)}</span>}
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                ⚠️ Aucune adresse de livraison renseignée à la commande. Demandez l'adresse au client avant de confirmer.
+              <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                ⚠️ Aucune adresse renseignée. Demandez l'adresse au client avant de confirmer.
               </div>
+            )}
+
+            {/* Adresse du profil — repliée (rarement nécessaire) */}
+            {hasProfilAddress && (
+              <details className="mt-3 text-sm">
+                <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground">
+                  Voir l'adresse du profil client (référence)
+                </summary>
+                <div className="mt-2 space-y-1 border-l-2 border-border pl-3 text-xs text-muted-foreground">
+                  {profilAdresse && <div>{safe(profilAdresse)}</div>}
+                  {profilAdresseComp && <div>{safe(profilAdresseComp)}</div>}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {profilGouv && <span>{safe(profilGouv)}</span>}
+                    {profilDele && <span>{safe(profilDele)}</span>}
+                    {profilVille && <span>{safe(profilVille)}</span>}
+                    {profilCp && <span>CP {safe(profilCp)}</span>}
+                  </div>
+                </div>
+              </details>
             )}
           </section>
 
-          {/* Adresse du PROFIL client (création de compte) — pour comparaison */}
-          {hasProfilAddress && (
-            <section className="rounded-[28px] border border-dashed border-border bg-muted/10 p-6">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-base">🪪</div>
-                <div className="flex-1">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adresse du profil client</div>
-                  <h3 className="text-sm font-black text-muted-foreground">Renseignée à la création du compte (référence)</h3>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600">
-                  Référence — non utilisée pour la livraison
-                </span>
-              </div>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                {profilAdresse && <div>📍 {safe(profilAdresse)}</div>}
-                {profilAdresseComp && <div className="text-xs">📋 {safe(profilAdresseComp)}</div>}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                  {profilGouv && <span>🏛️ {safe(profilGouv)}</span>}
-                  {profilDele && <span>📍 {safe(profilDele)}</span>}
-                  {profilVille && <span>🏙️ {safe(profilVille)}</span>}
-                  {profilCp && <span>📬 {safe(profilCp)}</span>}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Zone de livraison + Coverage */}
+          {/* Zone & couverture livreur (uniquement avant transformation) */}
           {!isTransformed && (
-            <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg">🗺️</div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Zone & livreur</div>
-                  <h2 className="text-lg font-black text-card-foreground">Configuration de livraison</h2>
-                </div>
-              </div>
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="mb-3 text-base font-bold text-card-foreground">🗺️ Zone &amp; livreur</h2>
               <div className="space-y-4">
                 <LocationEditSection
                   piece={piece as string}
@@ -767,198 +745,185 @@ export function ConfirmateurOrderDetailsPage() {
           )}
 
           {/* Articles */}
-          <section className="rounded-[28px] border border-border bg-card shadow-sm">
-            <div className="flex items-center justify-between border-b border-border px-6 py-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-lg">📦</div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Articles</div>
-                  <h2 className="text-lg font-black text-card-foreground">
-                    {totalLignes} ligne{totalLignes > 1 ? "s" : ""} • {totalArticles} article{totalArticles > 1 ? "s" : ""}
-                  </h2>
-                </div>
-              </div>
+          <section className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border px-5 py-3.5">
+              <h2 className="text-base font-bold text-card-foreground">
+                📦 {totalLignes} ligne{totalLignes > 1 ? "s" : ""} · {totalArticles} article{totalArticles > 1 ? "s" : ""}
+              </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-muted/20">
-                  <tr className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <th className="px-6 py-3">Réf</th>
-                    <th className="py-3 pr-4">Désignation</th>
-                    <th className="py-3 pr-4 text-right">Qté</th>
-                    <th className="py-3 pr-4 text-right">PU</th>
-                    <th className="px-6 py-3 text-right">Montant TTC</th>
+                <thead className="bg-muted/30">
+                  <tr className="text-left text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    <th className="px-5 py-2.5">Réf</th>
+                    <th className="py-2.5 pr-4">Désignation</th>
+                    <th className="py-2.5 pr-4 text-right">Qté</th>
+                    <th className="py-2.5 pr-4 text-right">PU</th>
+                    <th className="px-5 py-2.5 text-right">TTC</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {(data.lignes ?? []).map((line, i) => (
-                    <tr key={`${line.ar_Ref ?? "x"}-${i}`} className="transition hover:bg-muted/15">
-                      <td className="px-6 py-3.5">
-                        <span className="inline-flex items-center rounded-lg border border-border bg-card px-2 py-1 font-mono text-xs font-bold">
-                          {safe(line.ar_Ref)}
-                        </span>
-                      </td>
-                      <td className="max-w-[280px] truncate py-3.5 pr-4 font-semibold text-card-foreground">
-                        {safe(line.dL_Design)}
-                      </td>
-                      <td className="py-3.5 pr-4 text-right font-bold text-card-foreground">{Number(line.dL_Qte ?? 0)}</td>
-                      <td className="py-3.5 pr-4 text-right text-muted-foreground">{money(line.dL_PrixUnitaire ?? 0)}</td>
-                      <td className="px-6 py-3.5 text-right font-black text-primary">{money(lineAmount(line))}</td>
+                    <tr key={`${line.ar_Ref ?? "x"}-${i}`} className="hover:bg-muted/15">
+                      <td className="px-5 py-2.5 font-mono text-xs font-semibold">{safe(line.ar_Ref)}</td>
+                      <td className="max-w-[280px] truncate py-2.5 pr-4 font-medium text-card-foreground">{safe(line.dL_Design)}</td>
+                      <td className="py-2.5 pr-4 text-right font-bold text-card-foreground">{Number(line.dL_Qte ?? 0)}</td>
+                      <td className="py-2.5 pr-4 text-right text-muted-foreground">{money(line.dL_PrixUnitaire ?? 0)}</td>
+                      <td className="px-5 py-2.5 text-right font-bold text-primary">{money(lineAmount(line))}</td>
                     </tr>
                   ))}
                   {(data.lignes ?? []).length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                        Aucune ligne disponible.
-                      </td>
-                    </tr>
+                    <tr><td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">Aucune ligne disponible.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
+            {/* Récap montants en pied de tableau */}
+            <div className="space-y-1.5 border-t border-border px-5 py-4 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Total HT</span><span className="font-semibold">{money(data.dO_TotalHT)}</span></div>
+              {!!data.dO_FraisLivraison && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Frais de livraison</span><span className="font-semibold">{money(data.dO_FraisLivraison)}</span></div>
+              )}
+              {!!data.dO_TimbreFiscal && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Timbre fiscal</span><span className="font-semibold">{money(data.dO_TimbreFiscal)}</span></div>
+              )}
+              {hasB2BDiscount && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Remise B2B ({Number(data.b2BDiscountRate ?? 0).toFixed(1)} %)</span><span className="font-semibold text-success">-{money(data.b2BDiscountAmount ?? 0)}</span></div>
+              )}
+              <div className="flex justify-between border-t border-border/60 pt-1.5"><span className="font-semibold">Total TTC</span><span className="font-bold">{money(data.dO_TotalTTC)}</span></div>
+              {data.dO_ModePaiement && (
+                <div className="pt-1 text-xs text-muted-foreground">💳 {paymentLabel(data.dO_ModePaiement)}</div>
+              )}
+            </div>
           </section>
-
-          {hasB2BDiscount ? (
-            <section className="rounded-[30px] border border-border bg-card shadow-sm">
-              <div className="border-b border-border px-6 py-5">
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Remise B2B</div>
-                <h2 className="mt-1 text-xl font-black tracking-tight text-card-foreground">Snapshot commercial</h2>
-              </div>
-              <div className="space-y-3 px-6 py-6 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Total avant remise</span><span className="font-bold">{money(data.totalBeforeDiscount ?? data.dO_TotalTTC)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Taux</span><span className="font-bold">{Number(data.b2BDiscountRate ?? 0).toFixed(2)} %</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Montant</span><span className="font-bold text-success">-{money(data.b2BDiscountAmount ?? 0)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="font-bold">{safe(data.discountSource)}</span></div>
-                <div className="h-px bg-border/70" />
-                <div className="flex justify-between"><span className="text-muted-foreground">Net à payer</span><span className="font-black text-primary">{money(data.dO_NetAPayer)}</span></div>
-              </div>
-            </section>
-          ) : null}
         </div>
 
-        {/* ── Aside : récap + actions + superviseurs ── */}
-        <aside className="space-y-5">
+        {/* ── Colonne droite : décision (collante) ── */}
+        <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="mb-4 text-base font-bold text-card-foreground">Décision</h2>
 
-          {/* Récap financier */}
-          <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-lg">💰</div>
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Récapitulatif</div>
-                <h2 className="text-base font-black text-card-foreground">Montants</h2>
+            {/* Bouton principal : confirmer */}
+            {noZone && !isTransformed && (
+              <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-900">
+                ⚠️ Zone non renseignée. Définissez le gouvernorat + délégation avant de confirmer.
               </div>
-            </div>
-            <div className="space-y-2.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total HT</span>
-                <span className="font-bold text-card-foreground">{money(data.dO_TotalHT)}</span>
+            )}
+            {noLivreur && !isTransformed && (
+              <div className="mb-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-900">
+                🚫 Aucun livreur ne couvre cette zone. Modifiez la zone ou appelez un superviseur.
               </div>
-              {data.dO_FraisLivraison !== null && data.dO_FraisLivraison !== undefined && data.dO_FraisLivraison !== 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frais de livraison</span>
-                  <span className="font-bold text-card-foreground">{money(data.dO_FraisLivraison)}</span>
-                </div>
-              )}
-              {data.dO_TimbreFiscal !== null && data.dO_TimbreFiscal !== undefined && data.dO_TimbreFiscal !== 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Timbre fiscal</span>
-                  <span className="font-bold text-card-foreground">{money(data.dO_TimbreFiscal)}</span>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-border/60 pt-2.5">
-                <span className="text-sm font-bold text-card-foreground">Total TTC</span>
-                <span className="font-black text-card-foreground">{money(data.dO_TotalTTC)}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-primary/10 px-3 py-2.5">
-                <span className="text-sm font-black text-primary">Net à payer</span>
-                <span className="text-xl font-black text-primary">{money(data.dO_NetAPayer)}</span>
-              </div>
-              {data.dO_ModePaiement && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl border border-border/60 bg-muted/15 px-3 py-2 text-xs">
-                  <span>💳</span>
-                  <span className="font-semibold text-card-foreground">{paymentLabel(data.dO_ModePaiement)}</span>
-                </div>
-              )}
-            </div>
-          </section>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              isLoading={confirmMutation.isPending}
+              onClick={() => confirmMutation.mutate()}
+              disabled={isTransformed || blockConfirm}
+              className="h-12 w-full rounded-xl text-base font-bold shadow-md"
+            >
+              {isTransformed ? "✓ BC déjà transformé" : "✓ Confirmer et générer le BL"}
+            </Button>
 
-          {/* Actions */}
-          <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-lg">⚡</div>
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Décision</div>
-                <h2 className="text-base font-black text-card-foreground">Actions confirmateur</h2>
-              </div>
-            </div>
+            {!isTransformed && (
+              <>
+                {/* Tentative : grand contrôle clair +1 / -1 */}
+                <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50/70 p-3 dark:border-orange-400/20 dark:bg-orange-400/10">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-bold text-orange-800 dark:text-orange-200">🔄 Tentatives</span>
+                    <span className="text-2xl font-black text-orange-700 dark:text-orange-300">{data.tentativeCount ?? 0}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={tentativeMutation.isPending || (data.tentativeCount ?? 0) <= 0}
+                      onClick={() => tentativeMutation.mutate(-1)}
+                      className="flex h-10 flex-1 items-center justify-center rounded-lg border border-orange-300 bg-white text-lg font-black text-orange-700 transition hover:bg-orange-100 disabled:opacity-40 dark:bg-transparent"
+                    >
+                      − 1
+                    </button>
+                    <button
+                      type="button"
+                      disabled={tentativeMutation.isPending}
+                      onClick={() => tentativeMutation.mutate(1)}
+                      className="flex h-10 flex-1 items-center justify-center rounded-lg bg-orange-500 text-lg font-black text-white transition hover:bg-orange-600 disabled:opacity-40"
+                    >
+                      + 1
+                    </button>
+                  </div>
+                </div>
 
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                {([
-                  { status: 0 as OrderStatusValue, label: "⏸️ En attente", variant: "outline" as const },
-                  { status: 2 as OrderStatusValue, label: "🔄 Tentative", variant: "outline" as const },
-                  { status: 3 as OrderStatusValue, label: "❌ Refuser", variant: "destructive" as const },
-                ] as const).map(({ status, label, variant }) => (
+                {/* Autres statuts */}
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button
-                    key={status}
                     type="button"
-                    variant={currentStatus === status && status !== 3 ? "primary" : variant}
-                    onClick={() => statusMutation.mutate({ status })}
-                    disabled={statusMutation.isPending || isTransformed}
-                    className="justify-start rounded-xl px-4"
+                    variant={currentStatus === 0 ? "primary" : "outline"}
+                    onClick={() => statusMutation.mutate({ status: 0 })}
+                    disabled={statusMutation.isPending}
+                    className="rounded-xl"
                   >
-                    {label}
+                    ⏸️ En attente
                   </Button>
-                ))}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => statusMutation.mutate({ status: 3 })}
+                    disabled={statusMutation.isPending}
+                    className="rounded-xl"
+                  >
+                    ❌ Refuser
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {isTransformed && (
+              <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+                ✅ Ce BC est déjà transformé en BL. Actions verrouillées.
               </div>
+            )}
 
-              <div className="border-t border-border/40 pt-4">
-                {noZone && !isTransformed && (
-                  <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-900">
-                    ⚠️ Zone non renseignée. Définissez le gouvernorat + délégation avant de confirmer.
-                  </div>
-                )}
-                {noLivreur && !isTransformed && (
-                  <div className="mb-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-900">
-                    🚫 Aucun livreur ne couvre cette zone. Modifiez la zone ou appelez un superviseur.
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="primary"
-                  isLoading={confirmMutation.isPending}
-                  onClick={() => confirmMutation.mutate()}
-                  disabled={isTransformed || blockConfirm}
-                  className="h-12 w-full rounded-xl text-base font-black shadow-md"
-                >
-                  {isTransformed ? "✓ BC déjà transformé" : "✓ Confirmer et générer le BL"}
-                </Button>
+            {statusMutation.isError && (
+              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {getApiErrorMessage(statusMutation.error)}
               </div>
-
-              {isTransformed && (
-                <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
-                  ✅ Ce BC est déjà transformé en BL. Actions verrouillées.
-                </div>
-              )}
-
-              {statusMutation.isError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                  {getApiErrorMessage(statusMutation.error)}
-                </div>
-              )}
-              {confirmMutation.isError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800">
-                  <div className="font-bold">Confirmation impossible</div>
-                  <div className="mt-0.5">{getApiErrorMessage(confirmMutation.error)}</div>
-                </div>
-              )}
-            </div>
+            )}
+            {confirmMutation.isError && (
+              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800">
+                <div className="font-bold">Confirmation impossible</div>
+                <div className="mt-0.5">{getApiErrorMessage(confirmMutation.error)}</div>
+              </div>
+            )}
           </section>
 
-          {/* Superviseurs */}
+          {/* Journal des tentatives (partagé entre confirmatrices) */}
+          {(data.tentativeLog?.length ?? 0) > 0 && (
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="mb-3 text-sm font-bold text-card-foreground">Historique des tentatives</h2>
+              <ul className="space-y-2">
+                {(data.tentativeLog ?? []).map((t, i) => (
+                  <li key={i} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="font-semibold text-card-foreground">{i + 1}. {t.actorName?.trim() || "Confirmateur"}</span>
+                    <span className="text-muted-foreground">{formatDateTime(t.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <SuperviseursList highlight={!!(noLivreur || noZone) && !isTransformed} />
         </aside>
       </div>
+    </div>
+  );
+}
+
+// ─── Petit champ label/valeur (remplace les grosses tuiles) ─────────────────
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="truncate font-semibold text-card-foreground">{value}</div>
     </div>
   );
 }

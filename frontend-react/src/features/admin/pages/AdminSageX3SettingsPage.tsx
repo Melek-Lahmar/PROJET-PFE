@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { listSettings, putSetting } from "../api/settingsApi";
 import { Button } from "../../../shared/components/Button";
@@ -6,6 +7,30 @@ import { Input } from "../../../shared/components/Input";
 import { PasswordInput } from "../../../shared/components/PasswordInput";
 import { useToast } from "../../../shared/components/premium/Toast";
 import { PremiumHero } from "../../../shared/components/premium";
+
+const SETTINGS_TABS = [
+  { href: "/admin/settings", label: "Paramètres généraux", exact: true },
+  { href: "/admin/settings/sage-x3", label: "Connexion Sage X3", exact: false },
+  { href: "/admin/settings/print", label: "Impression", exact: false },
+];
+
+function SettingsTabBar() {
+  const { pathname } = useLocation();
+  return (
+    <div className="flex gap-1 rounded-2xl border border-border bg-muted/30 p-1">
+      {SETTINGS_TABS.map((t) => {
+        const active = t.exact ? pathname === t.href : pathname.startsWith(t.href);
+        return (
+          <Link key={t.href} to={t.href}
+            className={`flex-1 rounded-xl px-4 py-2 text-center text-sm font-semibold transition ${active ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {t.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export const SAGE_X3_SETTING_KEY = "sage.x3.connexion";
 
@@ -108,6 +133,7 @@ export function AdminSageX3SettingsPage() {
         title="Connexion Sage X3"
         description="Configurez les paramètres d'accès au serveur Sage X3 utilisés pour publier les Bons de Livraison lorsque le livreur marque une commande comme livrée."
       />
+      <SettingsTabBar />
 
       {isPending ? (
         <div className="text-sm text-muted-foreground">Chargement de la configuration…</div>

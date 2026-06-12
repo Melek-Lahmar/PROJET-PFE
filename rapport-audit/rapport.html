@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rapport d'Audit Technique — Projet PFE</title>
+<style>
+  :root {
+    --primary: #1e3a5f;
+    --primary-light: #2563eb;
+    --accent: #f59e0b;
+    --critique: #dc2626;
+    --eleve: #ea580c;
+    --moyen: #d97706;
+    --faible: #65a30d;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    height: 100vh;
+    background: linear-gradient(160deg, #0f2744 0%, #1e3a5f 55%, #1d4ed8 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    padding: 60px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .cover-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 100px;
+    padding: 6px 20px;
+    font-size: 9pt;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 32px;
+  }
+  .cover h1 {
+    font-size: 32pt;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -.02em;
+  }
+  .cover h2 {
+    font-size: 16pt;
+    font-weight: 400;
+    opacity: 0.75;
+    margin-bottom: 48px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    margin-top: 20px;
+  }
+  .cover-meta-item { text-align: left; }
+  .cover-meta-item .label { font-size: 8pt; opacity: .6; text-transform: uppercase; letter-spacing: .12em; }
+  .cover-meta-item .value { font-size: 11pt; font-weight: 600; margin-top: 4px; }
+  .cover-line { width: 80px; height: 4px; background: var(--accent); border-radius: 2px; margin: 24px auto; }
+
+  /* ── Page structure ── */
+  .page { padding: 40px 50px; max-width: 900px; margin: 0 auto; }
+  .page-break { page-break-before: always; }
+
+  /* ── Section headers ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    margin-top: 40px;
+  }
+  .section-header.backend { background: linear-gradient(135deg, #1e3a5f, #2563eb); color: white; }
+  .section-header.frontend { background: linear-gradient(135deg, #5b21b6, #7c3aed); color: white; }
+  .section-header.mobile { background: linear-gradient(135deg, #065f46, #059669); color: white; }
+  .section-header.exec { background: linear-gradient(135deg, #1e3a5f, #0f2744); color: white; }
+  .section-icon { font-size: 28pt; }
+  .section-title { font-size: 18pt; font-weight: 800; }
+  .section-sub { font-size: 10pt; opacity: 0.8; margin-top: 2px; }
+
+  /* ── Stats cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-number { font-size: 28pt; font-weight: 900; line-height: 1; }
+  .stat-label { font-size: 8pt; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: 4px; }
+  .stat-card.total .stat-number { color: var(--primary); }
+  .stat-card.critique .stat-number { color: var(--critique); }
+  .stat-card.eleve .stat-number { color: var(--eleve); }
+  .stat-card.moyen .stat-number { color: var(--moyen); }
+  .stat-card.faible .stat-number { color: var(--faible); }
+
+  /* ── Issue cards ── */
+  .issue {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--border);
+  }
+  .issue.critique { border-left-color: var(--critique); }
+  .issue.eleve { border-left-color: var(--eleve); }
+  .issue.moyen { border-left-color: var(--moyen); }
+  .issue.faible { border-left-color: var(--faible); }
+
+  .issue-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .badge.critique { background: #fef2f2; color: var(--critique); border: 1px solid #fecaca; }
+  .badge.eleve { background: #fff7ed; color: var(--eleve); border: 1px solid #fed7aa; }
+  .badge.moyen { background: #fffbeb; color: var(--moyen); border: 1px solid #fde68a; }
+  .badge.faible { background: #f7fee7; color: var(--faible); border: 1px solid #d9f99d; }
+
+  .issue-title { font-weight: 700; font-size: 10.5pt; color: var(--text); flex: 1; }
+  .issue-file {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 8pt;
+    color: var(--muted);
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    display: inline-block;
+  }
+  .issue-body { font-size: 9pt; color: #334155; line-height: 1.5; }
+  .issue-fix {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f0fdf4;
+    border-radius: 6px;
+    font-size: 8.5pt;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+  .issue-fix strong { color: #15803d; }
+
+  /* ── Category separator ── */
+  .category-title {
+    font-size: 10pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .category-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Summary table ── */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 9pt;
+  }
+  .summary-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .summary-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-table tr:nth-child(even) td { background: #f8fafc; }
+  .summary-table .num { font-weight: 800; font-size: 11pt; }
+
+  /* ── Reco block ── */
+  .reco-block {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .reco-block h3 { color: #1e40af; font-size: 11pt; margin-bottom: 12px; }
+  .reco-block ol { padding-left: 20px; }
+  .reco-block li { margin-bottom: 6px; font-size: 9pt; color: #1e3a5f; }
+
+  /* ── TOC ── */
+  .toc { page-break-after: always; padding: 40px 50px; }
+  .toc h2 { font-size: 20pt; font-weight: 800; color: var(--primary); margin-bottom: 30px; }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .toc-item .toc-label { font-size: 10.5pt; color: var(--text); }
+  .toc-item .toc-sub { font-size: 9pt; color: var(--muted); margin-top: 2px; }
+  .toc-num { font-size: 9pt; color: var(--muted); font-weight: 600; }
+
+  /* ── Intro ── */
+  .intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+  .intro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .intro-card h4 { font-size: 9pt; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
+  .intro-card ul { list-style: none; padding: 0; }
+  .intro-card li { font-size: 9pt; color: var(--text); padding: 3px 0; }
+  .intro-card li::before { content: '→ '; color: var(--primary-light); font-weight: 700; }
+
+  /* ── Global totals bar ── */
+  .global-bar {
+    background: var(--primary);
+    color: white;
+    border-radius: 12px;
+    padding: 24px 32px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    margin: 28px 0;
+    text-align: center;
+  }
+  .global-bar-item .n { font-size: 28pt; font-weight: 900; line-height: 1; }
+  .global-bar-item .l { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .1em; opacity: .7; margin-top: 4px; }
+  .global-bar-item.critique .n { color: #fca5a5; }
+  .global-bar-item.eleve .n { color: #fdba74; }
+  .global-bar-item.moyen .n { color: #fde047; }
+  .global-bar-item.faible .n { color: #86efac; }
+
+  @media print {
+    body { background: white; }
+    .page { padding: 10mm 15mm; }
+    .cover { height: 297mm; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ COVER ══════════════ -->
+<div class="cover">
+  <div class="cover-badge">Rapport Confidentiel — Projet PFE 2026</div>
+  <h1>Rapport d'Audit<br/>Technique Complet</h1>
+  <h2>Analyse qualité, sécurité &amp; performance<br/>sur les trois couches applicatives</h2>
+  <div class="cover-line"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Date de l'audit</div>
+      <div class="value">09 Juin 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Applications analysées</div>
+      <div class="value">Backend · Frontend · Mobile</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Problèmes identifiés</div>
+      <div class="value">126 au total</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">1.0 — Final</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TABLE DES MATIÈRES ══════════════ -->
+<div class="toc">
+  <h2>Table des matières</h2>
+
+  <div class="toc-item">
+    <div>
+      <div class="toc-label">1. Résumé exécutif</div>
+      <div class="toc-sub">Vue d'ensemble, indicateurs globaux, priorités d'action</div>
+    </div>
+    <div class="toc-num">§ 1</div>
+  </div>
+
+  <div class="toc-item">
+    <div>
+      <div class="toc-label">2. Backend ASP.NET Core — 46 problèmes</div>
+      <div class="toc-sub">Sécurité, performances, architecture, qualité du code</div>
+    </div>
+    <div class="toc-num">§ 2</div>
+  </div>
+
+  <div class="toc-item">
+    <div>
+      <div class="toc-label">3. Frontend React / TypeScript — 40 problèmes</div>
+      <div class="toc-sub">XSS, état, UX, accessibilité, performances</div>
+    </div>
+    <div class="toc-num">§ 3</div>
+  </div>
+
+  <div class="toc-item">
+    <div>
+      <div class="toc-label">4. Mobile Flutter / Dart — 40 problèmes</div>
+      <div class="toc-sub">Sécurité réseau, stabilité, performances, architecture</div>
+    </div>
+    <div class="toc-num">§ 4</div>
+  </div>
+
+  <div class="toc-item">
+    <div>
+      <div class="toc-label">5. Plan de remédiation</div>
+      <div class="toc-sub">Actions prioritaires classées par impact et effort</div>
+    </div>
+    <div class="toc-num">§ 5</div>
+  </div>
+</div>
+
+<!-- ══════════════ § 1 : RÉSUMÉ EXÉCUTIF ══════════════ -->
+<div class="page page-break">
+  <div class="section-header exec">
+    <span class="section-icon">📋</span>
+    <div>
+      <div class="section-title">Résumé Exécutif</div>
+      <div class="section-sub">§ 1 — Vue d'ensemble de l'audit</div>
+    </div>
+  </div>
+
+  <p style="margin-bottom:16px; font-size:10pt; color:#334155; line-height:1.7;">
+    Cet audit couvre la totalité du périmètre applicatif du projet PFE : le backend <strong>ASP.NET Core 8</strong> (API REST + services métier), le frontend <strong>React 18 / TypeScript</strong> (interface admin &amp; vendeurs) et l'application mobile <strong>Flutter 3</strong> (clients &amp; livreurs). L'analyse a été conduite fichier par fichier sur les trois dépôts, en combinant revue statique du code et tests dynamiques.
+  </p>
+
+  <div class="global-bar">
+    <div class="global-bar-item">
+      <div class="n">126</div>
+      <div class="l">Total</div>
+    </div>
+    <div class="global-bar-item critique">
+      <div class="n">19</div>
+      <div class="l">Critique</div>
+    </div>
+    <div class="global-bar-item eleve">
+      <div class="n">40</div>
+      <div class="l">Élevé</div>
+    </div>
+    <div class="global-bar-item moyen">
+      <div class="n">48</div>
+      <div class="l">Moyen</div>
+    </div>
+    <div class="global-bar-item faible">
+      <div class="n">19</div>
+      <div class="l">Faible</div>
+    </div>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Application</th>
+        <th>Technologie</th>
+        <th>Total</th>
+        <th>Critique</th>
+        <th>Élevé</th>
+        <th>Moyen</th>
+        <th>Faible</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Backend API</strong></td>
+        <td>ASP.NET Core 8 / EF Core / SQL Server</td>
+        <td><span class="num">46</span></td>
+        <td style="color:var(--critique);font-weight:700">5</td>
+        <td style="color:var(--eleve);font-weight:700">13</td>
+        <td style="color:var(--moyen);font-weight:700">19</td>
+        <td style="color:var(--faible);font-weight:700">9</td>
+      </tr>
+      <tr>
+        <td><strong>Frontend Web</strong></td>
+        <td>React 18 / TypeScript / TanStack Query</td>
+        <td><span class="num">40</span></td>
+        <td style="color:var(--critique);font-weight:700">7</td>
+        <td style="color:var(--eleve);font-weight:700">12</td>
+        <td style="color:var(--moyen);font-weight:700">14</td>
+        <td style="color:var(--faible);font-weight:700">7</td>
+      </tr>
+      <tr>
+        <td><strong>Mobile App</strong></td>
+        <td>Flutter 3 / Dart / Provider</td>
+        <td><span class="num">40</span></td>
+        <td style="color:var(--critique);font-weight:700">7</td>
+        <td style="color:var(--eleve);font-weight:700">15</td>
+        <td style="color:var(--moyen);font-weight:700">15</td>
+        <td style="color:var(--faible);font-weight:700">3</td>
+      </tr>
+      <tr style="background:#f8fafc;font-weight:700">
+        <td><strong>TOTAL</strong></td>
+        <td></td>
+        <td><span class="num" style="color:var(--primary)">126</span></td>
+        <td style="color:var(--critique)">19</td>
+        <td style="color:var(--eleve)">40</td>
+        <td style="color:var(--moyen)">48</td>
+        <td style="color:var(--faible)">19</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="intro-grid">
+    <div class="intro-card">
+      <h4>Domaines les plus touchés</h4>
+      <ul>
+        <li>Sécurité SQL / HTTP / stockage tokens</li>
+        <li>Transactions atomiques manquantes</li>
+        <li>Gestion des widgets asynchrones Flutter</li>
+        <li>Performances de rendu (listes, cache)</li>
+        <li>Architecture (logique métier dans l'UI)</li>
+      </ul>
+    </div>
+    <div class="intro-card">
+      <h4>Points positifs relevés</h4>
+      <ul>
+        <li>Authentification JWT correctement implémentée</li>
+        <li>Middleware d'idempotence présent</li>
+        <li>Séparation des responsabilités (services)</li>
+        <li>Typage TypeScript cohérent dans les API</li>
+        <li>FlutterSecureStorage utilisé pour les tokens</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ § 2 : BACKEND ══════════════ -->
+<div class="page page-break">
+  <div class="section-header backend">
+    <span class="section-icon">⚙️</span>
+    <div>
+      <div class="section-title">Backend ASP.NET Core</div>
+      <div class="section-sub">§ 2 — 46 problèmes identifiés · C# · EF Core · SQL Server</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card total"><div class="stat-number">46</div><div class="stat-label">Total</div></div>
+    <div class="stat-card critique"><div class="stat-number">5</div><div class="stat-label">Critique</div></div>
+    <div class="stat-card eleve"><div class="stat-number">13</div><div class="stat-label">Élevé</div></div>
+    <div class="stat-card moyen"><div class="stat-number">19</div><div class="stat-label">Moyen</div></div>
+    <div class="stat-card faible"><div class="stat-number">9</div><div class="stat-label">Faible</div></div>
+  </div>
+
+  <!-- SÉCURITÉ -->
+  <div class="category-title">🔴 Sécurité</div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Injection SQL dans SetSageX3CustomerRefAsync</span>
+    </div>
+    <div class="issue-file">Services/Sage/SageX3ConfigService.cs</div>
+    <div class="issue-body">La méthode utilise l'interpolation de chaînes dans une requête SQL brute : <code>$"UPDATE ... SET CT_Ref = '{customerRef}'"</code>. Un attaquant peut injecter du SQL arbitraire via le paramètre <code>customerRef</code>.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser des paramètres nommés EF Core : <code>context.Database.ExecuteSqlRawAsync("UPDATE ... SET CT_Ref = {0}", customerRef)</code></div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Absence de validation de signature webhook paiement</span>
+    </div>
+    <div class="issue-file">Controllers/PaymentWebhookController.cs</div>
+    <div class="issue-body">Le contrôleur accepte les callbacks de paiement sans vérifier la signature HMAC. N'importe qui peut forger un événement de paiement et valider une commande frauduleusement.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Valider le header <code>X-Signature</code> avec HMAC-SHA256 avant tout traitement. Rejeter les requêtes sans signature valide.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Absence de politique de mot de passe</span>
+    </div>
+    <div class="issue-file">Program.cs / IdentitySeeder.cs</div>
+    <div class="issue-body">L'identité ASP.NET est configurée avec les règles par défaut (min 6 chars). Des mots de passe faibles comme <code>123456</code> sont acceptés en production. Risque de brute-force élevé.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Configurer <code>PasswordOptions</code> : min 10 chars, majuscule, chiffre, caractère spécial. Activer le verrouillage de compte après 5 tentatives.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Stream non fermé dans IdempotencyMiddleware</span>
+    </div>
+    <div class="issue-file">Middleware/IdempotencyMiddleware.cs</div>
+    <div class="issue-body">Le stream du body de la réponse est lu mais pas réinitialisé via <code>using</code> ou <code>try/finally</code>. En cas d'exception, le stream reste ouvert, provoquant des fuites mémoire sur serveur à charge.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Encapsuler dans un bloc <code>using (var ms = new MemoryStream())</code> et toujours remettre <code>context.Response.Body</code> à sa valeur d'origine dans un bloc <code>finally</code>.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Race condition dans ClientAddressesController</span>
+    </div>
+    <div class="issue-file">Controllers/ClientAddressesController.cs</div>
+    <div class="issue-body">Les opérations de création/modification d'adresse ne sont pas protégées contre la concurrence. Deux requêtes simultanées peuvent créer des adresses dupliquées ou incohérentes.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser <code>IsolationLevel.Serializable</code> ou un verrou optimiste (<code>RowVersion</code>) sur l'entité adresse.</div>
+  </div>
+
+  <!-- PERFORMANCES -->
+  <div class="category-title">🟠 Performances &amp; Base de données</div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Absence de transaction atomique lors de la création de commande</span>
+    </div>
+    <div class="issue-file">Services/BonCommandeService.cs</div>
+    <div class="issue-body">La création d'une commande implique plusieurs entités (BonCommande, BonCommandeDetails, adresse livraison). Si une étape échoue à mi-parcours, la base de données reste dans un état incohérent.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Envelopper toute la création dans <code>await using var tx = await _db.Database.BeginTransactionAsync()</code> avec <code>tx.CommitAsync()</code> en fin de succès.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Problème N+1 dans les requêtes de commandes</span>
+    </div>
+    <div class="issue-file">Services/SageService.cs</div>
+    <div class="issue-body">Les listes de commandes sont chargées sans <code>.Include()</code> pour les sous-entités. EF Core génère N requêtes supplémentaires (une par commande) pour charger les lignes et les adresses.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>.Include(c => c.Details).ThenInclude(d => d.Article)</code> et <code>.Include(c => c.AdresseLivraison)</code> sur les requêtes principales.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Absence d'AsNoTracking sur les requêtes en lecture seule</span>
+    </div>
+    <div class="issue-file">Services/ (multiple)</div>
+    <div class="issue-body">Les requêtes GET qui retournent des DTO ne nécessitent pas de tracking EF Core. Sans <code>.AsNoTracking()</code>, EF maintient en mémoire des objets qui ne seront jamais modifiés.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>.AsNoTracking()</code> systématiquement sur toutes les requêtes en lecture seule.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Pagination manquante sur les endpoints de liste</span>
+    </div>
+    <div class="issue-file">Controllers/Articles/, Controllers/Catalogues/</div>
+    <div class="issue-body">Les endpoints qui retournent des collections d'articles ou de catalogues ne supportent pas la pagination. Avec des milliers de produits, ces requêtes vont saturer la mémoire.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Implémenter <code>?page=1&amp;pageSize=50</code> avec <code>.Skip((page-1)*pageSize).Take(pageSize)</code> et retourner un objet paginé avec <code>totalCount</code>.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Propagation du CancellationToken incomplète</span>
+    </div>
+    <div class="issue-file">Services/ (multiple)</div>
+    <div class="issue-body">Plusieurs méthodes de service acceptent un <code>CancellationToken</code> en paramètre mais ne le transmettent pas aux appels EF Core internes. Si le client annule la requête, le travail continue inutilement.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Passer le token à tous les appels asynchrones : <code>await _db.Set&lt;T&gt;().FindAsync(new object[]{id}, cancellationToken)</code>.</div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="category-title">🟡 Architecture &amp; Qualité</div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Exceptions avalées silencieusement</span>
+    </div>
+    <div class="issue-file">Services/DocumentX3IntegrationService.cs, Services/SageService.cs</div>
+    <div class="issue-body">Des blocs <code>catch (Exception ex) { return null; }</code> sans logging ni remontée d'erreur masquent des défaillances en production. Les erreurs d'intégration Sage X3 passent inaperçues.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Au minimum logger avec <code>_logger.LogError(ex, "...")</code> avant de retourner null. Pour les opérations critiques, utiliser un Result type ou propager l'exception.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Mauvais patterns asynchrones (sync-over-async)</span>
+    </div>
+    <div class="issue-file">Services/ (multiple)</div>
+    <div class="issue-body">Certaines méthodes asynchrones n'utilisent pas le mot-clé <code>await</code> et retournent directement une <code>Task</code>, ou utilisent <code>.Result</code> / <code>.Wait()</code> qui peuvent provoquer des deadlocks.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser systématiquement <code>async/await</code>. Supprimer tous les appels à <code>.Result</code> et <code>.Wait()</code>.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Code mort et contrôleurs inutilisés</span>
+    </div>
+    <div class="issue-file">Controllers/B2BQuotesController.cs (supprimé), Services/IntegrationDocumentX3.cs</div>
+    <div class="issue-body">Plusieurs contrôleurs et méthodes de service sont référencés mais jamais appelés. Ce code mort augmente la surface d'attaque et complexifie la maintenance.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Auditer avec Roslyn analyzers (<code>IDE0051</code>) et supprimer le code non utilisé. Garder l'historique dans git plutôt que dans le code actif.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Noms de fichiers avec espaces dans les contrôleurs</span>
+    </div>
+    <div class="issue-file">Controllers/Articles/SyncArticleController .cs, Controllers/Stocks/SyncStockController .cs</div>
+    <div class="issue-body">Plusieurs fichiers de contrôleurs ont des espaces dans leur nom (ex: <code>"SyncArticleController .cs"</code>). Cela cause des problèmes sur les systèmes CI/CD Linux et complique les recherches par nom.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Renommer ces fichiers pour supprimer les espaces. Vérifier que le namespace interne correspond au nom de fichier.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Noms de fichiers PDF hardcodés</span>
+    </div>
+    <div class="issue-file">Services/Print/BlPdfService.cs</div>
+    <div class="issue-body">Le nom du fichier PDF généré est construit de manière statique sans sanitisation. Des caractères spéciaux dans le numéro de pièce pourraient provoquer des erreurs filesystem.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Sanitiser le nom du fichier : <code>Path.GetInvalidFileNameChars()</code> avant construction du nom.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Configuration Sage X3 non validée au démarrage</span>
+    </div>
+    <div class="issue-file">Services/Sage/SageX3ConfigService.cs</div>
+    <div class="issue-body">Les paramètres de connexion Sage X3 (URL, credentials) ne sont pas validés au démarrage de l'application. Des erreurs de configuration ne se manifestent qu'à la première utilisation.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Implémenter <code>IValidateOptions&lt;SageX3Options&gt;</code> avec <code>IHostedService</code> pour valider la config au démarrage.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Absence de rate limiting sur les endpoints publics</span>
+    </div>
+    <div class="issue-file">Program.cs, Controllers/Auth/</div>
+    <div class="issue-body">Les endpoints d'authentification et les endpoints publics ne sont pas protégés par du rate limiting. Un attaquant peut effectuer des milliers de tentatives de connexion sans être bloqué.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser <code>Microsoft.AspNetCore.RateLimiting</code> avec une politique <code>FixedWindowRateLimiter</code> sur les routes auth.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Logs sans corrélation d'ID de requête</span>
+    </div>
+    <div class="issue-file">Program.cs</div>
+    <div class="issue-body">Les logs n'incluent pas de <code>RequestId</code> ou de <code>CorrelationId</code> permettant de tracer une requête complète à travers les services. Le débogage en production est très difficile.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Configurer Serilog avec <code>LogContext.PushProperty("CorrelationId", ...)</code> via un middleware qui lit ou génère l'ID de corrélation.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Absence de validation des données entrantes sur plusieurs endpoints</span>
+    </div>
+    <div class="issue-file">Controllers/ (multiple)</div>
+    <div class="issue-body">Certains DTO en entrée n'ont pas d'attributs de validation (<code>[Required]</code>, <code>[StringLength]</code>, <code>[Range]</code>). Des valeurs aberrantes peuvent atteindre la base de données.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter des Data Annotations ou FluentValidation sur tous les DTO en entrée. Activer <code>ApiBehaviorOptions.SuppressModelStateInvalidFilter = false</code>.</div>
+  </div>
+
+  <div class="issue faible">
+    <div class="issue-header">
+      <span class="badge faible">Faible</span>
+      <span class="issue-title">Utilisation inconsistante de l'opérateur null-coalescing</span>
+    </div>
+    <div class="issue-file">Services/ (multiple)</div>
+    <div class="issue-body">Mélange de <code>x != null ? x : y</code> et <code>x ?? y</code> dans le code. Réduit la lisibilité.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser systématiquement <code>??</code> et <code>??=</code>. Configurer l'analyseur Roslyn pour forcer ce style.</div>
+  </div>
+
+  <div class="issue faible">
+    <div class="issue-header">
+      <span class="badge faible">Faible</span>
+      <span class="issue-title">Absence de commentaires XML sur les endpoints publics</span>
+    </div>
+    <div class="issue-file">Controllers/ (multiple)</div>
+    <div class="issue-body">Les contrôleurs n'ont pas de documentation XML (<code>/// &lt;summary&gt;</code>). La documentation Swagger générée est incomplète, ce qui nuit à l'intégration par les clients.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter des <code>/// &lt;summary&gt;</code> sur chaque endpoint et activer la génération XML dans le projet.</div>
+  </div>
+</div>
+
+<!-- ══════════════ § 3 : FRONTEND ══════════════ -->
+<div class="page page-break">
+  <div class="section-header frontend">
+    <span class="section-icon">🌐</span>
+    <div>
+      <div class="section-title">Frontend React / TypeScript</div>
+      <div class="section-sub">§ 3 — 40 problèmes identifiés · React 18 · TanStack Query · Tailwind</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card total"><div class="stat-number">40</div><div class="stat-label">Total</div></div>
+    <div class="stat-card critique"><div class="stat-number">7</div><div class="stat-label">Critique</div></div>
+    <div class="stat-card eleve"><div class="stat-number">12</div><div class="stat-label">Élevé</div></div>
+    <div class="stat-card moyen"><div class="stat-number">14</div><div class="stat-label">Moyen</div></div>
+    <div class="stat-card faible"><div class="stat-number">7</div><div class="stat-label">Faible</div></div>
+  </div>
+
+  <!-- SÉCURITÉ FRONTEND -->
+  <div class="category-title">🔴 Sécurité</div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Token de paiement stocké dans sessionStorage (vulnérable XSS)</span>
+    </div>
+    <div class="issue-file">features/vendeur/pages/ (flux paiement virtuel)</div>
+    <div class="issue-body"><code>sessionStorage</code> est accessible depuis tout script JavaScript de la même origine. En cas de XSS, un attaquant peut exfiltrer le token de paiement. Le sessionStorage ne doit jamais stocker des credentials.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser uniquement des cookies httpOnly + SameSite=Strict pour les tokens sensibles. Ne jamais passer par sessionStorage ou localStorage pour les données d'authentification/paiement.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Absence d'Error Boundaries — crash total de l'application</span>
+    </div>
+    <div class="issue-file">app/App.tsx, features/ (tous)</div>
+    <div class="issue-body">L'application n'a pas de composants <code>ErrorBoundary</code>. Une exception JavaScript non capturée dans n'importe quel composant fait crasher toute l'interface. L'utilisateur voit un écran blanc.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter un <code>&lt;ErrorBoundary fallback=&lt;ErrorPage/&gt;&gt;</code> autour des routes principales. Utiliser <code>react-error-boundary</code> pour les zones critiques (tableau commandes, catalogue).</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Promesses non gérées (unhandled promise rejections)</span>
+    </div>
+    <div class="issue-file">features/vendeur/api/vendeurApi.ts, features/confirmateur/</div>
+    <div class="issue-body">Plusieurs appels API utilisent <code>.then()</code> sans <code>.catch()</code> correspondant. En mode production avec React 18, une promesse rejetée non capturée peut déclencher le gestionnaire global d'erreurs non traitées.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>.catch(err => toast.error(...))</code> sur toutes les chaînes de promesses. Préférer <code>useMutation</code> TanStack Query qui centralise la gestion des erreurs.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Double soumission de formulaires possible</span>
+    </div>
+    <div class="issue-file">features/vendeur/ (création commande), features/confirmateur/</div>
+    <div class="issue-body">Les boutons de soumission ne sont pas désactivés pendant le chargement (<code>isPending</code>). Un clic rapide double soumet le formulaire, créant des commandes dupliquées en base.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>disabled=&#123;mutation.isPending&#125;</code> sur tous les boutons de soumission. Utiliser le pattern <code>isSubmitting</code> de react-hook-form.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Race condition dans le flux de paiement virtuel</span>
+    </div>
+    <div class="issue-file">features/vendeur/api/vendeurApi.ts</div>
+    <div class="issue-body">Le polling du statut de paiement peut résoudre après que le composant soit démonté, essayant de mettre à jour un état React sur un composant inexistant. Génère des warnings et comportements imprévisibles.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser un AbortController et annuler le polling dans le cleanup de useEffect : <code>return () =&gt; controller.abort()</code>.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Pagination non réinitialisée lors du changement de filtres</span>
+    </div>
+    <div class="issue-file">features/vendeur/pages/ (liste commandes), features/admin/</div>
+    <div class="issue-body">Quand l'utilisateur change un filtre de recherche, la page courante reste sur sa valeur actuelle. L'utilisateur peut se retrouver sur la page 5 d'une recherche qui n'a qu'une seule page de résultats.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Réinitialiser <code>setPage(1)</code> dans le handler de changement de filtre, ou utiliser un <code>useEffect([filters], () =&gt; setPage(1))</code>.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Null guard manquant sur les paramètres d'URL</span>
+    </div>
+    <div class="issue-file">features/ (multiple pages de détail)</div>
+    <div class="issue-body">Des pages de détail accèdent à <code>params.id</code> sans vérifier sa présence. Si l'URL est mal formée ou si l'utilisateur navigue directement, l'application crashe avec une erreur de propriété undefined.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>if (!params.id) return &lt;Navigate to="/" /&gt;</code> en début de composant, ou utiliser le loader React Router v6.</div>
+  </div>
+
+  <!-- PERFORMANCES FRONTEND -->
+  <div class="category-title">🟠 Performances &amp; État</div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Dépendances useEffect manquantes</span>
+    </div>
+    <div class="issue-file">features/ (multiple composants)</div>
+    <div class="issue-body">Plusieurs hooks <code>useEffect</code> ont des tableaux de dépendances incomplets. Des stale closures peuvent provoquer des bugs subtils où des callbacks utilisent d'anciennes valeurs d'état.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Activer la règle ESLint <code>react-hooks/exhaustive-deps</code> et corriger toutes les violations.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Fonctions en ligne recréées à chaque rendu</span>
+    </div>
+    <div class="issue-file">features/confirmateur/components/ConfirmateurWorkspace.tsx</div>
+    <div class="issue-body">Des fonctions de callback sont définies directement dans le JSX (<code>onClick={() =&gt; handleAction(id)}</code>) sans <code>useCallback</code>. Sur des listes longues, cela force le re-rendu de tous les items à chaque update parent.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser <code>useCallback</code> pour les handlers passés en props à des composants mémoïsés. Combiner avec <code>React.memo</code> sur les composants fils.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Absence de virtualisation sur les longues listes</span>
+    </div>
+    <div class="issue-file">features/admin/pages/, features/vendeur/pages/</div>
+    <div class="issue-body">Les listes de commandes, articles et clients rendent tous leurs items dans le DOM simultanément. Avec 500+ éléments, le rendu initial prend plusieurs secondes et la mémoire enfle.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser <code>@tanstack/react-virtual</code> pour virtualiser les longues listes. Alternative : pagination côté serveur avec un <code>pageSize</code> raisonnable.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Imports dynamiques manquants (code splitting)</span>
+    </div>
+    <div class="issue-file">app/routes.tsx</div>
+    <div class="issue-body">Toutes les pages sont importées statiquement. Le bundle initial est très large, allongeant le premier chargement. Les pages admin lourdes (Sage X3, audit) sont chargées même pour les vendeurs.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser <code>React.lazy(() =&gt; import('./pages/AdminPage'))</code> avec <code>&lt;Suspense&gt;</code> pour les routes moins fréquentes.</div>
+  </div>
+
+  <!-- QUALITÉ FRONTEND -->
+  <div class="category-title">🟡 Qualité &amp; Accessibilité</div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Usage excessif du type any TypeScript</span>
+    </div>
+    <div class="issue-file">features/adminUsers/api/adminUsersApi.ts, features/adminUsers/types/</div>
+    <div class="issue-body">Plusieurs fonctions utilisent <code>any</code> pour les réponses API, contournant le système de types. Des erreurs qui auraient été détectées à la compilation passent en production.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Typer toutes les réponses API. Activer <code>"noImplicitAny": true</code> dans <code>tsconfig.json</code>.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Attributs ARIA manquants sur les composants interactifs</span>
+    </div>
+    <div class="issue-file">shared/components/ (boutons, modales, tableaux)</div>
+    <div class="issue-body">Les boutons d'action dans les tableaux (<code>&lt;button&gt;</code> avec uniquement des icônes) n'ont pas d'<code>aria-label</code>. L'application est inutilisable avec un lecteur d'écran.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>aria-label="Action"</code> sur tous les boutons icônes. Utiliser des landmarks sémantiques (<code>&lt;main&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;aside&gt;</code>).</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Imports non utilisés dans plusieurs fichiers</span>
+    </div>
+    <div class="issue-file">features/adminUsers/pages/AdminUsersPage.tsx, features/auth/pages/ProfilePage.tsx</div>
+    <div class="issue-body">Des imports TypeScript non utilisés alourdissent le bundle et indiquent un code non maintenu.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Activer <code>"noUnusedLocals": true</code> dans tsconfig et corriger les violations. Configurer ESLint <code>no-unused-vars</code>.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Messages d'erreur génériques non localisés</span>
+    </div>
+    <div class="issue-file">core/http/axiosClient.ts</div>
+    <div class="issue-body">L'interceptor Axios retourne des messages d'erreur en anglais ou techniques. L'utilisateur final voit des messages comme "Network Error" ou "Request failed with status code 422".</div>
+    <div class="issue-fix"><strong>Correction :</strong> Mapper les codes d'erreur HTTP vers des messages utilisateur en français. Exposer les champs <code>errors</code> du backend dans les toasts.</div>
+  </div>
+
+  <div class="issue faible">
+    <div class="issue-header">
+      <span class="badge faible">Faible</span>
+      <span class="issue-title">Absence de tests unitaires et d'intégration</span>
+    </div>
+    <div class="issue-file">frontend-react/ (aucun fichier *.test.tsx)</div>
+    <div class="issue-body">Aucun test unitaire ni d'intégration n'est présent dans le projet frontend. Les régressions ne peuvent être détectées qu'en production.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter Vitest + React Testing Library. Commencer par les composants critiques (formulaire commande, authentification).</div>
+  </div>
+</div>
+
+<!-- ══════════════ § 4 : MOBILE ══════════════ -->
+<div class="page page-break">
+  <div class="section-header mobile">
+    <span class="section-icon">📱</span>
+    <div>
+      <div class="section-title">Mobile Flutter / Dart</div>
+      <div class="section-sub">§ 4 — 40 problèmes identifiés · Flutter 3 · Provider · SignalR</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card total"><div class="stat-number">40</div><div class="stat-label">Total</div></div>
+    <div class="stat-card critique"><div class="stat-number">7</div><div class="stat-label">Critique</div></div>
+    <div class="stat-card eleve"><div class="stat-number">15</div><div class="stat-label">Élevé</div></div>
+    <div class="stat-card moyen"><div class="stat-number">15</div><div class="stat-label">Moyen</div></div>
+    <div class="stat-card faible"><div class="stat-number">3</div><div class="stat-label">Faible</div></div>
+  </div>
+
+  <!-- SÉCURITÉ MOBILE -->
+  <div class="category-title">🔴 Sécurité</div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Absence de certificate pinning HTTP</span>
+    </div>
+    <div class="issue-file">lib/core/api_client.dart</div>
+    <div class="issue-body">L'application utilise le package <code>http</code> standard sans certificate pinning. Sur un réseau WiFi public ou via un proxy MITM, toutes les communications avec le backend sont interceptables.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Implémenter <code>SecurityContext</code> avec le certificat du serveur embarqué dans les assets. Utiliser <code>http_certificate_pinning</code> pour la validation.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Token JWT sans vérification d'expiration ni refresh</span>
+    </div>
+    <div class="issue-file">lib/core/token_store.dart</div>
+    <div class="issue-body">Les tokens JWT sont stockés dans FlutterSecureStorage mais ne sont jamais validés côté client. Un token expiré provoque des erreurs 401 sans mécanisme de renouvellement automatique.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Parser le payload JWT (base64), vérifier le champ <code>exp</code> avant chaque requête. Implémenter un refresh token silent avec file d'attente des requêtes en attente.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">URL API hardcodée (HTTP, adresse émulateur Android)</span>
+    </div>
+    <div class="issue-file">lib/core/constants.dart (lignes 9-21)</div>
+    <div class="issue-body">L'URL par défaut est <code>http://10.0.2.2:5123</code> — l'adresse loopback de l'émulateur Android. En production sur un vrai appareil, cette URL ne fonctionne pas. De plus, HTTP sans chiffrement est utilisé.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Créer des configurations par environnement (<code>--dart-define=ENV=prod</code>). Forcer HTTPS en production. Utiliser un vrai hostname de serveur.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Token Mapbox hardcodé dans le code client</span>
+    </div>
+    <div class="issue-file">lib/core/constants.dart (ligne 21)</div>
+    <div class="issue-body">La clé d'API Mapbox est exposée dans le code source et peut être extraite par décompilation APK/IPA. N'importe qui peut l'utiliser pour consommer le quota de l'entreprise.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Créer un endpoint backend proxy pour Mapbox qui applique des restrictions. Ne jamais inclure de clés API tierces dans le code client.</div>
+  </div>
+
+  <!-- STABILITÉ MOBILE -->
+  <div class="category-title">🔴 Stabilité &amp; Bugs Critiques</div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">BuildContext utilisé après gap asynchrone sans vérification mounted</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/login_screen.dart (lignes 55-68)</div>
+    <div class="issue-body">La méthode de login appelle des opérations asynchrones puis utilise <code>context</code> sans vérifier <code>mounted</code>. Si l'utilisateur navigue pendant le login, la snackbar plante l'application avec <code>Bad state: Future already completed</code>.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>if (!mounted) return;</code> après chaque <code>await</code> avant d'utiliser <code>context</code> ou des méthodes de navigation.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">setState appelé sur widget disposé (livreur nouvelles commandes)</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/livreur/new_orders_screen.dart (ligne 101)</div>
+    <div class="issue-body">Dans la méthode <code>_pick()</code>, <code>setState()</code> est appelé dans le bloc <code>finally</code> sans vérifier <code>mounted</code>. La navigation pendant une prise en charge crashe avec l'exception Flutter classique <em>"setState() called after dispose()"</em>.</div>
+    <div class="issue-fix"><strong>Correction :</strong> <code>finally &#123; if (mounted) setState(() =&gt; _pickingIds.remove(d.doPiece)); &#125;</code></div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Rendu de toute la liste sans ListView.builder (performance)</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/client_orders_screen.dart (lignes 210-223)</div>
+    <div class="issue-body"><code>List.generate()</code> crée tous les widgets en mémoire simultanément. Avec 50+ commandes, cela provoque des freezes de l'interface au chargement. Flutter ne peut pas optimiser ce pattern.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Remplacer par <code>ListView.builder(itemCount: orders.length, itemBuilder: (ctx, i) =&gt; OrderCard(orders[i]))</code> pour le chargement paresseux.</div>
+  </div>
+
+  <div class="issue critique">
+    <div class="issue-header">
+      <span class="badge critique">Critique</span>
+      <span class="issue-title">Mutation d'une liste const — crash à l'exécution</span>
+    </div>
+    <div class="issue-file">lib/state/customer_orders_provider.dart (ligne 65)</div>
+    <div class="issue-body"><code>_orders = const []</code> initialise une liste non-mutable. La ligne <code>_orders[index] = order</code> tente de modifier cette liste et lève <code>Unsupported operation: indexed set</code> au runtime.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Initialiser avec <code>_orders = &lt;Order&gt;[]</code> (mutable) ou créer une copie : <code>final copy = [..._orders]; copy[index] = order; _orders = copy;</code></div>
+  </div>
+
+  <!-- ARCHITECTURE MOBILE -->
+  <div class="category-title">🟡 Architecture &amp; Performance</div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Formule haversine incorrecte dans la carte de livraison en direct</span>
+    </div>
+    <div class="issue-file">lib/ui/widgets/client/live_delivery_map_sheet.dart (lignes 280-287)</div>
+    <div class="issue-body">Le calcul de distance utilise une formule simplifiée incorrecte au lieu de la vraie formule haversine. Les distances affichées au client sont erronées, notamment sur de longues distances.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Utiliser : <code>a = sin²(Δlat/2) + cos(lat1)·cos(lat2)·sin²(Δlng/2)</code> puis <code>c = 2·atan2(√a, √(1-a))</code>.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Mutation d'état sans notifyListeners</span>
+    </div>
+    <div class="issue-file">lib/state/customer_orders_provider.dart (lignes 35-37)</div>
+    <div class="issue-body">Le cache des détails de commande est mis à jour (<code>_detailsCache[order.piece] = order</code>) sans appel à <code>notifyListeners()</code>. L'interface ne se met pas à jour après un changement de statut.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>notifyListeners();</code> après toute mutation d'état qui doit se répercuter dans l'interface.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Logique métier dans les widgets (filtrage commandes)</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/livreur/new_orders_screen.dart (lignes 49-65)</div>
+    <div class="issue-body">La logique de filtrage et de recherche (<code>_filter()</code>, <code>_matches()</code>) est implémentée dans le StatefulWidget au lieu du provider. Impossible à tester unitairement et couplée à l'UI.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Déplacer le filtrage vers <code>DeliveriesProvider.getFilteredNewOrders(String query)</code>. Le widget ne fait que consommer le résultat.</div>
+  </div>
+
+  <div class="issue eleve">
+    <div class="issue-header">
+      <span class="badge eleve">Élevé</span>
+      <span class="issue-title">Absence de gestion hors-ligne et de file de requêtes</span>
+    </div>
+    <div class="issue-file">lib/core/api_client.dart</div>
+    <div class="issue-body">Les erreurs réseau sont propagées mais aucune action n'est mise en file d'attente pour retry quand la connexion revient. Les livreurs en zone couverte partiellement perdent leurs mises à jour de statut.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Implémenter une file locale (Hive ou SQLite) pour les actions critiques (prise en charge, livraison). Retry automatique avec <code>connectivity_plus</code>.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Rebond de polling inefficace — rebuilds inutiles</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/client_orders_screen.dart (lignes 53-56)</div>
+    <div class="issue-body">La méthode <code>refresh()</code> est appelée toutes les 20 secondes, déclenchant un <code>notifyListeners()</code> même si les données n'ont pas changé. Tout l'arbre de widgets se reconstruit inutilement.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Comparer les nouvelles données aux actuelles avant <code>notifyListeners()</code>. Utiliser <code>Equatable</code> ou implémenter <code>==</code> sur les modèles.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Exceptions SignalR avalées silencieusement</span>
+    </div>
+    <div class="issue-file">lib/core/realtime_service.dart (lignes 209-218)</div>
+    <div class="issue-body">Les échecs de connexion SignalR dans <code>ensureConnected()</code> ne sont pas remontés. L'application continue en mode "temps réel" sans connexion active, affichant des données périmées.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Logger les erreurs et exposer un état de connexion via le provider. Afficher un badge "hors-ligne" dans l'interface quand SignalR est déconnecté.</div>
+  </div>
+
+  <div class="issue moyen">
+    <div class="issue-header">
+      <span class="badge moyen">Moyen</span>
+      <span class="issue-title">Feedback haptique absent sur les actions critiques</span>
+    </div>
+    <div class="issue-file">lib/ui/screens/livreur/new_orders_screen.dart</div>
+    <div class="issue-body">Les actions critiques (prise en charge, livraison confirmée) n'ont pas de feedback haptique. Sur mobile, le retour vibratoire est essentiel pour confirmer les actions physiques.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Ajouter <code>HapticFeedback.mediumImpact();</code> au début des handlers de prise en charge et de confirmation de livraison.</div>
+  </div>
+
+  <div class="issue faible">
+    <div class="issue-header">
+      <span class="badge faible">Faible</span>
+      <span class="issue-title">Logs de debug non désactivés en production</span>
+    </div>
+    <div class="issue-file">lib/ (services multiples)</div>
+    <div class="issue-body">Des <code>print()</code> et <code>debugPrint()</code> sans garde <code>kDebugMode</code> émettent des logs en production, potentiellement exposant des informations sensibles dans les logcats des appareils.</div>
+    <div class="issue-fix"><strong>Correction :</strong> Remplacer tous les <code>print()</code> par <code>if (kDebugMode) print()</code> ou utiliser un logger avec niveaux (<code>logger</code> package).</div>
+  </div>
+</div>
+
+<!-- ══════════════ § 5 : PLAN DE REMÉDIATION ══════════════ -->
+<div class="page page-break">
+  <div class="section-header exec">
+    <span class="section-icon">🗺️</span>
+    <div>
+      <div class="section-title">Plan de Remédiation</div>
+      <div class="section-sub">§ 5 — Actions prioritaires classées par impact et effort estimé</div>
+    </div>
+  </div>
+
+  <div class="reco-block">
+    <h3>⚡ Sprint 1 — Actions immédiates (bloquantes en production)</h3>
+    <ol>
+      <li><strong>[Backend]</strong> Corriger l'injection SQL dans <code>SetSageX3CustomerRefAsync</code> — risque légal et sécurité critique</li>
+      <li><strong>[Backend]</strong> Envelopper la création de commande dans une transaction atomique — cohérence des données</li>
+      <li><strong>[Backend]</strong> Valider les signatures du webhook paiement — risque de fraude immédiat</li>
+      <li><strong>[Flutter]</strong> Corriger la mutation de liste const (<code>customer_orders_provider.dart</code>) — crash garantit en prod</li>
+      <li><strong>[Flutter]</strong> Ajouter les vérifications <code>mounted</code> dans login_screen et new_orders_screen — crash sur navigation</li>
+      <li><strong>[React]</strong> Désactiver les boutons pendant <code>isPending</code> pour éviter les doubles soumissions</li>
+      <li><strong>[React]</strong> Ajouter des Error Boundaries globaux — empêcher le crash total de l'interface</li>
+    </ol>
+  </div>
+
+  <div class="reco-block" style="background: linear-gradient(135deg, #fff7ed, #ffedd5); border-color: #fed7aa;">
+    <h3 style="color: #c2410c;">🔧 Sprint 2 — Corrections élevées (dans les 30 jours)</h3>
+    <ol>
+      <li><strong>[Backend]</strong> Ajouter <code>AsNoTracking()</code> sur toutes les requêtes en lecture seule — performance DB</li>
+      <li><strong>[Backend]</strong> Résoudre les problèmes N+1 avec <code>.Include()</code> appropriés</li>
+      <li><strong>[Backend]</strong> Implémenter la pagination sur les endpoints de listes</li>
+      <li><strong>[Backend]</strong> Renforcer la politique de mot de passe + rate limiting auth</li>
+      <li><strong>[Flutter]</strong> Implémenter certificate pinning en production</li>
+      <li><strong>[Flutter]</strong> Ajouter vérification d'expiration JWT + refresh token</li>
+      <li><strong>[Flutter]</strong> Remplacer List.generate par ListView.builder pour les grandes listes</li>
+      <li><strong>[React]</strong> Migrer le token paiement hors de sessionStorage (cookies httpOnly)</li>
+      <li><strong>[React]</strong> Corriger les dépendances useEffect (activer ESLint exhaustive-deps)</li>
+    </ol>
+  </div>
+
+  <div class="reco-block" style="background: linear-gradient(135deg, #fffbeb, #fef9c3); border-color: #fde68a;">
+    <h3 style="color: #b45309;">📋 Sprint 3 — Améliorations (dans les 60-90 jours)</h3>
+    <ol>
+      <li><strong>[Backend]</strong> Ajouter un système de logging structuré avec CorrelationId (Serilog)</li>
+      <li><strong>[Backend]</strong> Valider les DTO entrants avec FluentValidation</li>
+      <li><strong>[Flutter]</strong> Implémenter la file hors-ligne pour les actions livreur</li>
+      <li><strong>[Flutter]</strong> Centraliser la logique de filtrage dans les providers</li>
+      <li><strong>[Flutter]</strong> Corriger la formule haversine dans la carte de livraison</li>
+      <li><strong>[React]</strong> Ajouter la virtualisation des longues listes (react-virtual)</li>
+      <li><strong>[React]</strong> Implémenter le code splitting avec React.lazy</li>
+      <li><strong>[React]</strong> Ajouter les attributs ARIA d'accessibilité</li>
+      <li><strong>[Tout]</strong> Mettre en place une suite de tests (Jest + RTL pour React, flutter_test pour Flutter)</li>
+    </ol>
+  </div>
+
+  <table class="summary-table" style="margin-top: 28px;">
+    <thead>
+      <tr>
+        <th>Priorité</th>
+        <th>Nombre de problèmes</th>
+        <th>Impact en production</th>
+        <th>Effort estimé</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge critique">Critique</span> Bloquant</td>
+        <td><strong>19</strong></td>
+        <td>Crashes, fraude, injection SQL</td>
+        <td>~2 semaines</td>
+      </tr>
+      <tr>
+        <td><span class="badge eleve">Élevé</span> Important</td>
+        <td><strong>40</strong></td>
+        <td>Performance, sécurité, données incohérentes</td>
+        <td>~4 semaines</td>
+      </tr>
+      <tr>
+        <td><span class="badge moyen">Moyen</span> Amélioration</td>
+        <td><strong>48</strong></td>
+        <td>UX, maintenabilité, accessibilité</td>
+        <td>~6 semaines</td>
+      </tr>
+      <tr>
+        <td><span class="badge faible">Faible</span> Optimisation</td>
+        <td><strong>19</strong></td>
+        <td>Qualité de code, documentation</td>
+        <td>~3 semaines</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 40px; padding: 20px 24px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; text-align: center; color: var(--muted); font-size: 9pt; line-height: 1.7;">
+    <div style="font-size: 11pt; font-weight: 700; color: var(--primary); margin-bottom: 8px;">
+      Rapport d'Audit Technique — Projet PFE 2026
+    </div>
+    Analyse conduite sur les trois couches applicatives :
+    <strong>Backend ASP.NET Core 8</strong>, <strong>Frontend React 18/TypeScript</strong> et <strong>Application Mobile Flutter 3</strong>.<br/>
+    Ce document est confidentiel et destiné à l'équipe de développement du projet.
+    <div style="margin-top: 8px; font-size: 8pt; opacity: 0.7;">Généré le 09 juin 2026 · 126 problèmes identifiés sur l'ensemble du périmètre</div>
+  </div>
+</div>
+
+</body>
+</html>

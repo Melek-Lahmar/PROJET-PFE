@@ -117,6 +117,9 @@ namespace Web_Api.Migrations
                     b.Property<DateTime?>("EncaisseAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("HasEverBeenPickedUp")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LI_Adresse")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -722,6 +725,34 @@ namespace Web_Api.Migrations
                     b.HasKey("DoPiece");
 
                     b.ToTable("CommandeConfirmationLocks");
+                });
+
+            modelBuilder.Entity("Web_Api.Model.CommandeTentativeLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DoPiece")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CommandeTentativeLogs");
                 });
 
             modelBuilder.Entity("Web_Api.Model.F_APP_CONFIG", b =>
@@ -1795,6 +1826,10 @@ namespace Web_Api.Migrations
                     b.Property<decimal?>("DO_NetAPayer")
                         .HasColumnType("decimal(24,13)");
 
+                    b.Property<string>("DO_NumeroSageX3")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<string>("DO_PassagerAdresse")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
@@ -1863,6 +1898,9 @@ namespace Web_Api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int>("DO_TentativeCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("DO_Tiers")
                         .HasMaxLength(17)
                         .HasColumnType("nvarchar(17)");
@@ -1884,6 +1922,9 @@ namespace Web_Api.Migrations
 
                     b.Property<short?>("DO_Valide")
                         .HasColumnType("smallint");
+
+                    b.Property<bool>("DO_ValiderSageX3")
+                        .HasColumnType("bit");
 
                     b.Property<Guid?>("DO_VendeurUserId")
                         .HasColumnType("uniqueidentifier");
@@ -2783,6 +2824,80 @@ namespace Web_Api.Migrations
                     b.ToTable("HomepageTemplates");
                 });
 
+            modelBuilder.Entity("Web_Api.Model.ManifestePrintBloc", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BLCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DepotNo")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PrintedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PrintedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(24,13)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepotNo", "PrintedAt");
+
+                    b.ToTable("ManifestePrintBlocs");
+                });
+
+            modelBuilder.Entity("Web_Api.Model.ManifestePrintBlocLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(24,13)");
+
+                    b.Property<string>("BLPiece")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<int>("BlocId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClientAddress")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("ClientCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ClientCode")
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
+
+                    b.Property<string>("ClientPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BLPiece");
+
+                    b.HasIndex("BlocId");
+
+                    b.ToTable("ManifestePrintBlocLines");
+                });
+
             modelBuilder.Entity("Web_Api.Model.PARAM_CONNEXION_X3", b =>
                 {
                     b.Property<int>("Id")
@@ -2850,6 +2965,63 @@ namespace Web_Api.Migrations
                             Password = "@Zerty1234",
                             Service_Web_BC = "SOH",
                             Type_BC = "WEB"
+                        });
+                });
+
+            modelBuilder.Entity("Web_Api.Model.PrintSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CompanyAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CompanyEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CompanyPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("FieldsConfig")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("{}");
+
+                    b.Property<string>("FooterText")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MatriculeFiscal")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RegistreCommerce")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PrintSettings", t =>
+                        {
+                            t.HasCheckConstraint("CK_PrintSettings_OneRow", "[Id] = 1");
                         });
                 });
 
@@ -2960,6 +3132,17 @@ namespace Web_Api.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
                 });
 
+            modelBuilder.Entity("Web_Api.Model.ManifestePrintBlocLine", b =>
+                {
+                    b.HasOne("Web_Api.Model.ManifestePrintBloc", "Bloc")
+                        .WithMany("Lines")
+                        .HasForeignKey("BlocId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bloc");
+                });
+
             modelBuilder.Entity("Web_Api.DTO.DOCUMENT", b =>
                 {
                     b.Navigation("LIGNEDOCUMENTs");
@@ -2977,6 +3160,11 @@ namespace Web_Api.Migrations
                     b.Navigation("Photos");
 
                     b.Navigation("Tentatives");
+                });
+
+            modelBuilder.Entity("Web_Api.Model.ManifestePrintBloc", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

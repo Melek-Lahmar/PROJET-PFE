@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Web_Api.Auth.Constants;
 using Web_Api.data;
 using Web_Api.Model;
+using Web_Api.DTO;
 using Web_Api.Services;
 
 namespace Web_Api.Controllers.Catalogues
@@ -25,7 +26,9 @@ namespace Web_Api.Controllers.Catalogues
         [HttpPost]
         public async Task<IActionResult> Sync(CancellationToken ct)
         {
-            var dtos = await _sageService.GetCataloguesFromSage(ct);
+            List<CatalogueSageDto> dtos;
+            try { dtos = await _sageService.GetCataloguesFromSage(ct); }
+            catch (Exception ex) { return StatusCode(502, new { isSuccess = false, error = ex.Message }); }
 
             var existing = await _db.F_CATALOGUES.ToListAsync(ct);
             var byNo = existing.ToDictionary(x => x.CL_No);

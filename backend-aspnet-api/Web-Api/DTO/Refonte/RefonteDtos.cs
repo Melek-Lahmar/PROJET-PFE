@@ -152,6 +152,9 @@ namespace Web_Api.DTO.Refonte
         public string? DestinationDepotName { get; set; }
         public int TransitReceivedCount { get; set; }
         public int TransitTotalCount { get; set; }
+        // Résumé global destiné au CLIENT (ex: "En transit de Sfax vers Sousse").
+        // Le détail article par article (Items) est réservé au staff.
+        public string? TransitSummary { get; set; }
         public List<OrderTimelineStepDto> Steps { get; set; } = new();
         public List<OrderItemTransitStatusDto> Items { get; set; } = new();
     }

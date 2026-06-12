@@ -74,6 +74,7 @@ namespace Web_Api.Services.Refonte
                 TransitReceivedCount = transfers.Count(x => TransitStatuses.IsReceived(x.Status)),
                 Items = items
             };
+            dto.TransitSummary = BuildTransitSummary(transfers, depots, dto.TransitReceivedCount, dto.TransitTotalCount);
             dto.Steps = BuildSteps(order, livraison, transfers, currentStatus);
             return dto;
         }
@@ -251,6 +252,32 @@ namespace Web_Api.Services.Refonte
             Date = date,
             Description = description
         };
+
+        // Résumé global "client" : routes distinctes "de X vers Y" sans détail par article.
+        private static string? BuildTransitSummary(
+            IReadOnlyList<F_TRANSFERT> transfers,
+            IReadOnlyDictionary<int, F_DEPOT> depots,
+            int received,
+            int total)
+        {
+            if (transfers.Count == 0)
+                return null;
+
+            if (total > 0 && received == total)
+                return "Tous les articles sont regroupés au dépôt de destination.";
+
+            var routes = transfers
+                .Select(t =>
+                {
+                    depots.TryGetValue(t.SourceDepotNo, out var s);
+                    depots.TryGetValue(t.DestinationDepotNo, out var d);
+                    return $"de {DepotName(s, t.SourceDepotNo)} vers {DepotName(d, t.DestinationDepotNo)}";
+                })
+                .Distinct()
+                .ToList();
+
+            return $"En transit {string.Join(", ", routes)}.";
+        }
 
         private static string BuildItemMessage(F_TRANSFERT transfert, F_DEPOT? sourceDepot, F_DEPOT? destinationDepot)
         {

@@ -81,12 +81,20 @@ namespace Web_Api.data
         // Phase 4 — verrou visuel 15 min sur les commandes à confirmer (pool FIFO).
         public DbSet<CommandeConfirmationLock> CommandeConfirmationLocks { get; set; } = null!;
 
+        // Journal des tentatives de confirmation (qui/quand) — partagé entre confirmatrices.
+        public DbSet<CommandeTentativeLog> CommandeTentativeLogs { get; set; } = null!;
+
         // A.2 — Sessions des confirmatrices (workload + temps de pause)
         public DbSet<F_CONFIRMATRICE_SESSION> F_CONFIRMATRICE_SESSIONS { get; set; } = null!;
 
         public DbSet<DOCUMENT> DOCUMENTS { get; set; } = null!;
         public DbSet<LIGNE_DOCUMENT> LIGNE_DOCUMENTS { get; set; } = null!;
         public DbSet<PARAM_CONNEXION_X3> PARAM_CONNEXION_X3 { get; set; } = null!;
+
+        // Module Impression — paramètres d'impression + manifestes vendeur
+        public DbSet<PrintSettings> PrintSettings { get; set; } = null!;
+        public DbSet<ManifestePrintBloc> ManifestePrintBlocs { get; set; } = null!;
+        public DbSet<ManifestePrintBlocLine> ManifestePrintBlocLines { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -449,6 +457,33 @@ namespace Web_Api.data
                 entity.Property(x => x.PhotoUrl).HasMaxLength(500);
             });
 
+            // Module Impression — PrintSettings singleton (Id=1)
+            modelBuilder.Entity<PrintSettings>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.Id).ValueGeneratedNever();
+                entity.Property(x => x.FieldsConfig).IsRequired().HasDefaultValue("{}");
+                entity.ToTable(t => t.HasCheckConstraint("CK_PrintSettings_OneRow", "[Id] = 1"));
+            });
+
+            modelBuilder.Entity<ManifestePrintBloc>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => new { x.DepotNo, x.PrintedAt });
+                entity.HasMany(x => x.Lines)
+                    .WithOne(x => x.Bloc)
+                    .HasForeignKey(x => x.BlocId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ManifestePrintBlocLine>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.BlocId);
+                entity.HasIndex(x => x.BLPiece);
+                entity.Property(x => x.BLPiece).IsRequired().HasMaxLength(13);
+            });
+
             // Section 1.4 — historique GPS livreur (1 ligne par ping, asynchrone).
             modelBuilder.Entity<F_LIVREUR_POSITION_HISTORY>(entity =>
             {
@@ -520,7 +555,6 @@ namespace Web_Api.data
                 .OnDelete(DeleteBehavior.NoAction);
 
 
-            // Refonte PFE v3 — mapping délégation → dépôt
             modelBuilder.Entity<F_DEPOT_ZONE>(entity =>
             {
                 entity.HasKey(x => x.Id);

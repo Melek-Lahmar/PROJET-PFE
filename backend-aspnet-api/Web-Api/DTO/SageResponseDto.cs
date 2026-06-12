@@ -9,5 +9,8 @@ namespace Web_Api.DTO
 
         [JsonPropertyName("value")]
         public List<T>? Value { get; set; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
     }
 }

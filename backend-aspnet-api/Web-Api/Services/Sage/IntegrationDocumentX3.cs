@@ -43,24 +43,11 @@ namespace Web_Api.Services.Sage
         public string Service_Web_BC { get; set; } = "SOH";
 
         public string Type_BC { get; set; } = "WEB";
-
-        // Hôte du wrapper REST WEB_API_STAGE_X3 (ex: "localhost" ou "10.0.0.5").
-        // Volontairement non sérialisé : ce n'est PAS un paramètre attendu par
-        // le wrapper Sage X3, c'est juste l'adresse du wrapper lui-même.
         [JsonIgnore]
         public string AdresseIP_API { get; set; } = "localhost";
 
-        // Numéro de dépôt Sage X3 utilisé par défaut quand le BL local n'en a
-        // pas (DE_No null ou 0). Pas envoyé au wrapper directement, il est
-        // appliqué côté Document.
         [JsonIgnore]
         public int DefaultDepotNo { get; set; } = 1;
-
-        // Mode démo : force le DOCUMENT envoyé à Sage X3 à utiliser les
-        // valeurs statiques connues comme valides dans le dossier SEED de
-        // l'encadrant (client FR004, dépôt 26, articles DIS007/DIS009).
-        // Permet de valider la chaîne d'intégration sans dépendre du mapping
-        // des clients/articles locaux vers Sage. À désactiver en prod.
         [JsonIgnore]
         public bool DemoMode { get; set; } = false;
 

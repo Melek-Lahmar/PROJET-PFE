@@ -66,6 +66,7 @@ export type OrderTimelineDto = {
   destinationDepotName?: string | null;
   transitReceivedCount: number;
   transitTotalCount: number;
+  transitSummary?: string | null;
   steps: OrderTimelineStepDto[];
   items: OrderItemTransitStatusDto[];
 };

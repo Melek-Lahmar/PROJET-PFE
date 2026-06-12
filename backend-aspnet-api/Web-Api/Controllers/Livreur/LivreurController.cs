@@ -1,7 +1,9 @@
-﻿using System.Security.Claims;
+﻿using Microsoft.Data.SqlClient;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MODELS_CREATEUR.MODELS_SAGE;
 using Web_Api.Auth.Constants;
 using Web_Api.Auth.Entities;
@@ -23,21 +25,23 @@ namespace Web_Api.Controllers
         private readonly SmsNotificationService _sms;
         private readonly SageX3ConfigService _sageX3Config;
         private readonly ILogger<LivreurController> _logger;
+        private readonly string _sageX3ConnStr;
         private const short BL_TYPE = 1;
 
         public LivreurController(
             AppDbContext db,
             SmsNotificationService sms,
             SageX3ConfigService sageX3Config,
+            IConfiguration config,
             ILogger<LivreurController> logger)
         {
             _db = db;
             _sms = sms;
             _sageX3Config = sageX3Config;
             _logger = logger;
+            _sageX3ConnStr = config.GetConnectionString("SageX3Connection") ?? string.Empty;
         }
 
-        // ── Construction du DOCUMENT Sage X3 à partir du F_DOCENTETE local ──
         private async Task<DOCUMENT?> BuildSageDocumentAsync(string piece, Param_Connexion_X3 param, CancellationToken ct)
         {
             var entete = await _db.F_DOCENTETES
@@ -52,8 +56,6 @@ namespace Web_Api.Controllers
                 .Where(l => l.DO_Piece == piece && l.DO_Domaine == 0 && l.DO_Type == BL_TYPE)
                 .ToListAsync(ct);
 
-            // ── MODE DÉMO TOTAL ──
-            // Remplace tout par les valeurs statiques de l'encadrant.
             if (param.DemoMode)
             {
                 _logger.LogInformation(
@@ -76,22 +78,8 @@ namespace Web_Api.Controllers
                 };
             }
 
-            // ── MODE NORMAL ──
-            //
-            // CT_Num : on force TOUJOURS le code client fallback configuré
-            //   (ex: FR004). Les codes clients générés par l'app
-            //   (CL+userId, PS+guid) n'existent pas dans F_COMPTET Sage.
-            //   On utilise donc un client générique "web" pour toutes les
-            //   commandes. La traçabilité du vrai client reste dans le BL
-            //   local (DO_PassagerNomComplet, DO_AdresseLivraison...).
-            //
-            // DE_No : on prend celui du BL si rempli (issus de la synchro
-            //   F_DEPOT), sinon le défaut configuré.
-            //
-            // Articles : on envoie les AR_Ref locaux tels quels — ils
-            //   proviennent de F_ARTICLE synchronisée depuis Sage.
 
-            var deNo = entete.DE_No.HasValue && entete.DE_No.Value > 0
+            var deNo = entete.DE_No.HasValue && entete.DE_No.Value > 0 && entete.DE_No.Value < 100
                 ? entete.DE_No.Value
                 : param.DefaultDepotNo;
 
@@ -109,19 +97,22 @@ namespace Web_Api.Controllers
                 LP_MontantTTC = l.DL_MontantTTC ?? 0m,
             }).ToList();
 
+            var doRef = !string.IsNullOrWhiteSpace(entete.DO_Ref)
+                ? entete.DO_Ref
+                : (entete.DO_Piece ?? piece);
+
             return new DOCUMENT
             {
                 DO_NumDocument = entete.DO_Piece ?? piece,
                 DO_Date = entete.DO_Date ?? DateTime.Now,
                 CT_Num = param.DemoCtNum,
                 DE_No = deNo,
-                DO_Ref = entete.DO_Ref ?? string.Empty,
+                DO_Ref = doRef,
                 DO_TotalTTC = entete.DO_TotalTTC,
                 LIGNEDOCUMENTs = lignes,
             };
         }
 
-        // ── POST vers Sage X3 (best-effort, non bloquant) ──
         private async Task PostSageBlAsync(string piece, CancellationToken ct)
         {
             try
@@ -135,26 +126,67 @@ namespace Web_Api.Controllers
                     return;
                 }
 
-                // Branche le logger interne de DataService pour tracer l'appel HTTP.
                 DataService.Logger = _logger;
 
                 _logger.LogInformation(
-                    "Sage X3 PREPARE POST {Piece} | client={CtNum} | totalTTC={Total} | lignes={Count} | http={Http} ip={Ip} dossier={Dossier} service={Service} type={Type}",
-                    piece, doc.CT_Num, doc.DO_TotalTTC, doc.LIGNEDOCUMENTs?.Count ?? 0,
+                    "Sage X3 PREPARE POST {Piece} | DO_NumDocument={DocNum} CT_Num={CtNum} DE_No={DeNo} totalTTC={Total} lignes={Count} | http={Http} ip={Ip} dossier={Dossier} service={Service} type={Type}",
+                    piece, doc.DO_NumDocument, doc.CT_Num, doc.DE_No, doc.DO_TotalTTC, doc.LIGNEDOCUMENTs?.Count ?? 0,
                     param.Http, param.AdresseIP_API, param.Dossier, param.Service_Web_BC, param.Type_BC);
 
                 var rep = await INTEGRATION_DOCUMENT_X3.Integration_Document(doc, param);
 
                 if (rep == null)
+                {
                     _logger.LogWarning("Sage X3 POST {Piece} : réponse vide/illisible.", piece);
+                }
                 else if (rep.IsSuccess)
-                    _logger.LogInformation("Sage X3 POST {Piece} OK. NumeroSage={Num}", piece, rep.Value?.M_NumeroSage);
+                {
+                    var numSage = rep.Value?.M_NumeroSage;
+                    _logger.LogInformation("Sage X3 POST {Piece} OK. NumeroSage={Num}", piece, numSage);
+
+                    
+                    if (!string.IsNullOrWhiteSpace(numSage))
+                    {
+                        var entete = await _db.F_DOCENTETES.FirstOrDefaultAsync(x => x.DO_Piece == piece, ct);
+                        if (entete != null)
+                        {
+                            entete.DO_NumeroSageX3 = numSage;
+                            entete.DO_ValiderSageX3 = true;
+                            await _db.SaveChangesAsync(ct);
+                        }
+
+                        await SetSageX3CustomerRefAsync(numSage, piece, ct);
+                    }
+                }
                 else
+                {
                     _logger.LogWarning("Sage X3 POST {Piece} KO. Error={Err}", piece, rep.Error);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Sage X3 POST {Piece} a levé une exception.", piece);
+            }
+        }
+
+        private async Task SetSageX3CustomerRefAsync(string sohNum, string blPiece, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(_sageX3ConnStr)) return;
+            try
+            {
+                await using var conn = new SqlConnection(_sageX3ConnStr);
+                await conn.OpenAsync(ct);
+                await using var cmd = new SqlCommand(
+                    "UPDATE SEED.SORDER SET CUSORDREF_0 = @ref WHERE SOHNUM_0 = @num", conn);
+                cmd.Parameters.AddWithValue("@ref", blPiece);
+                cmd.Parameters.AddWithValue("@num", sohNum);
+                var rows = await cmd.ExecuteNonQueryAsync(ct);
+                _logger.LogInformation(
+                    "Sage X3 CUSORDREF_0 mise à jour : {Num} → {Ref} ({Rows} ligne(s))", sohNum, blPiece, rows);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Impossible de mettre à jour CUSORDREF_0 pour {Num}.", sohNum);
             }
         }
 
@@ -306,8 +338,9 @@ namespace Web_Api.Controllers
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
+            var isAdmin = User.IsInRole(AppRoles.ADMIN);
             var profile = await GetCurrentProfileAsync(ct);
-            if (profile == null)
+            if (profile == null && !isAdmin)
                 return StatusCode(403, new { message = "Profil livreur introuvable." });
 
             string normalizedStatus;
@@ -333,9 +366,15 @@ namespace Web_Api.Controllers
             if (pieces.Count == 0)
                 return BadRequest(new { message = "Aucune pièce valide." });
 
-            var livraisons = await _db.F_LIVRAISONS
-                .Where(x => x.LivreurId == profile.cbMarq && pieces.Contains(x.DO_Piece))
-                .ToListAsync(ct);
+            // Admin peut changer le statut de n'importe quelle livraison.
+            // Livreur ne voit que ses propres livraisons.
+            var livraisons = isAdmin
+                ? await _db.F_LIVRAISONS
+                    .Where(x => pieces.Contains(x.DO_Piece))
+                    .ToListAsync(ct)
+                : await _db.F_LIVRAISONS
+                    .Where(x => x.LivreurId == profile!.cbMarq && pieces.Contains(x.DO_Piece))
+                    .ToListAsync(ct);
 
             var entetes = await _db.F_DOCENTETES
                 .Where(x =>
@@ -403,13 +442,11 @@ namespace Web_Api.Controllers
             if (updated.Count > 0)
                 await _db.SaveChangesAsync(ct);
 
-            // Section 1.3 — hook SMS sur transition vers Livre (batch)
             if (normalizedStatus == DeliveryStatuses.Livre)
             {
                 foreach (var p in updated)
                 {
                     await _sms.NotifyAsync(SmsTrigger.Livre, p, ct);
-                    // Sync Sage X3 : POST du BL livré (best-effort, non bloquant).
                     await PostSageBlAsync(p, ct);
                 }
             }
@@ -460,6 +497,8 @@ namespace Web_Api.Controllers
                 return BadRequest(new { message = "Le motif est obligatoire pour ce statut." });
 
             li.LI_Statut = MapStringToCode(normalizedStatus);
+            if (normalizedStatus == DeliveryStatuses.EnLivraison && !li.HasEverBeenPickedUp)
+                li.HasEverBeenPickedUp = true;
             li.LI_Commentaire = BuildCommentForStorage(normalizedMotif, req.Note);
             li.LI_DateReplanification =
                 normalizedStatus == DeliveryStatuses.Reporte ? req.ReplannedAt : null;

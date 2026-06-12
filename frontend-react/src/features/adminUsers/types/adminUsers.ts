@@ -22,6 +22,11 @@ export type ProfilUtilisateur = {
 
   dateCreation: string | null;
   dateModification: string | null;
+
+  codeDepot?: string | null;
+  codeEmploye?: string | null;
+  poste?: string | null;
+  depotRattacheNo?: number | null;
 };
 
 export type UserAdminResponseDto = {

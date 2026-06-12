@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../core/api_client.dart';
 import '../../models/avis.dart';
 import 'offline_queue_service.dart';
@@ -79,16 +81,22 @@ class LivreurSignalService {
     String? description,
     double? latitude,
     double? longitude,
+    File? photo,
   }) async {
-    return api.postForm(
+    final fields = <String, String>{
+      'doPiece': doPiece,
+      'motif': motif,
+      if (description != null) 'description': description,
+      if (latitude != null) 'latitude': latitude.toString(),
+      if (longitude != null) 'longitude': longitude.toString(),
+    };
+    // Le backend attend le fichier sous le champ `photo` (IFormFile photo).
+    // Obligatoire pour les motifs à photo (ex. COLIS_ENDOMMAGE_DEPOT).
+    return api.postMultipart(
       '/api/livreur/reclamations/attempt',
-      fields: {
-        'doPiece': doPiece,
-        'motif': motif,
-        if (description != null) 'description': description,
-        if (latitude != null) 'latitude': latitude.toString(),
-        if (longitude != null) 'longitude': longitude.toString(),
-      },
+      fields: fields,
+      file: photo,
+      fileFieldName: 'photo',
     );
   }
 

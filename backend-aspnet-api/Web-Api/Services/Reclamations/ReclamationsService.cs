@@ -728,6 +728,11 @@ namespace Web_Api.Services.Reclamations
             var reclamation = await _db.F_RECLAMATIONS.FirstOrDefaultAsync(x => x.Id == id, ct)
                 ?? throw new InvalidOperationException("Réclamation introuvable.");
 
+            // Anti-vol : on ne peut (ré)attribuer qu'un cas libre ou déjà à soi — jamais
+            // celui d'une autre confirmatrice active.
+            if (reclamation.AssignedToUserId.HasValue && reclamation.AssignedToUserId.Value != actorUserId)
+                throw new InvalidOperationException("Ce cas est déjà pris en charge par une autre confirmatrice.");
+
             var target = await EnsureConfirmateurAsync(confirmatriceUserId, ct);
             reclamation.AssignedToUserId = confirmatriceUserId;
             reclamation.UpdatedAt = DateTime.UtcNow;
@@ -1770,8 +1775,8 @@ namespace Web_Api.Services.Reclamations
             CancellationToken ct = default)
         {
             var rec = await _db.F_RECLAMATIONS
-                .FirstOrDefaultAsync(r => r.Id == reclamationId, ct)
-                ?? throw new InvalidOperationException("Réclamation introuvable.");
+                .FirstOrDefaultAsync(r => r.Id == reclamationId && r.AssignedToUserId == actorUserId, ct)
+                ?? throw new InvalidOperationException("Réclamation introuvable ou non affectée.");
 
             if (rec.Motif != LivreurMotifs.COLIS_ENDOMMAGE_DEPOT)
                 throw new InvalidOperationException(
@@ -2160,7 +2165,15 @@ namespace Web_Api.Services.Reclamations
 
             IQueryable<F_RECLAMATION> query = _db.F_RECLAMATIONS.AsNoTracking();
 
-            if (!crossGouvernorat)
+            if (crossGouvernorat)
+            {
+                // Vue "pool partagé" : ses propres cas + les cas orphelins (non attribués)
+                // encore à prendre. On n'expose JAMAIS les cas actifs d'une autre
+                // confirmatrice — sinon fuite de données + vol de cas possibles.
+                query = query.Where(x => x.AssignedToUserId == currentStaffUserId
+                    || x.AssignedToUserId == null);
+            }
+            else
             {
                 // Uniquement ses propres cas
                 query = query.Where(x => x.AssignedToUserId == currentStaffUserId);
@@ -2235,6 +2248,12 @@ namespace Web_Api.Services.Reclamations
         {
             var reclamation = await _db.F_RECLAMATIONS.FirstOrDefaultAsync(x => x.Id == id, ct)
                 ?? throw new InvalidOperationException("Réclamation introuvable.");
+
+            // Anti-vol : on ne peut reprendre qu'un cas libre (orphelin) ou déjà à soi.
+            // Le cas actif d'une autre confirmatrice n'est jamais repris manuellement
+            // (la redistribution 3C s'en charge si l'autre devient inactive).
+            if (reclamation.AssignedToUserId.HasValue && reclamation.AssignedToUserId.Value != actorUserId)
+                throw new InvalidOperationException("Ce cas est déjà pris en charge par une autre confirmatrice.");
 
             reclamation.AssignedToUserId = actorUserId;
             reclamation.UpdatedAt = DateTime.UtcNow;

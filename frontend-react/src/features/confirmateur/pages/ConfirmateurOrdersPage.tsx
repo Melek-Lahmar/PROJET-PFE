@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getConfirmateurOrders } from "../api/confirmateurApi";
+import { adjustConfirmateurTentative, getConfirmateurOrders } from "../api/confirmateurApi";
 import { Button } from "../../../shared/components/Button";
 import { Input } from "../../../shared/components/Input";
 import type { ConfirmateurOrder, OrderStatusValue } from "../types/confirmateur";
@@ -12,6 +12,25 @@ import {
   EmptyView,
   PremiumHero,
 } from "../../../shared/components/premium";
+import { useToast } from "../../../shared/components/premium/Toast";
+import { getApiErrorMessage } from "../../../core/http/getApiErrorMessage";
+
+// Couleurs de statut en STYLE INLINE (immunisé contre le purge Tailwind / cache JIT).
+// En attente = jaune clair · Tentative = orange · Refusé = rouge · Transformé = vert.
+function statusBadgeStyle(workflowState: string): React.CSSProperties {
+  switch (workflowState) {
+    case "attempted":
+      return { backgroundColor: "#ea580c", color: "#ffffff" }; // orange-600
+    case "refused":
+      return { backgroundColor: "#dc2626", color: "#ffffff" }; // red-600
+    case "transformed":
+      return { backgroundColor: "#16a34a", color: "#ffffff" }; // green-600
+    case "pending":
+      return { backgroundColor: "#fde047", color: "#713f12", border: "1px solid #eab308" }; // jaune clair
+    default:
+      return { backgroundColor: "#e5e7eb", color: "#374151" }; // gris neutre
+  }
+}
 
 const TABS: Array<{ label: string; value?: OrderStatusValue }> = [
   { label: "Toutes" },
@@ -143,10 +162,21 @@ export function ConfirmateurOrdersPage() {
   const [tab, setTab] = useState<OrderStatusValue | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<DateRangeFilter>("ALL");
+  const toast = useToast();
+  const qc = useQueryClient();
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["confirmateur", "commandes"],
     queryFn: () => getConfirmateurOrders(),
+  });
+
+  const tentativeMutation = useMutation({
+    mutationFn: ({ piece, delta }: { piece: string; delta: 1 | -1 }) =>
+      adjustConfirmateurTentative(piece, delta),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["confirmateur", "commandes"] });
+    },
+    onError: (err) => toast.error("Action impossible", getApiErrorMessage(err)),
   });
 
   const orders = useMemo(() => data ?? [], [data]);
@@ -156,6 +186,9 @@ export function ConfirmateurOrdersPage() {
 
     return orders.filter((order) => {
       if (tab !== undefined && order.dO_Valide !== tab) return false;
+      // Onglet "Toutes" : on masque les BC déjà confirmés/transformés (DO_Valide=1)
+      // car ils sont devenus des bons de livraison et n'ont plus à être traités ici.
+      if (tab === undefined && order.dO_Valide === 1) return false;
 
       const matchesPeriod = matchesDateRange(order.dO_Date, dateFilter);
       if (!matchesPeriod) return false;
@@ -166,6 +199,7 @@ export function ConfirmateurOrdersPage() {
       const tiers = (order.dO_Tiers ?? "").toLowerCase();
       const reference = (order.dO_Ref ?? "").toLowerCase();
       const client = clientDisplayFromOrder(order).toLowerCase();
+      const phone = ((order.clientPhone ?? order.dO_TelephoneLivraison) ?? "").toLowerCase();
       const status = (order.statusLabel ?? "").toLowerCase();
 
       return (
@@ -173,6 +207,7 @@ export function ConfirmateurOrdersPage() {
         tiers.includes(q) ||
         reference.includes(q) ||
         client.includes(q) ||
+        phone.includes(q) ||
         status.includes(q)
       );
     });
@@ -254,7 +289,7 @@ export function ConfirmateurOrdersPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher par N° BC, tiers, client ou statut..."
+                placeholder="Rechercher par N° BC, nom client, téléphone ou statut..."
               />
               <div className="inline-flex items-center justify-center rounded-2xl border border-border/70 bg-muted/25 px-4 text-sm font-semibold text-muted-foreground">
                 {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
@@ -338,10 +373,10 @@ export function ConfirmateurOrdersPage() {
                               statusMeta.workflowState === "refused"
                                 ? "bg-danger"
                                 : statusMeta.workflowState === "attempted"
-                                  ? "bg-info"
+                                  ? "bg-orange-500"
                                   : statusMeta.workflowState === "transformed"
                                     ? "bg-success"
-                                    : "bg-warning"
+                                    : "bg-yellow-400"
                             }`}
                           />
                           <div className="min-w-0 space-y-2">
@@ -373,10 +408,38 @@ export function ConfirmateurOrdersPage() {
                         <div className="font-black text-card-foreground">{money(order.dO_TotalTTC)}</div>
                       </div>
 
-                      <div className="col-span-1">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${statusMeta.badgeClass}`}>
+                      <div className="col-span-1 space-y-2">
+                        <span
+                          className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold"
+                          style={statusBadgeStyle(statusMeta.workflowState)}
+                        >
                           {statusMeta.label}
                         </span>
+                        {order.dO_Valide === 2 ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              title="Retirer une tentative"
+                              disabled={tentativeMutation.isPending || (order.tentativeCount ?? 0) <= 0}
+                              onClick={() => tentativeMutation.mutate({ piece: order.dO_Piece ?? "", delta: -1 })}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-border bg-card text-sm font-black text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+                            >
+                              −
+                            </button>
+                            <span className="min-w-[2.25rem] rounded-lg bg-orange-100 px-2 py-0.5 text-center text-xs font-black text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+                              {order.tentativeCount ?? 0}
+                            </span>
+                            <button
+                              type="button"
+                              title="Ajouter une tentative"
+                              disabled={tentativeMutation.isPending}
+                              onClick={() => tentativeMutation.mutate({ piece: order.dO_Piece ?? "", delta: 1 })}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-border bg-card text-sm font-black text-card-foreground transition hover:bg-muted disabled:opacity-40"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="col-span-1 flex items-center justify-end">

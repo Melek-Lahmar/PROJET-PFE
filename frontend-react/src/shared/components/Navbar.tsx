@@ -237,6 +237,12 @@ export function Navbar() {
           label: "Devis",
           onClick: () => navigate("/vendeur/quotes"),
           icon: <IconOrders className="h-4 w-4" />,
+        },
+        {
+          key: "vendeur-manifeste",
+          label: "Expédition",
+          onClick: () => navigate("/vendeur/manifeste"),
+          icon: <IconOrders className="h-4 w-4" />,
         }
       );
     }

@@ -29,6 +29,56 @@ namespace Web_Api.Controllers.Confirmateur
             _db = db;
         }
 
+        public sealed class ClientSearchItemDto
+        {
+            public Guid? UtilisateurId { get; set; }
+            public string? NomComplet { get; set; }
+            public string? NomSociete { get; set; }
+            public string? Telephone { get; set; }
+            public string? CodeClientSage { get; set; }
+            public string? TypeClient { get; set; }
+        }
+
+        /// <summary>
+        /// Lot E — Recherche d'un client par téléphone, nom, raison sociale ou code tiers,
+        /// pour l'onglet « Suivi » de l'espace confirmatrice.
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<ActionResult<List<ClientSearchItemDto>>> Search(
+            [FromQuery] string? q,
+            [FromQuery] int limit = 20,
+            CancellationToken ct = default)
+        {
+            q = (q ?? string.Empty).Trim();
+            if (q.Length < 2)
+                return Ok(new List<ClientSearchItemDto>());
+
+            limit = Math.Clamp(limit, 1, 50);
+            var ql = q.ToLower();
+
+            var rows = await _db.ProfilsUtilisateurs.AsNoTracking()
+                .Where(p => p.UtilisateurId != null && p.TypeClient != null && (
+                    (p.Telephone != null && p.Telephone.ToLower().Contains(ql)) ||
+                    (p.NomComplet != null && p.NomComplet.ToLower().Contains(ql)) ||
+                    (p.NomSociete != null && p.NomSociete.ToLower().Contains(ql)) ||
+                    (p.CodeClientSage != null && p.CodeClientSage.ToLower().Contains(ql))))
+                .OrderBy(p => p.NomComplet)
+                .Take(limit)
+                .ToListAsync(ct);
+
+            var result = rows.Select(p => new ClientSearchItemDto
+            {
+                UtilisateurId = p.UtilisateurId,
+                NomComplet = p.NomComplet,
+                NomSociete = p.NomSociete,
+                Telephone = p.Telephone,
+                CodeClientSage = p.CodeClientSage,
+                TypeClient = p.TypeClient?.ToString(),
+            }).ToList();
+
+            return Ok(result);
+        }
+
         [HttpGet("{clientId:guid}/orders-history")]
         public async Task<IActionResult> Get(
             Guid clientId,

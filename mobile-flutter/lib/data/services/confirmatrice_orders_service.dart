@@ -73,6 +73,15 @@ class ConfirmatriceOrdersService {
     );
   }
 
+  /// Ajuste le compteur de tentatives (+1 / -1). Chaque +1 est journalisé
+  /// (qui + quand) côté backend et visible par les autres confirmatrices.
+  Future<Map<String, dynamic>> adjustTentative(String piece, int delta) async {
+    return api.putJson(
+      '/api/confirmateur/commandes/$piece/tentative',
+      {'delta': delta},
+    );
+  }
+
   /// Retourne la couverture de zone pour la commande (livreur dispo dans la
   /// gouvernorat/délégation du client). Backend : `{ hasCoverage: bool,
   /// gouvernorat: string?, delegation: string?, livreurCount: int }`.

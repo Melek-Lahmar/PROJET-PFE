@@ -67,6 +67,8 @@ import { ConfirmateurBlDetailsPage } from "../features/confirmateur/pages/Confir
 import { ConfirmateurWorkspace } from "../features/confirmateur/components/ConfirmateurWorkspace";
 import { ConfirmateurDevisPage } from "../features/confirmateur/pages/ConfirmateurDevisPage";
 import { ConfirmateurDevisDetailsPage } from "../features/confirmateur/pages/ConfirmateurDevisDetailsPage";
+import { ConfirmateurSettingsPage } from "../features/confirmateur/pages/ConfirmateurSettingsPage";
+import { ConfirmateurSuiviPage } from "../features/confirmateur/pages/ConfirmateurSuiviPage";
 import { LivreurBlListPage, LivreurBlDetailsPage } from "../features/bl/pages/LivreurBlPages";
 
 import { AdminOverviewDashboardPage } from "../features/dashboard/pages/AdminOverviewDashboardPage";
@@ -93,6 +95,10 @@ import { VendeurCartPage } from "../features/vendeur/pages/VendeurCartPage";
 import { VendeurCheckoutPage } from "../features/vendeur/pages/VendeurCheckoutPage";
 import { VendeurOrdersPage } from "../features/vendeur/pages/VendeurOrdersPage";
 import { VendeurOrderDetailsPage } from "../features/vendeur/pages/VendeurOrderDetailsPage";
+import { VendeurManifestPage } from "../features/vendeur/pages/VendeurManifestPage";
+import { AdminPrintSettingsPage } from "../features/admin/pages/AdminPrintSettingsPage";
+import { AdminLivraisonSettingsPage } from "../features/admin/pages/AdminLivraisonSettingsPage";
+import { AdminReclamationMotifsPage } from "../features/admin/pages/AdminReclamationMotifsPage";
 
 import { AdminDepotZonesPage } from "../features/admin/depotZones/pages/AdminDepotZonesPage";
 import { AdminCoverageMapPage } from "../features/admin/depotZones/pages/AdminCoverageMapPage";
@@ -171,6 +177,7 @@ export const router = createBrowserRouter([
               { path: "vendeur/orders/:piece", element: <VendeurOrderDetailsPage /> },
               { path: "vendeur/quotes", element: <B2BQuotesAdminPage /> },
               { path: "vendeur/quotes/:piece", element: <B2BQuoteDetailsPage /> },
+              { path: "vendeur/manifeste", element: <VendeurManifestPage /> },
             ],
           },
 
@@ -223,6 +230,9 @@ export const router = createBrowserRouter([
                   { path: "admin/b2b/quotes/:piece", element: <B2BQuoteDetailsPage /> },
                   { path: "admin/settings", element: <AdminSettingsPage /> },
                   { path: "admin/settings/sage-x3", element: <AdminSageX3SettingsPage /> },
+                  { path: "admin/settings/print", element: <AdminPrintSettingsPage /> },
+                  { path: "admin/settings/livraison", element: <AdminLivraisonSettingsPage /> },
+                  { path: "admin/settings/reclamations", element: <AdminReclamationMotifsPage /> },
                   { path: "admin/chatbot", element: <ChatbotOverviewPage /> },
                   { path: "admin/chatbot/sandbox", element: <ChatbotSandboxPage /> },
                   { path: "admin/chatbot/conversations", element: <ChatbotConversationsPage /> },
@@ -245,6 +255,8 @@ export const router = createBrowserRouter([
                   { path: "confirmateur/devis/:piece", element: <ConfirmateurDevisDetailsPage /> },
                   { path: "confirmateur/bl", element: <ConfirmateurBlPage /> },
                   { path: "confirmateur/bl/:piece", element: <ConfirmateurBlDetailsPage /> },
+                  { path: "confirmateur/suivi", element: <ConfirmateurSuiviPage /> },
+                  { path: "confirmateur/parametres", element: <ConfirmateurSettingsPage /> },
                 ],
               },
             ],

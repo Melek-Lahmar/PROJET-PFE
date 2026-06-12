@@ -43,6 +43,13 @@ namespace Web_Api.DTO.Confirmateur
         [JsonPropertyName("dO_Valide")]
         public short? DO_Valide { get; set; }
 
+        [JsonPropertyName("tentativeCount")]
+        public int TentativeCount { get; set; }
+
+        // Journal des tentatives (qui/quand) — visible sur le détail commande.
+        [JsonPropertyName("tentativeLog")]
+        public List<ConfirmateurTentativeLogDto> TentativeLog { get; set; } = new();
+
         [JsonPropertyName("statusLabel")]
         public string? StatusLabel { get; set; }
 
@@ -52,6 +59,10 @@ namespace Web_Api.DTO.Confirmateur
 
         [JsonPropertyName("clientDisplay")]
         public string? ClientDisplay { get; set; }
+
+        // ✅ pour la recherche confirmateur (par téléphone)
+        [JsonPropertyName("clientPhone")]
+        public string? ClientPhone { get; set; }
 
         // ✅ détail
         [JsonPropertyName("client")]
@@ -96,5 +107,14 @@ namespace Web_Api.DTO.Confirmateur
 
         [JsonPropertyName("dO_TelephoneLivraison")]
         public string? DO_TelephoneLivraison { get; set; }
+    }
+
+    public class ConfirmateurTentativeLogDto
+    {
+        [JsonPropertyName("actorName")]
+        public string? ActorName { get; set; }
+
+        [JsonPropertyName("createdAt")]
+        public DateTime CreatedAt { get; set; }
     }
 }

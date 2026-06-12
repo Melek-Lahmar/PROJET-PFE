@@ -20,6 +20,11 @@ export type ConfirmateurClient = {
   adresseComplementaire?: string | null;
 };
 
+export type TentativeLogEntry = {
+  actorName?: string | null;
+  createdAt?: string | null;
+};
+
 export type ConfirmateurOrderLine = {
   ar_Ref?: string | null;
   dL_Design?: string | null;
@@ -45,10 +50,13 @@ export type ConfirmateurOrder = {
   discountSource?: string | null;
 
   dO_Valide?: number | null;
+  tentativeCount?: number | null;
+  tentativeLog?: TentativeLogEntry[];
   statusLabel?: string | null;
 
   clientType?: string | null;
   clientDisplay?: string | null;
+  clientPhone?: string | null;
 
   client?: ConfirmateurClient | null;
   lignes?: ConfirmateurOrderLine[];

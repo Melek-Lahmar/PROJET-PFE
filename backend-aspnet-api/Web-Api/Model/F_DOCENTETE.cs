@@ -56,6 +56,13 @@ namespace Web_Api.Model
 
         public short? DO_Valide { get; set; }
 
+        /// <summary>
+        /// Nombre de tentatives (contact / livraison) enregistrées par la
+        /// confirmatrice avant confirmation. Ajusté manuellement via les boutons
+        /// +1 / -1 de la liste BC. Quand &gt; 0, le BC bascule au statut TENTATIVE.
+        /// </summary>
+        public int DO_TentativeCount { get; set; }
+
         [NotMapped]
         public string DocumentStatus => ToStatusLabel(DO_Valide);
 

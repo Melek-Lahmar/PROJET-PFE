@@ -36,24 +36,35 @@ namespace Web_Api.Services
             _logger.LogInformation("Sage GET: {Url}", relativeUrl);
 
             using var response = await _httpClient.GetAsync(relativeUrl, ct);
+            var body = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogError("Erreur HTTP Sage ({StatusCode}) sur {Url}. Body: {Body}",
-                    (int)response.StatusCode, relativeUrl, body);
-                throw new HttpRequestException($"Erreur HTTP Sage {(int)response.StatusCode} sur {relativeUrl}");
+                // WEB_API_STAGE_X3 peut retourner 400 avec un JSON {isSuccess:false,error:"..."}
+                // On tente de désérialiser pour obtenir le message d'erreur métier.
+                try
+                {
+                    var errDto = JsonSerializer.Deserialize<SageResponseDto<T>>(body, _jsonOptions);
+                    if (errDto != null && !string.IsNullOrWhiteSpace(errDto.Error))
+                    {
+                        _logger.LogError("Sage {Url} HTTP {Code}: {Error}", relativeUrl, (int)response.StatusCode, errDto.Error);
+                        throw new InvalidOperationException($"Sage X3 erreur ({(int)response.StatusCode}): {errDto.Error}");
+                    }
+                }
+                catch (JsonException) { }
+
+                _logger.LogError("Sage HTTP {Code} sur {Url}. Body: {Body}", (int)response.StatusCode, relativeUrl, body);
+                throw new HttpRequestException($"Erreur HTTP Sage {(int)response.StatusCode} sur {relativeUrl}. Body: {body}");
             }
 
-            var json = await response.Content.ReadAsStringAsync(ct);
-            var sageResponse = JsonSerializer.Deserialize<SageResponseDto<T>>(json, _jsonOptions);
+            var sageResponse = JsonSerializer.Deserialize<SageResponseDto<T>>(body, _jsonOptions);
 
             if (sageResponse is null)
                 throw new InvalidOperationException($"Réponse Sage invalide (null) pour {relativeUrl}");
 
             if (!sageResponse.IsSuccess)
             {
-                _logger.LogWarning("Sage isSuccess=false pour {Url}", relativeUrl);
+                _logger.LogWarning("Sage isSuccess=false pour {Url}. Error: {Error}", relativeUrl, sageResponse.Error);
                 return new List<T>();
             }
 

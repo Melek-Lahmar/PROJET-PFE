@@ -127,6 +127,32 @@ function transitStatusColor(status: string) {
   return { bg: "bg-warning/10 border-warning/25", badge: "bg-warning/10 text-warning", dot: "bg-warning" };
 }
 
+// Résumé global destiné au CLIENT : "En transit de X vers Y" + progression,
+// sans le détail article par article (réservé au staff).
+function TransitSummaryBanner({ timeline }: { timeline?: OrderTimelineDto | null }) {
+  if (!timeline || timeline.transitTotalCount <= 0) return null;
+  // Si le détail par article est présent (staff), on laisse <TransitItems> gérer l'affichage.
+  if (timeline.items?.length) return null;
+
+  const allReceived = timeline.transitReceivedCount === timeline.transitTotalCount;
+  return (
+    <div className="border-t border-border px-6 py-5">
+      <div className={`rounded-2xl border p-4 ${allReceived ? "border-success/25 bg-success/10" : "border-primary/20 bg-primary/[0.07]"}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-black text-card-foreground">Acheminement de votre commande</div>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${allReceived ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+            <span className={`h-2 w-2 rounded-full ${allReceived ? "bg-success" : "bg-primary animate-pulse"}`} />
+            {timeline.transitReceivedCount} / {timeline.transitTotalCount} reçus
+          </span>
+        </div>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {timeline.transitSummary ?? "Certains articles sont acheminés depuis nos autres dépôts."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function TransitItems({ timeline }: { timeline?: OrderTimelineDto | null }) {
   if (!timeline?.items?.length) return null;
 
@@ -222,8 +248,9 @@ export function OrderTimeline({
         </div>
       </div>
 
-      {/* Articles en transit */}
+      {/* Articles en transit — détail (staff) ou résumé (client) */}
       <TransitItems timeline={timeline} />
+      <TransitSummaryBanner timeline={timeline} />
     </section>
   );
 }

@@ -18,3 +18,7 @@ export async function adminCreateUser(dto: CreateUserRequestDto) {
 export async function adminReplaceRoles(userId: string, roles: string[]) {
   await axiosClient.put(endpoints.adminUserRoles(userId), roles);
 }
+
+export async function adminUpdateUserProfile(userId: string, patch: { codeDepot?: string | null }) {
+  await axiosClient.put(`/api/admin/users/${userId}/profile`, patch);
+}

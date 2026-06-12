@@ -85,7 +85,8 @@ export function getConfirmateurStatusMeta(
   if (dO_Valide === 2 || normalized.includes("TENT")) {
     return {
       label: statusLabel?.trim() || "TENTATIVE",
-      badgeClass: "badge-info",
+      // Orange profond et plein (bien distinct du jaune clair "en attente" et du rouge "refusé").
+      badgeClass: "bg-orange-600 text-white font-bold ring-1 ring-orange-700/60 dark:bg-orange-600 dark:text-white",
       description: "Une tentative ou un point d’attention a été remonté pendant le traitement.",
       workflowState: "attempted",
     };
@@ -94,7 +95,8 @@ export function getConfirmateurStatusMeta(
   if (dO_Valide === 0 || normalized.includes("ATTENTE")) {
     return {
       label: statusLabel?.trim() || "EN_ATTENTE",
-      badgeClass: "badge-warning",
+      // Jaune clair (distinct de l'orange profond "tentative" et du rouge "refusé").
+      badgeClass: "bg-yellow-200 text-yellow-900 font-bold ring-1 ring-yellow-300 dark:bg-yellow-200 dark:text-yellow-900 dark:ring-yellow-300",
       description: "Le bon de commande est encore en attente d’analyse confirmateur.",
       workflowState: "pending",
     };

@@ -5,10 +5,12 @@ using System.Security.Claims;
 using Web_Api.Auth.Constants;
 using Web_Api.Auth.Entities;
 using Web_Api.data;
+using Web_Api.DTO.BL;
 using Web_Api.DTO.Orders;
 using Web_Api.DTO.Vendeur;
 using Web_Api.Model;
 using Web_Api.Services;
+using Web_Api.Services.Print;
 
 namespace Web_Api.Controllers.Vendeur
 {
@@ -19,11 +21,14 @@ namespace Web_Api.Controllers.Vendeur
     {
         private readonly AppDbContext _db;
         private readonly BonCommandeService _bonCommandeService;
+        private readonly BlPdfService _pdf;
+        private const short BL_TYPE = 1;
 
-        public VendeurOrdersController(AppDbContext db, BonCommandeService bonCommandeService)
+        public VendeurOrdersController(AppDbContext db, BonCommandeService bonCommandeService, BlPdfService pdf)
         {
             _db = db;
             _bonCommandeService = bonCommandeService;
+            _pdf = pdf;
         }
 
         [HttpGet("context")]
@@ -181,7 +186,7 @@ namespace Web_Api.Controllers.Vendeur
 
             var entetes = await _db.F_DOCENTETES
                 .AsNoTracking()
-                .Where(x => x.DO_Domaine == 0 && x.DO_Type == 0 && x.DO_VendeurUserId == vendeurUserId.Value)
+                .Where(x => x.DO_Domaine == 0 && x.DO_Type == BL_TYPE && x.DO_VendeurUserId == vendeurUserId.Value)
                 .OrderByDescending(x => x.DO_Date)
                 .ThenByDescending(x => x.cbMarq)
                 .ToListAsync(ct);
@@ -236,7 +241,7 @@ namespace Web_Api.Controllers.Vendeur
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
                     x.DO_Domaine == 0 &&
-                    x.DO_Type == 0 &&
+                    x.DO_Type == BL_TYPE &&
                     x.DO_Piece == piece &&
                     x.DO_VendeurUserId == vendeurUserId.Value, ct);
 
@@ -250,6 +255,78 @@ namespace Web_Api.Controllers.Vendeur
                 .ToListAsync(ct);
 
             return Ok(await BuildOrderResponseAsync(entete, lignes, ct));
+        }
+
+        [HttpGet("orders/{piece}/facture-pdf")]
+        public async Task<IActionResult> GetFacturePdf(string piece, CancellationToken ct)
+        {
+            piece = (piece ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(piece))
+                return BadRequest(new { message = "Piece invalide." });
+
+            var vendeurUserId = GetCurrentUserId();
+            if (vendeurUserId == null)
+                return Unauthorized();
+
+            var entete = await _db.F_DOCENTETES
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.DO_Domaine == 0 &&
+                    x.DO_Type == BL_TYPE &&
+                    x.DO_Piece == piece &&
+                    x.DO_VendeurUserId == vendeurUserId.Value, ct);
+
+            if (entete == null)
+                return NotFound(new { message = "Commande introuvable." });
+
+            var lignes = await _db.F_DOCLIGNES
+                .AsNoTracking()
+                .Where(x => x.DO_Piece == piece)
+                .OrderBy(x => x.cbMarq)
+                .ToListAsync(ct);
+
+            // Résolution client
+            var customer = await ResolveCustomerAsync(entete, ct);
+            var depot = await ResolveDepotAsync(entete.DE_No, ct);
+            var vendeurName = await ResolveVendeurDisplayNameAsync(entete.DO_VendeurUserId, ct);
+
+            var dto = new FacturePdfDto
+            {
+                Piece = entete.DO_Piece ?? "",
+                Date = entete.DO_Date,
+                ClientCode = entete.DO_Tiers ?? "",
+                ClientName = customer?.DisplayName,
+                ClientPhone = customer?.Telephone ?? entete.DO_TelephoneLivraison,
+                ClientAddress = customer?.Adresse ?? entete.DO_AdresseLivraison,
+                ClientCity = customer?.Gouvernorat ?? entete.DO_VilleLivraison,
+                ClientPostalCode = customer?.CodePostal ?? entete.DO_CodePostalLivraison,
+                ClientMatriculeFiscal = customer?.MatriculeFiscal,
+                ClientRegistreCommerce = customer?.RegistreCommerce,
+                VendeurName = vendeurName,
+                DepotNo = entete.DE_No ?? 0,
+                DepotIntitule = depot?.DepotIntitule,
+                PaymentMethod = entete.DO_ModePaiement,
+                TotalHT = entete.DO_TotalHT ?? 0m,
+                TotalTTC = entete.DO_TotalTTC ?? 0m,
+                FraisLivraison = entete.DO_FraisLivraison ?? 0m,
+                TimbreFiscal = entete.DO_TimbreFiscal ?? 0m,
+                NetAPayer = entete.DO_NetAPayer ?? 0m,
+                Lines = lignes.Select(l => new FactureLineDto
+                {
+                    ArticleRef = l.AR_Ref ?? "",
+                    Designation = l.DL_Design,
+                    Qty = l.DL_Qte ?? 0m,
+                    UnitPrice = l.DL_PrixUnitaire ?? 0m,
+                    AmountHT = l.DL_MontantHT ?? 0m,
+                    AmountTTC = l.DL_MontantTTC ?? 0m
+                }).ToList()
+            };
+
+            var settings = await _pdf.GetSettingsAsync(ct);
+            var logoBytes = await _pdf.FetchLogoBytesAsync(settings, ct);
+            var pdfBytes = _pdf.GenerateFacturePdf(dto, settings, logoBytes);
+
+            return File(pdfBytes, "application/pdf", $"facture-{piece}.pdf");
         }
 
         private Guid? GetCurrentUserId()

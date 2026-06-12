@@ -11,14 +11,6 @@ import { AnimatedCounter } from "../../../shared/components/premium";
 
 type DateRangeFilter = "ALL" | "TODAY" | "THIS_WEEK" | "ONE_MONTH" | "SIX_MONTHS" | "ONE_YEAR";
 
-const STATUS_FILTERS: Array<{ label: string; value?: number }> = [
-  { label: "Tous" },
-  { label: "À confirmer", value: 0 },
-  { label: "Expédié", value: 1 },
-  { label: "Bloqué", value: 2 },
-  { label: "Annulé", value: 3 },
-];
-
 const DATE_FILTERS: Array<{ label: string; value: DateRangeFilter }> = [
   { label: "Tout", value: "ALL" },
   { label: "Aujourd'hui", value: "TODAY" },
@@ -69,7 +61,6 @@ function SummaryCard({
 
 export function ConfirmateurBlPage() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<number | undefined>(undefined);
   const [dateFilter, setDateFilter] = useState<DateRangeFilter>("ALL");
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
@@ -83,7 +74,6 @@ export function ConfirmateurBlPage() {
     const q = search.trim().toLowerCase();
 
     return blList.filter((order: ConfirmateurOrder) => {
-      if (status !== undefined && order.dO_Valide !== status) return false;
       if (!matchesDateRange(order.dO_Date, dateFilter)) return false;
       if (!q) return true;
       const piece = (order.dO_Piece ?? "").toLowerCase();
@@ -93,7 +83,7 @@ export function ConfirmateurBlPage() {
       const statusLabel = (order.statusLabel ?? "").toLowerCase();
       return piece.includes(q) || tiers.includes(q) || client.includes(q) || statusLabel.includes(q) || depot.includes(q);
     });
-  }, [blList, search, status, dateFilter]);
+  }, [blList, search, dateFilter]);
 
   const metrics = useMemo(() => {
     const totalNet = filtered.reduce((sum, order) => sum + Number(order.dO_NetAPayer ?? 0), 0);
@@ -159,19 +149,6 @@ export function ConfirmateurBlPage() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          {STATUS_FILTERS.map((item) => (
-            <Button
-              key={item.label}
-              type="button"
-              variant={status === item.value ? "primary" : "outline"}
-              size="sm"
-              onClick={() => setStatus(item.value)}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
           {DATE_FILTERS.map((item) => (
             <Button
               key={item.value}
