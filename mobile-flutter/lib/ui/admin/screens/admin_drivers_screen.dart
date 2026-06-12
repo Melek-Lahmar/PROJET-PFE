@@ -415,12 +415,35 @@ class _DriverRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(driver.fullName ?? driver.email ?? '—',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    )),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(driver.fullName ?? driver.email ?? '—',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          )),
+                    ),
+                    if (driver.isTransit) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0EA5E9).withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Transit',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0369A1),
+                            )),
+                      ),
+                    ],
+                  ],
+                ),
                 if (driver.phone != null)
                   Text(driver.phone!,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -437,19 +460,49 @@ class _DriverRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             flex: 5,
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                _Stat(label: 'Total', value: driver.ordersTotal.toString(), color: scheme.primary),
-                _Stat(label: 'En cours', value: driver.ordersInProgress.toString(), color: const Color(0xFF0EA5E9)),
-                _Stat(label: 'Livrés', value: driver.ordersDelivered.toString(), color: const Color(0xFF22C55E)),
-                _Stat(label: 'Retours', value: driver.ordersReturned.toString(), color: const Color(0xFFEF4444)),
-                _Stat(label: 'Taux liv.', value: '${driver.deliveryRate.toStringAsFixed(0)}%', color: const Color(0xFF10B981)),
-                if (driver.claims > 0)
-                  _Stat(label: 'Réclam.', value: driver.claims.toString(), color: const Color(0xFFB91C1C)),
-              ],
-            ),
+            child: driver.isTransit
+                ? Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.local_shipping_rounded,
+                              size: 14, color: Color(0xFF0369A1)),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text('Stats dans l’onglet Transit',
+                                maxLines: 2,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF0369A1)
+                                      .withValues(alpha: 0.9),
+                                )),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      _Stat(label: 'Total', value: driver.ordersTotal.toString(), color: scheme.primary),
+                      _Stat(label: 'En cours', value: driver.ordersInProgress.toString(), color: const Color(0xFF0EA5E9)),
+                      _Stat(label: 'Livrés', value: driver.ordersDelivered.toString(), color: const Color(0xFF22C55E)),
+                      _Stat(label: 'Retours', value: driver.ordersReturned.toString(), color: const Color(0xFFEF4444)),
+                      _Stat(label: 'Taux liv.', value: '${driver.deliveryRate.toStringAsFixed(0)}%', color: const Color(0xFF10B981)),
+                      if (driver.claims > 0)
+                        _Stat(label: 'Réclam.', value: driver.claims.toString(), color: const Color(0xFFB91C1C)),
+                    ],
+                  ),
           ),
           PopupMenuButton<String>(
             tooltip: 'Actions',
@@ -665,6 +718,10 @@ class _DetailContent extends StatelessWidget {
             if (detail.inPause) ...[
               const SizedBox(width: 8),
               const _StatusPill(text: 'En pause', color: Color(0xFFF59E0B)),
+            ],
+            if (detail.isTransit) ...[
+              const SizedBox(width: 8),
+              const _StatusPill(text: 'Transit', color: Color(0xFF0EA5E9)),
             ],
           ],
         ),

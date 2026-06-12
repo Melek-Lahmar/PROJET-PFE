@@ -63,15 +63,32 @@ class _SupervisorHomeScreenState extends State<SupervisorHomeScreen> {
   }
 }
 
-class _StatsPage extends StatelessWidget {
+class _StatsPage extends StatefulWidget {
   final SupervisorService service;
 
   const _StatsPage({required this.service});
 
   @override
+  State<_StatsPage> createState() => _StatsPageState();
+}
+
+class _StatsPageState extends State<_StatsPage> {
+  late Future<Map<String, dynamic>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.service.stats();
+  }
+
+  void _retry() {
+    setState(() => _future = widget.service.stats());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: service.stats(),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
@@ -79,7 +96,7 @@ class _StatsPage extends StatelessWidget {
         if (snapshot.hasError) {
           return _ErrorState(
             message: _errorText(snapshot.error),
-            onRetry: () {},
+            onRetry: _retry,
           );
         }
 

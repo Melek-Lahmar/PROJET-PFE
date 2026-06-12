@@ -9,6 +9,7 @@ import 'screens/admin_drivers_screen.dart';
 import 'screens/admin_orders_screen.dart';
 import 'screens/admin_products_screen.dart';
 import 'screens/admin_settings_screen.dart';
+import 'screens/admin_transit_screen.dart';
 import 'screens/admin_workflow_screen.dart';
 
 Future<void> _confirmLogout(BuildContext context) async {
@@ -77,6 +78,11 @@ class _AdminHomeState extends State<AdminHome> {
       activeIcon: Icons.support_agent_rounded,
     ),
     _AdminTab(
+      label: 'Transit',
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+    ),
+    _AdminTab(
       label: 'Réclamations',
       icon: Icons.report_problem_outlined,
       activeIcon: Icons.report_problem_rounded,
@@ -103,6 +109,7 @@ class _AdminHomeState extends State<AdminHome> {
     AdminOrdersScreen(),
     AdminDriversScreen(),
     AdminConfirmatricesScreen(),
+    AdminTransitScreen(),
     AdminClaimsScreen(),
     AdminProductsScreen(),
     AdminWorkflowScreen(),

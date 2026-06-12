@@ -7,6 +7,7 @@ class AdminDriverListItem {
   final String? email;
   final String? phone;
   final String? governorate;
+  final bool isTransit;
   final bool online;
   final bool inPause;
   final DateTime? lastActivityAt;
@@ -26,6 +27,7 @@ class AdminDriverListItem {
     required this.email,
     required this.phone,
     required this.governorate,
+    this.isTransit = false,
     required this.online,
     required this.inPause,
     required this.lastActivityAt,
@@ -47,6 +49,7 @@ class AdminDriverListItem {
       email: m['email']?.toString(),
       phone: m['phone']?.toString(),
       governorate: m['governorate']?.toString(),
+      isTransit: m['isTransit'] == true,
       online: m['online'] == true,
       inPause: m['inPause'] == true,
       lastActivityAt: DateTime.tryParse(m['lastActivityAt']?.toString() ?? ''),
@@ -102,6 +105,7 @@ class AdminDriverDetail {
   final String? governorate;
   final String? delegation;
   final String? adresse;
+  final bool isTransit;
   final bool online;
   final bool inPause;
   final DateTime? lastActivityAt;
@@ -118,6 +122,7 @@ class AdminDriverDetail {
     required this.governorate,
     required this.delegation,
     required this.adresse,
+    this.isTransit = false,
     required this.online,
     required this.inPause,
     required this.lastActivityAt,
@@ -136,6 +141,7 @@ class AdminDriverDetail {
       governorate: m['governorate']?.toString(),
       delegation: m['delegation']?.toString(),
       adresse: m['adresse']?.toString(),
+      isTransit: m['isTransit'] == true,
       online: m['online'] == true,
       inPause: m['inPause'] == true,
       lastActivityAt: DateTime.tryParse(m['lastActivityAt']?.toString() ?? ''),

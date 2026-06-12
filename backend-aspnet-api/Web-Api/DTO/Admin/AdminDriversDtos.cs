@@ -21,6 +21,9 @@ namespace Web_Api.DTO.Admin
         public string? Phone { get; set; }
         public string? Governorate { get; set; }
 
+        /// <summary>Livreur-transit (travaille sur F_TRANSFERTS, pas F_LIVRAISONS).</summary>
+        public bool IsTransit { get; set; }
+
         public bool Online { get; set; }
         public bool InPause { get; set; }
         public DateTime? LastActivityAt { get; set; }
@@ -53,6 +56,7 @@ namespace Web_Api.DTO.Admin
         public string? Governorate { get; set; }
         public string? Delegation { get; set; }
         public string? Adresse { get; set; }
+        public bool IsTransit { get; set; }
         public bool Online { get; set; }
         public bool InPause { get; set; }
         public DateTime? LastActivityAt { get; set; }

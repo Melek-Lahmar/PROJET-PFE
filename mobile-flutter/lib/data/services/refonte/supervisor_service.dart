@@ -7,7 +7,7 @@ class SupervisorService {
   Future<Map<String, dynamic>> stats() =>
       api.getMap('/api/supervisor/dashboard/stats');
   Future<List<dynamic>> alerts() =>
-      api.getList('/api/supervisor/issues', q: {'includeRead': 'true'});
+      api.getList('/api/supervisor/alerts', q: {'includeRead': 'true'});
   Future<List<dynamic>> issues() =>
       api.getList('/api/supervisor/issues', q: {'includeRead': 'true'});
   Future<List<dynamic>> livreurs() => api.getList('/api/supervisor/livreurs');
